@@ -604,7 +604,28 @@ now Browse Curated Resources*/
   align-items: center;
   justify-content: center;
   transition: background-color 0.3s, transform 0.2s;
+
+  /* Disable mobile tap highlight */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  outline: none;
+
 }
+
+
+
+/* Add rules for all link states to maintain the same color */
+.home-button:link,
+.home-button:visited,
+.home-button:active,
+.home-button:focus {
+  color: #ffffff;
+  /* Keep the same color for all states */
+  outline: none;
+}
+
 
 .home-button:hover {
   background-color: #0056b3;
@@ -646,6 +667,26 @@ now Browse Curated Resources*/
   line-height: 50px;
   /* Centering the icon */
   border-radius: 50%;
+
+  /* Disable mobile tap highlight */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  outline: none;
+
+}
+
+
+
+/* Add rules for all link states to maintain the same color */
+.back-icon:link,
+.back-icon:visited,
+.back-icon:active,
+.back-icon:focus {
+  color: #ffffff;
+  /* Keep the same color for all states */
+  outline: none;
 }
 
 .back-icon:hover {
