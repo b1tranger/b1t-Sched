@@ -4,7 +4,7 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/selector.css"> 
+    <link rel="stylesheet" href="css/selector.css">
     <link rel="stylesheet" href="css/drop-down.css">
     <title>
         oUITS-Scheduler
@@ -14,19 +14,24 @@
             /* max-width: 600px; */
             text-align: center;
         }
+
         .parent-wrap {
             display: flex;
             flex-wrap: wrap;
-            justify-content:center ;
+            justify-content: center;
             gap: 16px;
             margin: auto;
-            width:95%;
+            width: 95%;
         }
     </style>
-  
+
 </head>
 
 <body>
+
+
+<div id="preloader"></div>
+
     <!-- TOP BAR -->
 
     <div class="topnav-1">
@@ -47,14 +52,15 @@
 
     </div>
     <!-- ----------------------------------------------------------------------- -->
-<!-- <a href="tmp.html">Link</a> -->
+    <!-- <a href="tmp.html">Link</a> -->
 
     <!-- <h1 align="center">oUITS-Scheduler</h1> -->
     <p align="center"><small><i>Academic Scheduling for CSE Students</i></small></p>
 
     <div class="parent-wrap">
         <div style="background-color: rgba(0, 0, 0, 0);border-radius: 5px;">
-            <a href="[mod]Faculty-Routine-Ramadan.pdf" download><img src="images\logo\logo (1).webp" height="120px" width="120px"></a>
+            <a href="[mod]Faculty-Routine-Ramadan.pdf" download><img src="images\logo\logo (1).webp" height="120px"
+                    width="120px"></a>
             <p style="text-align: center;margin-top: -15px;font-size: medium;">CSE<br>Routine</p>
         </div>
         <div style="background-color: rgba(0, 0, 0, 0);border-radius: 5px;">
@@ -68,7 +74,7 @@
         <!-- <div style="background-color: rgba(0, 0, 0, 0.316);padding: 5%;border-radius: 5px;">
             <p>Hello</p>
         </div> -->
-        
+
     </div>
 
     <br><br><br>
@@ -96,7 +102,8 @@
 
                     I have attached the Excel sheet view as Schedule, the Google Form view for adding new tasks to the
                     Schedule, and the Website view that links to both the sheet and form. Join me at the Telegram
-                    Channel <a href="https://t.me/oUITS_ORnU" style="color: #0004ff6a;">https://t.me/oUITS_ORnU</a> for the edit access.</div>
+                    Channel <a href="https://t.me/oUITS_ORnU" style="color: #0004ff6a;">https://t.me/oUITS_ORnU</a> for
+                    the edit access.</div>
                 </p>
                 <hr>
                 <p class="dropdown-item2" style="text-align: left;margin-top: -2px;color: #000000bb;font-size: medium;">
@@ -112,7 +119,7 @@
                     doesn't really matter.
                 </div>
                 </p>
-                
+
             </div>
         </div>
         <script>
@@ -169,11 +176,20 @@
 
         <br><br><br><br><br><br>
 
-      <!--  <p style="margin-bottom: 60px;"><a href="https://t.me/oUITS_ORnU/36?comment=60" target="_blank"
+        <!--  <p style="margin-bottom: 60px;"><a href="https://t.me/oUITS_ORnU/36?comment=60" target="_blank"
                 style="color: rgba(0, 0, 0, 0.718);"><i>( Read
                     FAQ )</i></a></p> -->
 
 
+
+        <!-- PRELOADER HIDE SCRIPT -->
+        <script>
+            var loader = document.getElementById("preloader");
+
+            window.addEventListener("load", function () {
+                loader.style.display = "none";
+            })
+        </script>
 
 
 
