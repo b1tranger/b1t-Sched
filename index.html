@@ -195,26 +195,29 @@
             })
         </script> -->
         <script>
-            // Set delay time in milliseconds (e.g., 3000ms = 3 seconds)
-            let preloaderDelay = 3000;
+            let preloaderDelay = 3000; // Time before preloader disappears (in ms)
 
-            window.onload = function () {
-                setTimeout(function () {
-                    // Add fade-out effect to preloader
-                    document.getElementById("preloader").classList.add("fade-out");
+            // Check if user has already seen the preloader
+            if (localStorage.getItem("seenPreloader")) {
+                document.getElementById("preloader").style.display = "none";
+                document.getElementById("content").style.display = "block";
+                document.getElementById("content").classList.add("fade-in");
+            } else {
+                // Show the preloader only for first-time visitors
+                localStorage.setItem("seenPreloader", "true");
 
-                    // Wait for fade-out to complete before showing content
+                window.onload = function () {
                     setTimeout(function () {
-                        document.getElementById("preloader").style.display = "none";
-                        document.getElementById("content").style.display = "block";
+                        document.getElementById("preloader").classList.add("fade-out");
 
-                        // Add fade-in effect to content
-                        setTimeout(() => {
+                        setTimeout(function () {
+                            document.getElementById("preloader").style.display = "none";
+                            document.getElementById("content").style.display = "block";
                             document.getElementById("content").classList.add("fade-in");
-                        }, 50); // Small delay for smooth effect
-                    }, 1000); // Match fade-out duration
-                }, preloaderDelay);
-            };
+                        }, 1000); // Match fade-out duration
+                    }, preloaderDelay);
+                };
+            }
         </script>
 
 
