@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css\menu-bar.css">
+    
+    <link rel="stylesheet" href="css/academics.selector.css">
     <title>
         Semesters
     </title>
@@ -84,8 +86,41 @@
     <!-- <h1 align="center">oUITS-Scheduler</h1> -->
     <!-- <p align="center"><small><i>#</i></small></p> -->
 
+ <div class="container-5" style="width:85%;max-width: 800px; background-color: #1B262C;">
 
-    <div class="container-5" align=center style="max-width: 500px;">
+
+            <!-- -------------------------------------------------------------------- -->
+            <div class="semester-selector-container" style="margin-bottom: -30px;">
+                <label style="color: rgba(255, 255, 255, 0.68);">Semester Browser</label>
+
+                <div class="custom-dropdown" id="departmentDropdown" style="margin-top: 20px;width: 100%;
+    max-width: 600px;">
+                    <div class="dropdown-header" id="dropdownHeader"
+                        style="font-size: 1rem;max-width: 500px;margin: auto;">Select Department
+                    </div>
+
+                    <div class="dropdown-list" id="dropdownList">
+                        <div class="dropdown-item" data-value="cse">Computer Science and Engineering</div>
+                        <div class="dropdown-item" data-value="it">Information Technology</div>
+                    </div>
+                </div>
+
+                <button id="resetButton"><small><b>Clear?</b></small></button>
+
+
+                <div id="semesterList" class="semester-list"
+                    style="background-color: transparent;border-color: transparent;"></div>
+                <p id="driveLink"></p>
+
+                <script src="js/academics.semester.selector.js"></script>
+            </div>
+           
+        </div>
+
+
+
+
+    <!-- <div class="container-5" align=center style="max-width: 500px;">
         <p align="center" style="color: rgba(240, 248, 255, 0.649);margin-bottom: 10px;">Select your
             semester<br><br></p>
         <table class="resources-table-5" align=center style="width:90%;margin-top: -15px;">
@@ -141,17 +176,17 @@
                     </a>
                 </td>
 
-                <!-- <tr>
+                <tr>
                 <td colspan=2 style="background-color: rgba(240, 248, 255, 0);">
                     <hr><br>
                     <a href="https://drive.google.com/drive/folders/1g93wCOUo4x0qvhNk_HHUb8Ozv_KuSLmL"
                         target="_blank"><small><b>(
                                 Link to the Google Drive instead? )</b></small></a>
                 </td>
-            </tr> -->
+            </tr>
         </table>
 
-    </div>
+    </div> -->
 
 
     <p align="center"><small>Current goals: <a
