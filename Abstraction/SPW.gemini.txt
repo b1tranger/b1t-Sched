@@ -1,0 +1,29 @@
+Of course. I'll create a simple and clean single-page website for you.
+
+This immersive document contains all the necessary HTML, CSS, and JavaScript in one file. The JavaScript is heavily commented to help you understand how it dynamically shows and hides different content sections to simulate multiple pages, without reloading the entire website.
+Single-Page Website with JavaScript
+Jun 27, 2:36 PM
+
+Open
+
+ Try again without Canvas 
+
+I've created the website for you. Here's a quick summary of how it functions:
+
+HTML Structure: The page has a navigation bar (<nav>) and a main content area (<main>). Inside the <main> tag, there are several <section> elements. Each section acts as a "page" (Home, About, etc.) and has a unique ID.
+
+CSS Styling: By default, the CSS rule .page-content { display: none; } hides all the content sections. A special class, .active, is used to make a section visible with display: block;. This is the core of the visual effect.
+
+JavaScript Logic:
+
+When a navigation link is clicked, the JavaScript code prevents the browser's default action.
+
+It then finds the data-page attribute from the clicked link (e.g., "about").
+
+It loops through all content sections, hiding them all.
+
+Finally, it finds the one section whose ID matches the data-page value and adds the .active class to it, making it visible.
+
+It also toggles an .active class on the navigation links themselves for better user experience.
+
+You can now modify the content within each <section> to build out your website. Let me know if you have any questions!
