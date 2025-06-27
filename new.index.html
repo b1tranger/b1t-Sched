@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Single-Page Website</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- Basic Reset & Body Styling --- */
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+            /* Add padding to the top to prevent content from being hidden behind the fixed nav bar */
+            padding-top: 80px; 
+        }
+
+        /* --- Navigation Bar Styling --- */
+        .navbar {
+            background-color: #ffffff;
+            /* Fixed position keeps the navbar at the top of the viewport */
+            position: fixed;
+            top: 0;
+            width: 100%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: center; /* Center the links */
+            align-items: center;
+            height: 70px;
+            z-index: 1000;
+        }
+
+        .nav-links {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            gap: 20px; /* Space between nav items */
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #555;
+            font-weight: 500;
+            font-size: 16px;
+            padding: 10px 20px;
+            border-radius: 8px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .nav-links a:hover {
+            background-color: #f0f0f0;
+            color: #000;
+        }
+
+        /* --- Style for the currently active link --- */
+        .nav-links a.active {
+            background-color: #007bff;
+            color: #ffffff;
+        }
+
+        /* --- Content Styling --- */
+        .content-container {
+            padding: 20px 40px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* * This is the key to the "single-page" effect.
+         * All page-content sections are hidden by default.
+         * JavaScript will be used to show the one we want to see.
+        */
+        .page-content {
+            display: none;
+            animation: fadeIn 0.5s; /* Add a simple fade-in effect */
+        }
+        
+        /* The active page content will have its display set to 'block' by JavaScript */
+        .page-content.active {
+            display: block;
+        }
+
+        h1 {
+            color: #007bff;
+        }
+
+        /* --- Simple Fade-in Animation --- */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <ul class="nav-links" id="nav-links">
+            <!-- The data-page attribute is used by JavaScript to know which content to show -->
+            <li><a href="#home" class="nav-link active" data-page="home">Home</a></li>
+            <li><a href="#about" class="nav-link" data-page="about">About</a></li>
+            <li><a href="#services" class="nav-link" data-page="services">Services</a></li>
+            <li><a href="#contact" class="nav-link" data-page="contact">Contact</a></li>
+        </ul>
+    </nav>
+
+    <!-- Container for all page content -->
+    <main class="content-container">
+        <!-- Home Page Content -->
+        <section id="home" class="page-content active">
+            <h1>Welcome to the Home Page</h1>
+            <p>This is the main page of our single-page website. Click the links in the navigation to switch between pages without reloading.</p>
+        </section>
+
+        <!-- About Page Content -->
+        <section id="about" class="page-content">
+            <h1>About Us</h1>
+            <p>This section contains information about our company. The content is loaded dynamically using JavaScript.</p>
+        </section>
+
+        <!-- Services Page Content -->
+        <section id="services" class="page-content">
+            <h1>Our Services</h1>
+            <p>Here we list the services we offer. Each page is a simple 'section' element in the HTML.</p>
+        </section>
+
+        <!-- Contact Page Content -->
+        <section id="contact" class="page-content">
+            <h1>Contact Us</h1>
+            <p>You can find our contact information here. The JavaScript finds the matching section ID and displays it.</p>
+        </section>
+    </main>
+
+    <script>
+        // Wait until the entire HTML document is loaded before running the script
+        document.addEventListener('DOMContentLoaded', function() {
+
+            // --- 1. Get references to the DOM elements we need to work with ---
+            const navLinks = document.querySelectorAll('.nav-link');
+            const pageContents = document.querySelectorAll('.page-content');
+
+            // --- 2. Add a click event listener to each navigation link ---
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(event) {
+                    // Prevent the default link behavior (which is to jump to the anchor)
+                    event.preventDefault();
+
+                    // Get the target page ID from the link's 'data-page' attribute
+                    const targetPageId = this.dataset.page;
+                    
+                    // --- 3. Handle the active state for the navigation links ---
+                    // First, remove the 'active' class from all links
+                    navLinks.forEach(navLink => {
+                        navLink.classList.remove('active');
+                    });
+                    
+                    // Then, add the 'active' class to the link that was just clicked
+                    this.classList.add('active');
+
+                    // --- 4. Handle showing and hiding the page content ---
+                    // Loop through all page content sections
+                    pageContents.forEach(page => {
+                        // Check if the current page's ID matches the target page ID
+                        if (page.id === targetPageId) {
+                            // If it matches, make it visible by adding the 'active' class
+                            page.classList.add('active');
+                        } else {
+                            // If it doesn't match, hide it by removing the 'active' class
+                            page.classList.remove('active');
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+
+</body>
+</html>
