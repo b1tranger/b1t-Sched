@@ -122,15 +122,20 @@
      justify-content: center;
      gap: 10px;
      margin-top: 15px;
+     max-width: 600px;
+     margin: auto;
+     /* min-width: -webkit-fit-available; */
  }
 
  .semester-button {
      background-color: #DBE2EF;
      border: 1px solid #dddddd23;
-     border-radius: 10px;
-     padding: 10px 15px;
+     border-radius: 30px;
+     padding: 15px 15px;
      cursor: pointer;
      transition: all 0.3s ease;
+     font-weight: bold;
+     font-size: medium;
      /* 
      -webkit-tap-highlight-color: transparent;
      -webkit-touch-callout: none;
