@@ -1,312 +1,316 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>oUITS-Scheduler Home</title>
-    <link rel="stylesheet" href="css\styles.css">
-    <link rel="stylesheet" href="css\menu-bar.css">
-    <link rel="stylesheet" href="css\drop-down.css">
+    <meta name="description" content="b1t-Sched - Academic Task Scheduler for Students">
+    <title>b1t-Sched | Academic Task Scheduler</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="Social-Preview.webp" type="image/webp">
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="css/colors.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/navbar.css">
+    <link rel="stylesheet" href="css/user-details-card.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    
+    <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <style>
-        p {
-            /* max-width: 600px; */
-            /* text-align: center; */
-
-        }
-
-        .a-1 {
-            color: rgba(51, 0, 255, 0.522);
-            transition: .5s ease;
-
-            text-align: center;
-        }
-
-        .a-1:hover {
-            color: black;
-            /* font-size: large; */
-            /* transform: scaleY(-5px); */
-            /* position: fixed; */
-
-        }
-
-        .parent-wrap {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 16px;
-            margin: auto;
-            width: 95%;
-        }
-
-        .logo-hover:hover {
-            transform: translateY(-3px);
-            transition: width 2s, height 2s, transform 2s;
-            /* border: 1px solid #00000018; */
-            /* border-radius: 50px; */
-        }
-    </style>
 </head>
-
 <body>
-    <!-- Navigation Bar -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <ul class="nav-links">
-                <li><a href="#" class="active">Home</a></li>
-                <li><a href="Semesters.html">Semesters</a></li>
-                <li><a href="Events.html">Events</a></li>
-                <li><a href="https://b1tacad.netlify.app/" target="_blank">Resources</a></li>
-                <!-- <li><a href="contact.html">Contact</a></li> -->
-            </ul>
-        </div>
-    </nav>
-
-    <!-- Page Content -->
-    <div class="page-content">
-        <!-- Logo at top left -->
-        <div class="logo-container">
-            <div class="logo">
-                <img src="Social-Preview.webp" height="80px" width="80px" style="border-radius: 50px;">
-            </div>
-            <div class="logo-text"></div>
-        </div>
-
-        <!-- Example content -->
-        <div class="content">
-            <h1 style="text-align: center;">Academic Scheduler</h1>
-            <!-- <p style="text-align: center;">quick downloads from below</p> -->
-        </div>
-
-        <div class="parent-wrap">
-            <div style="background-color: rgba(0, 0, 0, 0);border-radius: 5px;margin-top: 10px;">
-                <a href="https://docs.google.com/spreadsheets/d/1HLhnOWYCOJMzJ-ffADqrdapEsP6tx2PY6XDPMdNypCI/edit?usp=sharing"
-                    download><img src="images\logo\logo (6).webp" height="100px" width="100px" class="logo-hover"
-                        style="box-shadow: 2px 2px 5px 0px rgba(0, 0, 0, 0.101);border-radius: 50px;"></a>
-                <p style="text-align: center;margin-top: -1px;font-size: medium;">CSE Routine<br><small>(tmp Spring-2026)</small></p>
-            </div>
-            <!-- <div style="background-color: rgba(0, 0, 0, 0);border-radius: 5px;margin-top: 15px;">
-                <a href="Semesters.html"><img src="images\logo\logo (4).webp" height="92px" width="92px"
-                        class="logo-hover"></a>
-                <p style="text-align: center;margin-top: -1px;font-size: medium;">Browser<br>Schedules</p>
-            </div> -->
-            <!-- <div style="background-color: rgba(0, 0, 0, 0);border-radius: 5px;margin-top: 15px;">
-                <a href="Events.html"><img src="images\logo\logo (5).webp" height="92px" width="92px" class="logo-hover"
-                        class="logo-hover"></a>
-                <p style="text-align: center;margin-top: -1px;font-size: medium;">Upcoming<br>Events</p> 
-            </div>-->
-            <div style="background-color: rgba(0, 0, 0, 0);border-radius: 5px;margin-top: 10px;">
-                <a href="https://github.com/user-attachments/files/24494144/academic-calendar-2026-IMG_0001.pdf"
-                    download><img src="images\logo\logo (2).webp" height="100px" width="100px" class="logo-hover"
-                        style="box-shadow: 2px 2px 5px 0px rgba(0, 0, 0, 0.101);border-radius: 50px;"></a>
-                <p style="text-align: center;margin-top: -1px;font-size: medium;">
-                    Academic<br>Calendar<br><small>(2026)</small></p>
-            </div>
-            <div style="background-color: rgba(0, 0, 0, 0);border-radius: 5px;margin-top: 10px;">
-                <a href="https://github.com/user-attachments/files/24839321/Advisor.list.for.Registration.Spring.2026.pdf" download><img src="images\logo\logo (7).webp"
-                        height="100px" width="100px" class="logo-hover"
-                        style="box-shadow: 2px 2px 5px 0px rgba(0, 0, 0, 0.101);border-radius: 50px;"></a>
-                <p style="text-align: center;margin-top: -1px;font-size: medium;">CSE faculty <br>& Advisor
-                    list<br><small>(Spring-2026)</small></p>
-            </div>
-            <div style="background-color: rgba(0, 0, 0, 0);border-radius: 5px;margin-top: 15px;">
-                <a href="Note\SessionStorage\index-session.html"><img src="images\logo\logo (3).webp" height="92px"
-                        width="92px" class="logo-hover"
-                        style="box-shadow: 2px 2px 5px 0px rgba(0, 0, 0, 0.101);border-radius: 50px;"></a>
-                <p style="text-align: center;margin-top: -1px;font-size: medium;">Take<br>Notes</p>
-            </div>
-            <!-- <div style="background-color: rgba(0, 0, 0, 0.316);padding: 5%;border-radius: 5px;">
-            <p>Hello</p>
-        </div> -->
-
-        </div>
-
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loader"></div>
+        <p>Loading...</p>
     </div>
 
-    <div class="container" style="width: 80%;max-width: 500px;">
-        <div class="dropdown-container resources" style="border-radius: 20px;">
-            <div class="dropdown-header2" style="background-color: #1B262C;">
-                <p></p>FAQ
-            </div>
-            <div class="dropdown-content-1">
-                <p class="dropdown-item2" style="text-align: left;margin-top: -2px;color: #000000bb;font-size: medium;">
-                    # Academic Scheduler<br>
-                <div class="description" style="margin: 15px;color: #00000082;font-size: small;">
-                    I recently thought of an effort to organize and record future tasks and events that's available to
-                    the public. Therefore, anyone can view them through the website and reduce the chance of missing out
-                    on them. Moreover, be aware of any new changes before anyone else, and discuss about it instead of
-                    complaining at the last minute.</div>
-                </p>
-                <hr>
-                <p class="dropdown-item2" style="text-align: left;margin-top: -2px;color: #000000bb;font-size: medium;">
-                    # This is how it's gonna work...<br>
-                <div class="description" style="margin: 15px;color: #00000082;font-size: small;">
-                    Anyone can add a schedule using G-form, but only selected volunteers (preferably CRs) can edit the
-                    Excel sheet. Their work will be to delete the completed schedules.
-
-                    I have attached the Excel sheet view as Schedule, the Google Form view for adding new tasks to the
-                    Schedule, and the Website view that links to both the sheet and form. Join me at the Telegram
-                    Channel <a href="https://t.me/oUITS_ORnU" style="color: #0004ff6a;">https://t.me/oUITS_ORnU</a> for
-                    the edit access.</div>
-                </p>
-                <hr>
-                <p class="dropdown-item2" style="text-align: left;margin-top: -2px;color: #000000bb;font-size: medium;">
-                    # Conclusion<br>
-                <div class="description" style="margin: 15px;color: #00000082;font-size: small;">
-                    This is purely a crowdsourcing project and therefore, highly dependent on the people using it. Only
-                    those willing to utilize it will benefit from it. It is just the first demo of the idea therefore
-                    Suggestions and Criticisms are highly appreciated.
-                    <br>
-                    This is also intended to be an open-source project, so I appreciate anyone willing to contribute in
-                    any way they want to. For example, you are against the idea of me having admin access over all the
-                    Forms and Sheets, you can provide me the link of your admin access, I'll add them over mine. It
-                    doesn't really matter.
+    <!-- Main App Container -->
+    <div id="app" class="app-container" style="display: none;">
+        
+        <!-- Navigation Bar (hidden on login screen) -->
+        <nav id="navbar" class="navbar" style="display: none;">
+            <div class="nav-container">
+                <div class="nav-left">
+                    <img src="Social-Preview.webp" alt="Logo" class="nav-logo">
+                    <span class="nav-title">b1t-Sched</span>
                 </div>
-                </p>
-
+                <div class="nav-center">
+                    <ul class="nav-links">
+                        <li><a href="#/dashboard" class="nav-link active">Dashboard</a></li>
+                        <li><a href="https://b1tacad.netlify.app/" target="_blank" class="nav-link">Resources</a></li>
+                    </ul>
+                </div>
+                <div class="nav-right">
+                    <!-- User Details Card (clickable) -->
+                    <div id="user-details-card" class="user-details-card" style="display: none;">
+                        <div class="user-avatar">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                        <div class="user-info">
+                            <p class="user-email" id="user-email">Loading...</p>
+                            <p class="user-department" id="user-department">Loading...</p>
+                        </div>
+                        <div class="settings-icon">
+                            <i class="fas fa-cog"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
+        </nav>
+
+        <!-- Main Content Area (SPA Views) -->
+        <main id="main-content" class="main-content">
+            
+            <!-- Login/Signup View -->
+            <div id="login-view" class="view" style="display: none;">
+                <div class="auth-container">
+                    <div class="auth-card">
+                        <div class="auth-logo">
+                            <img src="Social-Preview.webp" alt="b1t-Sched Logo" class="auth-logo-img">
+                            <h1>b1t-Sched</h1>
+                            <p class="auth-subtitle">Academic Task Scheduler</p>
+                        </div>
+                        
+                        <!-- Login Form -->
+                        <form id="login-form" class="auth-form">
+                            <h2>User Login</h2>
+                            
+                            <div class="form-group">
+                                <label for="login-email">ID or Email</label>
+                                <input type="email" id="login-email" class="form-input" placeholder="student@example.com" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="login-password">Password</label>
+                                <input type="password" id="login-password" class="form-input" placeholder="Enter password" required>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary btn-block">
+                                <i class="fas fa-sign-in-alt"></i> Login
+                            </button>
+                            
+                            <div class="auth-divider">
+                                <span>Don't have an account?</span>
+                            </div>
+                            
+                            <button type="button" id="show-signup-btn" class="btn btn-secondary btn-block">
+                                Create Account
+                            </button>
+                        </form>
+                        
+                        <!-- Signup Form (hidden by default) -->
+                        <form id="signup-form" class="auth-form" style="display: none;">
+                            <h2>Create Account</h2>
+                            
+                            <div class="form-group">
+                                <label for="signup-email">Email Address</label>
+                                <input type="email" id="signup-email" class="form-input" placeholder="student@example.com" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="signup-password">Password</label>
+                                <input type="password" id="signup-password" class="form-input" placeholder="At least 6 characters" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="signup-confirm-password">Confirm Password</label>
+                                <input type="password" id="signup-confirm-password" class="form-input" placeholder="Re-enter password" required>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary btn-block">
+                                <i class="fas fa-user-plus"></i> Sign Up
+                            </button>
+                            
+                            <div class="auth-divider">
+                                <span>Already have an account?</span>
+                            </div>
+                            
+                            <button type="button" id="show-login-btn" class="btn btn-secondary btn-block">
+                                Back to Login
+                            </button>
+                        </form>
+                        
+                        <!-- Error/Success Messages -->
+                        <div id="auth-message" class="auth-message"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Set Details View (First-time login) -->
+            <div id="set-details-view" class="view" style="display: none;">
+                <div class="set-details-container">
+                    <div class="set-details-card">
+                        <h1>Set Your Details</h1>
+                        <p class="subtitle">This will help us show you relevant tasks and schedules</p>
+                        
+                        <form id="set-details-form" class="details-form">
+                            <div class="form-group">
+                                <label for="set-department">Department</label>
+                                <select id="set-department" class="form-select" required>
+                                    <option value="" disabled selected>Select Department</option>
+                                    <!-- Options will be loaded from Firestore -->
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="set-semester">Semester</label>
+                                <select id="set-semester" class="form-select" required>
+                                    <option value="" disabled selected>Select Semester</option>
+                                    <!-- Options will be loaded from Firestore -->
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="set-section">Section</label>
+                                <select id="set-section" class="form-select" required>
+                                    <option value="" disabled selected>Select Section</option>
+                                    <!-- Options will be loaded dynamically -->
+                                </select>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary btn-block">
+                                <i class="fas fa-save"></i> Save & Continue
+                            </button>
+                        </form>
+                        
+                        <div id="set-details-message" class="message"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard View -->
+            <div id="dashboard-view" class="view" style="display: none;">
+                <div class="dashboard-container">
+                    
+                    <!-- Resource Links Section -->
+                    <section class="resource-links-section">
+                        <div id="resource-links-container" class="resource-links-container">
+                            <!-- Resource link cards will be dynamically loaded -->
+                        </div>
+                    </section>
+
+                    <!-- Pending Tasks Section -->
+                    <section class="tasks-section">
+                        <div class="section-header">
+                            <h2><i class="fas fa-tasks"></i> Pending Tasks</h2>
+                            <button id="refresh-tasks-btn" class="btn btn-icon" title="Refresh tasks">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                        
+                        <div id="tasks-container" class="tasks-container">
+                            <!-- Task cards will be dynamically loaded -->
+                        </div>
+                        
+                        <div id="no-tasks-message" class="no-data-message" style="display: none;">
+                            <i class="fas fa-check-circle"></i>
+                            <p>No pending tasks! You're all caught up.</p>
+                        </div>
+                    </section>
+
+                    <!-- Events Section -->
+                    <section class="events-section">
+                        <div class="section-header">
+                            <h2><i class="fas fa-calendar-alt"></i> Upcoming Events</h2>
+                        </div>
+                        
+                        <div id="events-container" class="events-container">
+                            <!-- Event cards will be dynamically loaded -->
+                        </div>
+                        
+                        <div id="no-events-message" class="no-data-message" style="display: none;">
+                            <i class="fas fa-calendar-check"></i>
+                            <p>No upcoming events.</p>
+                        </div>
+                    </section>
+
+                </div>
+            </div>
+
+            <!-- Profile Settings View -->
+            <div id="profile-settings-view" class="view" style="display: none;">
+                <div class="profile-settings-container">
+                    <div class="profile-settings-card">
+                        <div class="settings-header">
+                            <button id="back-to-dashboard-btn" class="btn btn-text">
+                                <i class="fas fa-arrow-left"></i> Back to Dashboard
+                            </button>
+                            <h1>Profile Settings</h1>
+                        </div>
+                        
+                        <div class="profile-info">
+                            <div class="profile-avatar-large">
+                                <i class="fas fa-user-circle"></i>
+                            </div>
+                            <p class="profile-email" id="profile-email">Loading...</p>
+                            <p class="profile-id" id="profile-id">ID: Loading...</p>
+                        </div>
+                        
+                        <form id="profile-settings-form" class="profile-form">
+                            <h3>Academic Details</h3>
+                            <p class="form-note">Changes will update your personalized dashboard and resource links</p>
+                            
+                            <div class="form-group">
+                                <label for="profile-department">Department</label>
+                                <select id="profile-department" class="form-select" required>
+                                    <option value="" disabled>Select Department</option>
+                                    <!-- Options loaded from Firestore -->
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="profile-semester">Semester</label>
+                                <select id="profile-semester" class="form-select" required>
+                                    <option value="" disabled>Select Semester</option>
+                                    <!-- Options loaded from Firestore -->
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="profile-section">Section</label>
+                                <select id="profile-section" class="form-select" required>
+                                    <option value="" disabled>Select Section</option>
+                                    <!-- Options loaded dynamically -->
+                                </select>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Save Changes
+                                </button>
+                                <button type="button" id="cancel-settings-btn" class="btn btn-secondary">
+                                    Cancel
+                                </button>
+                                <button type="button" id="logout-btn" class="btn btn-danger">
+                                    <i class="fas fa-sign-out-alt"></i> Logout
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <div id="profile-message" class="message"></div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
     </div>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const dropdownHeaders = document.querySelectorAll('.dropdown-header2');
 
-            // Function to close all dropdowns
-            function closeAllDropdowns() {
-                dropdownHeaders.forEach(header => {
-                    header.classList.remove('active');
-                    header.nextElementSibling.classList.remove('show');
-                });
-            }
-
-            // Add click event to each dropdown header
-            dropdownHeaders.forEach(header => {
-                header.addEventListener('click', function (event) {
-                    event.stopPropagation(); // Prevent clicking from bubbling to document
-
-                    // Get the content element that follows this header
-                    const content = this.nextElementSibling;
-
-                    // If this dropdown is already open, close it
-                    if (this.classList.contains('active')) {
-                        this.classList.remove('active');
-                        content.classList.remove('show');
-                    } else {
-                        // Otherwise, close all dropdowns and open this one
-                        closeAllDropdowns();
-                        this.classList.add('active');
-                        content.classList.add('show');
-                    }
-                });
-            });
-
-            // Close dropdowns when clicking outside
-            document.addEventListener('click', function () {
-                closeAllDropdowns();
-            });
-
-            // Prevent clicks inside dropdown content from closing the dropdown
-            const dropdownContents = document.querySelectorAll('.dropdown-content-1');
-            dropdownContents.forEach(content => {
-                content.addEventListener('click', function (event) {
-                    event.stopPropagation();
-                });
-            });
-        });
-    </script>
-    <!-- --------------------------------------------------------------------- -->
-    <div style="margin: auto;text-align: center;display: flex;justify-content: center;">
-        <p style="margin-top: 20px;
-    margin-bottom: 15px;color: rgba(0, 0, 0, 0.589);font-size: 15px;">
-            <span style="">See: <a class="a-1"
-                    href="https://drive.google.com/drive/folders/1oMbT_6PIS8cEnTdRXuue9-KccctiFJZA?usp=drive_link"
-                    target="_blank">oU1TS info archive</a>
-                <br>
-                Current goals: <a class="a-1"
-                    href="https://play.google.com/store/apps/details?id=com.zohirrayhan.routinescrapper">DIU Routine
-                    scrapper</a>
-                <br>
-                </span>
-                <!-- mirror: <a class="a-1" href="https://b1tranger.github.io/oUITS-Scheduler-offline/"
-                target="_blank">Offline Scheduler</a> -->
-        </p>
-    </div>
-    <br><br><br><br><br><br>
-
-
-
-    <!-- TABLE FOR SOCIALS AND END CREDIT -->
-
-
-    <!-- END CREDIT  -->
-    <div align="center">
-        <div>
-            <!-- SOCIAL LINKS -->
-
-            <p align=center style="color: #00000086;">Join our Socials </p>
-            <p align=center style="color: #00000061;font-size: x-small;margin-top: -10px;"><i>for Updates and
-                    Feedback</i>
-            </p>
-
-            <a href="https://discord.gg/BdmArz6FHY" target="_blank"><img src=images\Social-logo\discord-logo.webp
-                    alt="Discord Server (Protein Shake)" width="70" height="70"></a>
-
-            <a href="https://t.me/s/oUITS_ORnU" target="_blank"><img src=images\Social-logo\telegram-logo2.webp
-                    alt="Telegram Channel (oUITS - Online Resources and Updates)" width="70" height="70"></a>
-
-            <a href="https://facebook.com/groups/1074592960836263/" target="_blank"><img
-                    src=images\Social-logo\fb-logo.webp alt="Facebook Group (oUITS - Online Resources)" width="70"
-                    height="70"></a>
-
-            <a href="https://github.com/oU1TS" target="_blank"><img src=images\Social-logo\github-logo2.webp
-                    alt="Facebook Group (oUITS - Online Resources)" width="70" height="70"></a>
-
-        </div>
-
-
-        <p style="text-align: center;margin: 20px;"><a style="color: #5b5050;"
-                href="https://b1tranger.gitbook.io/archive/documentations/web-dev/b1t-scheduler" target="_blank">Read
-                Documentation</a> <i class="fa-solid fa-book"></i></p>
-
-
-        <div style="margin-bottom: 20px;margin-top: 10px;margin-bottom: 70px;">
-            <!-- BOTTOM CREDITS -->
-            <p align=center style="color:rgba(0, 0, 0, 0.422);width: 80%;max-width:550px;font-size: small; "><small
-                    style="font-size: x-small;"><b>UNOFFICIAL</b>
-                    Online
-                    Academic Scheduler for UITS<br>This project is licensed under the <a
-                        href="https://www.apache.org/licenses/LICENSE-2.0" style="color:rgba(4, 0, 128, 0.806);"
-                        target="_blank">Apache License 2.0</a>.
-                    You may use, modify, and distribute its contents, but you must provide attribution and include the
-                    original
-                    license.</small></p>
-
-
-            <p align=center
-                style="color:rgba(0, 0, 0, 0.422);width: 95%;max-width:500px;font-size: small;font-style: italic;">
-                Copyright
-                &copy; 2024-<span id="year"></span>
-                b1tranger. </p>
-
-            <script>
-                document.getElementById("year").textContent = new Date().getFullYear();
-            </script>
-        </div>
-
-    </div>
-
-    <!-- ----------------------------------------------------------------- -->
-    <div class="navbar-5">
-
-        <font size="24"></font>
-        <p align=center style="color:rgba(255, 255, 255, 0.776);"><i>b1t Scheduler</i></p>
-        </font>
-
-    </div>
-
-
-
+    <!-- Firebase SDKs (CDN) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <!-- App JavaScript Modules -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/db.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/routing.js"></script>
+    <script src="js/profile.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/app.js"></script>
 </body>
-
 </html>
