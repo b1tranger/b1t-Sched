@@ -4,6 +4,10 @@
 
 const App = {
   userProfile: null,
+  userCompletions: {},
+  currentTasks: [],
+  currentEvents: [],
+  isAdmin: false,
 
   async init() {
     console.log('Initializing b1t-Sched...');
@@ -24,9 +28,21 @@ const App = {
 
     // Setup event listeners
     this.setupEventListeners();
+    this.setupTaskEventListeners();
+    this.setupEventsSidebarListeners();
+    this.setupAdminEventListeners();
 
     // Initialize Profile module
     await Profile.init();
+
+    // Handle route-specific data loading
+    Router.onRouteChange(async (route) => {
+      if (route === 'profile-settings') {
+        await Profile.loadProfile();
+      } else if (route === 'dashboard') {
+        await this.loadDashboardData();
+      }
+    });
   },
 
   setupEventListeners() {
@@ -92,6 +108,191 @@ const App = {
       refreshTasksBtn.addEventListener('click', async () => {
         await this.loadDashboardData();
       });
+    }
+  },
+
+  setupTaskEventListeners() {
+    // Add Task button
+    const addTaskBtn = document.getElementById('add-task-btn');
+    if (addTaskBtn) {
+      addTaskBtn.addEventListener('click', () => {
+        this.openAddTaskModal();
+      });
+    }
+
+    // View Old Tasks button
+    const viewOldTasksBtn = document.getElementById('view-old-tasks-btn');
+    if (viewOldTasksBtn) {
+      viewOldTasksBtn.addEventListener('click', async () => {
+        await this.openOldTasksModal();
+      });
+    }
+
+    // Add Task form
+    const addTaskForm = document.getElementById('add-task-form');
+    if (addTaskForm) {
+      addTaskForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await this.handleAddTask();
+      });
+    }
+
+    // Modal close buttons
+    const closeAddTaskModal = document.getElementById('close-add-task-modal');
+    const cancelAddTask = document.getElementById('cancel-add-task');
+    const closeOldTasksModal = document.getElementById('close-old-tasks-modal');
+
+    if (closeAddTaskModal) {
+      closeAddTaskModal.addEventListener('click', () => UI.hideModal('add-task-modal'));
+    }
+    if (cancelAddTask) {
+      cancelAddTask.addEventListener('click', () => UI.hideModal('add-task-modal'));
+    }
+    if (closeOldTasksModal) {
+      closeOldTasksModal.addEventListener('click', () => UI.hideModal('old-tasks-modal'));
+    }
+
+    // Close modals on backdrop click
+    document.querySelectorAll('.modal').forEach(modal => {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          UI.hideModal(modal.id);
+        }
+      });
+    });
+
+    // Task checkbox delegation (handles dynamically added checkboxes)
+    const tasksContainer = document.getElementById('tasks-container');
+    if (tasksContainer) {
+      tasksContainer.addEventListener('change', async (e) => {
+        if (e.target.classList.contains('task-checkbox')) {
+          const taskId = e.target.dataset.taskId;
+          const isCompleted = e.target.checked;
+          await this.handleTaskCompletion(taskId, isCompleted);
+        }
+      });
+    }
+  },
+
+  setupEventsSidebarListeners() {
+    // Events toggle (mobile)
+    const eventsToggle = document.getElementById('events-toggle');
+    if (eventsToggle) {
+      eventsToggle.addEventListener('click', () => {
+        UI.toggleEventsSidebar(true);
+      });
+    }
+
+    // Close events sidebar
+    const closeEventsSidebar = document.getElementById('close-events-sidebar');
+    if (closeEventsSidebar) {
+      closeEventsSidebar.addEventListener('click', () => {
+        UI.toggleEventsSidebar(false);
+      });
+    }
+
+    // Close on overlay click
+    const eventsOverlay = document.getElementById('events-overlay');
+    if (eventsOverlay) {
+      eventsOverlay.addEventListener('click', () => {
+        UI.toggleEventsSidebar(false);
+      });
+    }
+  },
+
+  openAddTaskModal() {
+    // Set minimum date to now
+    const deadlineInput = document.getElementById('task-deadline');
+    if (deadlineInput) {
+      const now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      deadlineInput.min = now.toISOString().slice(0, 16);
+    }
+    
+    // Clear form
+    document.getElementById('add-task-form').reset();
+    
+    UI.showModal('add-task-modal');
+  },
+
+  async openOldTasksModal() {
+    UI.showModal('old-tasks-modal');
+    
+    if (!this.userProfile) return;
+    
+    const userId = Auth.getUserId();
+    const { department, semester, section } = this.userProfile;
+    
+    const result = await DB.getOldTasks(userId, department, semester, section);
+    if (result.success) {
+      UI.renderOldTasks(result.data);
+    }
+  },
+
+  async handleAddTask() {
+    const title = document.getElementById('task-title').value.trim();
+    const course = document.getElementById('task-course').value.trim();
+    const type = document.getElementById('task-type').value;
+    const description = document.getElementById('task-description').value.trim();
+    const deadline = document.getElementById('task-deadline').value;
+
+    if (!title || !deadline) {
+      alert('Please fill in the required fields (Title and Deadline)');
+      return;
+    }
+
+    if (!this.userProfile) {
+      alert('User profile not loaded');
+      return;
+    }
+
+    const userId = Auth.getUserId();
+    const userEmail = Auth.getUserEmail();
+    const { department, semester, section } = this.userProfile;
+
+    const result = await DB.createTask(userId, userEmail, {
+      title,
+      course,
+      type,
+      description,
+      deadline,
+      department,
+      semester,
+      section
+    });
+
+    if (result.success) {
+      UI.hideModal('add-task-modal');
+      // Refresh tasks
+      await this.loadDashboardData();
+    } else {
+      alert('Failed to add task: ' + result.error);
+    }
+  },
+
+  async handleTaskCompletion(taskId, isCompleted) {
+    const userId = Auth.getUserId();
+    if (!userId) return;
+
+    const result = await DB.toggleTaskCompletion(userId, taskId, isCompleted);
+    
+    if (result.success) {
+      // Update local state
+      if (isCompleted) {
+        this.userCompletions[taskId] = { completedAt: new Date() };
+      } else {
+        delete this.userCompletions[taskId];
+      }
+      
+      // Re-render tasks with updated completions
+      UI.renderTasks(this.currentTasks, this.userCompletions);
+    } else {
+      // Revert checkbox state on error
+      const checkbox = document.querySelector(`.task-checkbox[data-task-id="${taskId}"]`);
+      if (checkbox) {
+        checkbox.checked = !isCompleted;
+      }
+      alert('Failed to update task: ' + result.error);
     }
   },
 
@@ -168,8 +369,13 @@ const App = {
       // User has profile, load dashboard
       this.userProfile = profileResult.data;
       
+      // Check if user is admin
+      const adminResult = await DB.isUserAdmin(user.uid);
+      this.isAdmin = adminResult.isAdmin || false;
+      
       // Save to localStorage
       Utils.storage.set('userProfile', this.userProfile);
+      Utils.storage.set('isAdmin', this.isAdmin);
       
       // Update user details card
       UI.updateUserDetailsCard(
@@ -178,6 +384,9 @@ const App = {
         this.userProfile.semester,
         this.userProfile.section
       );
+      
+      // Show/hide admin controls
+      UI.toggleAdminControls(this.isAdmin);
 
       // Navigate based on current route
       if (Router.getCurrentRoute() === 'profile-settings') {
@@ -199,6 +408,7 @@ const App = {
     UI.showLoading(false);
     Router.navigate('login');
     this.userProfile = null;
+    this.isAdmin = false;
     Utils.storage.clear();
   },
 
@@ -229,12 +439,19 @@ const App = {
   },
 
   async handleSetDetails() {
+    const studentId = document.getElementById('set-student-id').value.trim();
     const department = document.getElementById('set-department').value;
     const semester = document.getElementById('set-semester').value;
     const section = document.getElementById('set-section').value;
 
-    if (!department || !semester || !section) {
-      UI.showMessage('set-details-message', 'Please select all fields', 'error');
+    if (!studentId || !department || !semester || !section) {
+      UI.showMessage('set-details-message', 'Please fill in all fields', 'error');
+      return;
+    }
+
+    // Validate student ID (10-16 digits)
+    if (!/^[0-9]{10,16}$/.test(studentId)) {
+      UI.showMessage('set-details-message', 'Student ID must be 10-16 digits', 'error');
       return;
     }
 
@@ -245,6 +462,7 @@ const App = {
 
     const result = await DB.createUserProfile(userId, {
       email,
+      studentId,
       department,
       semester,
       section
@@ -282,6 +500,7 @@ const App = {
 
     UI.showLoading(true);
 
+    const userId = Auth.getUserId();
     const { department, semester, section } = this.userProfile;
 
     // Load resource links
@@ -290,19 +509,236 @@ const App = {
       UI.renderResourceLinks(resourceResult.data);
     }
 
+    // Load user's task completions
+    const completionsResult = await DB.getUserTaskCompletions(userId);
+    if (completionsResult.success) {
+      this.userCompletions = completionsResult.data;
+    }
+
     // Load tasks
     const tasksResult = await DB.getTasks(department, semester, section);
     if (tasksResult.success) {
-      UI.renderTasks(tasksResult.data);
+      this.currentTasks = tasksResult.data;
+      UI.renderTasks(this.currentTasks, this.userCompletions, this.isAdmin);
     }
 
     // Load events
     const eventsResult = await DB.getEvents(department);
     if (eventsResult.success) {
-      UI.renderEvents(eventsResult.data);
+      this.currentEvents = eventsResult.data;
+      UI.renderEvents(this.currentEvents, this.isAdmin);
     }
 
     UI.showLoading(false);
+  },
+
+  // ============================================
+  // ADMIN FUNCTIONS
+  // ============================================
+
+  setupAdminEventListeners() {
+    // Reset Tasks button (admin)
+    const resetTasksBtn = document.getElementById('reset-tasks-btn');
+    if (resetTasksBtn) {
+      resetTasksBtn.addEventListener('click', async () => {
+        await this.handleResetTasks();
+      });
+    }
+
+    // Delete task delegation (handles dynamically added delete buttons)
+    const tasksContainer = document.getElementById('tasks-container');
+    if (tasksContainer) {
+      tasksContainer.addEventListener('click', async (e) => {
+        if (e.target.closest('.task-delete-btn')) {
+          const taskId = e.target.closest('.task-delete-btn').dataset.taskId;
+          await this.handleDeleteTask(taskId);
+        }
+      });
+    }
+
+    // Add Event button (admin) - Desktop
+    const addEventBtn = document.getElementById('add-event-btn');
+    if (addEventBtn) {
+      addEventBtn.addEventListener('click', () => {
+        this.openAddEventModal();
+      });
+    }
+
+    // Add Event button (admin) - Mobile
+    const addEventBtnMobile = document.getElementById('add-event-btn-mobile');
+    if (addEventBtnMobile) {
+      addEventBtnMobile.addEventListener('click', () => {
+        UI.toggleEventsSidebar(false);
+        this.openAddEventModal();
+      });
+    }
+
+    // Add Event form
+    const addEventForm = document.getElementById('add-event-form');
+    if (addEventForm) {
+      addEventForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await this.handleAddEvent();
+      });
+    }
+
+    // Add Event modal close buttons
+    const closeAddEventModal = document.getElementById('close-add-event-modal');
+    const cancelAddEvent = document.getElementById('cancel-add-event');
+    if (closeAddEventModal) {
+      closeAddEventModal.addEventListener('click', () => UI.hideModal('add-event-modal'));
+    }
+    if (cancelAddEvent) {
+      cancelAddEvent.addEventListener('click', () => UI.hideModal('add-event-modal'));
+    }
+
+    // View Old Events button - Desktop
+    const viewOldEventsBtn = document.getElementById('view-old-events-btn');
+    if (viewOldEventsBtn) {
+      viewOldEventsBtn.addEventListener('click', async () => {
+        await this.openOldEventsModal();
+      });
+    }
+
+    // View Old Events button - Mobile
+    const viewOldEventsBtnMobile = document.getElementById('view-old-events-btn-mobile');
+    if (viewOldEventsBtnMobile) {
+      viewOldEventsBtnMobile.addEventListener('click', async () => {
+        UI.toggleEventsSidebar(false);
+        await this.openOldEventsModal();
+      });
+    }
+
+    // Old Events modal close
+    const closeOldEventsModal = document.getElementById('close-old-events-modal');
+    if (closeOldEventsModal) {
+      closeOldEventsModal.addEventListener('click', () => UI.hideModal('old-events-modal'));
+    }
+
+    // Delete event delegation (for desktop and mobile containers)
+    const eventsContainers = [
+      document.getElementById('events-container'),
+      document.getElementById('events-container-mobile')
+    ];
+    eventsContainers.forEach(container => {
+      if (container) {
+        container.addEventListener('click', async (e) => {
+          if (e.target.closest('.event-delete-btn')) {
+            const eventId = e.target.closest('.event-delete-btn').dataset.eventId;
+            await this.handleDeleteEvent(eventId);
+          }
+        });
+      }
+    });
+  },
+
+  async handleResetTasks() {
+    if (!this.isAdmin) return;
+    
+    const confirmed = confirm('Are you sure you want to reset all old/past tasks? This action cannot be undone.');
+    if (!confirmed) return;
+
+    const { department, semester, section } = this.userProfile;
+    const result = await DB.resetOldTasks(department, semester, section);
+    
+    if (result.success) {
+      alert(`Successfully reset ${result.deletedCount} old tasks.`);
+      await this.loadDashboardData();
+    } else {
+      alert('Failed to reset tasks: ' + result.error);
+    }
+  },
+
+  async handleDeleteTask(taskId) {
+    if (!this.isAdmin) return;
+    
+    const confirmed = confirm('Are you sure you want to delete this task?');
+    if (!confirmed) return;
+
+    const result = await DB.deleteTask(taskId);
+    
+    if (result.success) {
+      // Remove from local state and re-render
+      this.currentTasks = this.currentTasks.filter(t => t.id !== taskId);
+      UI.renderTasks(this.currentTasks, this.userCompletions, this.isAdmin);
+    } else {
+      alert('Failed to delete task: ' + result.error);
+    }
+  },
+
+  openAddEventModal() {
+    // Set minimum date to now
+    const dateInput = document.getElementById('event-date');
+    if (dateInput) {
+      const now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      dateInput.min = now.toISOString().slice(0, 16);
+    }
+    
+    // Clear form
+    document.getElementById('add-event-form').reset();
+    
+    UI.showModal('add-event-modal');
+  },
+
+  async handleAddEvent() {
+    const title = document.getElementById('event-title').value.trim();
+    const description = document.getElementById('event-description').value.trim();
+    const date = document.getElementById('event-date').value;
+    const department = document.getElementById('event-department').value;
+
+    if (!title || !date) {
+      alert('Please fill in the required fields (Title and Date)');
+      return;
+    }
+
+    const userId = Auth.getUserId();
+
+    const result = await DB.createEvent({
+      title,
+      description,
+      date,
+      department,
+      createdBy: userId
+    });
+
+    if (result.success) {
+      UI.hideModal('add-event-modal');
+      // Refresh events
+      await this.loadDashboardData();
+    } else {
+      alert('Failed to add event: ' + result.error);
+    }
+  },
+
+  async handleDeleteEvent(eventId) {
+    if (!this.isAdmin) return;
+    
+    const confirmed = confirm('Are you sure you want to delete this event?');
+    if (!confirmed) return;
+
+    const result = await DB.deleteEvent(eventId);
+    
+    if (result.success) {
+      // Remove from local state and re-render
+      this.currentEvents = this.currentEvents.filter(e => e.id !== eventId);
+      UI.renderEvents(this.currentEvents, this.isAdmin);
+    } else {
+      alert('Failed to delete event: ' + result.error);
+    }
+  },
+
+  async openOldEventsModal() {
+    UI.showModal('old-events-modal');
+    
+    if (!this.userProfile) return;
+    
+    const { department } = this.userProfile;
+    
+    const result = await DB.getOldEvents(department);
+    if (result.success) {
+      UI.renderOldEvents(result.data);
+    }
   }
 };
 

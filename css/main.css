@@ -291,6 +291,13 @@ body {
   margin-bottom: var(--spacing-lg);
 }
 
+.form-hint {
+  color: var(--text-medium);
+  font-size: var(--font-xs, 0.75rem);
+  display: block;
+  margin-top: var(--spacing-xs, 0.25rem);
+}
+
 .form-actions {
   display: flex;
   gap: var(--spacing-md);

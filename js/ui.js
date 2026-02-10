@@ -66,8 +66,8 @@ const UI = {
     `).join('');
   },
 
-  // Render tasks
-  renderTasks(tasks) {
+  // Render tasks with checkboxes
+  renderTasks(tasks, userCompletions = {}, isAdmin = false) {
     const container = document.getElementById('tasks-container');
     const noTasksMsg = document.getElementById('no-tasks-message');
     
@@ -80,29 +80,109 @@ const UI = {
     }
 
     noTasksMsg.style.display = 'none';
-    container.innerHTML = tasks.map(task => {
+    
+    // Sort tasks: incomplete first, then by deadline, completed at bottom
+    const now = new Date();
+    const sortedTasks = [...tasks].sort((a, b) => {
+      const aCompleted = userCompletions[a.id] || false;
+      const bCompleted = userCompletions[b.id] || false;
+      
+      // Completed tasks go to bottom
+      if (aCompleted !== bCompleted) {
+        return aCompleted ? 1 : -1;
+      }
+      
+      // Sort by deadline
+      const aDeadline = a.deadline ? a.deadline.toDate() : new Date();
+      const bDeadline = b.deadline ? b.deadline.toDate() : new Date();
+      return aDeadline - bDeadline;
+    });
+    
+    container.innerHTML = sortedTasks.map(task => {
       const deadline = task.deadline ? task.deadline.toDate() : new Date();
-      const now = new Date();
       const daysUntil = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
-      const isUrgent = daysUntil <= 3;
+      const isUrgent = daysUntil <= 3 && daysUntil > 0;
+      const isPastDeadline = deadline < now;
+      const isCompleted = userCompletions[task.id] || false;
+      
+      // Determine task status class
+      let statusClass = '';
+      if (isCompleted) {
+        statusClass = 'completed';
+      } else if (isPastDeadline) {
+        statusClass = 'incomplete';
+      }
+
+      const deleteButton = isAdmin ? `
+        <button class="task-delete-btn" data-task-id="${task.id}" title="Delete task">
+          <i class="fas fa-trash"></i>
+        </button>
+      ` : '';
 
       return `
-        <div class="task-card">
-          <div class="task-header">
-            <div>
-              <h3 class="task-title">${task.title || 'Untitled Task'}</h3>
-              <p class="task-course">${task.course || 'No course specified'}</p>
+        <div class="task-card ${statusClass}" data-task-id="${task.id}">
+          <div class="task-card-inner">
+            <div class="task-checkbox-wrapper">
+              <input type="checkbox" class="task-checkbox" 
+                     data-task-id="${task.id}" 
+                     ${isCompleted ? 'checked' : ''}
+                     title="${isCompleted ? 'Mark as incomplete' : 'Mark as complete'}">
             </div>
-            <span class="task-type-badge ${task.type}">${task.type || 'task'}</span>
+            <div class="task-content">
+              <div class="task-header">
+                <div>
+                  <h3 class="task-title">${task.title || 'Untitled Task'}</h3>
+                  <p class="task-course">${task.course || 'No course specified'}</p>
+                </div>
+                <span class="task-type-badge ${task.type}">${task.type || 'task'}</span>
+              </div>
+              <p class="task-description">${task.description || 'No description available.'}</p>
+              ${task.details ? `<p class="task-description"><strong>Details:</strong> ${task.details}</p>` : ''}
+              <div class="task-footer">
+                <span class="task-deadline ${isUrgent ? 'urgent' : ''} ${isPastDeadline && !isCompleted ? 'urgent' : ''}">
+                  <i class="fas fa-clock"></i>
+                  ${Utils.formatDate(deadline)}
+                  ${isPastDeadline && !isCompleted ? '(Overdue!)' : ''}
+                  ${isUrgent && !isPastDeadline ? `(${daysUntil} day${daysUntil !== 1 ? 's' : ''} left!)` : ''}
+                </span>
+                ${deleteButton}
+              </div>
+              ${task.addedBy ? `<p class="task-added-by">Added by ${task.addedByName || 'User'}</p>` : ''}
+            </div>
           </div>
-          <p class="task-description">${task.description || 'No description available.'}</p>
-          ${task.details ? `<p class="task-description"><strong>Details:</strong> ${task.details}</p>` : ''}
-          <div class="task-footer">
-            <span class="task-deadline ${isUrgent ? 'urgent' : ''}">
-              <i class="fas fa-clock"></i>
-              ${Utils.formatDate(deadline)}
-              ${isUrgent ? `(${daysUntil} day${daysUntil !== 1 ? 's' : ''} left!)` : ''}
-            </span>
+        </div>
+      `;
+    }).join('');
+  },
+
+  // Render old/completed tasks (compact view)
+  renderOldTasks(tasks) {
+    const container = document.getElementById('old-tasks-container');
+    const noOldTasksMsg = document.getElementById('no-old-tasks-message');
+    
+    if (!container) return;
+
+    if (tasks.length === 0) {
+      container.innerHTML = '';
+      noOldTasksMsg.style.display = 'block';
+      return;
+    }
+
+    noOldTasksMsg.style.display = 'none';
+    
+    container.innerHTML = tasks.map(task => {
+      const deadline = task.deadline ? task.deadline.toDate() : new Date();
+      const completedDate = task.completedAt ? task.completedAt.toDate() : null;
+      
+      return `
+        <div class="old-task-item">
+          <i class="fas fa-check-circle completed-icon"></i>
+          <div class="task-info">
+            <div class="task-title">${task.title || 'Untitled Task'}</div>
+            <div class="task-meta">
+              ${task.course || ''} • Due: ${Utils.formatDateShort(deadline)}
+              ${completedDate ? ` • Completed: ${Utils.formatDateShort(completedDate)}` : ''}
+            </div>
           </div>
         </div>
       `;
@@ -110,26 +190,34 @@ const UI = {
   },
 
   // Render events
-  renderEvents(events) {
+  renderEvents(events, isAdmin = false) {
     const container = document.getElementById('events-container');
     const noEventsMsg = document.getElementById('no-events-message');
+    const mobileContainer = document.getElementById('events-container-mobile');
     
     if (!container) return;
 
     if (events.length === 0) {
       container.innerHTML = '';
+      if (mobileContainer) mobileContainer.innerHTML = '';
       noEventsMsg.style.display = 'block';
       return;
     }
 
     noEventsMsg.style.display = 'none';
-    container.innerHTML = events.map(event => {
+    const eventsHTML = events.map(event => {
       const eventDate = event.date ? event.date.toDate() : new Date();
       const day = eventDate.getDate();
       const month = eventDate.toLocaleDateString('en-US', { month: 'short' });
 
+      const deleteButton = isAdmin ? `
+        <button class="event-delete-btn" data-event-id="${event.id}" title="Delete event">
+          <i class="fas fa-trash"></i>
+        </button>
+      ` : '';
+
       return `
-        <div class="event-card">
+        <div class="event-card" data-event-id="${event.id}">
           <div class="event-date">
             <div class="event-day">${day}</div>
             <div class="event-month">${month}</div>
@@ -138,9 +226,68 @@ const UI = {
             <h3 class="event-title">${event.title || 'Untitled Event'}</h3>
             <p class="event-description">${event.description || 'No description available.'}</p>
           </div>
+          ${deleteButton}
         </div>
       `;
     }).join('');
+    
+    container.innerHTML = eventsHTML;
+    
+    // Also render to mobile container
+    if (mobileContainer) {
+      mobileContainer.innerHTML = eventsHTML;
+    }
+  },
+
+  // Render old/past events
+  renderOldEvents(events) {
+    const container = document.getElementById('old-events-container');
+    const noOldEventsMsg = document.getElementById('no-old-events-message');
+    
+    if (!container) return;
+
+    if (events.length === 0) {
+      container.innerHTML = '';
+      noOldEventsMsg.style.display = 'block';
+      return;
+    }
+
+    noOldEventsMsg.style.display = 'none';
+    
+    container.innerHTML = events.map(event => {
+      const eventDate = event.date ? event.date.toDate() : new Date();
+      
+      return `
+        <div class="old-event-item">
+          <i class="fas fa-calendar-check completed-icon"></i>
+          <div class="event-info">
+            <div class="event-title">${event.title || 'Untitled Event'}</div>
+            <div class="event-meta">
+              ${Utils.formatDateShort(eventDate)}
+              ${event.department !== 'ALL' ? ` • ${event.department}` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  },
+
+  // Toggle admin controls visibility
+  toggleAdminControls(isAdmin) {
+    const adminControls = document.querySelectorAll('.admin-only');
+    adminControls.forEach(control => {
+      // Use inline-flex for buttons in flex containers, otherwise use block
+      const parentDisplay = window.getComputedStyle(control.parentElement).display;
+      if (isAdmin) {
+        if (parentDisplay === 'flex' || control.classList.contains('btn')) {
+          control.style.display = 'inline-flex';
+        } else {
+          control.style.display = 'block';
+        }
+      } else {
+        control.style.display = 'none';
+      }
+    });
   },
 
   // Populate dropdown
@@ -165,5 +312,41 @@ const UI = {
       }
       dropdown.appendChild(option);
     });
+  },
+
+  // Show modal
+  showModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+      modal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+  },
+
+  // Hide modal
+  hideModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+      modal.style.display = 'none';
+      document.body.style.overflow = '';
+    }
+  },
+
+  // Toggle events sidebar (mobile)
+  toggleEventsSidebar(open) {
+    const sidebar = document.getElementById('events-sidebar');
+    const overlay = document.getElementById('events-overlay');
+    
+    if (sidebar && overlay) {
+      if (open) {
+        sidebar.classList.add('open');
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      } else {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    }
   }
 };

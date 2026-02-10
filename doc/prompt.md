@@ -251,3 +251,4 @@ Dashboard → Click user card (top-right) → Profile Settings page
 The redesign plan is now complete with all requested features! 🎉
 
 Made changes.
+

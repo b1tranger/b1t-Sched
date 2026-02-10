@@ -4,6 +4,7 @@
 
 const Router = {
   currentRoute: '',
+  _onRouteChangeCallback: null,
   
   routes: {
     '': 'login',
@@ -29,6 +30,15 @@ const Router = {
 
     this.currentRoute = routeName;
     this.showView(routeName);
+
+    // Notify listener of route change
+    if (this._onRouteChangeCallback) {
+      this._onRouteChangeCallback(routeName);
+    }
+  },
+
+  onRouteChange(callback) {
+    this._onRouteChangeCallback = callback;
   },
 
   showView(viewName) {

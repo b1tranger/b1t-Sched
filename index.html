@@ -1,25 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="b1t-Sched - Academic Task Scheduler for Students">
     <title>b1t-Sched | Academic Task Scheduler</title>
-    
+
     <!-- Favicon -->
     <link rel="icon" href="Social-Preview.webp" type="image/webp">
-    
+
     <!-- CSS Files -->
     <link rel="stylesheet" href="css/colors.css">
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/navbar.css">
     <link rel="stylesheet" href="css/user-details-card.css">
+    <link rel="stylesheet" href="css/dashboard.css">
     <link rel="stylesheet" href="css/responsive.css">
-    
+
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
+
 <body>
     <!-- Loading Screen -->
     <div id="loading-screen" class="loading-screen">
@@ -29,7 +32,7 @@
 
     <!-- Main App Container -->
     <div id="app" class="app-container" style="display: none;">
-        
+
         <!-- Navigation Bar (hidden on login screen) -->
         <nav id="navbar" class="navbar" style="display: none;">
             <div class="nav-container">
@@ -63,7 +66,7 @@
 
         <!-- Main Content Area (SPA Views) -->
         <main id="main-content" class="main-content">
-            
+
             <!-- Login/Signup View -->
             <div id="login-view" class="view" style="display: none;">
                 <div class="auth-container">
@@ -73,66 +76,71 @@
                             <h1>b1t-Sched</h1>
                             <p class="auth-subtitle">Academic Task Scheduler</p>
                         </div>
-                        
+
                         <!-- Login Form -->
                         <form id="login-form" class="auth-form">
                             <h2>User Login</h2>
-                            
+
                             <div class="form-group">
                                 <label for="login-email">ID or Email</label>
-                                <input type="email" id="login-email" class="form-input" placeholder="student@example.com" required>
+                                <input type="email" id="login-email" class="form-input"
+                                    placeholder="student@example.com" required>
                             </div>
-                            
+
                             <div class="form-group">
                                 <label for="login-password">Password</label>
-                                <input type="password" id="login-password" class="form-input" placeholder="Enter password" required>
+                                <input type="password" id="login-password" class="form-input"
+                                    placeholder="Enter password" required>
                             </div>
-                            
+
                             <button type="submit" class="btn btn-primary btn-block">
                                 <i class="fas fa-sign-in-alt"></i> Login
                             </button>
-                            
+
                             <div class="auth-divider">
                                 <span>Don't have an account?</span>
                             </div>
-                            
+
                             <button type="button" id="show-signup-btn" class="btn btn-secondary btn-block">
                                 Create Account
                             </button>
                         </form>
-                        
+
                         <!-- Signup Form (hidden by default) -->
                         <form id="signup-form" class="auth-form" style="display: none;">
                             <h2>Create Account</h2>
-                            
+
                             <div class="form-group">
                                 <label for="signup-email">Email Address</label>
-                                <input type="email" id="signup-email" class="form-input" placeholder="student@example.com" required>
+                                <input type="email" id="signup-email" class="form-input"
+                                    placeholder="student@example.com" required>
                             </div>
-                            
+
                             <div class="form-group">
                                 <label for="signup-password">Password</label>
-                                <input type="password" id="signup-password" class="form-input" placeholder="At least 6 characters" required>
+                                <input type="password" id="signup-password" class="form-input"
+                                    placeholder="At least 6 characters" required>
                             </div>
-                            
+
                             <div class="form-group">
                                 <label for="signup-confirm-password">Confirm Password</label>
-                                <input type="password" id="signup-confirm-password" class="form-input" placeholder="Re-enter password" required>
+                                <input type="password" id="signup-confirm-password" class="form-input"
+                                    placeholder="Re-enter password" required>
                             </div>
-                            
+
                             <button type="submit" class="btn btn-primary btn-block">
                                 <i class="fas fa-user-plus"></i> Sign Up
                             </button>
-                            
+
                             <div class="auth-divider">
                                 <span>Already have an account?</span>
                             </div>
-                            
+
                             <button type="button" id="show-login-btn" class="btn btn-secondary btn-block">
                                 Back to Login
                             </button>
                         </form>
-                        
+
                         <!-- Error/Success Messages -->
                         <div id="auth-message" class="auth-message"></div>
                     </div>
@@ -145,8 +153,16 @@
                     <div class="set-details-card">
                         <h1>Set Your Details</h1>
                         <p class="subtitle">This will help us show you relevant tasks and schedules</p>
-                        
+
                         <form id="set-details-form" class="details-form">
+                            <div class="form-group">
+                                <label for="set-student-id">Student ID</label>
+                                <input type="text" id="set-student-id" class="form-input"
+                                    placeholder="Enter your 10-16 digit student ID" pattern="[0-9]{10,16}"
+                                    minlength="10" maxlength="16" required>
+                                <small class="form-hint">Your student ID must be 10-16 digits</small>
+                            </div>
+
                             <div class="form-group">
                                 <label for="set-department">Department</label>
                                 <select id="set-department" class="form-select" required>
@@ -154,7 +170,7 @@
                                     <!-- Options will be loaded from Firestore -->
                                 </select>
                             </div>
-                            
+
                             <div class="form-group">
                                 <label for="set-semester">Semester</label>
                                 <select id="set-semester" class="form-select" required>
@@ -162,7 +178,7 @@
                                     <!-- Options will be loaded from Firestore -->
                                 </select>
                             </div>
-                            
+
                             <div class="form-group">
                                 <label for="set-section">Section</label>
                                 <select id="set-section" class="form-select" required>
@@ -170,12 +186,12 @@
                                     <!-- Options will be loaded dynamically -->
                                 </select>
                             </div>
-                            
+
                             <button type="submit" class="btn btn-primary btn-block">
                                 <i class="fas fa-save"></i> Save & Continue
                             </button>
                         </form>
-                        
+
                         <div id="set-details-message" class="message"></div>
                     </div>
                 </div>
@@ -183,50 +199,237 @@
 
             <!-- Dashboard View -->
             <div id="dashboard-view" class="view" style="display: none;">
-                <div class="dashboard-container">
-                    
-                    <!-- Resource Links Section -->
-                    <section class="resource-links-section">
-                        <div id="resource-links-container" class="resource-links-container">
-                            <!-- Resource link cards will be dynamically loaded -->
-                        </div>
-                    </section>
+                <div class="dashboard-container dashboard-grid">
+                    <div style="margin: 30px;"></div>
+                    <!-- Left Column: Resources + Tasks -->
+                    <div class="dashboard-main">
+                        <!-- Resource Links Section -->
+                        <section class="resource-links-section">
+                            <div id="resource-links-container" class="resource-links-container">
+                                <!-- Resource link cards will be dynamically loaded -->
+                            </div>
+                        </section>
 
-                    <!-- Pending Tasks Section -->
-                    <section class="tasks-section">
-                        <div class="section-header">
-                            <h2><i class="fas fa-tasks"></i> Pending Tasks</h2>
-                            <button id="refresh-tasks-btn" class="btn btn-icon" title="Refresh tasks">
-                                <i class="fas fa-sync-alt"></i>
-                            </button>
-                        </div>
-                        
-                        <div id="tasks-container" class="tasks-container">
-                            <!-- Task cards will be dynamically loaded -->
-                        </div>
-                        
-                        <div id="no-tasks-message" class="no-data-message" style="display: none;">
-                            <i class="fas fa-check-circle"></i>
-                            <p>No pending tasks! You're all caught up.</p>
-                        </div>
-                    </section>
+                        <!-- Pending Tasks Section -->
+                        <section class="tasks-section">
+                            <div class="section-header">
+                                <h2><i class="fas fa-tasks"></i> Pending Tasks</h2>
+                                <button id="refresh-tasks-btn" class="btn btn-icon" title="Refresh tasks">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
 
-                    <!-- Events Section -->
-                    <section class="events-section">
-                        <div class="section-header">
-                            <h2><i class="fas fa-calendar-alt"></i> Upcoming Events</h2>
-                        </div>
-                        
-                        <div id="events-container" class="events-container">
-                            <!-- Event cards will be dynamically loaded -->
-                        </div>
-                        
-                        <div id="no-events-message" class="no-data-message" style="display: none;">
-                            <i class="fas fa-calendar-check"></i>
-                            <p>No upcoming events.</p>
-                        </div>
-                    </section>
+                            <div id="tasks-container" class="tasks-container">
+                                <!-- Task cards will be dynamically loaded -->
+                            </div>
 
+                            <div id="no-tasks-message" class="no-data-message" style="display: none;">
+                                <i class="fas fa-check-circle"></i>
+                                <p>No pending tasks! You're all caught up.</p>
+                            </div>
+
+                            <!-- Task Action Buttons -->
+                            <div class="tasks-actions">
+                                <button id="add-task-btn" class="btn btn-secondary">
+                                    <i class="fas fa-plus"></i> Add Tasks
+                                </button>
+                                <button id="view-old-tasks-btn" class="btn btn-secondary">
+                                    <i class="fas fa-history"></i> View Old
+                                </button>
+                                <button id="reset-tasks-btn" class="btn btn-danger admin-only" style="display: none;">
+                                    <i class="fas fa-redo"></i> Reset Tasks
+                                </button>
+                            </div>
+                        </section>
+                    </div>
+
+                    <!-- Right Column: Events (Desktop) -->
+                    <aside class="dashboard-sidebar desktop-only">
+                        <section class="events-section">
+                            <div class="section-header">
+                                <h2><i class="fas fa-calendar-alt"></i> Upcoming Events</h2>
+                            </div>
+
+                            <div id="events-container" class="events-container">
+                                <!-- Event cards will be dynamically loaded -->
+                            </div>
+
+                            <div id="no-events-message" class="no-data-message" style="display: none;">
+                                <i class="fas fa-calendar-check"></i>
+                                <p>No upcoming events.</p>
+                            </div>
+
+                            <!-- Events Action Buttons -->
+                            <div class="events-actions">
+                                <button id="add-event-btn" class="btn btn-secondary admin-only" style="display: none;">
+                                    <i class="fas fa-plus"></i> Add Event
+                                </button>
+                                <button id="view-old-events-btn" class="btn btn-secondary">
+                                    <i class="fas fa-history"></i> Old Events
+                                </button>
+                            </div>
+                        </section>
+                    </aside>
+
+                </div>
+
+                <!-- Mobile Events Sidebar Toggle -->
+                <div id="events-toggle" class="events-toggle mobile-only">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Events</span>
+                </div>
+
+                <!-- Mobile Events Sidebar -->
+                <div id="events-sidebar" class="events-sidebar mobile-only">
+                    <div class="events-sidebar-header">
+                        <h3><i class="fas fa-calendar-alt"></i> Events</h3>
+                        <button id="close-events-sidebar" class="btn btn-icon">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div id="events-container-mobile" class="events-container-mobile">
+                        <!-- Events will be cloned here for mobile -->
+                    </div>
+                    <!-- Mobile Events Actions -->
+                    <div class="events-sidebar-actions">
+                        <button id="add-event-btn-mobile" class="btn btn-secondary admin-only" style="display: none;">
+                            <i class="fas fa-plus"></i> Add Event
+                        </button>
+                        <button id="view-old-events-btn-mobile" class="btn btn-secondary">
+                            <i class="fas fa-history"></i> Old Events
+                        </button>
+                    </div>
+                </div>
+                <div id="events-overlay" class="events-overlay mobile-only"></div>
+            </div>
+
+            <!-- Add Task Modal -->
+            <div id="add-task-modal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 class="modal-title">Add New Task</h2>
+                        <button id="close-add-task-modal" class="btn btn-icon">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <form id="add-task-form" class="modal-body">
+                        <div class="form-group">
+                            <label for="task-title">Task Title</label>
+                            <input type="text" id="task-title" class="form-input" placeholder="e.g., Assignment 1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="task-course">Course</label>
+                            <input type="text" id="task-course" class="form-input" placeholder="e.g., CSE301">
+                        </div>
+                        <div class="form-group">
+                            <label for="task-type">Type</label>
+                            <select id="task-type" class="form-select">
+                                <option value="assignment">Assignment</option>
+                                <option value="homework">Homework</option>
+                                <option value="exam">Exam</option>
+                                <option value="project">Project</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="task-description">Description</label>
+                            <textarea id="task-description" class="form-input form-textarea" placeholder="Task details..." rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="task-deadline">Deadline</label>
+                            <input type="datetime-local" id="task-deadline" class="form-input" required>
+                        </div>
+                    </form>
+                    <div class="modal-footer">
+                        <button type="button" id="cancel-add-task" class="btn btn-secondary">Cancel</button>
+                        <button type="submit" form="add-task-form" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Add Task
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Old Tasks Modal -->
+            <div id="old-tasks-modal" class="modal" style="display: none;">
+                <div class="modal-content modal-content-lg">
+                    <div class="modal-header">
+                        <h2 class="modal-title">Completed Tasks</h2>
+                        <button id="close-old-tasks-modal" class="btn btn-icon">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="old-tasks-container" class="old-tasks-container">
+                            <!-- Old tasks will be loaded here -->
+                        </div>
+                        <div id="no-old-tasks-message" class="no-data-message compact" style="display: none;">
+                            <i class="fas fa-archive"></i>
+                            <p>No completed tasks yet.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Event Modal (Admin Only) -->
+            <div id="add-event-modal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 class="modal-title">Add New Event</h2>
+                        <button id="close-add-event-modal" class="btn btn-icon">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <form id="add-event-form" class="modal-body">
+                        <div class="form-group">
+                            <label for="event-title">Event Title</label>
+                            <input type="text" id="event-title" class="form-input" placeholder="e.g., Mid-term Exams" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="event-description">Description</label>
+                            <textarea id="event-description" class="form-input form-textarea" placeholder="Event details..." rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="event-date">Date</label>
+                            <input type="datetime-local" id="event-date" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="event-department">Target Department</label>
+                            <select id="event-department" class="form-select">
+                                <option value="ALL">All Departments</option>
+                                <option value="CSE">CSE Only</option>
+                                <option value="IT">IT Only</option>
+                                <option value="CE">CE Only</option>
+                                <option value="EEE">EEE Only</option>
+                                <option value="BBA">BBA Only</option>
+                            </select>
+                        </div>
+                    </form>
+                    <div class="modal-footer">
+                        <button type="button" id="cancel-add-event" class="btn btn-secondary">Cancel</button>
+                        <button type="submit" form="add-event-form" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Add Event
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Old Events Modal -->
+            <div id="old-events-modal" class="modal" style="display: none;">
+                <div class="modal-content modal-content-lg">
+                    <div class="modal-header">
+                        <h2 class="modal-title">Past Events</h2>
+                        <button id="close-old-events-modal" class="btn btn-icon">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="old-events-container" class="old-events-container">
+                            <!-- Old events will be loaded here -->
+                        </div>
+                        <div id="no-old-events-message" class="no-data-message compact" style="display: none;">
+                            <i class="fas fa-calendar-times"></i>
+                            <p>No past events.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -240,19 +443,19 @@
                             </button>
                             <h1>Profile Settings</h1>
                         </div>
-                        
+
                         <div class="profile-info">
                             <div class="profile-avatar-large">
                                 <i class="fas fa-user-circle"></i>
                             </div>
                             <p class="profile-email" id="profile-email">Loading...</p>
-                            <p class="profile-id" id="profile-id">ID: Loading...</p>
+                            <p class="profile-student-id" id="profile-student-id">Student ID: Loading...</p>
                         </div>
-                        
+
                         <form id="profile-settings-form" class="profile-form">
                             <h3>Academic Details</h3>
                             <p class="form-note">Changes will update your personalized dashboard and resource links</p>
-                            
+
                             <div class="form-group">
                                 <label for="profile-department">Department</label>
                                 <select id="profile-department" class="form-select" required>
@@ -260,7 +463,7 @@
                                     <!-- Options loaded from Firestore -->
                                 </select>
                             </div>
-                            
+
                             <div class="form-group">
                                 <label for="profile-semester">Semester</label>
                                 <select id="profile-semester" class="form-select" required>
@@ -268,7 +471,7 @@
                                     <!-- Options loaded from Firestore -->
                                 </select>
                             </div>
-                            
+
                             <div class="form-group">
                                 <label for="profile-section">Section</label>
                                 <select id="profile-section" class="form-select" required>
@@ -276,7 +479,7 @@
                                     <!-- Options loaded dynamically -->
                                 </select>
                             </div>
-                            
+
                             <div class="form-actions">
                                 <button type="submit" class="btn btn-primary">
                                     <i class="fas fa-save"></i> Save Changes
@@ -289,7 +492,7 @@
                                 </button>
                             </div>
                         </form>
-                        
+
                         <div id="profile-message" class="message"></div>
                     </div>
                 </div>
@@ -302,7 +505,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    
+
     <!-- App JavaScript Modules -->
     <script src="js/firebase-config.js"></script>
     <script src="js/auth.js"></script>
@@ -313,4 +516,5 @@
     <script src="js/utils.js"></script>
     <script src="js/app.js"></script>
 </body>
+
 </html>

@@ -6,10 +6,12 @@ const Profile = {
   currentProfile: null,
 
   async init() {
-    await this.setupEventListeners();
+    this.setupEventListeners();
   },
 
-  async setupEventListeners() {
+  setupEventListeners() {
+    const self = this;
+    
     // User details card click
     const userDetailsCard = document.getElementById('user-details-card');
     if (userDetailsCard) {
@@ -37,23 +39,33 @@ const Profile = {
     // Logout button
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) {
-      logoutBtn.addEventListener('click', async () => {
-        const confirmed = confirm('Are you sure you want to logout?');
-        if (confirmed) {
-          const result = await Auth.logout();
-          if (result.success) {
-            Router.navigate('login');
+      logoutBtn.addEventListener('click', async function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        try {
+          const confirmed = confirm('Are you sure you want to logout?');
+          if (confirmed) {
+            self.currentProfile = null;
+            await Auth.logout();
+            // Navigate to login
+            window.location.hash = '';
+            window.location.reload();
           }
+        } catch (error) {
+          console.error('Logout error:', error);
+          window.location.hash = '';
+          window.location.reload();
         }
       });
     }
 
-    // Profile settings form
+    // Profile settings form submission
     const profileForm = document.getElementById('profile-settings-form');
     if (profileForm) {
-      profileForm.addEventListener('submit', async (e) => {
+      profileForm.addEventListener('submit', async function(e) {
         e.preventDefault();
-        await this.handleSaveProfile();
+        e.stopPropagation();
+        await self.handleSaveProfile();
       });
     }
 
@@ -81,7 +93,7 @@ const Profile = {
       
       // Populate form fields
       document.getElementById('profile-email').textContent = this.currentProfile.email;
-      document.getElementById('profile-id').textContent = `ID: ${userId.slice(0, 8)}`;
+      document.getElementById('profile-student-id').textContent = `Student ID: ${this.currentProfile.studentId || 'Not set'}`;
       
       // Load dropdown options
       const deptResult = await DB.getDepartments();
@@ -110,56 +122,84 @@ const Profile = {
   },
 
   async handleSaveProfile() {
-    const department = document.getElementById('profile-department').value;
-    const semester = document.getElementById('profile-semester').value;
-    const section = document.getElementById('profile-section').value;
+    try {
+      const department = document.getElementById('profile-department').value;
+      const semester = document.getElementById('profile-semester').value;
+      const section = document.getElementById('profile-section').value;
 
-    if (!department || !semester || !section) {
-      UI.showMessage('profile-message', 'Please select all fields', 'error');
-      return;
-    }
+      if (!department || !semester || !section) {
+        UI.showMessage('profile-message', 'Please select all fields', 'error');
+        return;
+      }
 
-    // Check if anything changed
-    if (department === this.currentProfile.department && 
-        semester === this.currentProfile.semester && 
-        section === this.currentProfile.section) {
-      UI.showMessage('profile-message', 'No changes detected', 'info');
-      return;
-    }
+      // Ensure profile is loaded
+      if (!this.currentProfile) {
+        UI.showMessage('profile-message', 'Loading profile data, please wait...', 'info');
+        await this.loadProfile();
+        if (!this.currentProfile) {
+          UI.showMessage('profile-message', 'Could not load profile. Please try again.', 'error');
+          return;
+        }
+      }
 
-    // Confirm changes
-    const confirmed = confirm(`Are you sure you want to change your settings to:\n\nDepartment: ${department}\nSemester: ${semester}\nSection: ${section}\n\nThis will update your personalized dashboard.`);
-    
-    if (!confirmed) return;
+      // Check if anything changed
+      if (department === this.currentProfile.department && 
+          semester === this.currentProfile.semester && 
+          section === this.currentProfile.section) {
+        UI.showMessage('profile-message', 'No changes detected', 'info');
+        return;
+      }
 
-    UI.showLoading(true);
+      // Confirm changes
+      const confirmed = confirm(`Are you sure you want to change your settings to:\n\nDepartment: ${department}\nSemester: ${semester}\nSection: ${section}\n\nThis will update your personalized dashboard.`);
+      
+      if (!confirmed) return;
 
-    const userId = Auth.getUserId();
-    const result = await DB.updateUserProfile(userId, {
-      department,
-      semester,
-      section
-    });
+      UI.showLoading(true);
 
-    if (result.success) {
-      // Update localStorage
-      localStorage.setItem('userProfile', JSON.stringify({
+      const userId = Auth.getUserId();
+      const result = await DB.updateUserProfile(userId, {
         department,
         semester,
-        section,
-        email: this.currentProfile.email
-      }));
+        section
+      });
 
-      UI.showMessage('profile-message', 'Profile updated successfully! Redirecting...', 'success');
-      
-      // Redirect to dashboard after 1 second
-      setTimeout(() => {
-        Router.navigate('dashboard');
-      }, 1000);
-    } else {
-      UI.showMessage('profile-message', result.error, 'error');
+      if (result.success) {
+        // Update current profile
+        this.currentProfile.department = department;
+        this.currentProfile.semester = semester;
+        this.currentProfile.section = section;
+
+        // Update localStorage
+        localStorage.setItem('userProfile', JSON.stringify({
+          department,
+          semester,
+          section,
+          email: this.currentProfile.email
+        }));
+
+        // Update App's userProfile so dashboard reloads correctly
+        if (App.userProfile) {
+          App.userProfile.department = department;
+          App.userProfile.semester = semester;
+          App.userProfile.section = section;
+        }
+
+        UI.showMessage('profile-message', 'Profile updated successfully! Redirecting...', 'success');
+        
+        // Redirect to dashboard after 1 second
+        setTimeout(() => {
+          Router.navigate('dashboard');
+        }, 1000);
+      } else {
+        UI.showMessage('profile-message', result.error || 'Failed to save changes', 'error');
+      }
+
+      UI.showLoading(false);
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      UI.showMessage('profile-message', 'An error occurred. Please try again.', 'error');
+      UI.showLoading(false);
     }
-
-    UI.showLoading(false);
   }
 };
