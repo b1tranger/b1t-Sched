@@ -552,3 +552,650 @@ Manually set `isAdmin: true` in their Firestore user document.
 Documentation: ADMIN_FEATURES.md
 
 Made changes.
+
+User: update documentation at "doc/DOCUMENTATION.md"
+
+GitHub Copilot: Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/doc/DOCUMENTATION.md#1-1), lines 1 to 100
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/doc/DOCUMENTATION.md#100-100), lines 100 to 200
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/doc/DOCUMENTATION.md#200-200), lines 200 to 300
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/doc/DOCUMENTATION.md#300-300), lines 300 to 400
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/doc/DOCUMENTATION.md#400-400), lines 400 to 500
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/doc/DOCUMENTATION.md#500-500), lines 500 to 600
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/doc/DOCUMENTATION.md#600-600), lines 600 to 754
+
+Replacing 74 lines with 119 lines in [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/doc/DOCUMENTATION.md)
+
+
+```
+
+```
+
+
+Replacing 70 lines with 95 lines in [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/doc/DOCUMENTATION.md)
+
+
+```
+
+```
+
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/doc/DOCUMENTATION.md#655-655), lines 655 to 700
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/doc/DOCUMENTATION.md#700-700), lines 700 to 760
+
+Replacing 4 lines with 15 lines in [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/doc/DOCUMENTATION.md)
+
+
+```
+
+```
+
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/doc/DOCUMENTATION.md#805-805), lines 805 to 833
+
+Replacing 19 lines with 23 lines in [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/doc/DOCUMENTATION.md)
+
+
+```
+
+```
+
+
+Checked [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/doc/DOCUMENTATION.md), 149 problems found
+
+Documentation updated at DOCUMENTATION.md. Changes include:
+
+**Key Features** - Added task completion, admin features, two-column layout
+
+**Project Structure** - Added dashboard.css to CSS folder listing
+
+**DB Methods** - Added task completion, admin operations (delete, reset, events)
+
+**UI Methods** - Added modal controls, sidebar toggle, admin controls, new render methods
+
+**App Methods** - Added task/event handlers, admin functions, updated state properties
+
+**Schemas** - Updated user profile (isAdmin), event (createdBy, createdAt), added completedTasks subcollection
+
+**Security Rules** - Updated with admin checks and task completion permissions
+
+**Dashboard Components** - Expanded with modals, admin buttons, events sidebar
+
+**Version History** - Added versions 2.1.0, 2.2.0, 2.3.0
+
+**Related Documentation** - Added links to ADMIN_FEATURES.md and FIRESTORE_TASK_CHANGES.md
+
+Made changes.
+
+User: how do I updte Firebase database to check for admin ?
+
+GitHub Copilot: To make a user an admin in Firebase Firestore:
+
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Select your project
+3. Navigate to **Firestore Database** (left sidebar)
+4. Click on the `users` collection
+5. Find and click on the user document you want to make admin (the document ID is their `userId`)
+6. Click **Add field**:
+   - Field name: `isAdmin`
+   - Type: `boolean`
+   - Value: `true`
+7. Click **Save**
+
+The user will need to log out and log back in (or refresh the page) for the admin privileges to take effect.
+
+**Note:** This is intentionally a manual process for security - only someone with Firebase Console access can grant admin privileges. The app checks this field at login via:
+
+```javascript
+// In db.js
+async isUserAdmin(userId) {
+  const doc = await db.collection('users').doc(userId).get();
+  return doc.data().isAdmin === true;
+}
+```
+
+User: cannot add Events or Tasks:
+"Failed to add task: Missing or insufficient permissions."
+
+GitHub Copilot: This is a Firestore Security Rules issue. You need to update your rules in Firebase Console:
+
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Select your project
+3. Navigate to **Firestore Database** → **Rules** tab
+4. Replace the rules with:
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check admin status
+    function isAdmin() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+    
+    // Users can read/write their own profile and completedTasks subcollection
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      match /completedTasks/{taskId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+    
+    // Tasks - all authenticated users can read and create
+    match /tasks/{taskId} {
+      allow read, create: if request.auth != null;
+      allow delete: if isAdmin();
+    }
+    
+    // Events - all can read, only admin can create/delete
+    match /events/{eventId} {
+      allow read: if request.auth != null;
+      allow create, delete: if isAdmin();
+    }
+    
+    // Resource links - read only
+    match /resourceLinks/{department} {
+      allow read: if request.auth != null;
+    }
+    
+    // Metadata - read only
+    match /metadata/{document} {
+      allow read: if request.auth != null;
+    }
+  }
+}
+```
+
+5. Click **Publish**
+
+**Key points:**
+- **Tasks**: Any logged-in user can create tasks (`allow create: if request.auth != null`)
+- **Events**: Only admins can create events (`allow create, delete: if isAdmin()`)
+- Make sure you're logged in as an admin user (with `isAdmin: true` in their user document) to add events
+
+User: how can I add user authentication through Email in Firebase?
+
+GitHub Copilot: To enable Email/Password authentication in Firebase:
+
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Select your project
+3. Navigate to **Authentication** (left sidebar, under "Build")
+4. Click the **Sign-in method** tab
+5. Click on **Email/Password** in the provider list
+6. Toggle **Enable** to ON
+7. Click **Save**
+
+That's it! Your app already has the code to handle email/password auth in auth.js:
+
+```javascript
+// Signup
+Auth.signup(email, password)
+
+// Login  
+Auth.login(email, password)
+```
+
+**Optional settings you can also enable:**
+- **Email link (passwordless sign-in)** - Users sign in via a link sent to their email
+- **Email enumeration protection** - Prevents attackers from discovering valid emails
+
+User: does it let the user log in only after verifying through their email inbox?
+
+GitHub Copilot: No, by default Firebase allows users to log in immediately after signup **without** email verification.
+
+**If you want to require email verification:**
+
+1. **Send verification email after signup** - Update auth.js:
+
+```javascript
+async signup(email, password) {
+  try {
+    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+    // Send verification email
+    await userCredential.user.sendEmailVerification();
+    return { success: true, user: userCredential.user };
+  } catch (error) {
+    return { success: false, error: this.getErrorMessage(error.code) };
+  }
+}
+```
+
+2. **Block unverified users at login** - Update app.js in `handleAuthenticatedUser`:
+
+```javascript
+async handleAuthenticatedUser(user) {
+  // Check if email is verified
+  if (!user.emailVerified) {
+    UI.showMessage('auth-message', 'Please verify your email before logging in. Check your inbox.', 'error');
+    await Auth.logout();
+    UI.showLoading(false);
+    return;
+  }
+  
+  // ... rest of existing code
+}
+```
+
+**Would you like me to implement this verification requirement?**
+
+User: yes, please!
+
+GitHub Copilot: Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/js/auth.js#1-1), lines 1 to 80
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/js/auth.js#80-80), lines 80 to 91
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/js/app.js#365-365), lines 365 to 420
+
+Replacing 52 lines with 85 lines in [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/js/auth.js), [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/js/app.js)
+
+
+```
+
+```
+
+```
+
+```
+
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/js/app.js#340-340), lines 340 to 380
+
+Replacing 12 lines with 18 lines in [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/js/app.js)
+
+
+```
+
+```
+
+
+Checked [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/js/auth.js), [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/js/app.js), no problems found
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/js/auth.js#8-8), lines 8 to 30
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/js/auth.js#85-85), lines 85 to 110
+
+Done! Email verification is now required. Here's what happens:
+
+**On Signup:**
+1. User creates account
+2. Verification email is automatically sent
+3. User is signed out and shown a success message
+4. They must verify their email before they can log in
+
+**On Login:**
+1. If email is not verified → blocked with message to check inbox
+2. If email is verified → proceeds normally
+
+**New method available:**
+```javascript
+// To resend verification email (if needed)
+Auth.resendVerificationEmail()
+```
+
+**Note:** Make sure your Firebase project has a valid sender email configured in Firebase Console → Authentication → Templates for the verification emails to send properly.
+
+Made changes.
+
+User: do I need to update anything on Firebase?
+
+GitHub Copilot: No additional Firebase setup is required - email verification works automatically once Email/Password authentication is enabled.
+
+**Optional customizations** (Firebase Console → Authentication → Templates):
+
+1. **Email address verification template**
+   - Customize subject line
+   - Edit email body text
+   - Change sender name
+
+2. **Action URL** (Settings → Authorized domains)
+   - Add your custom domain if hosting on your own domain
+   - `localhost` is allowed by default for development
+
+That's it! The verification emails will be sent from `noreply@YOUR-PROJECT-ID.firebaseapp.com` by default.
+
+User: email verification link does not appear in inbox. Is there a Firebase settings I need to change?
+
+GitHub Copilot: Check these Firebase settings:
+
+### 1. **Check Spam/Junk folder**
+Firebase emails often land in spam initially.
+
+### 2. **Verify Email/Password provider is enabled**
+Firebase Console → Authentication → Sign-in method → Email/Password → **Enable**
+
+### 3. **Check Authorized Domains**
+Firebase Console → Authentication → Settings → **Authorized domains**
+- Should include `localhost` (for dev)
+- Add your production domain if deployed
+
+### 4. **Check Email Templates**
+Firebase Console → Authentication → **Templates** → Email address verification
+- Make sure the template exists and isn't corrupted
+- Click "Reset to default" if unsure
+
+### 5. **Check Firebase Quotas**
+Firebase Console → Authentication → **Usage**
+- Free tier allows 50 emails/day initially
+- Check if you've hit limits
+
+### 6. **Test in Console - Send manually**
+Firebase Console → Authentication → **Users** tab
+- Find the user
+- Click the 3-dot menu → **Send password reset email** (this tests if emails work at all)
+
+### 7. **Try a different email provider**
+Gmail sometimes filters Firebase emails aggressively. Try:
+- A different email address
+- Check Gmail's "All Mail" folder
+- Check "Promotions" or "Updates" tabs
+
+### 8. **Enable Detailed Logging (for debugging)**
+Check browser console for any errors when signup happens - there might be a Firebase error being thrown.
+
+**Most common issue:** The email is going to spam, or Gmail is filtering it. Check all folders including Spam.
+
+User: when trying to log in without verifying the Email first, it does not show that the user needs to verify email. 
+
+GitHub Copilot: Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/js/app.js#360-360), lines 360 to 400
+
+The code looks correct. The issue is likely that the login view gets hidden too quickly or the message element isn't visible. Let me check the login view structure: 
+
+Searched for text `auth-message` (`**/index.html`), 2 results
+
+Found the issue. When logout is called, it triggers `handleUnauthenticatedUser()` which calls `Router.navigate('login')` - this might be clearing the message. Let me fix this: 
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/js/app.js#405-405), lines 405 to 430
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/js/app.js#290-290), lines 290 to 320
+
+Found it! The issue is that `handleLogin()` calls `UI.hideMessage('auth-message')` on successful login before `handleAuthenticatedUser()` has a chance to check verification. Also, the loading screen may be obscuring the message. 
+
+Replacing 8 lines with 16 lines in [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/js/app.js)
+
+
+```
+
+```
+Now the verification message will show immediately after login attempt. The check happens in `handleLogin()` before any view changes occur.
+
+Test it now - if email isn't verified, you should see: *"Please verify your email before logging in. Check your inbox for the verification link."*
+
+Made changes.
+
+User: the CSS is a bit inconsistent.
+- make the column divisions uniform in desktop display. The Events section should be visible on the right side.
+
+GitHub Copilot: Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/css/dashboard.css#1-1), lines 1 to 60
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/index.html#200-200), lines 200 to 270
+
+Searched for text `dashboard-container`, 5 results
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/css/main.css#165-165), lines 165 to 200
+
+Searched for text `events-section`, 3 results
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/css/main.css#200-200), lines 200 to 240
+
+Replacing 43 lines with 61 lines in [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/index.html), [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/css/dashboard.css)
+
+
+```
+
+```
+
+```
+
+```
+
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/css/dashboard.css#85-85), lines 85 to 130
+
+Searched for text `event-card`, 9 results
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/css/components.css#255-255), lines 255 to 310
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/css/dashboard.css#45-45), lines 45 to 80
+
+Replacing 13 lines with 63 lines in [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/css/dashboard.css)
+
+
+```
+
+```
+
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/css/dashboard.css#570-570), lines 570 to 620
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/css/dashboard.css#620-620), lines 620 to 660
+
+Replacing 16 lines with 22 lines in [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/css/dashboard.css)
+
+
+```
+
+```
+
+
+Checked [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/css/dashboard.css), [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/index.html), 2 problems found
+
+Done! Fixed the dashboard layout:
+
+**Changes made:**
+
+1. **Removed empty div** that was breaking the grid layout in index.html
+
+2. **Improved dashboard-grid CSS:**
+   - Added `align-items: start` to keep columns aligned at top
+   - Added consistent gap spacing
+
+3. **Enhanced dashboard-sidebar styling:**
+   - Added background, border-radius, padding, and shadow for card-like appearance
+   - Added `position: sticky` to keep events visible while scrolling
+   - Compact event cards with smaller date badges and text
+
+4. **Sidebar-specific event styling:**
+   - Smaller, more compact event cards
+   - Truncated descriptions (2 lines max)
+   - Compact no-data message
+   - Adjusted action buttons spacing
+
+The Events section should now appear properly on the right side on desktop (992px+) with uniform styling.
+
+Made changes.
+
+User: [Task-1]
+#target: fixing CSS
+- when the user is logged in as admin, on mobile display, the page css seem to be breaking due to a new button taking space without accounting for changes. Make the button "Reset Tasks" appear below the other buttons.
+- make the bottom buttons in "Events" sidebar appear a bit higher (add padding-bottom)
+
+[Task-2]
+#target: fix user cannot add Tasks
+- any authenticated user should be able to add tasks
+- only admin can view and use the "Reset Tasks" button, with confirmation
+
+GitHub Copilot: Summarized conversation history
+
+Created 4 todos
+
+Searched for regex `Reset Tasks|reset-tasks-btn`, 14 results
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/index.html#225-225), lines 225 to 260
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/index.html#260-260), lines 260 to 295
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/css/dashboard.css#600-600), lines 600 to 660
+
+Searched for regex `tasks-actions`, 3 results
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/css/dashboard.css#185-185), lines 185 to 220
+
+Searched for regex `@media.*max-width` (`**/css/dashboard.css`), 3 results
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/css/dashboard.css#480-480), lines 480 to 540
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/css/dashboard.css#700-700), lines 700 to 715
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/index.html#291-291), lines 291 to 310
+
+Searched for regex `events-sidebar` (`**/css/**`), 8 results
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/css/dashboard.css#240-240), lines 240 to 290
+
+Searched for regex `createTask|isAdmin` (`**/js/db.js`), 5 results
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/js/db.js#75-75), lines 75 to 110
+
+Searched for regex `rules_version|match.*task|isAdmin`, 20 results
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/doc/DOCUMENTATION.md#595-595), lines 595 to 640
+
+Replacing 20 lines with 29 lines in [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/css/dashboard.css)
+
+
+```
+
+```
+
+
+Starting: *Allow any user to add tasks* (3/4)
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/js/ui.js#270-270), lines 270 to 300
+
+Looking at the code, I see:
+1. **Reset Tasks button** already has `admin-only` class and will only be shown for admins
+2. **Add Task button** does NOT have `admin-only` class - so any user can use it
+
+The issue for Task 2 might be the Firestore security rules. Let me check the documented rules vs what should be deployed: 
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/doc/ADMIN_FEATURES.md#65-65), lines 65 to 100
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/js/app.js#655-655), lines 655 to 675
+
+Let me verify that all the admin restrictions are properly in place: 
+
+Searched for regex `add-task-btn`, 2 results
+
+Completed: *Allow any user to add tasks* (3/4)
+
+Checked [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/css/dashboard.css), [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/js/app.js), 2 problems found
+
+All tasks complete:
+
+**Task 1 - CSS Fixes:**
+- Added `flex-wrap: wrap` and `flex-basis: 100%` to Reset Tasks button so it appears on a new row on mobile
+- Added `padding-bottom: var(--spacing-xl)` to `.events-sidebar-actions`
+
+**Task 2 - Functionality (already correct):**
+- Add Task button is available to all users (no `admin-only` class)
+- Firestore rules already allow `create: if request.auth != null` for tasks
+- Reset Tasks button is admin-only:
+  - Has `admin-only` class (hidden via CSS)
+  - Has `if (!this.isAdmin) return;` check in app.js
+  - Shows `confirm()` dialog before execution
+
+If users still can't add tasks, the issue is likely that the Firestore Security Rules haven't been deployed. They need to copy the rules from ADMIN_FEATURES.md to the Firebase Console → Firestore Database → Rules tab and click "Publish".
+
+Made changes.
+
+User: this is the current rule, please make a new rule addressing all the final changes:
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check admin status
+    function isAdmin() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+    
+    // Users can read/write their own profile and completedTasks subcollection
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      match /completedTasks/{taskId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+    
+    // Tasks - all authenticated users can read and create
+    match /tasks/{taskId} {
+      allow read, create: if request.auth != null;
+      allow delete: if isAdmin();
+    }
+    
+    // Events - all can read, only admin can create/delete
+    match /events/{eventId} {
+      allow read: if request.auth != null;
+      allow create, delete: if isAdmin();
+    }
+    
+    // Resource links - read only
+    match /resourceLinks/{department} {
+      allow read: if request.auth != null;
+    }
+    
+    // Metadata - read only
+    match /metadata/{document} {
+      allow read: if request.auth != null;
+    }
+  }
+}
+
+GitHub Copilot: The rules you provided are already correct for the requirements. Here's the final version with better comments:
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check admin status
+    function isAdmin() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+    
+    // Users can read/write their own profile and completedTasks subcollection
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      match /completedTasks/{taskId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+    
+    // Tasks - any authenticated user can read and create; only admin can delete
+    match /tasks/{taskId} {
+      allow read, create: if request.auth != null;
+      allow delete: if isAdmin();
+    }
+    
+    // Events - all can read; only admin can create/delete
+    match /events/{eventId} {
+      allow read: if request.auth != null;
+      allow create, delete: if isAdmin();
+    }
+    
+    // Resource links and metadata - read only for authenticated users
+    match /resourceLinks/{department} {
+      allow read: if request.auth != null;
+    }
+    
+    match /metadata/{document} {
+      allow read: if request.auth != null;
+    }
+  }
+}
+```
+
+Your current rules are correct. To deploy:
+1. Firebase Console → Firestore Database → Rules tab
+2. Replace existing rules with the above
+3. Click **Publish**

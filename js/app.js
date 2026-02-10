@@ -315,6 +315,14 @@ const App = {
     const result = await Auth.login(email, password);
 
     if (result.success) {
+      // Check email verification immediately
+      const user = Auth.getCurrentUser();
+      if (user && !user.emailVerified) {
+        UI.showLoading(false);
+        UI.showMessage('auth-message', 'Please verify your email before logging in. Check your inbox for the verification link.', 'error');
+        await Auth.logout();
+        return;
+      }
       // Auth state listener will handle navigation
       UI.hideMessage('auth-message');
     } else {

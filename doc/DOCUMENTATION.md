@@ -597,34 +597,34 @@ Firestore Database
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    
     // Helper function to check admin status
     function isAdmin() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
     }
     
-    // Users can only read/write their own profile
+    // Users can read/write their own profile and completedTasks subcollection
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
       
-      // Completed tasks subcollection
       match /completedTasks/{taskId} {
         allow read, write: if request.auth != null && request.auth.uid == userId;
       }
     }
     
-    // Tasks - all users can read/create, only admin can delete
+    // Tasks - any authenticated user can read and create; only admin can delete
     match /tasks/{taskId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null;
+      allow read, create: if request.auth != null;
       allow delete: if isAdmin();
     }
     
-    // Events - all users can read, only admin can create/delete
+    // Events - all can read; only admin can create/delete
     match /events/{eventId} {
       allow read: if request.auth != null;
       allow create, delete: if isAdmin();
     }
     
+    // Resource links and metadata - read only for authenticated users
     match /resourceLinks/{department} {
       allow read: if request.auth != null;
     }
@@ -819,8 +819,7 @@ Router.onRouteChange((routeName) => {
 | 2.0.1 | Feb 2026 | Added Student ID field (10-16 digits), fixed profile save/logout |
 | 2.1.0 | Feb 2026 | Task completion with checkboxes, user task creation, view old tasks |
 | 2.2.0 | Feb 2026 | Two-column dashboard layout, mobile events sidebar |
-| 2.3.0 | Feb 2026 | Admin features: reset tasks, delete tasks/events, add events, view old events |
-
+| 2.3.0 | Feb 2026 | Admin features: reset tasks, delete tasks/events, add events, view old events || 2.3.1 | Feb 2026 | Mobile CSS fixes: Reset Tasks button layout, Events sidebar padding |
 ---
 
 ## Related Documentation

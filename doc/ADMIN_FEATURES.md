@@ -70,27 +70,39 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Users can only access their own profile
-    match /users/{userId} {
-      allow read, write: if request.auth.uid == userId;
+    // Helper function to check admin status
+    function isAdmin() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
     }
     
-    // Tasks - admin can delete, users can read
+    // Users can read/write their own profile and completedTasks subcollection
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      match /completedTasks/{taskId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+    
+    // Tasks - any authenticated user can read and create; only admin can delete
     match /tasks/{taskId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null;
+      allow read, create: if request.auth != null;
       allow delete: if isAdmin();
     }
     
-    // Events - admin can create/delete, users can read
+    // Events - all can read; only admin can create/delete
     match /events/{eventId} {
       allow read: if request.auth != null;
       allow create, delete: if isAdmin();
     }
     
-    // Helper function to check admin status
-    function isAdmin() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    // Resource links and metadata - read only for authenticated users
+    match /resourceLinks/{department} {
+      allow read: if request.auth != null;
+    }
+    
+    match /metadata/{document} {
+      allow read: if request.auth != null;
     }
   }
 }
