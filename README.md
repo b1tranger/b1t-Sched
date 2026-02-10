@@ -2,7 +2,11 @@
 
 A single-page application (SPA) that helps students manage academic tasks, assignments, exams, and events with personalized department-specific content.
 
-![b1t-Sched Preview](Social-Preview.webp)
+<div align=center>
+<img src="Social-Preview.webp" width=200px align=center>
+   <h1>👉 <a href="https://github.com/b1tranger/b1t-Sched/blob/main/doc/DOCUMENTATION.md">Documentation</a> 👈</h1>
+   </div>
+<!-- ![b1t-Sched Preview]() -->
 
 ## ✨ Features
 
@@ -15,6 +19,21 @@ A single-page application (SPA) that helps students manage academic tasks, assig
 - ⚙️ **Profile Settings** - Update your details anytime
 - 🎨 **Maroon Theme** - Professional dark maroon and off-white color scheme
 - 📱 **Fully Responsive** - Works on desktop, tablet, and mobile
+
+---
+
+## Stack
+<img align="center" width="488" height="346" alt="image" src="https://github.com/user-attachments/assets/34afedc6-2aba-4e80-a38f-0b4239e6556d" />
+
+---
+
+## Screenshots
+<div align=center>
+<img width="800" height="956" alt="image" src="https://github.com/user-attachments/assets/392e1681-7ae2-4146-8a33-1eea33ba06b8" />
+<img width="400" height="949" alt="image" src="https://github.com/user-attachments/assets/8691ed80-7b0a-47f3-a52a-c9331ac58155" /><img width="400" height="977" alt="image" src="https://github.com/user-attachments/assets/c902a23b-106b-486b-af52-180e3b0d15f1" />
+
+</div>
+
 
 ---
 
