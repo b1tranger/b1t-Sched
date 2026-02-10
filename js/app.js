@@ -542,6 +542,12 @@ const App = {
     if (tasksResult.success) {
       this.currentTasks = tasksResult.data;
       UI.renderTasks(this.currentTasks, this.userCompletions, this.isAdmin);
+    } else {
+      console.error('Failed to load tasks:', tasksResult.error);
+      // Check if it's an index error
+      if (tasksResult.error && tasksResult.error.includes('index')) {
+        alert('Firestore index required. Check browser console for the index creation link.');
+      }
     }
 
     // Load events

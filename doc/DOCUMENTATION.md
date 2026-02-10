@@ -819,7 +819,10 @@ Router.onRouteChange((routeName) => {
 | 2.0.1 | Feb 2026 | Added Student ID field (10-16 digits), fixed profile save/logout |
 | 2.1.0 | Feb 2026 | Task completion with checkboxes, user task creation, view old tasks |
 | 2.2.0 | Feb 2026 | Two-column dashboard layout, mobile events sidebar |
-| 2.3.0 | Feb 2026 | Admin features: reset tasks, delete tasks/events, add events, view old events || 2.3.1 | Feb 2026 | Mobile CSS fixes: Reset Tasks button layout, Events sidebar padding |
+| 2.3.0 | Feb 2026 | Admin features: reset tasks, delete tasks/events, add events, view old events |
+| 2.3.1 | Feb 2026 | Mobile CSS fixes: Reset Tasks button layout, Events sidebar padding |
+| 2.3.2 | Feb 2026 | Removed orderBy from getTasks query (avoid composite index requirement) |
+
 ---
 
 ## Related Documentation

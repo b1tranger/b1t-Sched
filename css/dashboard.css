@@ -654,7 +654,8 @@
 /* Events Sidebar Actions */
 .events-sidebar-actions {
     padding: var(--spacing-md);
-    padding-bottom: var(--spacing-xl);
+    /* padding-bottom: var(--spacing-xl); */
+    padding-bottom: 50px;
     border-top: 1px solid var(--border-light);
     display: flex;
     gap: var(--spacing-sm);

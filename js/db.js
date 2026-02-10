@@ -59,7 +59,6 @@ const DB = {
         .where('semester', '==', semester)
         .where('section', '==', section)
         .where('status', '==', 'active')
-        .orderBy('deadline', 'asc')
         .get();
       
       const tasks = [];
