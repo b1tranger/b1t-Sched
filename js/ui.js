@@ -147,7 +147,7 @@ const UI = {
                 </span>
                 ${deleteButton}
               </div>
-              ${task.addedBy ? `<p class="task-added-by">Added by ${task.addedByName || 'User'}</p>` : ''}
+              ${task.addedBy ? `<p class="task-added-by">Added by ${task.addedByName || 'User'}${task.section ? ` (${task.section})` : ''}</p>` : ''}
             </div>
           </div>
         </div>

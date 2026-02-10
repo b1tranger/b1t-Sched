@@ -385,6 +385,8 @@ const db = firebase.firestore();   // Firestore instance
 | `isValidPassword(password)` | string | boolean | Validate password (min 6 chars) |
 | `truncate(text, maxLength)` | string, number | string | Truncate text with ellipsis |
 | `debounce(func, wait)` | function, number | function | Debounce function calls |
+| `getSectionGroup(section)` | string | string | Get section group letter (A1 → A) |
+| `getSectionsInGroup(section)` | string | array | Get all sections in group (A1 → [A1, A2]) |
 
 **Storage Helpers (`Utils.storage`):**
 
@@ -822,6 +824,7 @@ Router.onRouteChange((routeName) => {
 | 2.3.0 | Feb 2026 | Admin features: reset tasks, delete tasks/events, add events, view old events |
 | 2.3.1 | Feb 2026 | Mobile CSS fixes: Reset Tasks button layout, Events sidebar padding |
 | 2.3.2 | Feb 2026 | Removed orderBy from getTasks query (avoid composite index requirement) |
+| 2.4.0 | Feb 2026 | Section grouping: A1+A2, B1+B2, C1+C2 merged; shows task creator's section |
 
 ---
 

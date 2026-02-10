@@ -51,13 +51,16 @@ const DB = {
     }
   },
 
-  // Task operations
+  // Task operations - fetches tasks for the section group (A1+A2 merged, B1+B2 merged, etc.)
   async getTasks(department, semester, section) {
     try {
+      // Get all sections in the same group (e.g., ['A1', 'A2'] for user in A1)
+      const sectionsInGroup = Utils.getSectionsInGroup(section);
+      
       const snapshot = await db.collection('tasks')
         .where('department', '==', department)
         .where('semester', '==', semester)
-        .where('section', '==', section)
+        .where('section', 'in', sectionsInGroup)
         .where('status', '==', 'active')
         .get();
       
@@ -66,7 +69,7 @@ const DB = {
         tasks.push({ id: doc.id, ...doc.data() });
       });
       
-      console.log(`Found ${tasks.length} tasks`);
+      console.log(`Found ${tasks.length} tasks for sections: ${sectionsInGroup.join(', ')}`);
       return { success: true, data: tasks };
     } catch (error) {
       console.error('Error getting tasks:', error);
@@ -161,10 +164,11 @@ const DB = {
       // 1. Completed by user and past deadline
       // 2. Status changed to 'archived' by admin
       const now = new Date();
+      const sectionsInGroup = Utils.getSectionsInGroup(section);
       const tasksSnapshot = await db.collection('tasks')
         .where('department', '==', department)
         .where('semester', '==', semester)
-        .where('section', '==', section)
+        .where('section', 'in', sectionsInGroup)
         .get();
       
       const oldTasks = [];
@@ -317,14 +321,15 @@ const DB = {
     }
   },
 
-  // Reset (delete) all old tasks for a department/semester/section (admin only)
+  // Reset (delete) all old tasks for a department/semester/section group (admin only)
   async resetOldTasks(department, semester, section) {
     try {
       const now = new Date();
+      const sectionsInGroup = Utils.getSectionsInGroup(section);
       const snapshot = await db.collection('tasks')
         .where('department', '==', department)
         .where('semester', '==', semester)
-        .where('section', '==', section)
+        .where('section', 'in', sectionsInGroup)
         .get();
       
       const batch = db.batch();

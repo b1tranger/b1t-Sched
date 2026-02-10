@@ -112,5 +112,19 @@ const Utils = {
         return false;
       }
     }
+  },
+
+  // Section grouping helpers (A1+A2 = Section A, B1+B2 = Section B, etc.)
+  getSectionGroup(section) {
+    if (!section) return '';
+    // Extract the letter part (e.g., 'A' from 'A1' or 'A2')
+    return section.replace(/[0-9]/g, '');
+  },
+
+  getSectionsInGroup(section) {
+    if (!section) return [section];
+    const group = this.getSectionGroup(section);
+    // Return both sections in the group (e.g., ['A1', 'A2'] for 'A1')
+    return [`${group}1`, `${group}2`];
   }
 };
