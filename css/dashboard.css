@@ -565,6 +565,12 @@
     display: none; /* Default hidden, shown via JS when admin */
 }
 
+/* CR or Admin elements - visible to both roles */
+.cr-or-admin {
+    /* Visibility controlled by JS */
+    display: none; /* Default hidden, shown via JS when admin or CR */
+}
+
 /* Task Delete Button */
 .task-delete-btn {
     background: none;

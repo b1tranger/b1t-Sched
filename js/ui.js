@@ -272,13 +272,28 @@ const UI = {
     }).join('');
   },
 
-  // Toggle admin controls visibility
-  toggleAdminControls(isAdmin) {
+  // Toggle admin and CR controls visibility
+  toggleAdminControls(isAdmin, isCR = false) {
+    // Admin-only controls (events management)
     const adminControls = document.querySelectorAll('.admin-only');
     adminControls.forEach(control => {
-      // Use inline-flex for buttons in flex containers, otherwise use block
       const parentDisplay = window.getComputedStyle(control.parentElement).display;
       if (isAdmin) {
+        if (parentDisplay === 'flex' || control.classList.contains('btn')) {
+          control.style.display = 'inline-flex';
+        } else {
+          control.style.display = 'block';
+        }
+      } else {
+        control.style.display = 'none';
+      }
+    });
+
+    // CR or Admin controls (reset tasks)
+    const crOrAdminControls = document.querySelectorAll('.cr-or-admin');
+    crOrAdminControls.forEach(control => {
+      const parentDisplay = window.getComputedStyle(control.parentElement).display;
+      if (isAdmin || isCR) {
         if (parentDisplay === 'flex' || control.classList.contains('btn')) {
           control.style.display = 'inline-flex';
         } else {

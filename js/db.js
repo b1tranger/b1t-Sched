@@ -295,17 +295,22 @@ const DB = {
   // ADMIN OPERATIONS
   // ============================================
 
-  // Check if user is an admin (admin flag set manually in Firestore)
-  async isUserAdmin(userId) {
+  // Check if user is an admin or CR (flags set manually in Firestore)
+  async getUserRoles(userId) {
     try {
       const doc = await db.collection('users').doc(userId).get();
       if (doc.exists) {
-        return { success: true, isAdmin: doc.data().isAdmin === true };
+        const data = doc.data();
+        return { 
+          success: true, 
+          isAdmin: data.isAdmin === true,
+          isCR: data.isCR === true
+        };
       }
-      return { success: true, isAdmin: false };
+      return { success: true, isAdmin: false, isCR: false };
     } catch (error) {
-      console.error('Error checking admin status:', error);
-      return { success: false, isAdmin: false, error: error.message };
+      console.error('Error checking user roles:', error);
+      return { success: false, isAdmin: false, isCR: false, error: error.message };
     }
   },
 

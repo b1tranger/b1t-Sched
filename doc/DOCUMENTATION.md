@@ -35,6 +35,7 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **Responsive Design** - Works on desktop, tablet, and mobile
 - **Maroon Theme** - Professional dark maroon and off-white color scheme
 - **Admin Features** - Task reset, task/event delete, event creation (admin-only)
+- **CR Role** - Class Representatives can reset tasks for their section
 - **Two-Column Layout** - Events sidebar on desktop, slide-out panel on mobile
 
 ### Technology Stack
@@ -223,6 +224,7 @@ const db = firebase.firestore();   // Firestore instance
   semester: string,       // e.g., "1st", "2nd"
   section: string,        // e.g., "A1", "B2"
   isAdmin: boolean,       // Optional - admin privileges (set manually)
+  isCR: boolean,          // Optional - CR privileges (set manually)
   createdAt: Timestamp,
   updatedAt: Timestamp
 }
@@ -266,11 +268,11 @@ const db = firebase.firestore();   // Firestore instance
 | `deleteEvent(eventId)` | string | `{success, error?}` | Delete event (admin) |
 | `getOldEvents(department)` | string | `{success, data/error}` | Get past events |
 
-#### Admin Operations
+#### Role Operations
 
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
-| `isUserAdmin(userId)` | string | `{success, isAdmin/error}` | Check if user is admin |
+| `getUserRoles(userId)` | string | `{success, isAdmin, isCR/error}` | Check user's admin/CR status |
 
 **Event Schema:**
 ```javascript
@@ -346,7 +348,7 @@ const db = firebase.firestore();   // Firestore instance
 | `showModal(modalId)` | string | Display modal dialog |
 | `hideModal(modalId)` | string | Hide modal dialog |
 | `toggleEventsSidebar(open)` | boolean | Open/close mobile events sidebar |
-| `toggleAdminControls(isAdmin)` | boolean | Show/hide admin-only elements |
+| `toggleAdminControls(isAdmin, isCR)` | boolean, boolean | Show/hide admin-only and CR elements |
 
 ---
 
@@ -442,6 +444,7 @@ App.userCompletions = {}      // Task completion states
 App.currentTasks = []         // Loaded tasks
 App.currentEvents = []        // Loaded events
 App.isAdmin = false           // Admin privileges
+App.isCR = false              // CR (Class Representative) privileges
 ```
 
 ---
@@ -543,6 +546,7 @@ Firestore Database
 │       ├── semester: string
 │       ├── section: string
 │       ├── isAdmin: boolean    # Optional - admin privileges
+│       ├── isCR: boolean       # Optional - CR privileges
 │       ├── createdAt: timestamp
 │       ├── updatedAt: timestamp
 │       └── completedTasks/     # Subcollection: task completions
@@ -605,6 +609,11 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
     }
     
+    // Helper function to check CR status
+    function isCR() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isCR == true;
+    }
+    
     // Users can read/write their own profile and completedTasks subcollection
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
@@ -614,10 +623,10 @@ service cloud.firestore {
       }
     }
     
-    // Tasks - any authenticated user can read and create; only admin can delete
+    // Tasks - any authenticated user can read and create; admin or CR can delete
     match /tasks/{taskId} {
       allow read, create: if request.auth != null;
-      allow delete: if isAdmin();
+      allow delete: if isAdmin() || isCR();
     }
     
     // Events - all can read; only admin can create/delete
@@ -825,6 +834,7 @@ Router.onRouteChange((routeName) => {
 | 2.3.1 | Feb 2026 | Mobile CSS fixes: Reset Tasks button layout, Events sidebar padding |
 | 2.3.2 | Feb 2026 | Removed orderBy from getTasks query (avoid composite index requirement) |
 | 2.4.0 | Feb 2026 | Section grouping: A1+A2, B1+B2, C1+C2 merged; shows task creator's section |
+| 2.5.0 | Feb 2026 | CR role: Class Representatives can reset tasks for their section |
 
 ---
 
@@ -839,3 +849,4 @@ Router.onRouteChange((routeName) => {
 ---
 
 *Documentation last updated: February 11, 2026*
+*Version: 2.5.0*

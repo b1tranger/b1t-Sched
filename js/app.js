@@ -8,6 +8,7 @@ const App = {
   currentTasks: [],
   currentEvents: [],
   isAdmin: false,
+  isCR: false,
 
   async init() {
     console.log('Initializing b1t-Sched...');
@@ -391,13 +392,15 @@ const App = {
       // User has profile, load dashboard
       this.userProfile = profileResult.data;
       
-      // Check if user is admin
-      const adminResult = await DB.isUserAdmin(user.uid);
-      this.isAdmin = adminResult.isAdmin || false;
+      // Check if user is admin or CR
+      const rolesResult = await DB.getUserRoles(user.uid);
+      this.isAdmin = rolesResult.isAdmin || false;
+      this.isCR = rolesResult.isCR || false;
       
       // Save to localStorage
       Utils.storage.set('userProfile', this.userProfile);
       Utils.storage.set('isAdmin', this.isAdmin);
+      Utils.storage.set('isCR', this.isCR);
       
       // Update user details card
       UI.updateUserDetailsCard(
@@ -407,8 +410,8 @@ const App = {
         this.userProfile.section
       );
       
-      // Show/hide admin controls
-      UI.toggleAdminControls(this.isAdmin);
+      // Show/hide admin and CR controls
+      UI.toggleAdminControls(this.isAdmin, this.isCR);
 
       // Navigate based on current route
       if (Router.getCurrentRoute() === 'profile-settings') {
@@ -431,6 +434,7 @@ const App = {
     Router.navigate('login');
     this.userProfile = null;
     this.isAdmin = false;
+    this.isCR = false;
     Utils.storage.clear();
   },
 
@@ -661,7 +665,7 @@ const App = {
   },
 
   async handleResetTasks() {
-    if (!this.isAdmin) return;
+    if (!this.isAdmin && !this.isCR) return;
     
     const confirmed = confirm('Are you sure you want to reset all old/past tasks? This action cannot be undone.');
     if (!confirmed) return;
