@@ -1,0 +1,116 @@
+// ============================================
+// UTILITY FUNCTIONS
+// ============================================
+
+const Utils = {
+  // Format date to readable string
+  formatDate(date) {
+    if (!date) return 'No date';
+    
+    const d = date instanceof Date ? date : new Date(date);
+    const options = { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    };
+    
+    return d.toLocaleDateString('en-US', options);
+  },
+
+  // Format date to short form
+  formatDateShort(date) {
+    if (!date) return 'No date';
+    
+    const d = date instanceof Date ? date : new Date(date);
+    const options = { 
+      month: 'short', 
+      day: 'numeric'
+    };
+    
+    return d.toLocaleDateString('en-US', options);
+  },
+
+  // Calculate days until date
+  daysUntil(date) {
+    const d = date instanceof Date ? date : new Date(date);
+    const now = new Date();
+    const diff = d - now;
+    return Math.ceil(diff / (1000 * 60 * 60 * 24));
+  },
+
+  // Validate email format
+  isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  },
+
+  // Validate password strength
+  isValidPassword(password) {
+    return password && password.length >= 6;
+  },
+
+  // Truncate text
+  truncate(text, maxLength = 100) {
+    if (!text) return '';
+    if (text.length <= maxLength) return text;
+    return text.slice(0, maxLength) + '...';
+  },
+
+  // Debounce function
+  debounce(func, wait = 300) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  },
+
+  // Local storage helpers
+  storage: {
+    get(key) {
+      try {
+        const item = localStorage.getItem(key);
+        return item ? JSON.parse(item) : null;
+      } catch (error) {
+        console.error('Error reading from localStorage:', error);
+        return null;
+      }
+    },
+
+    set(key, value) {
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+        return true;
+      } catch (error) {
+        console.error('Error writing to localStorage:', error);
+        return false;
+      }
+    },
+
+    remove(key) {
+      try {
+        localStorage.removeItem(key);
+        return true;
+      } catch (error) {
+        console.error('Error removing from localStorage:', error);
+        return false;
+      }
+    },
+
+    clear() {
+      try {
+        localStorage.clear();
+        return true;
+      } catch (error) {
+        console.error('Error clearing localStorage:', error);
+        return false;
+      }
+    }
+  }
+};

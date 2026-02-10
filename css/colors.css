@@ -1,0 +1,100 @@
+/* ============================================
+   COLOR VARIABLES - Maroon & Dark Off-White Theme
+   ============================================ */
+
+:root {
+  /* Primary Maroon Colors */
+  --primary-maroon: #800000;
+  --secondary-maroon: #660000;
+  --accent-maroon: #A00000;
+  --light-maroon: #B30000;
+  --maroon-hover: #990000;
+  
+  /* Background Colors */
+  --bg-light: #F5F3F0;
+  --bg-lighter: #F9F7F4;
+  --bg-white: #FFFFFF;
+  --bg-dark: #E8E6E3;
+  
+  /* Text Colors */
+  --text-dark: #333333;
+  --text-medium: #666666;
+  --text-light: #999999;
+  --text-white: #FFFFFF;
+  
+  /* Border Colors */
+  --border-light: #E8E6E3;
+  --border-medium: #D0CECA;
+  --border-dark: #B8B5B1;
+  
+  /* Status Colors */
+  --success: #28a745;
+  --warning: #ffc107;
+  --danger: #dc3545;
+  --info: #17a2b8;
+  
+  /* Shadow */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.2);
+  --shadow-maroon: 0 4px 8px rgba(128, 0, 0, 0.2);
+  
+  /* Transitions */
+  --transition-fast: 0.2s ease;
+  --transition-medium: 0.3s ease;
+  --transition-slow: 0.5s ease;
+  
+  /* Border Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 50%;
+  
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-xxl: 48px;
+  
+  /* Font Sizes */
+  --font-xs: 12px;
+  --font-sm: 14px;
+  --font-md: 16px;
+  --font-lg: 18px;
+  --font-xl: 24px;
+  --font-xxl: 32px;
+  
+  /* Font Weights */
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+  
+  /* Z-index layers */
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+}
+
+/* Dark mode variables (future implementation) */
+body.dark-mode {
+  --bg-light: #1a1a1a;
+  --bg-lighter: #242424;
+  --bg-white: #2d2d2d;
+  --bg-dark: #0f0f0f;
+  
+  --text-dark: #f0f0f0;
+  --text-medium: #b0b0b0;
+  --text-light: #808080;
+  --text-white: #ffffff;
+  
+  --border-light: #3a3a3a;
+  --border-medium: #505050;
+  --border-dark: #656565;
+}
