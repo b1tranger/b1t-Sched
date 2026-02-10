@@ -48,7 +48,7 @@ A single-page application (SPA) that helps students manage academic tasks, assig
 ### Step 1: Firebase Backend Setup
 
 1. **Follow the complete Firebase setup guide:**
-   - Open [`FIREBASE_SETUP.md`](FIREBASE_SETUP.md)
+   - Open [`FIREBASE_SETUP.md`](doc/FIREBASE_SETUP.md)
    - Complete all steps to set up Firebase project
    - Create Firestore collections with sample data
    - Copy your Firebase configuration
