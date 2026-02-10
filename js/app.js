@@ -354,7 +354,13 @@ const App = {
 
     if (result.success) {
       UI.hideMessage('auth-message');
-      // Auth state listener will handle navigation
+      UI.showMessage('auth-message', result.message || 'Account created! Please check your email to verify your account before logging in.', 'success');
+      // Sign out - user must verify email first
+      await Auth.logout();
+      // Show login form
+      document.getElementById('signup-form').style.display = 'none';
+      document.getElementById('login-form').style.display = 'block';
+      UI.showLoading(false);
     } else {
       UI.showMessage('auth-message', result.error, 'error');
       UI.showLoading(false);
@@ -362,6 +368,14 @@ const App = {
   },
 
   async handleAuthenticatedUser(user) {
+    // Check if email is verified
+    if (!user.emailVerified) {
+      UI.showMessage('auth-message', 'Please verify your email before logging in. Check your inbox for the verification link.', 'error');
+      await Auth.logout();
+      UI.showLoading(false);
+      return;
+    }
+
     // Check if user has profile
     const profileResult = await DB.getUserProfile(user.uid);
 

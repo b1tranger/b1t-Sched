@@ -10,8 +10,12 @@ const Auth = {
     try {
       const userCredential = await auth.createUserWithEmailAndPassword(email, password);
       this.currentUser = userCredential.user;
-      console.log('User signed up:', this.currentUser.uid);
-      return { success: true, user: this.currentUser };
+      
+      // Send verification email
+      await this.currentUser.sendEmailVerification();
+      console.log('User signed up, verification email sent:', this.currentUser.uid);
+      
+      return { success: true, user: this.currentUser, message: 'Verification email sent! Please check your inbox.' };
     } catch (error) {
       console.error('Signup error:', error);
       return { success: false, error: this.getErrorMessage(error.code) };
@@ -86,5 +90,20 @@ const Auth = {
     };
 
     return errorMessages[errorCode] || 'An error occurred. Please try again.';
+  },
+
+  // Resend verification email
+  async resendVerificationEmail() {
+    try {
+      const user = this.getCurrentUser();
+      if (user && !user.emailVerified) {
+        await user.sendEmailVerification();
+        return { success: true, message: 'Verification email sent!' };
+      }
+      return { success: false, error: 'No user or already verified.' };
+    } catch (error) {
+      console.error('Resend verification error:', error);
+      return { success: false, error: error.message };
+    }
   }
 };
