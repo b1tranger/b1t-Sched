@@ -89,7 +89,7 @@ const Auth = {
       'auth/network-request-failed': 'Network error. Please check your internet connection.'
     };
 
-    return errorMessages[errorCode] || 'An error occurred. Please try again.';
+    return errorMessages[errorCode] || '-';
   },
 
   // Resend verification email

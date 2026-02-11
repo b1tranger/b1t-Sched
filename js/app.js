@@ -11,6 +11,7 @@ const App = {
   isCR: false,
   isBlocked: false,
   allUsers: [],
+  isSigningUp: false, // Flag to prevent auth state handling during signup
 
   async init() {
     console.log('Initializing b1t-Sched...');
@@ -20,6 +21,11 @@ const App = {
 
     // Setup authentication state listener
     Auth.onAuthStateChanged(async (user) => {
+      // Skip handling during signup process
+      if (this.isSigningUp) {
+        console.log('Skipping auth state change during signup');
+        return;
+      }
       if (user) {
         console.log('User is logged in:', user.email);
         await this.handleAuthenticatedUser(user);
@@ -589,6 +595,9 @@ const App = {
     }
 
     UI.showLoading(true);
+    
+    // Set flag to prevent auth state handling during signup
+    this.isSigningUp = true;
 
     const result = await Auth.signup(email, password);
 
@@ -597,11 +606,15 @@ const App = {
       UI.showMessage('auth-message', 'Account created successfully! Please check your email inbox (or spam folder) for a verification link before logging in.', 'success');
       // Sign out - user must verify email first
       await Auth.logout();
+      // Clear the signup flag after logout completes
+      this.isSigningUp = false;
       // Show login form
       document.getElementById('signup-form').style.display = 'none';
       document.getElementById('login-form').style.display = 'block';
       UI.showLoading(false);
     } else {
+      // Clear the signup flag on error
+      this.isSigningUp = false;
       // Show error as info type if it's about email verification
       const msgType = result.error.includes('verify') || result.error.includes('verification') ? 'info' : 'error';
       UI.showMessage('auth-message', result.error, msgType);

@@ -492,7 +492,16 @@ App.isAdmin = false           // Admin privileges
 App.isCR = false              // CR (Class Representative) privileges
 App.isBlocked = false         // Blocked/restricted user status
 App.allUsers = []             // All users (admin panel)
+App.isSigningUp = false       // Flag to prevent auth state handling during signup
 ```
+
+**Signup Race Condition Prevention:**
+
+During signup, Firebase triggers `onAuthStateChanged` immediately when the user is created (before email verification). Without protection, this would cause `handleAuthenticatedUser()` to run and display an error message ("Please verify your email...") that overwrites the success message. The `isSigningUp` flag prevents auth state handling during the signup process:
+
+1. Flag is set before `Auth.signup()` is called
+2. `onAuthStateChanged` callback checks the flag and skips handling
+3. Flag is cleared after logout completes (success) or on error
 
 ---
 
