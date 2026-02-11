@@ -224,7 +224,7 @@ const UI = {
           </div>
           <div class="event-content">
             <h3 class="event-title">${event.title || 'Untitled Event'}</h3>
-            <p class="event-description">${event.description || 'No description available.'}</p>
+            <p class="event-description">${Utils.escapeAndLinkify(event.description) || 'No description available.'}</p>
           </div>
           ${deleteButton}
         </div>

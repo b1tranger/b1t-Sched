@@ -69,12 +69,12 @@
 
             <!-- Login/Signup View -->
             <div id="login-view" class="view" style="display: none;">
-                <div class="auth-container">
+                <div class="auth-container" style="margin-top: -100px;">
                     <div class="auth-card">
                         <div class="auth-logo">
                             <img src="Social-Preview.webp" alt="b1t-Sched Logo" class="auth-logo-img">
                             <h1>b1t-Sched</h1>
-                            <p class="auth-subtitle">Academic Task Scheduler</p>
+                            <p class="auth-subtitle">b1t-Sched is a web-based academic task scheduler designed for university students. It provides a personalized dashboard with tasks, events, and resource links filtered by the student's department, semester, and section.</p>
                         </div>
 
                         <!-- Login Form -->
@@ -204,9 +204,19 @@
                     <div class="dashboard-main">
                         <!-- Resource Links Section -->
                         <section class="resource-links-section">
+                            <!-- Mobile-only header -->
+                            <div class="section-header mobile-only resources-header">
+                                <h2><i class="fas fa-link"></i> Quick Links</h2>
+                            </div>
                             <div id="resource-links-container" class="resource-links-container">
                                 <!-- Resource link cards will be dynamically loaded -->
                             </div>
+                            <!-- Mobile-only external resources link -->
+                            <a href="https://b1tacad.netlify.app/" target="_blank" class="resource-link-card external-resources-link mobile-only">
+                                <div class="resource-icon"><i class="fas fa-external-link-alt"></i></div>
+                                <h3>All Resources</h3>
+                                <p>Browse all academic resources</p>
+                            </a>
                         </section>
 
                         <!-- Pending Tasks Section -->
@@ -327,6 +337,8 @@
                                 <option value="homework">Homework</option>
                                 <option value="exam">Exam</option>
                                 <option value="project">Project</option>
+                                <option value="presentation">Presentation</option>
+                                <option value="other">Other</option>
                             </select>
                         </div>
                         <div class="form-group">

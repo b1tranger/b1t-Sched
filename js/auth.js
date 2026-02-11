@@ -77,7 +77,7 @@ const Auth = {
   // Get error message
   getErrorMessage(errorCode) {
     const errorMessages = {
-      'auth/email-already-in-use': 'This email is already registered. Please login instead.',
+      'auth/email-already-in-use': 'This email is already registered. If you haven\'t verified your email yet, please check your inbox (or spam folder) for the verification link, then login.',
       'auth/invalid-email': 'Invalid email address format.',
       'auth/operation-not-allowed': 'Email/password accounts are not enabled. Please contact support.',
       'auth/weak-password': 'Password should be at least 6 characters long.',

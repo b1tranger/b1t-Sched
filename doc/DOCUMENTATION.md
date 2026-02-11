@@ -25,18 +25,18 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 
 ### Key Features
 - **Single-Page Application (SPA)** - Hash-based routing for seamless navigation
-- **Firebase Authentication** - Secure email/password login system
+- **Firebase Authentication** - Secure email/password login system with email verification
 - **User Profiles** - Student ID, department, semester, and section
 - **Personalized Dashboard** - Content filtered by user's academic details
 - **Task Management** - View pending assignments and exams with deadlines
 - **Task Completion** - Checkboxes to mark tasks complete, persistent per-user
-- **Event Calendar** - Track upcoming academic events
+- **Event Calendar** - Track upcoming academic events with clickable links in descriptions
 - **Resource Links** - Quick access to department-specific resources
 - **Responsive Design** - Works on desktop, tablet, and mobile
 - **Maroon Theme** - Professional dark maroon and off-white color scheme
 - **Admin Features** - Task reset, task/event delete, event creation (admin-only)
-- **CR Role** - Class Representatives can reset tasks for their section
-- **Two-Column Layout** - Events sidebar on desktop, slide-out panel on mobile
+- **CR Role** - Class Representatives can reset and delete tasks for their section
+- **Two-Column Layout** - Events sidebar on desktop, slide-out panel (40vw) on mobile
 
 ### Technology Stack
 | Category | Technology |
@@ -110,6 +110,7 @@ b1t-Sched/
 │
 ├── index.html                    # Main SPA entry point
 ├── Social-Preview.webp           # Logo/favicon
+├── Social-Preview.ico            # Favicon (ICO format)
 ├── LICENSE                       # Project license
 ├── README.md                     # Quick start guide
 │
@@ -136,18 +137,22 @@ b1t-Sched/
 │   └── app.js                   # Main application logic
 │
 ├── doc/                          # Documentation
+│   ├── DOCUMENTATION.md         # Complete project documentation (this file)
 │   ├── FIREBASE_SETUP.md        # Firebase setup guide
 │   ├── QUICKSTART.md            # Quick start guide
 │   ├── REDESIGN_PLAN.md         # Design documentation
-│   └── PROJECT_DOCUMENTATION.md # This file
+│   ├── ADMIN_FEATURES.md        # Admin functionality docs
+│   └── FIRESTORE_TASK_CHANGES.md # Task schema changes
 │
 ├── images/                       # Image assets
 │   ├── logo/                    # Logo variations
 │   └── Social-logo/             # Social media assets
 │
-└── D1/                           # Department schedules (legacy)
-    ├── CSE/                      # CSE semester files
-    └── IT/                       # IT semester files
+└── Archive/                      # Legacy/unused files (see Archive/README.md)
+    ├── Abstraction/             # Old prototype files
+    ├── D1/                      # Legacy department schedules
+    ├── Note/                    # Code examples
+    └── *.html, *.md             # Old static pages
 ```
 
 ---
@@ -239,8 +244,8 @@ const db = firebase.firestore();   // Firestore instance
 | `getUserTaskCompletions(userId)` | string | `{success, data/error}` | Get user's completed tasks |
 | `toggleTaskCompletion(userId, taskId, isCompleted)` | string, string, boolean | `{success, error?}` | Toggle task completion |
 | `getOldTasks(userId, department, semester, section)` | strings | `{success, data/error}` | Get completed/past tasks |
-| `deleteTask(taskId)` | string | `{success, error?}` | Delete task (admin) |
-| `resetOldTasks(department, semester, section)` | strings | `{success, deletedCount/error}` | Delete all past tasks (admin) |
+| `deleteTask(taskId)` | string | `{success, error?}` | Delete task (admin or CR) |
+| `resetOldTasks(department, semester, section)` | strings | `{success, deletedCount/error}` | Delete all past tasks (admin or CR) |
 
 **Task Schema:**
 ```javascript
@@ -389,6 +394,8 @@ const db = firebase.firestore();   // Firestore instance
 | `debounce(func, wait)` | function, number | function | Debounce function calls |
 | `getSectionGroup(section)` | string | string | Get section group letter (A1 → A) |
 | `getSectionsInGroup(section)` | string | array | Get all sections in group (A1 → [A1, A2]) |
+| `linkify(text)` | string | string | Convert URLs in text to clickable anchor tags |
+| `escapeAndLinkify(text)` | string | string | Escape HTML then convert URLs to links (XSS-safe) |
 
 **Storage Helpers (`Utils.storage`):**
 
@@ -424,8 +431,8 @@ const db = firebase.firestore();   // Firestore instance
 | `openAddTaskModal()` | - | Open add task modal |
 | `handleAddTask()` | - | Process add task form |
 | `openOldTasksModal()` | - | Open completed tasks modal |
-| `handleResetTasks()` | - | Reset all old tasks (admin) |
-| `handleDeleteTask(taskId)` | string | Delete task (admin) |
+| `handleResetTasks()` | - | Reset all old tasks (admin or CR) |
+| `handleDeleteTask(taskId)` | string | Delete task (admin or CR) |
 | `openAddEventModal()` | - | Open add event modal (admin) |
 | `handleAddEvent()` | - | Process add event form (admin) |
 | `handleDeleteEvent(eventId)` | string | Delete event (admin) |
@@ -738,14 +745,15 @@ service cloud.firestore {
 
 ### Dashboard View Components
 - **Resource Links Section** - Department-specific quick links
-- **Pending Tasks Section** - Task cards with checkboxes, deadlines, delete buttons (admin)
+  - Mobile: "Quick Links" header, icons hidden, external "All Resources" link
+- **Pending Tasks Section** - Task cards with checkboxes, deadlines, delete buttons (admin/CR)
   - Add Tasks button - Opens task creation modal
   - View Old button - Opens completed tasks modal
-  - Reset Tasks button (admin-only) - Clears past tasks
+  - Reset Tasks button (admin/CR) - Clears past tasks
 - **Upcoming Events Section** - Calendar events with delete buttons (admin)
   - Add Event button (admin-only) - Opens event creation modal
   - Old Events button - Opens past events modal
-- **Events Sidebar (Mobile)** - Slide-out panel with events and action buttons
+- **Events Sidebar (Mobile)** - Slide-out panel (40vw) with events and action buttons
 - **Modals:**
   - Add Task Modal - Task creation form
   - Old Tasks Modal - List of completed/past tasks
@@ -835,6 +843,8 @@ Router.onRouteChange((routeName) => {
 | 2.3.2 | Feb 2026 | Removed orderBy from getTasks query (avoid composite index requirement) |
 | 2.4.0 | Feb 2026 | Section grouping: A1+A2, B1+B2, C1+C2 merged; shows task creator's section |
 | 2.5.0 | Feb 2026 | CR role: Class Representatives can reset tasks for their section |
+| 2.6.0 | Feb 2026 | Improved signup flow: better email verification messages; CR can delete tasks; Events sidebar slide-out (40vw when open) with clickable links in descriptions |
+| 2.6.1 | Feb 2026 | Mobile UX: Resources section with header, hidden icons, external "All Resources" link |
 
 ---
 
@@ -849,4 +859,4 @@ Router.onRouteChange((routeName) => {
 ---
 
 *Documentation last updated: February 11, 2026*
-*Version: 2.5.0*
+*Version: 2.6.1*

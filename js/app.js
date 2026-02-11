@@ -286,7 +286,7 @@ const App = {
       }
       
       // Re-render tasks with updated completions
-      UI.renderTasks(this.currentTasks, this.userCompletions);
+      UI.renderTasks(this.currentTasks, this.userCompletions, this.isAdmin || this.isCR);
     } else {
       // Revert checkbox state on error
       const checkbox = document.querySelector(`.task-checkbox[data-task-id="${taskId}"]`);
@@ -363,7 +363,7 @@ const App = {
 
     if (result.success) {
       UI.hideMessage('auth-message');
-      UI.showMessage('auth-message', result.message || 'Account created! Please check your email to verify your account before logging in.', 'success');
+      UI.showMessage('auth-message', 'Account created successfully! Please check your email inbox (or spam folder) for a verification link before logging in.', 'success');
       // Sign out - user must verify email first
       await Auth.logout();
       // Show login form
@@ -371,7 +371,9 @@ const App = {
       document.getElementById('login-form').style.display = 'block';
       UI.showLoading(false);
     } else {
-      UI.showMessage('auth-message', result.error, 'error');
+      // Show error as info type if it's about email verification
+      const msgType = result.error.includes('verify') || result.error.includes('verification') ? 'info' : 'error';
+      UI.showMessage('auth-message', result.error, msgType);
       UI.showLoading(false);
     }
   },
@@ -545,7 +547,7 @@ const App = {
     const tasksResult = await DB.getTasks(department, semester, section);
     if (tasksResult.success) {
       this.currentTasks = tasksResult.data;
-      UI.renderTasks(this.currentTasks, this.userCompletions, this.isAdmin);
+      UI.renderTasks(this.currentTasks, this.userCompletions, this.isAdmin || this.isCR);
     } else {
       console.error('Failed to load tasks:', tasksResult.error);
       // Check if it's an index error
@@ -682,7 +684,7 @@ const App = {
   },
 
   async handleDeleteTask(taskId) {
-    if (!this.isAdmin) return;
+    if (!this.isAdmin && !this.isCR) return;
     
     const confirmed = confirm('Are you sure you want to delete this task?');
     if (!confirmed) return;
@@ -692,7 +694,7 @@ const App = {
     if (result.success) {
       // Remove from local state and re-render
       this.currentTasks = this.currentTasks.filter(t => t.id !== taskId);
-      UI.renderTasks(this.currentTasks, this.userCompletions, this.isAdmin);
+      UI.renderTasks(this.currentTasks, this.userCompletions, this.isAdmin || this.isCR);
     } else {
       alert('Failed to delete task: ' + result.error);
     }

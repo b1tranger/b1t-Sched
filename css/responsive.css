@@ -53,6 +53,45 @@
     grid-template-columns: 1fr;
   }
   
+  /* Hide resource icons on mobile */
+  .resource-link-card .resource-icon {
+    display: none;
+  }
+  
+  /* Resources section mobile header */
+  .resources-header {
+    margin-bottom: var(--spacing-md);
+  }
+  
+  .resources-header h2 {
+    font-size: var(--font-lg);
+    color: var(--primary-maroon);
+  }
+  
+  /* External resources link on mobile */
+  .external-resources-link {
+    margin-top: var(--spacing-sm);
+    background: var(--primary-maroon);
+    border-color: var(--primary-maroon);
+  }
+  
+  .external-resources-link h3,
+  .external-resources-link p {
+    color: var(--text-white);
+  }
+  
+  .external-resources-link .resource-icon {
+    display: block;
+    color: var(--text-white);
+    font-size: 1.5rem;
+    margin-bottom: var(--spacing-sm);
+  }
+  
+  .external-resources-link:hover {
+    background: var(--maroon-hover);
+    border-color: var(--maroon-hover);
+  }
+  
   .section-header {
     flex-direction: column;
     align-items: flex-start;

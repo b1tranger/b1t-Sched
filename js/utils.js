@@ -126,5 +126,28 @@ const Utils = {
     const group = this.getSectionGroup(section);
     // Return both sections in the group (e.g., ['A1', 'A2'] for 'A1')
     return [`${group}1`, `${group}2`];
+  },
+
+  // Convert URLs in text to clickable links
+  linkify(text) {
+    if (!text) return '';
+    // URL regex pattern
+    const urlPattern = /(https?:\/\/[^\s<>"'\)\]]+)/g;
+    // Replace URLs with anchor tags
+    return text.replace(urlPattern, '<a href="$1" target="_blank" rel="noopener noreferrer" class="description-link">$1</a>');
+  },
+
+  // Escape HTML to prevent XSS, then linkify
+  escapeAndLinkify(text) {
+    if (!text) return '';
+    // First escape HTML special characters
+    const escaped = text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+    // Then convert URLs to clickable links
+    return this.linkify(escaped);
   }
 };
