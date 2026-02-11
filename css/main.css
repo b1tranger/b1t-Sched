@@ -437,3 +437,114 @@ body {
   margin-bottom: var(--spacing-lg);
   line-height: 1.5;
 }
+
+/* CR Info Message */
+.cr-info-message {
+  font-size: var(--font-sm);
+  color: var(--text-medium);
+  background-color: var(--bg-light);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  margin-top: var(--spacing-sm);
+  width: 100%;
+}
+
+.cr-info-message i {
+  color: var(--primary);
+  margin-right: var(--spacing-xs);
+}
+
+.cr-info-message a {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.cr-info-message a:hover {
+  text-decoration: underline;
+}
+
+/* Profile Warnings */
+.profile-warnings {
+  background-color: #fff8e1;
+  border: 1px solid #ffcc02;
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.profile-warnings .warning-message {
+  color: #856404;
+  font-size: var(--font-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.profile-warnings .warning-message i {
+  color: #f4a100;
+  margin-right: var(--spacing-xs);
+}
+
+.profile-warnings .info-message {
+  color: var(--text-medium);
+  font-size: var(--font-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.profile-warnings .info-message i {
+  color: var(--primary);
+  margin-right: var(--spacing-xs);
+}
+
+.profile-warnings .info-message a {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.profile-warnings .info-message a:hover {
+  text-decoration: underline;
+}
+
+.profile-warnings .cooldown-message {
+  color: #856404;
+  font-size: var(--font-sm);
+  background-color: #fff3cd;
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-sm);
+  margin-top: var(--spacing-xs);
+}
+
+.profile-warnings .cooldown-message i {
+  color: #f4a100;
+  margin-right: var(--spacing-xs);
+}
+
+/* App Footer */
+.app-footer {
+  text-align: center;
+  padding: var(--spacing-md) var(--spacing-lg);
+  color: var(--text-medium);
+  font-size: var(--font-sm);
+  border-top: 1px solid var(--border-light);
+  background-color: var(--bg-white);
+}
+
+.app-footer a {
+  color: var(--text-medium);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.app-footer a:hover {
+  color: var(--primary);
+}
+
+.app-footer i {
+  margin-right: var(--spacing-xs);
+}
+
+.footer-separator {
+  margin: 0 var(--spacing-sm);
+  color: var(--border-light);
+}

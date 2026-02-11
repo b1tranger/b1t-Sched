@@ -327,6 +327,23 @@ const UI = {
         control.style.display = 'none';
       }
     });
+
+    // Show CR info message for non-CR/non-Admin users
+    const crInfoMessage = document.getElementById('cr-info-message');
+    if (crInfoMessage) {
+      crInfoMessage.style.display = (isAdmin || isCR) ? 'none' : 'block';
+    }
+
+    // Show footer when logged in
+    const appFooter = document.getElementById('app-footer');
+    if (appFooter) {
+      appFooter.style.display = 'block';
+      // Set current year
+      const yearSpan = document.getElementById('footer-year');
+      if (yearSpan) {
+        yearSpan.textContent = new Date().getFullYear();
+      }
+    }
   },
 
   // Populate dropdown

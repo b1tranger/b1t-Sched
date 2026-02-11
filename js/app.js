@@ -627,6 +627,12 @@ const App = {
     this.isAdmin = false;
     this.isCR = false;
     Utils.storage.clear();
+    
+    // Hide footer when not logged in
+    const appFooter = document.getElementById('app-footer');
+    if (appFooter) {
+      appFooter.style.display = 'none';
+    }
   },
 
   async loadSetDetailsForm() {

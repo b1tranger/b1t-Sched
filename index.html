@@ -281,6 +281,11 @@
                                 <button id="reset-tasks-btn" class="btn btn-danger cr-or-admin" style="display: none;">
                                     <i class="fas fa-redo"></i> Reset Tasks
                                 </button>
+                                <p id="cr-info-message" class="cr-info-message" style="display: none;">
+                                    <i class="fas fa-info-circle"></i>
+                                    If you are a CR, please reach out to Admin at 
+                                    <a href="https://t.me/oUITS_res" target="_blank" rel="noopener noreferrer">t.me/oUITS_res</a>
+                                </p>
                             </div>
                         </section>
                     </div>
@@ -591,6 +596,18 @@
                         <form id="profile-settings-form" class="profile-form">
                             <h3>Academic Details</h3>
                             <p class="form-note">Changes will update your personalized dashboard and resource links</p>
+                            <div class="profile-warnings">
+                                <p class="warning-message">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <strong>Warning:</strong> Be careful when changing your profile settings. You can only change your profile once every 30 days.
+                                </p>
+                                <p class="info-message">
+                                    <i class="fas fa-info-circle"></i>
+                                    If you need to change your profile again before 30 days, contact Admin at 
+                                    <a href="https://t.me/oUITS_res" target="_blank" rel="noopener noreferrer">t.me/oUITS_res</a>
+                                </p>
+                                <p id="profile-cooldown-message" class="cooldown-message" style="display: none;"></p>
+                            </div>
 
                             <div class="form-group">
                                 <label for="profile-department">Department</label>
@@ -635,6 +652,18 @@
             </div>
 
         </main>
+
+        <!-- Source Code Footer (visible when logged in) -->
+        <footer id="app-footer" class="app-footer" style="display: none;">
+            <p>
+                © <span id="footer-year"></span> 
+                <a href="https://github.com/b1tranger" target="_blank" rel="noopener noreferrer">@b1tranger</a>
+                <span class="footer-separator">|</span>
+                <a href="https://github.com/b1tranger/b1t-Sched" target="_blank" rel="noopener noreferrer">
+                    <i class="fab fa-github"></i> Source Code
+                </a>
+            </p>
+        </footer>
     </div>
 
     <!-- Firebase SDKs (CDN) -->

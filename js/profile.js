@@ -95,6 +95,9 @@ const Profile = {
       document.getElementById('profile-email').textContent = this.currentProfile.email;
       document.getElementById('profile-student-id').textContent = `Student ID: ${this.currentProfile.studentId || 'Not set'}`;
       
+      // Show cooldown status if applicable
+      this.updateCooldownMessage();
+      
       // Load dropdown options
       const deptResult = await DB.getDepartments();
       const semResult = await DB.getSemesters();
@@ -118,6 +121,35 @@ const Profile = {
     const result = await DB.getSections(department, semester);
     if (result.success) {
       await UI.populateDropdown(elementId, result.data, selectedValue);
+    }
+  },
+
+  updateCooldownMessage() {
+    const cooldownMsg = document.getElementById('profile-cooldown-message');
+    if (!cooldownMsg || !this.currentProfile) return;
+
+    // Admins bypass cooldown
+    if (App.isAdmin) {
+      cooldownMsg.style.display = 'none';
+      return;
+    }
+
+    if (this.currentProfile.lastProfileChange) {
+      const lastChange = this.currentProfile.lastProfileChange.toDate ? 
+        this.currentProfile.lastProfileChange.toDate() : 
+        new Date(this.currentProfile.lastProfileChange);
+      const now = new Date();
+      const daysSinceChange = Math.floor((now - lastChange) / (1000 * 60 * 60 * 24));
+      const daysRemaining = 30 - daysSinceChange;
+
+      if (daysRemaining > 0) {
+        cooldownMsg.innerHTML = `<i class="fas fa-clock"></i> You last changed your profile ${daysSinceChange} day${daysSinceChange !== 1 ? 's' : ''} ago. You can change again in <strong>${daysRemaining} day${daysRemaining !== 1 ? 's' : ''}</strong>.`;
+        cooldownMsg.style.display = 'block';
+      } else {
+        cooldownMsg.style.display = 'none';
+      }
+    } else {
+      cooldownMsg.style.display = 'none';
     }
   },
 
@@ -150,8 +182,26 @@ const Profile = {
         return;
       }
 
+      // Check profile change cooldown (30 days) - skip for admins
+      const isAdmin = App.isAdmin || false;
+      if (!isAdmin && this.currentProfile.lastProfileChange) {
+        const lastChange = this.currentProfile.lastProfileChange.toDate ? 
+          this.currentProfile.lastProfileChange.toDate() : 
+          new Date(this.currentProfile.lastProfileChange);
+        const now = new Date();
+        const daysSinceChange = Math.floor((now - lastChange) / (1000 * 60 * 60 * 24));
+        const daysRemaining = 30 - daysSinceChange;
+        
+        if (daysRemaining > 0) {
+          UI.showMessage('profile-message', 
+            `You can only change your profile once every 30 days. Please wait ${daysRemaining} more day${daysRemaining !== 1 ? 's' : ''}, or contact Admin at t.me/oUITS_res`, 
+            'error');
+          return;
+        }
+      }
+
       // Confirm changes
-      const confirmed = confirm(`Are you sure you want to change your settings to:\n\nDepartment: ${department}\nSemester: ${semester}\nSection: ${section}\n\nThis will update your personalized dashboard.`);
+      const confirmed = confirm(`Are you sure you want to change your settings to:\n\nDepartment: ${department}\nSemester: ${semester}\nSection: ${section}\n\nThis will update your personalized dashboard.\n\nNote: You won't be able to change again for 30 days.`);
       
       if (!confirmed) return;
 
@@ -161,7 +211,8 @@ const Profile = {
       const result = await DB.updateUserProfile(userId, {
         department,
         semester,
-        section
+        section,
+        lastProfileChange: firebase.firestore.FieldValue.serverTimestamp()
       });
 
       if (result.success) {
@@ -169,6 +220,7 @@ const Profile = {
         this.currentProfile.department = department;
         this.currentProfile.semester = semester;
         this.currentProfile.section = section;
+        this.currentProfile.lastProfileChange = new Date();
 
         // Update localStorage
         localStorage.setItem('userProfile', JSON.stringify({

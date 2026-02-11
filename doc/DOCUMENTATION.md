@@ -38,7 +38,10 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **Maroon Theme** - Professional dark maroon and off-white color scheme
 - **Admin Features** - Task reset, task/event delete, event creation (admin-only)
 - **CR Role** - Class Representatives can reset and delete tasks for their section
+- **CR Info Message** - Non-CR users see instructions to contact admin for CR role
+- **Profile Change Cooldown** - Users can only change profile once per 30 days (anti-spam)
 - **Two-Column Layout** - Events sidebar on desktop, slide-out panel (40vw) on mobile
+- **Footer with Credits** - Source code link and dynamic copyright year
 
 ### Technology Stack
 | Category | Technology |
@@ -234,6 +237,7 @@ const db = firebase.firestore();   // Firestore instance
   section: string,        // e.g., "A1", "B2"
   isAdmin: boolean,       // Optional - admin privileges (set manually)
   isCR: boolean,          // Optional - CR privileges (set manually)
+  lastProfileChange: Timestamp, // Optional - last profile edit timestamp (30-day cooldown)
   createdAt: Timestamp,
   updatedAt: Timestamp
 }
@@ -373,7 +377,8 @@ const db = firebase.firestore();   // Firestore instance
 | `setupEventListeners()` | - | Attach event listeners to profile UI |
 | `loadProfile()` | - | Load and display user profile |
 | `updateSectionDropdown(elementId, dept, sem, selectedValue)` | strings | Update section dropdown |
-| `handleSaveProfile()` | - | Save profile changes to Firestore |
+| `updateCooldownMessage()` | - | Display remaining days until profile can be changed |
+| `handleSaveProfile()` | - | Save profile changes to Firestore (with 30-day cooldown check) |
 
 **Event Listeners:**
 - User details card click → Navigate to profile settings
@@ -566,6 +571,7 @@ Firestore Database
 │       ├── section: string
 │       ├── isAdmin: boolean    # Optional - admin privileges
 │       ├── isCR: boolean       # Optional - CR privileges
+│       ├── lastProfileChange: timestamp  # Optional - 30-day cooldown
 │       ├── createdAt: timestamp
 │       ├── updatedAt: timestamp
 │       └── completedTasks/     # Subcollection: task completions
@@ -921,6 +927,7 @@ Router.onRouteChange((routeName) => {
 | 2.8.0 | Feb 2026 | Basic markdown support in task/event descriptions: `**bold**`, `*italic*`, `` `code` ``, and line breaks |
 | 2.9.0 | Feb 2026 | Edit functionality: Users can edit own tasks; admins can edit all tasks and events |
 | 2.9.1 | Feb 2026 | Permissions fix: Regular users can now delete their own tasks; clarified role permissions |
+| 2.10.0 | Feb 2026 | CR info message for non-CR users; Profile change 30-day cooldown; Footer with credits and dynamic year |
 
 ---
 
@@ -935,4 +942,4 @@ Router.onRouteChange((routeName) => {
 ---
 
 *Documentation last updated: February 11, 2026*
-*Version: 2.9.1*
+*Version: 2.10.0*
