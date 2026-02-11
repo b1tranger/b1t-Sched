@@ -105,5 +105,17 @@ const Auth = {
       console.error('Resend verification error:', error);
       return { success: false, error: error.message };
     }
+  },
+
+  // Send password reset email
+  async sendPasswordResetEmail(email) {
+    try {
+      await auth.sendPasswordResetEmail(email);
+      console.log('Password reset email sent to:', email);
+      return { success: true, message: 'Password reset email sent! Please check your inbox.' };
+    } catch (error) {
+      console.error('Password reset error:', error);
+      return { success: false, error: this.getErrorMessage(error.code) };
+    }
   }
 };

@@ -136,8 +136,8 @@ const UI = {
                 </div>
                 <span class="task-type-badge ${task.type}">${task.type || 'task'}</span>
               </div>
-              <p class="task-description">${task.description || 'No description available.'}</p>
-              ${task.details ? `<p class="task-description"><strong>Details:</strong> ${task.details}</p>` : ''}
+              <p class="task-description">${Utils.escapeAndLinkify(task.description) || 'No description available.'}</p>
+              ${task.details ? `<p class="task-description"><strong>Details:</strong> ${Utils.escapeAndLinkify(task.details)}</p>` : ''}
               <div class="task-footer">
                 <span class="task-deadline ${isUrgent ? 'urgent' : ''} ${isPastDeadline && !isCompleted ? 'urgent' : ''}">
                   <i class="fas fa-clock"></i>

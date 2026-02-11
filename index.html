@@ -97,6 +97,11 @@
                                 <i class="fas fa-sign-in-alt"></i> Login
                             </button>
 
+                            <!-- Forgot Password Link (hidden by default, shows after failed login) -->
+                            <div id="forgot-password-container" class="forgot-password-container">
+                                <a href="#" id="forgot-password-link" class="forgot-password-link">Forgot Password?</a>
+                            </div>
+
                             <div class="auth-divider">
                                 <span>Don't have an account?</span>
                             </div>
@@ -143,6 +148,34 @@
 
                         <!-- Error/Success Messages -->
                         <div id="auth-message" class="auth-message"></div>
+                    </div>
+                </div>
+
+                <!-- Password Reset Modal -->
+                <div id="password-reset-modal" class="modal" style="display: none;">
+                    <div class="modal-content modal-content-sm">
+                        <div class="modal-header">
+                            <h2 class="modal-title">Reset Password</h2>
+                            <button id="close-password-reset-modal" class="btn btn-icon">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <p class="modal-description">Enter your email address and we'll send you a link to reset your password.</p>
+                            <form id="password-reset-form">
+                                <div class="form-group">
+                                    <label for="reset-email">Email Address</label>
+                                    <input type="email" id="reset-email" class="form-input" placeholder="student@example.com" required>
+                                </div>
+                                <div id="password-reset-message" class="auth-message"></div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" id="cancel-password-reset" class="btn btn-secondary">Cancel</button>
+                            <button type="submit" form="password-reset-form" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i> Send Reset Link
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

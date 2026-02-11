@@ -398,3 +398,42 @@ body {
 .visible {
   display: block !important;
 }
+
+/* Forgot Password Link */
+.forgot-password-container {
+  text-align: center;
+  margin-top: var(--spacing-md);
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.3s ease, opacity 0.3s ease, margin-top 0.3s ease;
+}
+
+.forgot-password-container.visible {
+  max-height: 50px;
+  opacity: 1;
+}
+
+.forgot-password-link {
+  color: var(--primary);
+  text-decoration: none;
+  font-size: var(--font-sm);
+  transition: color 0.2s ease;
+}
+
+.forgot-password-link:hover {
+  color: var(--primary-dark);
+  text-decoration: underline;
+}
+
+/* Password Reset Modal Specifics */
+.modal-content-sm {
+  max-width: 400px;
+}
+
+.modal-description {
+  color: var(--text-medium);
+  font-size: var(--font-sm);
+  margin-bottom: var(--spacing-lg);
+  line-height: 1.5;
+}

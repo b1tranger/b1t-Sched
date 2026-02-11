@@ -142,6 +142,8 @@ const App = {
     const closeAddTaskModal = document.getElementById('close-add-task-modal');
     const cancelAddTask = document.getElementById('cancel-add-task');
     const closeOldTasksModal = document.getElementById('close-old-tasks-modal');
+    const closePasswordResetModal = document.getElementById('close-password-reset-modal');
+    const cancelPasswordReset = document.getElementById('cancel-password-reset');
 
     if (closeAddTaskModal) {
       closeAddTaskModal.addEventListener('click', () => UI.hideModal('add-task-modal'));
@@ -151,6 +153,37 @@ const App = {
     }
     if (closeOldTasksModal) {
       closeOldTasksModal.addEventListener('click', () => UI.hideModal('old-tasks-modal'));
+    }
+    if (closePasswordResetModal) {
+      closePasswordResetModal.addEventListener('click', () => UI.hideModal('password-reset-modal'));
+    }
+    if (cancelPasswordReset) {
+      cancelPasswordReset.addEventListener('click', () => UI.hideModal('password-reset-modal'));
+    }
+
+    // Forgot password link
+    const forgotPasswordLink = document.getElementById('forgot-password-link');
+    if (forgotPasswordLink) {
+      forgotPasswordLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        // Pre-fill email from login form if available
+        const loginEmail = document.getElementById('login-email').value.trim();
+        const resetEmailInput = document.getElementById('reset-email');
+        if (resetEmailInput && loginEmail) {
+          resetEmailInput.value = loginEmail;
+        }
+        UI.hideMessage('password-reset-message');
+        UI.showModal('password-reset-modal');
+      });
+    }
+
+    // Password reset form
+    const passwordResetForm = document.getElementById('password-reset-form');
+    if (passwordResetForm) {
+      passwordResetForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await this.handlePasswordReset();
+      });
     }
 
     // Close modals on backdrop click
@@ -326,9 +359,47 @@ const App = {
       }
       // Auth state listener will handle navigation
       UI.hideMessage('auth-message');
+      // Hide forgot password link on successful login
+      const forgotPasswordContainer = document.getElementById('forgot-password-container');
+      if (forgotPasswordContainer) {
+        forgotPasswordContainer.classList.remove('visible');
+      }
     } else {
       UI.showMessage('auth-message', result.error, 'error');
+      // Show forgot password link after failed login attempt
+      const forgotPasswordContainer = document.getElementById('forgot-password-container');
+      if (forgotPasswordContainer) {
+        forgotPasswordContainer.classList.add('visible');
+      }
       UI.showLoading(false);
+    }
+  },
+
+  async handlePasswordReset() {
+    const email = document.getElementById('reset-email').value.trim();
+
+    if (!email) {
+      UI.showMessage('password-reset-message', 'Please enter your email address', 'error');
+      return;
+    }
+
+    if (!Utils.isValidEmail(email)) {
+      UI.showMessage('password-reset-message', 'Please enter a valid email address', 'error');
+      return;
+    }
+
+    const result = await Auth.sendPasswordResetEmail(email);
+
+    if (result.success) {
+      UI.showMessage('password-reset-message', result.message, 'success');
+      // Clear the form and close modal after a delay
+      setTimeout(() => {
+        document.getElementById('reset-email').value = '';
+        UI.hideModal('password-reset-modal');
+        UI.hideMessage('password-reset-message');
+      }, 3000);
+    } else {
+      UI.showMessage('password-reset-message', result.error, 'error');
     }
   },
 

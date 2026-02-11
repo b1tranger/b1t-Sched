@@ -25,10 +25,10 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 
 ### Key Features
 - **Single-Page Application (SPA)** - Hash-based routing for seamless navigation
-- **Firebase Authentication** - Secure email/password login system with email verification
+- **Firebase Authentication** - Secure email/password login system with email verification and password reset
 - **User Profiles** - Student ID, department, semester, and section
 - **Personalized Dashboard** - Content filtered by user's academic details
-- **Task Management** - View pending assignments and exams with deadlines
+- **Task Management** - View pending assignments and exams with deadlines, with clickable links in descriptions
 - **Task Completion** - Checkboxes to mark tasks complete, persistent per-user
 - **Event Calendar** - Track upcoming academic events with clickable links in descriptions
 - **Resource Links** - Quick access to department-specific resources
@@ -196,6 +196,8 @@ const db = firebase.firestore();   // Firestore instance
 | `getUserId()` | - | string or null | Get current user's UID |
 | `getUserEmail()` | - | string or null | Get current user's email |
 | `getErrorMessage(errorCode)` | string | string | Convert Firebase error codes to user-friendly messages |
+| `resendVerificationEmail()` | - | `{success, message/error}` | Resend email verification link |
+| `sendPasswordResetEmail(email)` | string | `{success, message/error}` | Send password reset link to email |
 
 **Error Messages Handled:**
 - `auth/email-already-in-use`
@@ -418,6 +420,7 @@ const db = firebase.firestore();   // Firestore instance
 | `setupEventListeners()` | - | Setup form and button listeners |
 | `handleLogin()` | - | Process login form submission |
 | `handleSignup()` | - | Process signup form submission |
+| `handlePasswordReset()` | - | Process password reset form submission |
 | `handleAuthenticatedUser(user)` | User object | Handle post-authentication flow |
 | `handleUnauthenticatedUser()` | - | Handle logged out state |
 | `loadSetDetailsForm()` | - | Load set details form dropdowns |
@@ -716,6 +719,19 @@ service cloud.firestore {
                                       └─────────────┘
 ```
 
+### 5. Password Reset Flow
+
+```
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│   Login     │    │   Login     │    │  Password   │    │   Email     │
+│    View     │───▶│   Failed    │───▶│   Reset     │───▶│   Sent      │
+│             │    │             │    │   Modal     │    │             │
+│ Enter wrong │    │ "Forgot     │    │ Enter email │    │ Check inbox │
+│ credentials │    │  Password?" │    │ address     │    │ for reset   │
+│             │    │ link shows  │    │             │    │ link        │
+└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
+```
+
 ---
 
 ## Views & Components
@@ -846,6 +862,7 @@ Router.onRouteChange((routeName) => {
 | 2.6.0 | Feb 2026 | Improved signup flow: better email verification messages; CR can delete tasks; Events sidebar slide-out (40vw when open) with clickable links in descriptions |
 | 2.6.1 | Feb 2026 | Mobile UX: Resources section with header, hidden icons, external "All Resources" link |
 | 2.6.2 | Feb 2026 | Security: Added `rel="noopener noreferrer"` to all external links (`target="_blank"`) |
+| 2.7.0 | Feb 2026 | Password reset: "Forgot Password?" link appears after failed login, opens modal to request reset email; Clickable links in task descriptions |
 
 ---
 
@@ -860,4 +877,4 @@ Router.onRouteChange((routeName) => {
 ---
 
 *Documentation last updated: February 11, 2026*
-*Version: 2.6.2*
+*Version: 2.7.0*

@@ -11,11 +11,11 @@ A single-page application (SPA) that helps students manage academic tasks, assig
 ## ✨ Features
 
 - 📱 **Single-Page Application** - Fast, seamless navigation
-- 🔐 **Firebase Authentication** - Secure email/password login
+- 🔐 **Firebase Authentication** - Secure email/password login with password reset
 - 👤 **User Profiles** - Set department, semester, and section once
-- 📋 **Personalized Tasks** - View tasks filtered by your academic details
+- 📋 **Personalized Tasks** - View tasks filtered by your academic details, with clickable links
 - 🔗 **Dynamic Resource Links** - Department-specific routine, calendar, and faculty contacts
-- 📅 **Event Calendar** - Track upcoming academic events
+- 📅 **Event Calendar** - Track upcoming academic events with clickable links
 - ⚙️ **Profile Settings** - Update your details anytime
 - 🎨 **Maroon Theme** - Professional dark maroon and off-white color scheme
 - 📱 **Fully Responsive** - Works on desktop, tablet, and mobile
