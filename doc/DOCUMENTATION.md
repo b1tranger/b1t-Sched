@@ -845,6 +845,7 @@ Router.onRouteChange((routeName) => {
 | 2.5.0 | Feb 2026 | CR role: Class Representatives can reset tasks for their section |
 | 2.6.0 | Feb 2026 | Improved signup flow: better email verification messages; CR can delete tasks; Events sidebar slide-out (40vw when open) with clickable links in descriptions |
 | 2.6.1 | Feb 2026 | Mobile UX: Resources section with header, hidden icons, external "All Resources" link |
+| 2.6.2 | Feb 2026 | Security: Added `rel="noopener noreferrer"` to all external links (`target="_blank"`) |
 
 ---
 
@@ -859,4 +860,4 @@ Router.onRouteChange((routeName) => {
 ---
 
 *Documentation last updated: February 11, 2026*
-*Version: 2.6.1*
+*Version: 2.6.2*

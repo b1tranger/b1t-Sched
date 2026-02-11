@@ -58,7 +58,7 @@ const UI = {
     }
 
     container.innerHTML = links.map(link => `
-      <a href="${link.url}" target="_blank" class="resource-link-card">
+      <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="resource-link-card">
         <div class="resource-icon">${link.icon}</div>
         <h3>${link.title}</h3>
         <p>${link.description}</p>
