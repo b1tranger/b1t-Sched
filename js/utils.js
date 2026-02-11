@@ -137,17 +137,35 @@ const Utils = {
     return text.replace(urlPattern, '<a href="$1" target="_blank" rel="noopener noreferrer" class="description-link">$1</a>');
   },
 
-  // Escape HTML to prevent XSS, then linkify
+  // Apply basic markdown formatting
+  // Supports: **bold**, *italic*, `code`
+  applyBasicMarkdown(text) {
+    if (!text) return '';
+    return text
+      // Bold: **text**
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      // Italic: *text* (single asterisks only, after bold is processed)
+      .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+      // Inline code: `text`
+      .replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
+  },
+
+  // Escape HTML to prevent XSS, apply markdown, then linkify
   escapeAndLinkify(text) {
     if (!text) return '';
     // First escape HTML special characters
-    const escaped = text
+    let result = text
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
-    // Then convert URLs to clickable links
-    return this.linkify(escaped);
+    // Apply basic markdown formatting
+    result = this.applyBasicMarkdown(result);
+    // Convert URLs to clickable links
+    result = this.linkify(result);
+    // Convert line breaks to <br>
+    result = result.replace(/\n/g, '<br>');
+    return result;
   }
 };

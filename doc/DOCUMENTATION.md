@@ -28,9 +28,11 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **Firebase Authentication** - Secure email/password login system with email verification and password reset
 - **User Profiles** - Student ID, department, semester, and section
 - **Personalized Dashboard** - Content filtered by user's academic details
-- **Task Management** - View pending assignments and exams with deadlines, with clickable links in descriptions
+- **Task Management** - View pending assignments and exams with deadlines, with basic markdown and clickable links
 - **Task Completion** - Checkboxes to mark tasks complete, persistent per-user
-- **Event Calendar** - Track upcoming academic events with clickable links in descriptions
+- **Task Editing** - Users can edit their own tasks; admins can edit all tasks
+- **Event Calendar** - Track upcoming academic events with basic markdown and clickable links
+- **Event Editing** - Admins can edit all events
 - **Resource Links** - Quick access to department-specific resources
 - **Responsive Design** - Works on desktop, tablet, and mobile
 - **Maroon Theme** - Professional dark maroon and off-white color scheme
@@ -243,6 +245,7 @@ const db = firebase.firestore();   // Firestore instance
 |--------|------------|---------|-------------|
 | `getTasks(department, semester, section)` | string, string, string | `{success, data/error}` | Get filtered tasks |
 | `createTask(userId, userEmail, data)` | string, string, object | `{success, id/error}` | Create new task |
+| `updateTask(taskId, data)` | string, object | `{success, error?}` | Update existing task |
 | `getUserTaskCompletions(userId)` | string | `{success, data/error}` | Get user's completed tasks |
 | `toggleTaskCompletion(userId, taskId, isCompleted)` | string, string, boolean | `{success, error?}` | Toggle task completion |
 | `getOldTasks(userId, department, semester, section)` | strings | `{success, data/error}` | Get completed/past tasks |
@@ -272,6 +275,7 @@ const db = firebase.firestore();   // Firestore instance
 |--------|------------|---------|-------------|
 | `getEvents(department)` | string (default: 'ALL') | `{success, data/error}` | Get upcoming events |
 | `createEvent(data)` | object | `{success, id/error}` | Create event (admin) |
+| `updateEvent(eventId, data)` | string, object | `{success, error?}` | Update existing event (admin) |
 | `deleteEvent(eventId)` | string | `{success, error?}` | Delete event (admin) |
 | `getOldEvents(department)` | string | `{success, data/error}` | Get past events |
 
@@ -347,9 +351,9 @@ const db = firebase.firestore();   // Firestore instance
 | `hideMessage(elementId)` | string | Hide message element |
 | `updateUserDetailsCard(email, dept, sem, section)` | strings | Update navbar user card |
 | `renderResourceLinks(links)` | array | Render resource link cards |
-| `renderTasks(tasks, userCompletions, isAdmin)` | array, object, boolean | Render task cards with checkboxes |
+| `renderTasks(tasks, userCompletions, isAdmin, currentUserId)` | array, object, boolean, string | Render task cards with checkboxes and edit buttons |
 | `renderOldTasks(tasks)` | array | Render completed tasks list |
-| `renderEvents(events, isAdmin)` | array, boolean | Render event cards with delete buttons |
+| `renderEvents(events, isAdmin)` | array, boolean | Render event cards with edit/delete buttons |
 | `renderOldEvents(events)` | array | Render past events list |
 | `populateDropdown(elementId, items, selectedValue)` | string, array, string? | Populate select dropdown |
 | `showModal(modalId)` | string | Display modal dialog |
@@ -397,7 +401,8 @@ const db = firebase.firestore();   // Firestore instance
 | `getSectionGroup(section)` | string | string | Get section group letter (A1 → A) |
 | `getSectionsInGroup(section)` | string | array | Get all sections in group (A1 → [A1, A2]) |
 | `linkify(text)` | string | string | Convert URLs in text to clickable anchor tags |
-| `escapeAndLinkify(text)` | string | string | Escape HTML then convert URLs to links (XSS-safe) |
+| `applyBasicMarkdown(text)` | string | string | Apply basic markdown: `**bold**`, `*italic*`, `` `code` `` |
+| `escapeAndLinkify(text)` | string | string | Escape HTML, apply markdown, linkify URLs, convert line breaks (XSS-safe) |
 
 **Storage Helpers (`Utils.storage`):**
 
@@ -436,9 +441,13 @@ const db = firebase.firestore();   // Firestore instance
 | `openOldTasksModal()` | - | Open completed tasks modal |
 | `handleResetTasks()` | - | Reset all old tasks (admin or CR) |
 | `handleDeleteTask(taskId)` | string | Delete task (admin or CR) |
+| `openEditTaskModal(taskId)` | string | Open edit task modal with pre-filled data |
+| `handleEditTask()` | - | Process edit task form submission |
 | `openAddEventModal()` | - | Open add event modal (admin) |
 | `handleAddEvent()` | - | Process add event form (admin) |
 | `handleDeleteEvent(eventId)` | string | Delete event (admin) |
+| `openEditEventModal(eventId)` | string | Open edit event modal with pre-filled data (admin) |
+| `handleEditEvent()` | - | Process edit event form submission (admin) |
 | `openOldEventsModal()` | - | Open past events modal |
 
 **Application State:**
@@ -863,6 +872,8 @@ Router.onRouteChange((routeName) => {
 | 2.6.1 | Feb 2026 | Mobile UX: Resources section with header, hidden icons, external "All Resources" link |
 | 2.6.2 | Feb 2026 | Security: Added `rel="noopener noreferrer"` to all external links (`target="_blank"`) |
 | 2.7.0 | Feb 2026 | Password reset: "Forgot Password?" link appears after failed login, opens modal to request reset email; Clickable links in task descriptions |
+| 2.8.0 | Feb 2026 | Basic markdown support in task/event descriptions: `**bold**`, `*italic*`, `` `code` ``, and line breaks |
+| 2.9.0 | Feb 2026 | Edit functionality: Users can edit own tasks; admins can edit all tasks and events |
 
 ---
 
@@ -877,4 +888,4 @@ Router.onRouteChange((routeName) => {
 ---
 
 *Documentation last updated: February 11, 2026*
-*Version: 2.7.0*
+*Version: 2.9.0*

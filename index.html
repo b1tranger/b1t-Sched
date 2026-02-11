@@ -413,6 +413,54 @@
                 </div>
             </div>
 
+            <!-- Edit Task Modal -->
+            <div id="edit-task-modal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 class="modal-title">Edit Task</h2>
+                        <button id="close-edit-task-modal" class="btn btn-icon">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <form id="edit-task-form" class="modal-body">
+                        <input type="hidden" id="edit-task-id">
+                        <div class="form-group">
+                            <label for="edit-task-title">Task Title</label>
+                            <input type="text" id="edit-task-title" class="form-input" placeholder="e.g., Assignment 1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-task-course">Course</label>
+                            <input type="text" id="edit-task-course" class="form-input" placeholder="e.g., CSE301">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-task-type">Type</label>
+                            <select id="edit-task-type" class="form-select">
+                                <option value="assignment">Assignment</option>
+                                <option value="homework">Homework</option>
+                                <option value="exam">Exam</option>
+                                <option value="project">Project</option>
+                                <option value="presentation">Presentation</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-task-description">Description</label>
+                            <textarea id="edit-task-description" class="form-input form-textarea" placeholder="Task details..." rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-task-deadline">Deadline</label>
+                            <input type="datetime-local" id="edit-task-deadline" class="form-input" required>
+                        </div>
+                    </form>
+                    <div class="modal-footer">
+                        <button type="button" id="cancel-edit-task" class="btn btn-secondary">Cancel</button>
+                        <button type="submit" form="edit-task-form" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Add Event Modal (Admin Only) -->
             <div id="add-event-modal" class="modal" style="display: none;">
                 <div class="modal-content">
@@ -451,6 +499,50 @@
                         <button type="button" id="cancel-add-event" class="btn btn-secondary">Cancel</button>
                         <button type="submit" form="add-event-form" class="btn btn-primary">
                             <i class="fas fa-plus"></i> Add Event
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit Event Modal (Admin Only) -->
+            <div id="edit-event-modal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 class="modal-title">Edit Event</h2>
+                        <button id="close-edit-event-modal" class="btn btn-icon">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <form id="edit-event-form" class="modal-body">
+                        <input type="hidden" id="edit-event-id">
+                        <div class="form-group">
+                            <label for="edit-event-title">Event Title</label>
+                            <input type="text" id="edit-event-title" class="form-input" placeholder="e.g., Mid-term Exams" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-event-description">Description</label>
+                            <textarea id="edit-event-description" class="form-input form-textarea" placeholder="Event details..." rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-event-date">Date</label>
+                            <input type="datetime-local" id="edit-event-date" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-event-department">Target Department</label>
+                            <select id="edit-event-department" class="form-select">
+                                <option value="ALL">All Departments</option>
+                                <option value="CSE">CSE Only</option>
+                                <option value="IT">IT Only</option>
+                                <option value="CE">CE Only</option>
+                                <option value="EEE">EEE Only</option>
+                                <option value="BBA">BBA Only</option>
+                            </select>
+                        </div>
+                    </form>
+                    <div class="modal-footer">
+                        <button type="button" id="cancel-edit-event" class="btn btn-secondary">Cancel</button>
+                        <button type="submit" form="edit-event-form" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Changes
                         </button>
                     </div>
                 </div>

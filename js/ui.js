@@ -67,7 +67,7 @@ const UI = {
   },
 
   // Render tasks with checkboxes
-  renderTasks(tasks, userCompletions = {}, isAdmin = false) {
+  renderTasks(tasks, userCompletions = {}, isAdmin = false, currentUserId = null) {
     const container = document.getElementById('tasks-container');
     const noTasksMsg = document.getElementById('no-tasks-message');
     
@@ -113,6 +113,14 @@ const UI = {
         statusClass = 'incomplete';
       }
 
+      // User can edit their own tasks, admin can edit all
+      const canEdit = isAdmin || (currentUserId && task.addedBy === currentUserId);
+      const editButton = canEdit ? `
+        <button class="task-edit-btn" data-task-id="${task.id}" title="Edit task">
+          <i class="fas fa-edit"></i>
+        </button>
+      ` : '';
+
       const deleteButton = isAdmin ? `
         <button class="task-delete-btn" data-task-id="${task.id}" title="Delete task">
           <i class="fas fa-trash"></i>
@@ -145,7 +153,10 @@ const UI = {
                   ${isPastDeadline && !isCompleted ? '(Overdue!)' : ''}
                   ${isUrgent && !isPastDeadline ? `(${daysUntil} day${daysUntil !== 1 ? 's' : ''} left!)` : ''}
                 </span>
-                ${deleteButton}
+                <div class="task-actions">
+                  ${editButton}
+                  ${deleteButton}
+                </div>
               </div>
               ${task.addedBy ? `<p class="task-added-by">Added by ${task.addedByName || 'User'}${task.section ? ` (${task.section})` : ''}</p>` : ''}
             </div>
@@ -210,6 +221,12 @@ const UI = {
       const day = eventDate.getDate();
       const month = eventDate.toLocaleDateString('en-US', { month: 'short' });
 
+      const editButton = isAdmin ? `
+        <button class="event-edit-btn" data-event-id="${event.id}" title="Edit event">
+          <i class="fas fa-edit"></i>
+        </button>
+      ` : '';
+
       const deleteButton = isAdmin ? `
         <button class="event-delete-btn" data-event-id="${event.id}" title="Delete event">
           <i class="fas fa-trash"></i>
@@ -226,7 +243,10 @@ const UI = {
             <h3 class="event-title">${event.title || 'Untitled Event'}</h3>
             <p class="event-description">${Utils.escapeAndLinkify(event.description) || 'No description available.'}</p>
           </div>
-          ${deleteButton}
+          <div class="event-actions">
+            ${editButton}
+            ${deleteButton}
+          </div>
         </div>
       `;
     }).join('');

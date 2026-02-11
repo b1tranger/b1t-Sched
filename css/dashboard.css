@@ -592,7 +592,8 @@
 }
 
 /* Task Delete Button */
-.task-delete-btn {
+.task-delete-btn,
+.task-edit-btn {
     background: none;
     border: none;
     color: var(--text-light);
@@ -600,13 +601,23 @@
     padding: var(--spacing-xs);
     border-radius: var(--radius-sm);
     transition: all var(--transition-fast);
-    margin-left: auto;
     flex-shrink: 0;
 }
 
 .task-delete-btn:hover {
     color: var(--danger);
     background-color: rgba(var(--danger-rgb, 220, 53, 69), 0.1);
+}
+
+.task-edit-btn:hover {
+    color: var(--primary);
+    background-color: rgba(var(--primary-rgb, 128, 0, 31), 0.1);
+}
+
+.task-actions {
+    display: flex;
+    gap: var(--spacing-xs);
+    margin-left: auto;
 }
 
 .task-footer {
@@ -616,15 +627,25 @@
     flex-wrap: wrap;
 }
 
-/* Event Delete Button */
+/* Event Delete/Edit Buttons */
 .event-card {
     position: relative;
 }
 
-.event-delete-btn {
-    position: absolute;
-    top: var(--spacing-xs);
-    right: var(--spacing-xs);
+.event-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+}
+
+.event-card:hover .event-actions {
+    opacity: 1;
+}
+
+.event-delete-btn,
+.event-edit-btn {
     background: none;
     border: none;
     color: var(--text-light);
@@ -632,16 +653,16 @@
     padding: var(--spacing-xs);
     border-radius: var(--radius-sm);
     transition: all var(--transition-fast);
-    opacity: 0;
-}
-
-.event-card:hover .event-delete-btn {
-    opacity: 1;
 }
 
 .event-delete-btn:hover {
     color: var(--danger);
     background-color: rgba(var(--danger-rgb, 220, 53, 69), 0.1);
+}
+
+.event-edit-btn:hover {
+    color: var(--primary);
+    background-color: rgba(var(--primary-rgb, 128, 0, 31), 0.1);
 }
 
 /* Reset Tasks Button */
@@ -738,14 +759,19 @@
     font-size: var(--font-lg);
 }
 
-/* Mobile compact delete buttons */
+/* Mobile compact buttons */
 @media (max-width: 768px) {
-    .event-delete-btn {
+    .event-actions {
         opacity: 1;
+    }
+
+    .event-delete-btn,
+    .event-edit-btn {
         padding: 4px;
     }
 
-    .task-delete-btn {
+    .task-delete-btn,
+    .task-edit-btn {
         padding: 4px;
     }
 }

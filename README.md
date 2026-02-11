@@ -14,6 +14,7 @@ A single-page application (SPA) that helps students manage academic tasks, assig
 - 🔐 **Firebase Authentication** - Secure email/password login with password reset
 - 👤 **User Profiles** - Set department, semester, and section once
 - 📋 **Personalized Tasks** - View tasks filtered by your academic details, with clickable links
+- ✏️ **Edit Entries** - Users can edit their own tasks; admins can edit all tasks and events
 - 🔗 **Dynamic Resource Links** - Department-specific routine, calendar, and faculty contacts
 - 📅 **Event Calendar** - Track upcoming academic events with clickable links
 - ⚙️ **Profile Settings** - Update your details anytime

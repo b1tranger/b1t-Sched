@@ -390,6 +390,43 @@ const DB = {
     }
   },
 
+  // Update a task
+  async updateTask(taskId, data) {
+    try {
+      await db.collection('tasks').doc(taskId).update({
+        title: data.title,
+        course: data.course || '',
+        type: data.type || 'assignment',
+        description: data.description || '',
+        deadline: firebase.firestore.Timestamp.fromDate(new Date(data.deadline)),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      console.log('Task updated:', taskId);
+      return { success: true };
+    } catch (error) {
+      console.error('Error updating task:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Update an event (admin only)
+  async updateEvent(eventId, data) {
+    try {
+      await db.collection('events').doc(eventId).update({
+        title: data.title,
+        description: data.description || '',
+        date: firebase.firestore.Timestamp.fromDate(new Date(data.date)),
+        department: data.department || 'ALL',
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      console.log('Event updated:', eventId);
+      return { success: true };
+    } catch (error) {
+      console.error('Error updating event:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
   // Get old/past events
   async getOldEvents(department = 'ALL') {
     try {

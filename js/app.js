@@ -304,6 +304,124 @@ const App = {
     }
   },
 
+  async openEditTaskModal(taskId) {
+    // Find the task in currentTasks
+    const task = this.currentTasks.find(t => t.id === taskId);
+    if (!task) {
+      alert('Task not found');
+      return;
+    }
+
+    // Check if user can edit this task
+    const userId = Auth.getUserId();
+    const canEdit = this.isAdmin || (userId && task.addedBy === userId);
+    if (!canEdit) {
+      alert('You do not have permission to edit this task');
+      return;
+    }
+
+    // Populate the form
+    document.getElementById('edit-task-id').value = taskId;
+    document.getElementById('edit-task-title').value = task.title || '';
+    document.getElementById('edit-task-course').value = task.course || '';
+    document.getElementById('edit-task-type').value = task.type || 'assignment';
+    document.getElementById('edit-task-description').value = task.description || '';
+    
+    // Format deadline for datetime-local input
+    const deadline = task.deadline ? task.deadline.toDate() : new Date();
+    deadline.setMinutes(deadline.getMinutes() - deadline.getTimezoneOffset());
+    document.getElementById('edit-task-deadline').value = deadline.toISOString().slice(0, 16);
+
+    UI.showModal('edit-task-modal');
+  },
+
+  async handleEditTask() {
+    const taskId = document.getElementById('edit-task-id').value;
+    const title = document.getElementById('edit-task-title').value.trim();
+    const course = document.getElementById('edit-task-course').value.trim();
+    const type = document.getElementById('edit-task-type').value;
+    const description = document.getElementById('edit-task-description').value.trim();
+    const deadline = document.getElementById('edit-task-deadline').value;
+
+    if (!title || !deadline) {
+      alert('Please fill in the required fields (Title and Deadline)');
+      return;
+    }
+
+    const result = await DB.updateTask(taskId, {
+      title,
+      course,
+      type,
+      description,
+      deadline
+    });
+
+    if (result.success) {
+      UI.hideModal('edit-task-modal');
+      // Refresh tasks
+      await this.loadDashboardData();
+    } else {
+      alert('Failed to update task: ' + result.error);
+    }
+  },
+
+  async openEditEventModal(eventId) {
+    if (!this.isAdmin) {
+      alert('Only admins can edit events');
+      return;
+    }
+
+    // Find the event in currentEvents
+    const event = this.currentEvents.find(e => e.id === eventId);
+    if (!event) {
+      alert('Event not found');
+      return;
+    }
+
+    // Populate the form
+    document.getElementById('edit-event-id').value = eventId;
+    document.getElementById('edit-event-title').value = event.title || '';
+    document.getElementById('edit-event-description').value = event.description || '';
+    document.getElementById('edit-event-department').value = event.department || 'ALL';
+    
+    // Format date for datetime-local input
+    const eventDate = event.date ? event.date.toDate() : new Date();
+    eventDate.setMinutes(eventDate.getMinutes() - eventDate.getTimezoneOffset());
+    document.getElementById('edit-event-date').value = eventDate.toISOString().slice(0, 16);
+
+    UI.showModal('edit-event-modal');
+  },
+
+  async handleEditEvent() {
+    if (!this.isAdmin) return;
+
+    const eventId = document.getElementById('edit-event-id').value;
+    const title = document.getElementById('edit-event-title').value.trim();
+    const description = document.getElementById('edit-event-description').value.trim();
+    const date = document.getElementById('edit-event-date').value;
+    const department = document.getElementById('edit-event-department').value;
+
+    if (!title || !date) {
+      alert('Please fill in the required fields (Title and Date)');
+      return;
+    }
+
+    const result = await DB.updateEvent(eventId, {
+      title,
+      description,
+      date,
+      department
+    });
+
+    if (result.success) {
+      UI.hideModal('edit-event-modal');
+      // Refresh events
+      await this.loadDashboardData();
+    } else {
+      alert('Failed to update event: ' + result.error);
+    }
+  },
+
   async handleTaskCompletion(taskId, isCompleted) {
     const userId = Auth.getUserId();
     if (!userId) return;
@@ -319,7 +437,7 @@ const App = {
       }
       
       // Re-render tasks with updated completions
-      UI.renderTasks(this.currentTasks, this.userCompletions, this.isAdmin || this.isCR);
+      UI.renderTasks(this.currentTasks, this.userCompletions, this.isAdmin || this.isCR, Auth.getUserId());
     } else {
       // Revert checkbox state on error
       const checkbox = document.querySelector(`.task-checkbox[data-task-id="${taskId}"]`);
@@ -618,7 +736,7 @@ const App = {
     const tasksResult = await DB.getTasks(department, semester, section);
     if (tasksResult.success) {
       this.currentTasks = tasksResult.data;
-      UI.renderTasks(this.currentTasks, this.userCompletions, this.isAdmin || this.isCR);
+      UI.renderTasks(this.currentTasks, this.userCompletions, this.isAdmin || this.isCR, userId);
     } else {
       console.error('Failed to load tasks:', tasksResult.error);
       // Check if it's an index error
@@ -657,6 +775,10 @@ const App = {
         if (e.target.closest('.task-delete-btn')) {
           const taskId = e.target.closest('.task-delete-btn').dataset.taskId;
           await this.handleDeleteTask(taskId);
+        }
+        if (e.target.closest('.task-edit-btn')) {
+          const taskId = e.target.closest('.task-edit-btn').dataset.taskId;
+          await this.openEditTaskModal(taskId);
         }
       });
     }
@@ -732,9 +854,51 @@ const App = {
             const eventId = e.target.closest('.event-delete-btn').dataset.eventId;
             await this.handleDeleteEvent(eventId);
           }
+          if (e.target.closest('.event-edit-btn')) {
+            const eventId = e.target.closest('.event-edit-btn').dataset.eventId;
+            await this.openEditEventModal(eventId);
+          }
         });
       }
     });
+
+    // Edit Task modal listeners
+    const closeEditTaskModal = document.getElementById('close-edit-task-modal');
+    const cancelEditTask = document.getElementById('cancel-edit-task');
+    if (closeEditTaskModal) {
+      closeEditTaskModal.addEventListener('click', () => UI.hideModal('edit-task-modal'));
+    }
+    if (cancelEditTask) {
+      cancelEditTask.addEventListener('click', () => UI.hideModal('edit-task-modal'));
+    }
+
+    // Edit Task form
+    const editTaskForm = document.getElementById('edit-task-form');
+    if (editTaskForm) {
+      editTaskForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await this.handleEditTask();
+      });
+    }
+
+    // Edit Event modal listeners
+    const closeEditEventModal = document.getElementById('close-edit-event-modal');
+    const cancelEditEvent = document.getElementById('cancel-edit-event');
+    if (closeEditEventModal) {
+      closeEditEventModal.addEventListener('click', () => UI.hideModal('edit-event-modal'));
+    }
+    if (cancelEditEvent) {
+      cancelEditEvent.addEventListener('click', () => UI.hideModal('edit-event-modal'));
+    }
+
+    // Edit Event form
+    const editEventForm = document.getElementById('edit-event-form');
+    if (editEventForm) {
+      editEventForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await this.handleEditEvent();
+      });
+    }
   },
 
   async handleResetTasks() {
@@ -765,7 +929,7 @@ const App = {
     if (result.success) {
       // Remove from local state and re-render
       this.currentTasks = this.currentTasks.filter(t => t.id !== taskId);
-      UI.renderTasks(this.currentTasks, this.userCompletions, this.isAdmin || this.isCR);
+      UI.renderTasks(this.currentTasks, this.userCompletions, this.isAdmin || this.isCR, Auth.getUserId());
     } else {
       alert('Failed to delete task: ' + result.error);
     }
