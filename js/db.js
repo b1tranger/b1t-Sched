@@ -295,7 +295,7 @@ const DB = {
   // ADMIN OPERATIONS
   // ============================================
 
-  // Check if user is an admin or CR (flags set manually in Firestore)
+  // Check if user is an admin, CR, or blocked (flags set in Firestore)
   async getUserRoles(userId) {
     try {
       const doc = await db.collection('users').doc(userId).get();
@@ -304,13 +304,14 @@ const DB = {
         return { 
           success: true, 
           isAdmin: data.isAdmin === true,
-          isCR: data.isCR === true
+          isCR: data.isCR === true,
+          isBlocked: data.isBlocked === true
         };
       }
-      return { success: true, isAdmin: false, isCR: false };
+      return { success: true, isAdmin: false, isCR: false, isBlocked: false };
     } catch (error) {
       console.error('Error checking user roles:', error);
-      return { success: false, isAdmin: false, isCR: false, error: error.message };
+      return { success: false, isAdmin: false, isCR: false, isBlocked: false, error: error.message };
     }
   },
 
@@ -450,6 +451,60 @@ const DB = {
       return { success: true, data: events };
     } catch (error) {
       console.error('Error getting old events:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  // ============================================
+  // USER MANAGEMENT (Admin Only)
+  // ============================================
+
+  // Get all users (admin only)
+  async getAllUsers() {
+    try {
+      const snapshot = await db.collection('users').get();
+      const users = [];
+      snapshot.forEach(doc => {
+        users.push({ id: doc.id, ...doc.data() });
+      });
+      console.log(`Found ${users.length} users`);
+      return { success: true, data: users };
+    } catch (error) {
+      console.error('Error getting all users:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Update user role (admin only)
+  async updateUserRole(userId, role, value) {
+    try {
+      const updateData = {
+        [role]: value,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      await db.collection('users').doc(userId).update(updateData);
+      console.log(`User ${userId} role ${role} set to ${value}`);
+      return { success: true };
+    } catch (error) {
+      console.error('Error updating user role:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Update user profile by admin (bypasses cooldown)
+  async adminUpdateUserProfile(userId, data) {
+    try {
+      await db.collection('users').doc(userId).update({
+        department: data.department,
+        semester: data.semester,
+        section: data.section,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        lastProfileChangeByAdmin: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      console.log('User profile updated by admin');
+      return { success: true };
+    } catch (error) {
+      console.error('Error updating user profile:', error);
       return { success: false, error: error.message };
     }
   }

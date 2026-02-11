@@ -346,6 +346,34 @@ const UI = {
     }
   },
 
+  // Toggle blocked user mode (read-only mode)
+  toggleBlockedUserMode(isBlocked) {
+    const blockedBanner = document.getElementById('blocked-user-banner');
+    const addTaskBtn = document.getElementById('add-task-btn');
+    
+    if (blockedBanner) {
+      blockedBanner.style.display = isBlocked ? 'flex' : 'none';
+    }
+    
+    // Disable add task button for blocked users
+    if (addTaskBtn) {
+      if (isBlocked) {
+        addTaskBtn.disabled = true;
+        addTaskBtn.title = 'Your account has been restricted';
+      } else {
+        addTaskBtn.disabled = false;
+        addTaskBtn.title = '';
+      }
+    }
+
+    // Add class to body for global styling
+    if (isBlocked) {
+      document.body.classList.add('user-blocked');
+    } else {
+      document.body.classList.remove('user-blocked');
+    }
+  },
+
   // Populate dropdown
   async populateDropdown(elementId, items, selectedValue = null) {
     const dropdown = document.getElementById(elementId);

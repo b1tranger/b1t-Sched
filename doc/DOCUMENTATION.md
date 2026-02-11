@@ -37,7 +37,9 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **Responsive Design** - Works on desktop, tablet, and mobile
 - **Maroon Theme** - Professional dark maroon and off-white color scheme
 - **Admin Features** - Task reset, task/event delete, event creation (admin-only)
+- **Admin User Management** - View all users, manage roles (CR/Blocked), edit user profiles
 - **CR Role** - Class Representatives can reset and delete tasks for their section
+- **Blocked Users** - Restricted accounts in read-only mode (cannot add/edit/delete tasks or change profile)
 - **CR Info Message** - Non-CR users see instructions to contact admin for CR role
 - **Profile Change Cooldown** - Users can only change profile once per 30 days (anti-spam)
 - **Two-Column Layout** - Events sidebar on desktop, slide-out panel (40vw) on mobile
@@ -236,8 +238,10 @@ const db = firebase.firestore();   // Firestore instance
   semester: string,       // e.g., "1st", "2nd"
   section: string,        // e.g., "A1", "B2"
   isAdmin: boolean,       // Optional - admin privileges (set manually)
-  isCR: boolean,          // Optional - CR privileges (set manually)
+  isCR: boolean,          // Optional - CR privileges (set via admin panel)
+  isBlocked: boolean,     // Optional - blocked/restricted user (set via admin panel)
   lastProfileChange: Timestamp, // Optional - last profile edit timestamp (30-day cooldown)
+  lastProfileChangeByAdmin: Timestamp, // Optional - last admin edit timestamp
   createdAt: Timestamp,
   updatedAt: Timestamp
 }
@@ -287,7 +291,15 @@ const db = firebase.firestore();   // Firestore instance
 
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
-| `getUserRoles(userId)` | string | `{success, isAdmin, isCR/error}` | Check user's admin/CR status |
+| `getUserRoles(userId)` | string | `{success, isAdmin, isCR, isBlocked/error}` | Check user's admin/CR/blocked status |
+
+#### User Management Operations (Admin Only)
+
+| Method | Parameters | Returns | Description |
+|--------|------------|---------|-------------|
+| `getAllUsers()` | - | `{success, data/error}` | Get all users for admin panel |
+| `updateUserRole(userId, role, value)` | string, string, boolean | `{success, error?}` | Set user role (isCR, isBlocked) |
+| `adminUpdateUserProfile(userId, data)` | string, object | `{success, error?}` | Admin edit user profile (bypasses cooldown) |
 
 **Event Schema:**
 ```javascript
@@ -329,8 +341,7 @@ const db = firebase.firestore();   // Firestore instance
 | `""` (empty) | login | `login-view` |
 | `#/dashboard` | dashboard | `dashboard-view` |
 | `#/profile-settings` | profile-settings | `profile-settings-view` |
-| `#/set-details` | set-details | `set-details-view` |
-
+| `#/set-details` | set-details | `set-details-view` || `#/user-management` | user-management | `user-management-view` |
 #### Methods
 
 | Method | Parameters | Description |
@@ -364,6 +375,7 @@ const db = firebase.firestore();   // Firestore instance
 | `hideModal(modalId)` | string | Hide modal dialog |
 | `toggleEventsSidebar(open)` | boolean | Open/close mobile events sidebar |
 | `toggleAdminControls(isAdmin, isCR)` | boolean, boolean | Show/hide admin-only and CR elements |
+| `toggleBlockedUserMode(isBlocked)` | boolean | Enable/disable read-only mode for blocked users |
 
 ---
 
@@ -454,6 +466,15 @@ const db = firebase.firestore();   // Firestore instance
 | `openEditEventModal(eventId)` | string | Open edit event modal with pre-filled data (admin) |
 | `handleEditEvent()` | - | Process edit event form submission (admin) |
 | `openOldEventsModal()` | - | Open past events modal |
+| `setupUserManagementListeners()` | - | Setup user management event handlers |
+| `loadUserManagement()` | - | Load all users for admin panel |
+| `renderUserList(users)` | array | Render user cards in admin panel |
+| `filterUsers()` | - | Filter users by department/semester/section/role |
+| `clearUserFilters()` | - | Reset all user filters |
+| `toggleUserRole(userId, role, value)` | strings, boolean | Toggle user role (isCR, isBlocked) |
+| `openEditUserModal(userId)` | string | Open edit user modal |
+| `updateEditUserSections(selectedValue)` | string? | Update sections in edit user modal |
+| `handleEditUser()` | - | Process edit user form (admin) |
 
 **Application State:**
 ```javascript
@@ -469,6 +490,8 @@ App.currentTasks = []         // Loaded tasks
 App.currentEvents = []        // Loaded events
 App.isAdmin = false           // Admin privileges
 App.isCR = false              // CR (Class Representative) privileges
+App.isBlocked = false         // Blocked/restricted user status
+App.allUsers = []             // All users (admin panel)
 ```
 
 ---
@@ -571,7 +594,9 @@ Firestore Database
 │       ├── section: string
 │       ├── isAdmin: boolean    # Optional - admin privileges
 │       ├── isCR: boolean       # Optional - CR privileges
+│       ├── isBlocked: boolean  # Optional - blocked/restricted user
 │       ├── lastProfileChange: timestamp  # Optional - 30-day cooldown
+│       ├── lastProfileChangeByAdmin: timestamp  # Optional - admin edit
 │       ├── createdAt: timestamp
 │       ├── updatedAt: timestamp
 │       └── completedTasks/     # Subcollection: task completions
@@ -651,35 +676,52 @@ service cloud.firestore {
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isCR == true;
     }
     
-    // Users collection - users can only read/write their own data
+    // Helper function to check if user is blocked
+    function isBlocked() {
+      return isSignedIn() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isBlocked == true;
+    }
+    
+    // Users collection
     match /users/{userId} {
-      allow read: if isOwner(userId);
+      // Users can read their own profile; Admins can read all users
+      allow read: if isOwner(userId) || isAdmin();
+      
+      // Users can create their own profile
       allow create: if isSignedIn() && request.auth.uid == userId;
-      allow update: if isOwner(userId);
-      allow delete: if false; // Prevent deletion
+      
+      // Users can update their own profile (if not blocked); Admins can update any
+      allow update: if (isOwner(userId) && !isBlocked()) || isAdmin();
+      
+      // Only admins can delete user profiles
+      allow delete: if isAdmin();
     }
     
     // Task completions subcollection (user's personal completion status)
-    match /users/{userId}/taskCompletions/{taskId} {
-      allow read, write: if isOwner(userId);
+    match /users/{userId}/completedTasks/{taskId} {
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId) && !isBlocked();
     }
     
     // Tasks collection
-    // - Anyone can read (authenticated)
-    // - Anyone can create (authenticated)
-    // - Edit: Admin or task owner
-    // - Delete: Admin, CR, or task owner
     match /tasks/{taskId} {
+      // Anyone authenticated can read
       allow read: if isSignedIn();
-      allow create: if isSignedIn();
+      
+      // Create: authenticated and not blocked
+      allow create: if isSignedIn() && !isBlocked();
+      
+      // Update: Admin or task owner (if not blocked)
       allow update: if isSignedIn() && (
         isAdmin() || 
-        resource.data.addedBy == request.auth.uid
+        (resource.data.addedBy == request.auth.uid && !isBlocked())
       );
+      
+      // Delete: Admin, CR, or task owner (if not blocked)
       allow delete: if isSignedIn() && (
         isAdmin() || 
         isCR() || 
-        resource.data.addedBy == request.auth.uid
+        (resource.data.addedBy == request.auth.uid && !isBlocked())
       );
     }
     
@@ -706,17 +748,21 @@ service cloud.firestore {
 
 ### User Role Permissions Summary
 
-| Action | Regular User | CR | Admin |
-|--------|-------------|-----|-------|
-| Read tasks | ✓ | ✓ | ✓ |
-| Create tasks | ✓ | ✓ | ✓ |
-| Edit own tasks | ✓ | ✓ | ✓ |
-| Edit any task | ✗ | ✗ | ✓ |
-| Delete own tasks | ✓ | ✓ | ✓ |
-| Delete any task | ✗ | ✓ | ✓ |
-| Reset tasks | ✗ | ✓ | ✓ |
-| Read events | ✓ | ✓ | ✓ |
-| Create/Edit/Delete events | ✗ | ✗ | ✓ |
+| Action | Blocked User | Regular User | CR | Admin |
+|--------|-------------|--------------|-----|-------|
+| Read tasks | ✓ (read-only) | ✓ | ✓ | ✓ |
+| Create tasks | ✗ | ✓ | ✓ | ✓ |
+| Edit own tasks | ✗ | ✓ | ✓ | ✓ |
+| Edit any task | ✗ | ✗ | ✗ | ✓ |
+| Delete own tasks | ✗ | ✓ | ✓ | ✓ |
+| Delete any task | ✗ | ✗ | ✓ | ✓ |
+| Reset tasks | ✗ | ✗ | ✓ | ✓ |
+| Mark tasks complete | ✗ | ✓ | ✓ | ✓ |
+| Read events | ✓ | ✓ | ✓ | ✓ |
+| Create/Edit/Delete events | ✗ | ✗ | ✗ | ✓ |
+| Change own profile | ✗ | ✓ (30-day cooldown) | ✓ | ✓ |
+| Manage users | ✗ | ✗ | ✗ | ✓ |
+| Assign/remove roles | ✗ | ✗ | ✗ | ✓ |
 
 ---
 
@@ -928,6 +974,7 @@ Router.onRouteChange((routeName) => {
 | 2.9.0 | Feb 2026 | Edit functionality: Users can edit own tasks; admins can edit all tasks and events |
 | 2.9.1 | Feb 2026 | Permissions fix: Regular users can now delete their own tasks; clarified role permissions |
 | 2.10.0 | Feb 2026 | CR info message for non-CR users; Profile change 30-day cooldown; Footer with credits and dynamic year |
+| 2.11.0 | Feb 2026 | Admin User Management: view all users, filter by dept/sem/section/role, toggle isCR/isBlocked roles, edit user profiles; Blocked users restricted to read-only mode |
 
 ---
 
@@ -942,4 +989,4 @@ Router.onRouteChange((routeName) => {
 ---
 
 *Documentation last updated: February 11, 2026*
-*Version: 2.10.0*
+*Version: 2.11.0*

@@ -155,6 +155,12 @@ const Profile = {
 
   async handleSaveProfile() {
     try {
+      // Check if user is blocked
+      if (App.isBlocked) {
+        UI.showMessage('profile-message', 'Your account has been restricted. You cannot change profile settings.', 'error');
+        return;
+      }
+
       const department = document.getElementById('profile-department').value;
       const semester = document.getElementById('profile-semester').value;
       const section = document.getElementById('profile-section').value;

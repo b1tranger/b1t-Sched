@@ -9,6 +9,8 @@ const App = {
   currentEvents: [],
   isAdmin: false,
   isCR: false,
+  isBlocked: false,
+  allUsers: [],
 
   async init() {
     console.log('Initializing b1t-Sched...');
@@ -32,6 +34,7 @@ const App = {
     this.setupTaskEventListeners();
     this.setupEventsSidebarListeners();
     this.setupAdminEventListeners();
+    this.setupUserManagementListeners();
 
     // Initialize Profile module
     await Profile.init();
@@ -42,6 +45,8 @@ const App = {
         await Profile.loadProfile();
       } else if (route === 'dashboard') {
         await this.loadDashboardData();
+      } else if (route === 'user-management') {
+        await this.loadUserManagement();
       }
     });
   },
@@ -235,6 +240,12 @@ const App = {
   },
 
   openAddTaskModal() {
+    // Check if user is blocked
+    if (this.isBlocked) {
+      alert('Your account has been restricted. You cannot add tasks.');
+      return;
+    }
+    
     // Set minimum date to now
     const deadlineInput = document.getElementById('task-deadline');
     if (deadlineInput) {
@@ -264,6 +275,12 @@ const App = {
   },
 
   async handleAddTask() {
+    // Check if user is blocked
+    if (this.isBlocked) {
+      alert('Your account has been restricted. You cannot add tasks.');
+      return;
+    }
+    
     const title = document.getElementById('task-title').value.trim();
     const course = document.getElementById('task-course').value.trim();
     const type = document.getElementById('task-type').value;
@@ -305,6 +322,12 @@ const App = {
   },
 
   async openEditTaskModal(taskId) {
+    // Check if user is blocked
+    if (this.isBlocked) {
+      alert('Your account has been restricted. You cannot edit tasks.');
+      return;
+    }
+    
     // Find the task in currentTasks
     const task = this.currentTasks.find(t => t.id === taskId);
     if (!task) {
@@ -336,6 +359,12 @@ const App = {
   },
 
   async handleEditTask() {
+    // Check if user is blocked
+    if (this.isBlocked) {
+      alert('Your account has been restricted. You cannot edit tasks.');
+      return;
+    }
+    
     const taskId = document.getElementById('edit-task-id').value;
     const title = document.getElementById('edit-task-title').value.trim();
     const course = document.getElementById('edit-task-course').value.trim();
@@ -423,6 +452,17 @@ const App = {
   },
 
   async handleTaskCompletion(taskId, isCompleted) {
+    // Check if user is blocked
+    if (this.isBlocked) {
+      // Revert checkbox state
+      const checkbox = document.querySelector(`.task-checkbox[data-task-id="${taskId}"]`);
+      if (checkbox) {
+        checkbox.checked = !isCompleted;
+      }
+      alert('Your account has been restricted. You cannot modify tasks.');
+      return;
+    }
+    
     const userId = Auth.getUserId();
     if (!userId) return;
 
@@ -583,15 +623,17 @@ const App = {
       // User has profile, load dashboard
       this.userProfile = profileResult.data;
       
-      // Check if user is admin or CR
+      // Check if user is admin, CR, or blocked
       const rolesResult = await DB.getUserRoles(user.uid);
       this.isAdmin = rolesResult.isAdmin || false;
       this.isCR = rolesResult.isCR || false;
+      this.isBlocked = rolesResult.isBlocked || false;
       
       // Save to localStorage
       Utils.storage.set('userProfile', this.userProfile);
       Utils.storage.set('isAdmin', this.isAdmin);
       Utils.storage.set('isCR', this.isCR);
+      Utils.storage.set('isBlocked', this.isBlocked);
       
       // Update user details card
       UI.updateUserDetailsCard(
@@ -603,6 +645,9 @@ const App = {
       
       // Show/hide admin and CR controls
       UI.toggleAdminControls(this.isAdmin, this.isCR);
+      
+      // Show blocked user warning if applicable
+      UI.toggleBlockedUserMode(this.isBlocked);
 
       // Navigate based on current route
       if (Router.getCurrentRoute() === 'profile-settings') {
@@ -626,6 +671,7 @@ const App = {
     this.userProfile = null;
     this.isAdmin = false;
     this.isCR = false;
+    this.isBlocked = false;
     Utils.storage.clear();
     
     // Hide footer when not logged in
@@ -925,6 +971,12 @@ const App = {
   },
 
   async handleDeleteTask(taskId) {
+    // Check if user is blocked
+    if (this.isBlocked) {
+      alert('Your account has been restricted. You cannot delete tasks.');
+      return;
+    }
+    
     // Find the task to check ownership
     const task = this.currentTasks.find(t => t.id === taskId);
     if (!task) return;
@@ -1023,6 +1075,344 @@ const App = {
     const result = await DB.getOldEvents(department);
     if (result.success) {
       UI.renderOldEvents(result.data);
+    }
+  },
+
+  // ============================================
+  // USER MANAGEMENT (Admin Only)
+  // ============================================
+
+  setupUserManagementListeners() {
+    // Manage Users button
+    const manageUsersBtn = document.getElementById('manage-users-btn');
+    if (manageUsersBtn) {
+      manageUsersBtn.addEventListener('click', () => {
+        Router.navigate('user-management');
+      });
+    }
+
+    // Back to Profile from User Management
+    const backToProfileBtn = document.getElementById('back-to-profile-btn');
+    if (backToProfileBtn) {
+      backToProfileBtn.addEventListener('click', () => {
+        Router.navigate('profile-settings');
+      });
+    }
+
+    // User filter inputs
+    const filterInputs = ['filter-department', 'filter-semester', 'filter-section', 'filter-role'];
+    filterInputs.forEach(inputId => {
+      const input = document.getElementById(inputId);
+      if (input) {
+        input.addEventListener('change', () => this.filterUsers());
+      }
+    });
+
+    // Clear filters button
+    const clearFiltersBtn = document.getElementById('clear-filters-btn');
+    if (clearFiltersBtn) {
+      clearFiltersBtn.addEventListener('click', () => this.clearUserFilters());
+    }
+
+    // User list delegation for role toggles and edit buttons
+    const userListContainer = document.getElementById('user-list-container');
+    if (userListContainer) {
+      userListContainer.addEventListener('click', async (e) => {
+        if (e.target.closest('.toggle-cr-btn')) {
+          const userId = e.target.closest('.toggle-cr-btn').dataset.userId;
+          const currentValue = e.target.closest('.toggle-cr-btn').dataset.currentValue === 'true';
+          await this.toggleUserRole(userId, 'isCR', !currentValue);
+        }
+        if (e.target.closest('.toggle-blocked-btn')) {
+          const userId = e.target.closest('.toggle-blocked-btn').dataset.userId;
+          const currentValue = e.target.closest('.toggle-blocked-btn').dataset.currentValue === 'true';
+          await this.toggleUserRole(userId, 'isBlocked', !currentValue);
+        }
+        if (e.target.closest('.edit-user-btn')) {
+          const userId = e.target.closest('.edit-user-btn').dataset.userId;
+          await this.openEditUserModal(userId);
+        }
+      });
+    }
+
+    // Edit User modal listeners
+    const closeEditUserModal = document.getElementById('close-edit-user-modal');
+    const cancelEditUser = document.getElementById('cancel-edit-user');
+    if (closeEditUserModal) {
+      closeEditUserModal.addEventListener('click', () => UI.hideModal('edit-user-modal'));
+    }
+    if (cancelEditUser) {
+      cancelEditUser.addEventListener('click', () => UI.hideModal('edit-user-modal'));
+    }
+
+    // Edit User form
+    const editUserForm = document.getElementById('edit-user-form');
+    if (editUserForm) {
+      editUserForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await this.handleEditUser();
+      });
+    }
+
+    // Listen for department/semester changes in edit user modal
+    const editUserDept = document.getElementById('edit-user-department');
+    const editUserSem = document.getElementById('edit-user-semester');
+    if (editUserDept && editUserSem) {
+      editUserDept.addEventListener('change', () => this.updateEditUserSections());
+      editUserSem.addEventListener('change', () => this.updateEditUserSections());
+    }
+  },
+
+  async loadUserManagement() {
+    if (!this.isAdmin) {
+      alert('Access denied. Admin only.');
+      Router.navigate('dashboard');
+      return;
+    }
+
+    UI.showLoading(true);
+
+    // Load all users
+    const result = await DB.getAllUsers();
+    if (result.success) {
+      this.allUsers = result.data;
+      this.renderUserList(this.allUsers);
+    } else {
+      alert('Failed to load users: ' + result.error);
+    }
+
+    // Load filter dropdowns
+    const deptResult = await DB.getDepartments();
+    const semResult = await DB.getSemesters();
+    
+    if (deptResult.success) {
+      await UI.populateDropdown('filter-department', ['All', ...deptResult.data], 'All');
+    }
+    if (semResult.success) {
+      await UI.populateDropdown('filter-semester', ['All', ...semResult.data], 'All');
+    }
+
+    UI.showLoading(false);
+  },
+
+  renderUserList(users) {
+    const container = document.getElementById('user-list-container');
+    const countEl = document.getElementById('user-count');
+    
+    if (!container) return;
+
+    if (countEl) {
+      countEl.textContent = `${users.length} user${users.length !== 1 ? 's' : ''}`;
+    }
+
+    if (users.length === 0) {
+      container.innerHTML = '<div class="no-data-message"><i class="fas fa-users-slash"></i><p>No users found matching the criteria.</p></div>';
+      return;
+    }
+
+    container.innerHTML = users.map(user => {
+      const roles = [];
+      if (user.isAdmin) roles.push('<span class="role-badge admin">Admin</span>');
+      if (user.isCR) roles.push('<span class="role-badge cr">CR</span>');
+      if (user.isBlocked) roles.push('<span class="role-badge blocked">Blocked</span>');
+
+      return `
+        <div class="user-card ${user.isBlocked ? 'blocked' : ''}" data-user-id="${user.id}">
+          <div class="user-card-header">
+            <div class="user-avatar-small">
+              <i class="fas fa-user-circle"></i>
+            </div>
+            <div class="user-basic-info">
+              <p class="user-card-email">${user.email || 'No email'}</p>
+              <p class="user-card-details">${user.department || 'N/A'} • ${user.semester || 'N/A'} • ${user.section || 'N/A'}</p>
+              <p class="user-card-student-id">ID: ${user.studentId || 'Not set'}</p>
+            </div>
+            <div class="user-roles">
+              ${roles.join('') || '<span class="role-badge user">User</span>'}
+            </div>
+          </div>
+          <div class="user-card-actions">
+            ${!user.isAdmin ? `
+              <button class="btn btn-sm toggle-cr-btn ${user.isCR ? 'active' : ''}" data-user-id="${user.id}" data-current-value="${user.isCR || false}" title="${user.isCR ? 'Remove CR role' : 'Make CR'}">
+                <i class="fas fa-user-graduate"></i> ${user.isCR ? 'Remove CR' : 'Make CR'}
+              </button>
+              <button class="btn btn-sm toggle-blocked-btn ${user.isBlocked ? 'active danger' : ''}" data-user-id="${user.id}" data-current-value="${user.isBlocked || false}" title="${user.isBlocked ? 'Unblock user' : 'Block user'}">
+                <i class="fas fa-${user.isBlocked ? 'unlock' : 'ban'}"></i> ${user.isBlocked ? 'Unblock' : 'Block'}
+              </button>
+            ` : '<span class="admin-protected">Admin account</span>'}
+            <button class="btn btn-sm edit-user-btn" data-user-id="${user.id}" title="Edit user profile">
+              <i class="fas fa-edit"></i> Edit
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  },
+
+  filterUsers() {
+    const department = document.getElementById('filter-department')?.value || 'All';
+    const semester = document.getElementById('filter-semester')?.value || 'All';
+    const section = document.getElementById('filter-section')?.value || 'All';
+    const role = document.getElementById('filter-role')?.value || 'All';
+
+    let filtered = [...this.allUsers];
+
+    if (department !== 'All') {
+      filtered = filtered.filter(u => u.department === department);
+    }
+    if (semester !== 'All') {
+      filtered = filtered.filter(u => u.semester === semester);
+    }
+    if (section !== 'All') {
+      // Handle section groups: A matches A1, A2; B matches B1, B2, etc.
+      filtered = filtered.filter(u => {
+        if (!u.section) return false;
+        // If filter is a group (single letter like A, B, C)
+        if (section.length === 1) {
+          return u.section.startsWith(section);
+        }
+        // Otherwise exact match
+        return u.section === section;
+      });
+    }
+    if (role !== 'All') {
+      switch(role) {
+        case 'Admin':
+          filtered = filtered.filter(u => u.isAdmin === true);
+          break;
+        case 'CR':
+          filtered = filtered.filter(u => u.isCR === true);
+          break;
+        case 'Blocked':
+          filtered = filtered.filter(u => u.isBlocked === true);
+          break;
+        case 'User':
+          filtered = filtered.filter(u => !u.isAdmin && !u.isCR && !u.isBlocked);
+          break;
+      }
+    }
+
+    this.renderUserList(filtered);
+  },
+
+  clearUserFilters() {
+    const filterDept = document.getElementById('filter-department');
+    const filterSem = document.getElementById('filter-semester');
+    const filterSection = document.getElementById('filter-section');
+    const filterRole = document.getElementById('filter-role');
+    
+    if (filterDept) filterDept.value = 'All';
+    if (filterSem) filterSem.value = 'All';
+    if (filterSection) filterSection.value = 'All';
+    if (filterRole) filterRole.value = 'All';
+
+    this.renderUserList(this.allUsers);
+  },
+
+  async toggleUserRole(userId, role, value) {
+    if (!this.isAdmin) return;
+
+    const roleNames = {
+      'isCR': 'CR',
+      'isBlocked': value ? 'Block' : 'Unblock'
+    };
+
+    const action = value ? 'add' : 'remove';
+    const confirmed = confirm(`Are you sure you want to ${value ? 'assign' : 'remove'} ${roleNames[role]} ${value ? 'to' : 'from'} this user?`);
+    if (!confirmed) return;
+
+    const result = await DB.updateUserRole(userId, role, value);
+    if (result.success) {
+      // Update local state
+      const userIndex = this.allUsers.findIndex(u => u.id === userId);
+      if (userIndex !== -1) {
+        this.allUsers[userIndex][role] = value;
+      }
+      this.filterUsers(); // Re-render with current filters
+    } else {
+      alert('Failed to update role: ' + result.error);
+    }
+  },
+
+  async openEditUserModal(userId) {
+    if (!this.isAdmin) return;
+
+    const user = this.allUsers.find(u => u.id === userId);
+    if (!user) {
+      alert('User not found');
+      return;
+    }
+
+    // Store current editing user
+    this.editingUserId = userId;
+
+    // Populate form
+    document.getElementById('edit-user-id').value = userId;
+    document.getElementById('edit-user-email').textContent = user.email || 'No email';
+    document.getElementById('edit-user-student-id').textContent = user.studentId || 'Not set';
+
+    // Load dropdowns
+    const deptResult = await DB.getDepartments();
+    const semResult = await DB.getSemesters();
+    
+    if (deptResult.success) {
+      await UI.populateDropdown('edit-user-department', deptResult.data, user.department);
+    }
+    if (semResult.success) {
+      await UI.populateDropdown('edit-user-semester', semResult.data, user.semester);
+    }
+    
+    // Load sections
+    await this.updateEditUserSections(user.section);
+
+    UI.showModal('edit-user-modal');
+  },
+
+  async updateEditUserSections(selectedValue = null) {
+    const department = document.getElementById('edit-user-department')?.value;
+    const semester = document.getElementById('edit-user-semester')?.value;
+    
+    if (department && semester) {
+      const result = await DB.getSections(department, semester);
+      if (result.success) {
+        await UI.populateDropdown('edit-user-section', result.data, selectedValue);
+      }
+    }
+  },
+
+  async handleEditUser() {
+    if (!this.isAdmin) return;
+
+    const userId = document.getElementById('edit-user-id').value;
+    const department = document.getElementById('edit-user-department').value;
+    const semester = document.getElementById('edit-user-semester').value;
+    const section = document.getElementById('edit-user-section').value;
+
+    if (!department || !semester || !section) {
+      alert('Please select all fields');
+      return;
+    }
+
+    const result = await DB.adminUpdateUserProfile(userId, {
+      department,
+      semester,
+      section
+    });
+
+    if (result.success) {
+      // Update local state
+      const userIndex = this.allUsers.findIndex(u => u.id === userId);
+      if (userIndex !== -1) {
+        this.allUsers[userIndex].department = department;
+        this.allUsers[userIndex].semester = semester;
+        this.allUsers[userIndex].section = section;
+      }
+      
+      UI.hideModal('edit-user-modal');
+      this.filterUsers(); // Re-render
+      alert('User profile updated successfully!');
+    } else {
+      alert('Failed to update user: ' + result.error);
     }
   }
 };

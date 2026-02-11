@@ -10,7 +10,8 @@ const Router = {
     '': 'login',
     '#/dashboard': 'dashboard',
     '#/profile-settings': 'profile-settings',
-    '#/set-details': 'set-details'
+    '#/set-details': 'set-details',
+    '#/user-management': 'user-management'
   },
 
   init() {
@@ -79,7 +80,8 @@ const Router = {
       'login': '',
       'dashboard': '#/dashboard',
       'profile-settings': '#/profile-settings',
-      'set-details': '#/set-details'
+      'set-details': '#/set-details',
+      'user-management': '#/user-management'
     };
 
     const hash = routeMap[route];

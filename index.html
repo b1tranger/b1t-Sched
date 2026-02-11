@@ -232,6 +232,12 @@
 
             <!-- Dashboard View -->
             <div id="dashboard-view" class="view" style="display: none;">
+                <!-- Blocked User Banner -->
+                <div id="blocked-user-banner" class="blocked-user-banner" style="display: none;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Your account has been restricted. The website is in read-only mode. Contact admin for assistance.</span>
+                </div>
+
                 <div class="dashboard-container dashboard-grid">
                     <!-- Left Column: Resources + Tasks -->
                     <div class="dashboard-main">
@@ -582,6 +588,10 @@
                             <button id="back-to-dashboard-btn" class="btn btn-text">
                                 <i class="fas fa-arrow-left"></i> Back to Dashboard
                             </button>
+                            <!-- Admin: Manage Users Button -->
+                            <button id="manage-users-btn" class="btn btn-primary admin-only" style="display: none;">
+                                <i class="fas fa-users-cog"></i> Manage Users
+                            </button>
                             <h1>Profile Settings</h1>
                         </div>
 
@@ -647,6 +657,123 @@
                         </form>
 
                         <div id="profile-message" class="message"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Management View (Admin Only) -->
+            <div id="user-management-view" class="view" style="display: none;">
+                <div class="user-management-container">
+                    <div class="user-management-card">
+                        <div class="settings-header">
+                            <button id="back-to-profile-btn" class="btn btn-text">
+                                <i class="fas fa-arrow-left"></i> Back to Profile
+                            </button>
+                            <h1><i class="fas fa-users-cog"></i> User Management</h1>
+                        </div>
+
+                        <!-- Filters Section -->
+                        <div class="user-filters">
+                            <h3>Filter Users</h3>
+                            <div class="filters-grid">
+                                <div class="form-group">
+                                    <label for="filter-department">Department</label>
+                                    <select id="filter-department" class="form-select">
+                                        <option value="All">All Departments</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="filter-semester">Semester</label>
+                                    <select id="filter-semester" class="form-select">
+                                        <option value="All">All Semesters</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="filter-section">Section</label>
+                                    <select id="filter-section" class="form-select">
+                                        <option value="All">All Sections</option>
+                                        <option value="A">A (A1 + A2)</option>
+                                        <option value="A1">A1</option>
+                                        <option value="A2">A2</option>
+                                        <option value="B">B (B1 + B2)</option>
+                                        <option value="B1">B1</option>
+                                        <option value="B2">B2</option>
+                                        <option value="C">C (C1 + C2)</option>
+                                        <option value="C1">C1</option>
+                                        <option value="C2">C2</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="filter-role">Role</label>
+                                    <select id="filter-role" class="form-select">
+                                        <option value="All">All Roles</option>
+                                        <option value="Admin">Admin</option>
+                                        <option value="CR">CR</option>
+                                        <option value="Blocked">Blocked</option>
+                                        <option value="User">Regular User</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button id="clear-filters-btn" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Clear Filters
+                            </button>
+                        </div>
+
+                        <!-- User List Section -->
+                        <div class="user-list-section">
+                            <div class="user-list-header">
+                                <h3>All Users</h3>
+                                <span id="user-count" class="user-count">0 users</span>
+                            </div>
+                            <div id="user-list-container" class="user-list-container">
+                                <!-- User cards will be rendered here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit User Modal (Admin Only) -->
+            <div id="edit-user-modal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 class="modal-title">Edit User Profile</h2>
+                        <button id="close-edit-user-modal" class="btn btn-icon">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <form id="edit-user-form" class="modal-body">
+                        <input type="hidden" id="edit-user-id">
+                        
+                        <div class="user-info-display">
+                            <p><strong>Email:</strong> <span id="edit-user-email">-</span></p>
+                            <p><strong>Student ID:</strong> <span id="edit-user-student-id">-</span></p>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="edit-user-department">Department</label>
+                            <select id="edit-user-department" class="form-select" required>
+                                <option value="" disabled>Select Department</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-user-semester">Semester</label>
+                            <select id="edit-user-semester" class="form-select" required>
+                                <option value="" disabled>Select Semester</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-user-section">Section</label>
+                            <select id="edit-user-section" class="form-select" required>
+                                <option value="" disabled>Select Section</option>
+                            </select>
+                        </div>
+                    </form>
+                    <div class="modal-footer">
+                        <button type="button" id="cancel-edit-user" class="btn btn-secondary">Cancel</button>
+                        <button type="submit" form="edit-user-form" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
                     </div>
                 </div>
             </div>
