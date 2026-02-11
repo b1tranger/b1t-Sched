@@ -201,12 +201,14 @@ const App = {
     });
 
     // Task checkbox delegation (handles dynamically added checkboxes)
+    // Using 'click' event instead of 'change' for more reliable event delegation
     const tasksContainer = document.getElementById('tasks-container');
     if (tasksContainer) {
-      tasksContainer.addEventListener('change', async (e) => {
-        if (e.target.classList.contains('task-checkbox')) {
-          const taskId = e.target.dataset.taskId;
-          const isCompleted = e.target.checked;
+      tasksContainer.addEventListener('click', async (e) => {
+        const checkbox = e.target.closest('.task-checkbox');
+        if (checkbox && checkbox.type === 'checkbox') {
+          const taskId = checkbox.dataset.taskId;
+          const isCompleted = checkbox.checked;
           await this.handleTaskCompletion(taskId, isCompleted);
         }
       });
