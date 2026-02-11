@@ -67,7 +67,9 @@ const UI = {
   },
 
   // Render tasks with checkboxes
-  renderTasks(tasks, userCompletions = {}, isAdmin = false, currentUserId = null) {
+  // isAdmin: user has admin privileges (can edit/delete any task, manage events)
+  // isCR: user is a Class Representative (can delete any task, use reset)
+  renderTasks(tasks, userCompletions = {}, isAdmin = false, isCR = false, currentUserId = null) {
     const container = document.getElementById('tasks-container');
     const noTasksMsg = document.getElementById('no-tasks-message');
     
@@ -113,7 +115,7 @@ const UI = {
         statusClass = 'incomplete';
       }
 
-      // User can edit their own tasks, admin can edit all
+      // Edit: Admin can edit any task, users can only edit their own tasks
       const canEdit = isAdmin || (currentUserId && task.addedBy === currentUserId);
       const editButton = canEdit ? `
         <button class="task-edit-btn" data-task-id="${task.id}" title="Edit task">
@@ -121,7 +123,9 @@ const UI = {
         </button>
       ` : '';
 
-      const deleteButton = isAdmin ? `
+      // Delete: Admin/CR can delete any task, users can only delete their own tasks
+      const canDelete = isAdmin || isCR || (currentUserId && task.addedBy === currentUserId);
+      const deleteButton = canDelete ? `
         <button class="task-delete-btn" data-task-id="${task.id}" title="Delete task">
           <i class="fas fa-trash"></i>
         </button>

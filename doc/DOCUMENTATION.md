@@ -351,7 +351,7 @@ const db = firebase.firestore();   // Firestore instance
 | `hideMessage(elementId)` | string | Hide message element |
 | `updateUserDetailsCard(email, dept, sem, section)` | strings | Update navbar user card |
 | `renderResourceLinks(links)` | array | Render resource link cards |
-| `renderTasks(tasks, userCompletions, isAdmin, currentUserId)` | array, object, boolean, string | Render task cards with checkboxes and edit buttons |
+| `renderTasks(tasks, userCompletions, isAdmin, isCR, currentUserId)` | array, object, boolean, boolean, string | Render task cards with checkboxes, edit/delete buttons based on permissions |
 | `renderOldTasks(tasks)` | array | Render completed tasks list |
 | `renderEvents(events, isAdmin)` | array, boolean | Render event cards with edit/delete buttons |
 | `renderOldEvents(events)` | array | Render past events list |
@@ -623,48 +623,94 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Helper function to check admin status
+    // Helper function to check if user is authenticated
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user owns the document
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    // Helper function to check if user is admin
     function isAdmin() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+      return isSignedIn() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
     }
     
-    // Helper function to check CR status
+    // Helper function to check if user is CR
     function isCR() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isCR == true;
+      return isSignedIn() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isCR == true;
     }
     
-    // Users can read/write their own profile and completedTasks subcollection
+    // Users collection - users can only read/write their own data
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-      
-      match /completedTasks/{taskId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
+      allow read: if isOwner(userId);
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isOwner(userId);
+      allow delete: if false; // Prevent deletion
     }
     
-    // Tasks - any authenticated user can read and create; admin or CR can delete
+    // Task completions subcollection (user's personal completion status)
+    match /users/{userId}/taskCompletions/{taskId} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    // Tasks collection
+    // - Anyone can read (authenticated)
+    // - Anyone can create (authenticated)
+    // - Edit: Admin or task owner
+    // - Delete: Admin, CR, or task owner
     match /tasks/{taskId} {
-      allow read, create: if request.auth != null;
-      allow delete: if isAdmin() || isCR();
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && (
+        isAdmin() || 
+        resource.data.addedBy == request.auth.uid
+      );
+      allow delete: if isSignedIn() && (
+        isAdmin() || 
+        isCR() || 
+        resource.data.addedBy == request.auth.uid
+      );
     }
     
-    // Events - all can read; only admin can create/delete
+    // Events collection - Admin only for write operations
     match /events/{eventId} {
-      allow read: if request.auth != null;
-      allow create, delete: if isAdmin();
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin();
     }
     
-    // Resource links and metadata - read only for authenticated users
+    // Resource links - read only for users, admin can write
     match /resourceLinks/{department} {
-      allow read: if request.auth != null;
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
     }
     
-    match /metadata/{document} {
-      allow read: if request.auth != null;
+    // Metadata - read only for users, admin can write
+    match /metadata/{document=**} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
     }
   }
 }
 ```
+
+### User Role Permissions Summary
+
+| Action | Regular User | CR | Admin |
+|--------|-------------|-----|-------|
+| Read tasks | ✓ | ✓ | ✓ |
+| Create tasks | ✓ | ✓ | ✓ |
+| Edit own tasks | ✓ | ✓ | ✓ |
+| Edit any task | ✗ | ✗ | ✓ |
+| Delete own tasks | ✓ | ✓ | ✓ |
+| Delete any task | ✗ | ✓ | ✓ |
+| Reset tasks | ✗ | ✓ | ✓ |
+| Read events | ✓ | ✓ | ✓ |
+| Create/Edit/Delete events | ✗ | ✗ | ✓ |
 
 ---
 
@@ -874,6 +920,7 @@ Router.onRouteChange((routeName) => {
 | 2.7.0 | Feb 2026 | Password reset: "Forgot Password?" link appears after failed login, opens modal to request reset email; Clickable links in task descriptions |
 | 2.8.0 | Feb 2026 | Basic markdown support in task/event descriptions: `**bold**`, `*italic*`, `` `code` ``, and line breaks |
 | 2.9.0 | Feb 2026 | Edit functionality: Users can edit own tasks; admins can edit all tasks and events |
+| 2.9.1 | Feb 2026 | Permissions fix: Regular users can now delete their own tasks; clarified role permissions |
 
 ---
 
@@ -888,4 +935,4 @@ Router.onRouteChange((routeName) => {
 ---
 
 *Documentation last updated: February 11, 2026*
-*Version: 2.9.0*
+*Version: 2.9.1*

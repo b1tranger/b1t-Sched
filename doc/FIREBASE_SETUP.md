@@ -217,6 +217,18 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
     
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return isSignedIn() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+    
+    // Helper function to check if user is CR
+    function isCR() {
+      return isSignedIn() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isCR == true;
+    }
+    
     // Users collection - users can only read/write their own data
     match /users/{userId} {
       allow read: if isOwner(userId);
@@ -225,31 +237,64 @@ service cloud.firestore {
       allow delete: if false; // Prevent deletion
     }
     
-    // Tasks collection - read only, filtered by department/semester/section
+    // Task completions subcollection (user's personal completion status)
+    match /users/{userId}/taskCompletions/{taskId} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    // Tasks collection
+    // - Anyone can read (authenticated)
+    // - Anyone can create (authenticated)
+    // - Edit: Admin or task owner
+    // - Delete: Admin, CR, or task owner
     match /tasks/{taskId} {
       allow read: if isSignedIn();
-      allow write: if false; // Only admins can write (implement admin logic later)
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && (
+        isAdmin() || 
+        resource.data.addedBy == request.auth.uid
+      );
+      allow delete: if isSignedIn() && (
+        isAdmin() || 
+        isCR() || 
+        resource.data.addedBy == request.auth.uid
+      );
     }
     
-    // Events collection - read only
+    // Events collection - Admin only for write operations
     match /events/{eventId} {
       allow read: if isSignedIn();
-      allow write: if false; // Only admins can write
+      allow create, update, delete: if isAdmin();
     }
     
-    // Resource links - read only
+    // Resource links - read only for users, admin can write
     match /resourceLinks/{department} {
       allow read: if isSignedIn();
-      allow write: if false; // Only admins can write
+      allow write: if isAdmin();
     }
     
-    // Metadata - read only
+    // Metadata - read only for users, admin can write
     match /metadata/{document=**} {
       allow read: if isSignedIn();
-      allow write: if false; // Only admins can write
+      allow write: if isAdmin();
     }
   }
 }
+```
+
+### User Role Permissions
+
+| Action | Regular User | CR | Admin |
+|--------|-------------|-----|-------|
+| Read tasks | ✓ | ✓ | ✓ |
+| Create tasks | ✓ | ✓ | ✓ |
+| Edit own tasks | ✓ | ✓ | ✓ |
+| Edit any task | ✗ | ✗ | ✓ |
+| Delete own tasks | ✓ | ✓ | ✓ |
+| Delete any task | ✗ | ✓ | ✓ |
+| Reset tasks | ✗ | ✓ | ✓ |
+| Read events | ✓ | ✓ | ✓ |
+| Create/Edit/Delete events | ✗ | ✗ | ✓ |
 ```
 
 ### 6.3 Publish Rules

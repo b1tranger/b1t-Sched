@@ -437,7 +437,7 @@ const App = {
       }
       
       // Re-render tasks with updated completions
-      UI.renderTasks(this.currentTasks, this.userCompletions, this.isAdmin || this.isCR, Auth.getUserId());
+      UI.renderTasks(this.currentTasks, this.userCompletions, this.isAdmin, this.isCR, Auth.getUserId());
     } else {
       // Revert checkbox state on error
       const checkbox = document.querySelector(`.task-checkbox[data-task-id="${taskId}"]`);
@@ -736,7 +736,7 @@ const App = {
     const tasksResult = await DB.getTasks(department, semester, section);
     if (tasksResult.success) {
       this.currentTasks = tasksResult.data;
-      UI.renderTasks(this.currentTasks, this.userCompletions, this.isAdmin || this.isCR, userId);
+      UI.renderTasks(this.currentTasks, this.userCompletions, this.isAdmin, this.isCR, userId);
     } else {
       console.error('Failed to load tasks:', tasksResult.error);
       // Check if it's an index error
@@ -919,7 +919,17 @@ const App = {
   },
 
   async handleDeleteTask(taskId) {
-    if (!this.isAdmin && !this.isCR) return;
+    // Find the task to check ownership
+    const task = this.currentTasks.find(t => t.id === taskId);
+    if (!task) return;
+    
+    // Check permissions: Admin/CR can delete any, users can only delete their own
+    const userId = Auth.getUserId();
+    const canDelete = this.isAdmin || this.isCR || (userId && task.addedBy === userId);
+    if (!canDelete) {
+      alert('You do not have permission to delete this task');
+      return;
+    }
     
     const confirmed = confirm('Are you sure you want to delete this task?');
     if (!confirmed) return;
@@ -929,7 +939,7 @@ const App = {
     if (result.success) {
       // Remove from local state and re-render
       this.currentTasks = this.currentTasks.filter(t => t.id !== taskId);
-      UI.renderTasks(this.currentTasks, this.userCompletions, this.isAdmin || this.isCR, Auth.getUserId());
+      UI.renderTasks(this.currentTasks, this.userCompletions, this.isAdmin, this.isCR, Auth.getUserId());
     } else {
       alert('Failed to delete task: ' + result.error);
     }
