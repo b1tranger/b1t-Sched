@@ -43,7 +43,8 @@
                 <div class="nav-center">
                     <ul class="nav-links">
                         <li><a href="#/dashboard" class="nav-link active">Dashboard</a></li>
-                        <li><a href="https://b1tacad.netlify.app/departments" target="_blank" rel="noopener noreferrer" class="nav-link">Resources</a></li>
+                        <li><a href="https://b1tacad.netlify.app/departments" target="_blank" rel="noopener noreferrer"
+                                class="nav-link">Resources</a></li>
                     </ul>
                 </div>
                 <div class="nav-right">
@@ -74,7 +75,9 @@
                         <div class="auth-logo">
                             <img src="Social-Preview.webp" alt="b1t-Sched Logo" class="auth-logo-img">
                             <h1>b1t-Sched</h1>
-                            <p class="auth-subtitle">b1t-Sched is a web-based academic task scheduler designed for university students. It provides a personalized dashboard with tasks, events, and resource links filtered by the student's department, semester, and section.</p>
+                            <p class="auth-subtitle">b1t-Sched is a web-based academic task scheduler designed for
+                                university students. It provides a personalized dashboard with tasks, events, and
+                                resource links filtered by the student's department, semester, and section.</p>
                         </div>
 
                         <!-- Login Form -->
@@ -161,11 +164,13 @@
                             </button>
                         </div>
                         <div class="modal-body">
-                            <p class="modal-description">Enter your email address and we'll send you a link to reset your password.</p>
+                            <p class="modal-description">Enter your email address and we'll send you a link to reset
+                                your password.</p>
                             <form id="password-reset-form">
                                 <div class="form-group">
                                     <label for="reset-email">Email Address</label>
-                                    <input type="email" id="reset-email" class="form-input" placeholder="student@example.com" required>
+                                    <input type="email" id="reset-email" class="form-input"
+                                        placeholder="student@example.com" required>
                                 </div>
                                 <div id="password-reset-message" class="auth-message"></div>
                             </form>
@@ -235,7 +240,8 @@
                 <!-- Blocked User Banner -->
                 <div id="blocked-user-banner" class="blocked-user-banner" style="display: none;">
                     <i class="fas fa-exclamation-triangle"></i>
-                    <span>Your account has been restricted. The website is in read-only mode. Contact admin for assistance.</span>
+                    <span>Your account has been restricted. The website is in read-only mode. Contact admin for
+                        assistance.</span>
                 </div>
 
                 <div class="dashboard-container dashboard-grid">
@@ -251,7 +257,8 @@
                                 <!-- Resource link cards will be dynamically loaded -->
                             </div>
                             <!-- Mobile-only external resources link -->
-                            <a href="https://b1tacad.netlify.app/departments" target="_blank" rel="noopener noreferrer" class="resource-link-card external-resources-link mobile-only">
+                            <a href="https://b1tacad.netlify.app/departments" target="_blank" rel="noopener noreferrer"
+                                class="resource-link-card external-resources-link mobile-only">
                                 <div class="resource-icon"><i class="fas fa-external-link-alt"></i></div>
                                 <h3>All Resources</h3>
                                 <p>Browse all academic resources department-wise</p>
@@ -260,22 +267,13 @@
 
                         <!-- Pending Tasks Section -->
                         <section class="tasks-section">
+
                             <div class="section-header">
                                 <h2><i class="fas fa-tasks"></i> Pending Tasks</h2>
                                 <button id="refresh-tasks-btn" class="btn btn-icon" title="Refresh tasks">
                                     <i class="fas fa-sync-alt"></i>
                                 </button>
                             </div>
-
-                            <div id="tasks-container" class="tasks-container">
-                                <!-- Task cards will be dynamically loaded -->
-                            </div>
-
-                            <div id="no-tasks-message" class="no-data-message" style="display: none;">
-                                <i class="fas fa-check-circle"></i>
-                                <p>No pending tasks! You're all caught up.</p>
-                            </div>
-
                             <!-- Task Action Buttons -->
                             <div class="tasks-actions">
                                 <button id="add-task-btn" class="btn btn-secondary">
@@ -289,10 +287,25 @@
                                 </button>
                                 <p id="cr-info-message" class="cr-info-message" style="display: none;">
                                     <i class="fas fa-info-circle"></i>
-                                    If you are a CR, please reach out to Admin at 
-                                    <a href="https://t.me/oUITS_res" target="_blank" rel="noopener noreferrer">t.me/oUITS_res</a>
+                                    If you are a CR, please reach out to Admin at
+                                    <a href="https://t.me/oUITS_res" target="_blank"
+                                        rel="noopener noreferrer">t.me/oUITS_res</a>
                                 </p>
                             </div>
+
+                            <br>
+
+
+                            <div id="tasks-container" class="tasks-container">
+                                <!-- Task cards will be dynamically loaded -->
+                            </div>
+
+                            <div id="no-tasks-message" class="no-data-message" style="display: none;">
+                                <i class="fas fa-check-circle"></i>
+                                <p>No pending tasks! You're all caught up.</p>
+                            </div>
+
+
                         </section>
                     </div>
 
@@ -387,7 +400,8 @@
                         </div>
                         <div class="form-group">
                             <label for="task-description">Description</label>
-                            <textarea id="task-description" class="form-input form-textarea" placeholder="Task details..." rows="3"></textarea>
+                            <textarea id="task-description" class="form-input form-textarea"
+                                placeholder="Task details..." rows="3"></textarea>
                         </div>
                         <div class="form-group">
                             <label for="task-deadline">Deadline</label>
@@ -437,7 +451,8 @@
                         <input type="hidden" id="edit-task-id">
                         <div class="form-group">
                             <label for="edit-task-course">Course</label>
-                            <input type="text" id="edit-task-course" class="form-input" placeholder="e.g., CSE301" required>
+                            <input type="text" id="edit-task-course" class="form-input" placeholder="e.g., CSE301"
+                                required>
                         </div>
                         <div class="form-group">
                             <label for="edit-task-title">Task Title</label>
@@ -456,7 +471,8 @@
                         </div>
                         <div class="form-group">
                             <label for="edit-task-description">Description</label>
-                            <textarea id="edit-task-description" class="form-input form-textarea" placeholder="Task details..." rows="3"></textarea>
+                            <textarea id="edit-task-description" class="form-input form-textarea"
+                                placeholder="Task details..." rows="3"></textarea>
                         </div>
                         <div class="form-group">
                             <label for="edit-task-deadline">Deadline</label>
@@ -484,11 +500,13 @@
                     <form id="add-event-form" class="modal-body">
                         <div class="form-group">
                             <label for="event-title">Event Title</label>
-                            <input type="text" id="event-title" class="form-input" placeholder="e.g., Mid-term Exams" required>
+                            <input type="text" id="event-title" class="form-input" placeholder="e.g., Mid-term Exams"
+                                required>
                         </div>
                         <div class="form-group">
                             <label for="event-description">Description</label>
-                            <textarea id="event-description" class="form-input form-textarea" placeholder="Event details..." rows="3"></textarea>
+                            <textarea id="event-description" class="form-input form-textarea"
+                                placeholder="Event details..." rows="3"></textarea>
                         </div>
                         <div class="form-group">
                             <label for="event-date">Date</label>
@@ -528,11 +546,13 @@
                         <input type="hidden" id="edit-event-id">
                         <div class="form-group">
                             <label for="edit-event-title">Event Title</label>
-                            <input type="text" id="edit-event-title" class="form-input" placeholder="e.g., Mid-term Exams" required>
+                            <input type="text" id="edit-event-title" class="form-input"
+                                placeholder="e.g., Mid-term Exams" required>
                         </div>
                         <div class="form-group">
                             <label for="edit-event-description">Description</label>
-                            <textarea id="edit-event-description" class="form-input form-textarea" placeholder="Event details..." rows="3"></textarea>
+                            <textarea id="edit-event-description" class="form-input form-textarea"
+                                placeholder="Event details..." rows="3"></textarea>
                         </div>
                         <div class="form-group">
                             <label for="edit-event-date">Date</label>
@@ -592,9 +612,12 @@
                             <button id="manage-users-btn" class="btn btn-primary admin-only" style="display: none;">
                                 <i class="fas fa-users-cog"></i> Manage Users
                             </button>
-                           
+
                             <!-- Admin: Firebase Dashboard Button -->
-                            <a id="firebase-dashboard-btn" href="https://console.firebase.google.com/u/0/project/b1t-sched/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary admin-only" style="display: none;margin: 5px;">
+                            <a id="firebase-dashboard-btn"
+                                href="https://console.firebase.google.com/u/0/project/b1t-sched/" target="_blank"
+                                rel="noopener noreferrer" class="btn btn-secondary admin-only"
+                                style="display: none;margin: 5px;">
                                 <i class="fas fa-database"></i>Firebase
                             </a>
                             <h1>Profile Settings</h1>
@@ -614,12 +637,14 @@
                             <div class="profile-warnings">
                                 <p class="warning-message">
                                     <i class="fas fa-exclamation-triangle"></i>
-                                    <strong>Warning:</strong> Be careful when changing your profile settings. You can only change your profile once every 30 days.
+                                    <strong>Warning:</strong> Be careful when changing your profile settings. You can
+                                    only change your profile once every 30 days.
                                 </p>
                                 <p class="info-message">
                                     <i class="fas fa-info-circle"></i>
-                                    If you need to change your profile again before 30 days, contact Admin at 
-                                    <a href="https://t.me/oUITS_res" target="_blank" rel="noopener noreferrer">t.me/oUITS_res</a>
+                                    If you need to change your profile again before 30 days, contact Admin at
+                                    <a href="https://t.me/oUITS_res" target="_blank"
+                                        rel="noopener noreferrer">t.me/oUITS_res</a>
                                 </p>
                                 <p id="profile-cooldown-message" class="cooldown-message" style="display: none;"></p>
                             </div>
@@ -749,7 +774,7 @@
                     </div>
                     <form id="edit-user-form" class="modal-body">
                         <input type="hidden" id="edit-user-id">
-                        
+
                         <div class="user-info-display">
                             <p><strong>Email:</strong> <span id="edit-user-email">-</span></p>
                             <p><strong>Student ID:</strong> <span id="edit-user-student-id">-</span></p>
@@ -788,7 +813,7 @@
         <!-- Source Code Footer (visible when logged in) -->
         <footer id="app-footer" class="app-footer" style="display: none;">
             <p>
-                © <span id="footer-year"></span> 
+                © <span id="footer-year"></span>
                 <a href="https://github.com/b1tranger" target="_blank" rel="noopener noreferrer">@b1tranger</a>
                 <span class="footer-separator">|</span>
                 <a href="https://github.com/b1tranger/b1t-Sched" target="_blank" rel="noopener noreferrer">
