@@ -143,13 +143,28 @@ const UI = {
             <div class="task-content">
               <div class="task-header">
                 <div>
-                  <h3 class="task-title">${task.title || 'Untitled Task'}</h3>
                   <p class="task-course">${task.course || 'No course specified'}</p>
+                  <h3 class="task-title">${task.title || ''}</h3>
                 </div>
-                <span class="task-type-badge ${task.type}">${task.type || 'task'}</span>
+                <div class="task-header-right">
+                  <span class="task-type-badge ${task.type}">${task.type || 'task'}</span>
+                  <div class="task-actions-vertical">
+                    ${editButton}
+                    ${deleteButton}
+                  </div>
+                </div>
               </div>
-              <p class="task-description">${Utils.escapeAndLinkify(task.description) || 'No description available.'}</p>
-              ${task.details ? `<p class="task-description"><strong>Details:</strong> ${Utils.escapeAndLinkify(task.details)}</p>` : ''}
+              <div class="task-description">
+                <div class="task-description-wrapper">
+                  <div class="task-description-text">${Utils.escapeAndLinkify(task.description) || 'No description available.'}</div>
+                  ${task.addedBy ? `<p class="task-added-by task-added-by-hidden">Added by ${task.addedByName || 'User'}${task.section ? ` (${task.section})` : ''}</p>` : ''}
+                  <button type="button" class="task-description-toggle" aria-label="Toggle description">
+                    <span class="toggle-text">Show more</span>
+                    <i class="fas fa-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              ${task.details ? `<div class="task-description"><div class="task-description-wrapper"><div class="task-description-text"><strong>Details:</strong> ${Utils.escapeAndLinkify(task.details)}</div><button type="button" class="task-description-toggle" aria-label="Toggle details"><span class="toggle-text">Show more</span><i class="fas fa-chevron-down"></i></button></div></div>` : ''}
               <div class="task-footer">
                 <span class="task-deadline ${isUrgent ? 'urgent' : ''} ${isPastDeadline && !isCompleted ? 'urgent' : ''}">
                   <i class="fas fa-clock"></i>
@@ -157,12 +172,7 @@ const UI = {
                   ${isPastDeadline && !isCompleted ? '(Overdue!)' : ''}
                   ${isUrgent && !isPastDeadline ? `(${daysUntil} day${daysUntil !== 1 ? 's' : ''} left!)` : ''}
                 </span>
-                <div class="task-actions">
-                  ${editButton}
-                  ${deleteButton}
-                </div>
               </div>
-              ${task.addedBy ? `<p class="task-added-by">Added by ${task.addedByName || 'User'}${task.section ? ` (${task.section})` : ''}</p>` : ''}
             </div>
           </div>
         </div>
@@ -170,7 +180,7 @@ const UI = {
     }).join('');
   },
 
-  // Render old/completed tasks (compact view)
+  // Render old tasks (past deadline - compact view)
   renderOldTasks(tasks) {
     const container = document.getElementById('old-tasks-container');
     const noOldTasksMsg = document.getElementById('no-old-tasks-message');
@@ -187,16 +197,22 @@ const UI = {
     
     container.innerHTML = tasks.map(task => {
       const deadline = task.deadline ? task.deadline.toDate() : new Date();
+      const isCompleted = task.isCompleted || false;
       const completedDate = task.completedAt ? task.completedAt.toDate() : null;
       
+      // Show different icon and style based on completion status
+      const iconClass = isCompleted ? 'fa-check-circle completed-icon' : 'fa-clock overdue-icon';
+      const statusClass = isCompleted ? 'completed' : 'overdue';
+      
       return `
-        <div class="old-task-item">
-          <i class="fas fa-check-circle completed-icon"></i>
+        <div class="old-task-item ${statusClass}">
+          <i class="fas ${iconClass}"></i>
           <div class="task-info">
             <div class="task-title">${task.title || 'Untitled Task'}</div>
             <div class="task-meta">
               ${task.course || ''} • Due: ${Utils.formatDateShort(deadline)}
-              ${completedDate ? ` • Completed: ${Utils.formatDateShort(completedDate)}` : ''}
+              ${isCompleted && completedDate ? ` • Completed: ${Utils.formatDateShort(completedDate)}` : ''}
+              ${!isCompleted ? ' • <span class="overdue-label">Not completed</span>' : ''}
             </div>
           </div>
         </div>

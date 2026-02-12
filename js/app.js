@@ -211,11 +211,25 @@ const App = {
     const tasksContainer = document.getElementById('tasks-container');
     if (tasksContainer) {
       tasksContainer.addEventListener('click', async (e) => {
+        // Handle task checkbox
         const checkbox = e.target.closest('.task-checkbox');
         if (checkbox && checkbox.type === 'checkbox') {
           const taskId = checkbox.dataset.taskId;
           const isCompleted = checkbox.checked;
           await this.handleTaskCompletion(taskId, isCompleted);
+          return;
+        }
+        
+        // Handle description toggle
+        const toggleBtn = e.target.closest('.task-description-toggle');
+        if (toggleBtn) {
+          const wrapper = toggleBtn.closest('.task-description-wrapper');
+          const textEl = wrapper.querySelector('.task-description-text');
+          const toggleText = toggleBtn.querySelector('.toggle-text');
+          
+          const isExpanded = textEl.classList.toggle('expanded');
+          toggleBtn.classList.toggle('expanded', isExpanded);
+          toggleText.textContent = isExpanded ? 'Show less' : 'Show more';
         }
       });
     }
@@ -295,8 +309,8 @@ const App = {
     const description = document.getElementById('task-description').value.trim();
     const deadline = document.getElementById('task-deadline').value;
 
-    if (!title || !deadline) {
-      alert('Please fill in the required fields (Title and Deadline)');
+    if (!course || !deadline) {
+      alert('Please fill in the required fields (Course and Deadline)');
       return;
     }
 
@@ -380,8 +394,8 @@ const App = {
     const description = document.getElementById('edit-task-description').value.trim();
     const deadline = document.getElementById('edit-task-deadline').value;
 
-    if (!title || !deadline) {
-      alert('Please fill in the required fields (Title and Deadline)');
+    if (!course || !deadline) {
+      alert('Please fill in the required fields (Course and Deadline)');
       return;
     }
 

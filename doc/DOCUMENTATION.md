@@ -28,9 +28,9 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **Firebase Authentication** - Secure email/password login system with email verification and password reset
 - **User Profiles** - Student ID, department, semester, and section
 - **Personalized Dashboard** - Content filtered by user's academic details
-- **Task Management** - View pending assignments and exams with deadlines, with basic markdown and clickable links
+- **Task Management** - View pending assignments and exams with deadlines, with basic markdown and clickable links, collapsible descriptions (2-line truncation)
 - **Task Completion** - Checkboxes to mark tasks complete, persistent per-user
-- **Task Editing** - Users can edit their own tasks; admins can edit all tasks
+- **Task Editing** - Users can edit their own tasks; admins can edit all tasks; Course is required field
 - **Event Calendar** - Track upcoming academic events with basic markdown and clickable links
 - **Event Editing** - Admins can edit all events
 - **Resource Links** - Quick access to department-specific resources
@@ -366,8 +366,8 @@ const db = firebase.firestore();   // Firestore instance
 | `hideMessage(elementId)` | string | Hide message element |
 | `updateUserDetailsCard(email, dept, sem, section)` | strings | Update navbar user card |
 | `renderResourceLinks(links)` | array | Render resource link cards |
-| `renderTasks(tasks, userCompletions, isAdmin, isCR, currentUserId)` | array, object, boolean, boolean, string | Render task cards with checkboxes, edit/delete buttons based on permissions |
-| `renderOldTasks(tasks)` | array | Render completed tasks list |
+| `renderTasks(tasks, userCompletions, isAdmin, isCR, currentUserId)` | array, object, boolean, boolean, string | Render task cards with checkboxes, collapsible descriptions, vertical edit/delete buttons |
+| `renderOldTasks(tasks)` | array | Render old tasks (past deadline) with completion status |
 | `renderEvents(events, isAdmin)` | array, boolean | Render event cards with edit/delete buttons |
 | `renderOldEvents(events)` | array | Render past events list |
 | `populateDropdown(elementId, items, selectedValue)` | string, array, string? | Populate select dropdown |
@@ -878,17 +878,20 @@ service cloud.firestore {
 ### Dashboard View Components
 - **Resource Links Section** - Department-specific quick links
   - Mobile: "Quick Links" header, icons hidden, external "All Resources" link
-- **Pending Tasks Section** - Task cards with checkboxes, deadlines, delete buttons (admin/CR)
-  - Add Tasks button - Opens task creation modal
-  - View Old button - Opens completed tasks modal
+- **Pending Tasks Section** - Task cards with Course Title (primary), collapsible descriptions, vertical edit/delete buttons
+  - Course shown larger than Task Title; descriptions truncated to 2 lines with "Show more" toggle
+  - Edit/delete buttons vertically stacked on right side below task type badge
+  - "Added by" info appears only when description is expanded
+  - Add Tasks button - Opens task creation modal (Course required)
+  - View Old button - Opens past deadline tasks modal
   - Reset Tasks button (admin/CR) - Clears past tasks
 - **Upcoming Events Section** - Calendar events with delete buttons (admin)
   - Add Event button (admin-only) - Opens event creation modal
   - Old Events button - Opens past events modal
 - **Events Sidebar (Mobile)** - Slide-out panel (40vw) with events and action buttons
 - **Modals:**
-  - Add Task Modal - Task creation form
-  - Old Tasks Modal - List of completed/past tasks
+  - Add Task Modal - Task creation form with Course as required field
+  - Old Tasks Modal - List of past deadline tasks (with completion status)
   - Add Event Modal (admin) - Event creation form
   - Old Events Modal - List of past events
 
@@ -984,6 +987,7 @@ Router.onRouteChange((routeName) => {
 | 2.9.1 | Feb 2026 | Permissions fix: Regular users can now delete their own tasks; clarified role permissions |
 | 2.10.0 | Feb 2026 | CR info message for non-CR users; Profile change 30-day cooldown; Footer with credits and dynamic year |
 | 2.11.0 | Feb 2026 | Admin User Management: view all users, filter by dept/sem/section/role, toggle isCR/isBlocked roles, edit user profiles; Blocked users restricted to read-only mode |
+| 2.12.0 | Feb 2026 | Task UI improvements: Course as required field (displayed first), collapsible descriptions with 2-line truncation, vertical edit/delete buttons, "View Old" shows past deadline tasks, compact spacing |
 
 ---
 
@@ -997,5 +1001,5 @@ Router.onRouteChange((routeName) => {
 
 ---
 
-*Documentation last updated: February 11, 2026*
-*Version: 2.11.0*
+*Documentation last updated: February 12, 2026*
+*Version: 2.12.0*

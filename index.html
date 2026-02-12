@@ -367,12 +367,12 @@
                     </div>
                     <form id="add-task-form" class="modal-body">
                         <div class="form-group">
-                            <label for="task-title">Task Title</label>
-                            <input type="text" id="task-title" class="form-input" placeholder="e.g., Assignment 1" required>
+                            <label for="task-course">Course</label>
+                            <input type="text" id="task-course" class="form-input" placeholder="e.g., CSE301" required>
                         </div>
                         <div class="form-group">
-                            <label for="task-course">Course</label>
-                            <input type="text" id="task-course" class="form-input" placeholder="e.g., CSE301">
+                            <label for="task-title">Task Title</label>
+                            <input type="text" id="task-title" class="form-input" placeholder="e.g., Assignment 1">
                         </div>
                         <div class="form-group">
                             <label for="task-type">Type</label>
@@ -407,7 +407,7 @@
             <div id="old-tasks-modal" class="modal" style="display: none;">
                 <div class="modal-content modal-content-lg">
                     <div class="modal-header">
-                        <h2 class="modal-title">Completed Tasks</h2>
+                        <h2 class="modal-title">Old Tasks</h2>
                         <button id="close-old-tasks-modal" class="btn btn-icon">
                             <i class="fas fa-times"></i>
                         </button>
@@ -418,7 +418,7 @@
                         </div>
                         <div id="no-old-tasks-message" class="no-data-message compact" style="display: none;">
                             <i class="fas fa-archive"></i>
-                            <p>No completed tasks yet.</p>
+                            <p>No old tasks (past deadline).</p>
                         </div>
                     </div>
                 </div>
@@ -436,12 +436,12 @@
                     <form id="edit-task-form" class="modal-body">
                         <input type="hidden" id="edit-task-id">
                         <div class="form-group">
-                            <label for="edit-task-title">Task Title</label>
-                            <input type="text" id="edit-task-title" class="form-input" placeholder="e.g., Assignment 1" required>
+                            <label for="edit-task-course">Course</label>
+                            <input type="text" id="edit-task-course" class="form-input" placeholder="e.g., CSE301" required>
                         </div>
                         <div class="form-group">
-                            <label for="edit-task-course">Course</label>
-                            <input type="text" id="edit-task-course" class="form-input" placeholder="e.g., CSE301">
+                            <label for="edit-task-title">Task Title</label>
+                            <input type="text" id="edit-task-title" class="form-input" placeholder="e.g., Assignment 1">
                         </div>
                         <div class="form-group">
                             <label for="edit-task-type">Type</label>

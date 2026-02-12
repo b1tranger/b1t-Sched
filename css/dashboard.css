@@ -493,6 +493,21 @@
     font-size: var(--font-lg);
 }
 
+/* Overdue (not completed) old task styling */
+.old-task-item.overdue {
+    border-left-color: var(--danger);
+}
+
+.old-task-item .overdue-icon {
+    color: var(--danger);
+    font-size: var(--font-lg);
+}
+
+.old-task-item .overdue-label {
+    color: var(--danger);
+    font-weight: var(--font-medium);
+}
+
 /* Compact no-data message */
 .no-data-message.compact {
     padding: var(--spacing-lg);
@@ -618,6 +633,26 @@
     display: flex;
     gap: var(--spacing-xs);
     margin-left: auto;
+}
+
+/* Task header right side container */
+.task-header-right {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--spacing-xs);
+    flex-shrink: 0;
+    z-index: 10;
+}
+
+/* Vertical task actions (edit/delete buttons) */
+.task-actions-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
 
 .task-footer {

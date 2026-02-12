@@ -52,10 +52,12 @@ const DB = {
   },
 
   // Task operations - fetches tasks for the section group (A1+A2 merged, B1+B2 merged, etc.)
+  // Only returns pending tasks (not past deadline)
   async getTasks(department, semester, section) {
     try {
       // Get all sections in the same group (e.g., ['A1', 'A2'] for user in A1)
       const sectionsInGroup = Utils.getSectionsInGroup(section);
+      const now = new Date();
       
       const snapshot = await db.collection('tasks')
         .where('department', '==', department)
@@ -66,10 +68,15 @@ const DB = {
       
       const tasks = [];
       snapshot.forEach(doc => {
-        tasks.push({ id: doc.id, ...doc.data() });
+        const data = doc.data();
+        const deadline = data.deadline ? data.deadline.toDate() : new Date();
+        // Only include tasks that are NOT past deadline (pending tasks only)
+        if (deadline >= now) {
+          tasks.push({ id: doc.id, ...data });
+        }
       });
       
-      console.log(`Found ${tasks.length} tasks for sections: ${sectionsInGroup.join(', ')}`);
+      console.log(`Found ${tasks.length} pending tasks for sections: ${sectionsInGroup.join(', ')}`);
       return { success: true, data: tasks };
     } catch (error) {
       console.error('Error getting tasks:', error);
@@ -142,10 +149,10 @@ const DB = {
     }
   },
 
-  // Get old/completed tasks
+  // Get old tasks (past deadline)
   async getOldTasks(userId, department, semester, section) {
     try {
-      // Get user's completed task IDs
+      // Get user's completed task IDs for marking completion status
       const completionsSnapshot = await db.collection('users').doc(userId)
         .collection('completedTasks').get();
       
@@ -156,19 +163,14 @@ const DB = {
         completionDates[doc.id] = doc.data().completedAt;
       });
 
-      if (completedTaskIds.length === 0) {
-        return { success: true, data: [] };
-      }
-
-      // Get tasks that are either:
-      // 1. Completed by user and past deadline
-      // 2. Status changed to 'archived' by admin
+      // Get all tasks that are past deadline
       const now = new Date();
       const sectionsInGroup = Utils.getSectionsInGroup(section);
       const tasksSnapshot = await db.collection('tasks')
         .where('department', '==', department)
         .where('semester', '==', semester)
         .where('section', 'in', sectionsInGroup)
+        .where('status', '==', 'active')
         .get();
       
       const oldTasks = [];
@@ -177,24 +179,25 @@ const DB = {
         const deadline = data.deadline ? data.deadline.toDate() : new Date();
         const isCompleted = completedTaskIds.includes(doc.id);
         
-        // Include if completed and past deadline
-        if (isCompleted && deadline < now) {
+        // Include all tasks that are past deadline (old tasks)
+        if (deadline < now) {
           oldTasks.push({
             id: doc.id,
             ...data,
-            completedAt: completionDates[doc.id]
+            isCompleted: isCompleted,
+            completedAt: completionDates[doc.id] || null
           });
         }
       });
       
-      // Sort by completion date (newest first)
+      // Sort by deadline (most recent first)
       oldTasks.sort((a, b) => {
-        const aDate = a.completedAt ? a.completedAt.toDate() : new Date(0);
-        const bDate = b.completedAt ? b.completedAt.toDate() : new Date(0);
-        return bDate - aDate;
+        const aDeadline = a.deadline ? a.deadline.toDate() : new Date(0);
+        const bDeadline = b.deadline ? b.deadline.toDate() : new Date(0);
+        return bDeadline - aDeadline;
       });
       
-      console.log(`Found ${oldTasks.length} old tasks`);
+      console.log(`Found ${oldTasks.length} old tasks (past deadline)`);
       return { success: true, data: oldTasks };
     } catch (error) {
       console.error('Error getting old tasks:', error);
