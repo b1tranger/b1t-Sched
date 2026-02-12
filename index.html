@@ -405,7 +405,13 @@
                         </div>
                         <div class="form-group">
                             <label for="task-deadline">Deadline</label>
-                            <input type="datetime-local" id="task-deadline" class="form-input" required>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <input type="radio" name="deadline-option" id="deadline-none" value="none" checked>
+                                <label for="deadline-none" style="margin-bottom: 0;">No official Time limit</label>
+                                <input type="radio" name="deadline-option" id="deadline-date" value="date">
+                                <label for="deadline-date" style="margin-bottom: 0;">Set Deadline</label>
+                                <input type="datetime-local" id="task-deadline" class="form-input" style="flex:1; min-width: 180px;" disabled>
+                            </div>
                         </div>
                     </form>
                     <div class="modal-footer">
@@ -476,7 +482,13 @@
                         </div>
                         <div class="form-group">
                             <label for="edit-task-deadline">Deadline</label>
-                            <input type="datetime-local" id="edit-task-deadline" class="form-input" required>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <input type="radio" name="edit-deadline-option" id="edit-deadline-none" value="none" checked>
+                                <label for="edit-deadline-none" style="margin-bottom: 0;">No official Time limit</label>
+                                <input type="radio" name="edit-deadline-option" id="edit-deadline-date" value="date">
+                                <label for="edit-deadline-date" style="margin-bottom: 0;">Set Deadline</label>
+                                <input type="datetime-local" id="edit-task-deadline" class="form-input" style="flex:1; min-width: 180px;" disabled>
+                            </div>
                         </div>
                     </form>
                     <div class="modal-footer">

@@ -814,3 +814,18 @@ Made changes.
 User: please update the documentation at "doc/DOCUMENTATION.md"
 
 GitHub Copilot: 
+
+User: for Pending Tasks, I want to add a deadline of "No official Time limit" besides the default Date and Time entry that is required. So there would be two options:
+- No Deadline
+- Deadline of specified dat and time
+
+
+Completed: *Update JS logic to handle no deadline* (2/4)
+
+You can now select "No official Time limit" or set a specific deadline when adding or editing a task. Tasks with no deadline will display "No official Time limit" in the Pending Tasks list. The UI and logic have been updated to fully support this feature. Let me know if you want any further adjustments!
+
+Made changes.
+
+User: please update the documentation at "doc/DOCUMENTATION.md"
+
+GitHub Copilot: 

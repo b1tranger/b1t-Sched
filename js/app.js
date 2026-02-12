@@ -270,15 +270,24 @@ const App = {
     
     // Set minimum date to now
     const deadlineInput = document.getElementById('task-deadline');
+    const deadlineNone = document.getElementById('deadline-none');
+    const deadlineDate = document.getElementById('deadline-date');
     if (deadlineInput) {
       const now = new Date();
       now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
       deadlineInput.min = now.toISOString().slice(0, 16);
+      deadlineInput.value = '';
+      deadlineInput.disabled = true;
     }
-    
+    if (deadlineNone) deadlineNone.checked = true;
+    if (deadlineDate) deadlineDate.checked = false;
+    // Add event listeners for radio buttons
+    if (deadlineNone && deadlineDate && deadlineInput) {
+      deadlineNone.onclick = () => { deadlineInput.disabled = true; deadlineInput.value = ''; };
+      deadlineDate.onclick = () => { deadlineInput.disabled = false; };
+    }
     // Clear form
     document.getElementById('add-task-form').reset();
-    
     UI.showModal('add-task-modal');
   },
 
@@ -307,9 +316,15 @@ const App = {
     const course = document.getElementById('task-course').value.trim();
     const type = document.getElementById('task-type').value;
     const description = document.getElementById('task-description').value.trim();
-    const deadline = document.getElementById('task-deadline').value;
-
-    if (!course || !deadline) {
+    const deadlineInput = document.getElementById('task-deadline');
+    const deadlineNone = document.getElementById('deadline-none');
+    let deadline = null;
+    if (deadlineNone && deadlineNone.checked) {
+      deadline = null;
+    } else if (deadlineInput && deadlineInput.value) {
+      deadline = deadlineInput.value;
+    }
+    if (!course || (deadline === null && (!deadlineNone || !deadlineNone.checked))) {
       alert('Please fill in the required fields (Course and Deadline)');
       return;
     }
@@ -371,12 +386,33 @@ const App = {
     document.getElementById('edit-task-course').value = task.course || '';
     document.getElementById('edit-task-type').value = task.type || 'assignment';
     document.getElementById('edit-task-description').value = task.description || '';
-    
-    // Format deadline for datetime-local input
-    const deadline = task.deadline ? task.deadline.toDate() : new Date();
-    deadline.setMinutes(deadline.getMinutes() - deadline.getTimezoneOffset());
-    document.getElementById('edit-task-deadline').value = deadline.toISOString().slice(0, 16);
-
+    const deadlineInput = document.getElementById('edit-task-deadline');
+    const deadlineNone = document.getElementById('edit-deadline-none');
+    const deadlineDate = document.getElementById('edit-deadline-date');
+    if (task.deadline) {
+      // Set radio to date, enable input
+      if (deadlineDate) deadlineDate.checked = true;
+      if (deadlineNone) deadlineNone.checked = false;
+      if (deadlineInput) {
+        deadlineInput.disabled = false;
+        const deadline = task.deadline.toDate ? task.deadline.toDate() : new Date(task.deadline);
+        deadline.setMinutes(deadline.getMinutes() - deadline.getTimezoneOffset());
+        deadlineInput.value = deadline.toISOString().slice(0, 16);
+      }
+    } else {
+      // No deadline
+      if (deadlineNone) deadlineNone.checked = true;
+      if (deadlineDate) deadlineDate.checked = false;
+      if (deadlineInput) {
+        deadlineInput.disabled = true;
+        deadlineInput.value = '';
+      }
+    }
+    // Add event listeners for radio buttons
+    if (deadlineNone && deadlineDate && deadlineInput) {
+      deadlineNone.onclick = () => { deadlineInput.disabled = true; deadlineInput.value = ''; };
+      deadlineDate.onclick = () => { deadlineInput.disabled = false; };
+    }
     UI.showModal('edit-task-modal');
   },
 
@@ -392,9 +428,15 @@ const App = {
     const course = document.getElementById('edit-task-course').value.trim();
     const type = document.getElementById('edit-task-type').value;
     const description = document.getElementById('edit-task-description').value.trim();
-    const deadline = document.getElementById('edit-task-deadline').value;
-
-    if (!course || !deadline) {
+    const deadlineInput = document.getElementById('edit-task-deadline');
+    const deadlineNone = document.getElementById('edit-deadline-none');
+    let deadline = null;
+    if (deadlineNone && deadlineNone.checked) {
+      deadline = null;
+    } else if (deadlineInput && deadlineInput.value) {
+      deadline = deadlineInput.value;
+    }
+    if (!course || (deadline === null && (!deadlineNone || !deadlineNone.checked))) {
       alert('Please fill in the required fields (Course and Deadline)');
       return;
     }

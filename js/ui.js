@@ -88,25 +88,31 @@ const UI = {
     const sortedTasks = [...tasks].sort((a, b) => {
       const aCompleted = userCompletions[a.id] || false;
       const bCompleted = userCompletions[b.id] || false;
-      
       // Completed tasks go to bottom
       if (aCompleted !== bCompleted) {
         return aCompleted ? 1 : -1;
       }
-      
-      // Sort by deadline
-      const aDeadline = a.deadline ? a.deadline.toDate() : new Date();
-      const bDeadline = b.deadline ? b.deadline.toDate() : new Date();
+      // Sort by deadline (null deadlines go last)
+      if (!a.deadline && !b.deadline) return 0;
+      if (!a.deadline) return 1;
+      if (!b.deadline) return -1;
+      const aDeadline = a.deadline.toDate ? a.deadline.toDate() : new Date(a.deadline);
+      const bDeadline = b.deadline.toDate ? b.deadline.toDate() : new Date(b.deadline);
       return aDeadline - bDeadline;
     });
     
     container.innerHTML = sortedTasks.map(task => {
-      const deadline = task.deadline ? task.deadline.toDate() : new Date();
-      const daysUntil = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
-      const isUrgent = daysUntil <= 3 && daysUntil > 0;
-      const isPastDeadline = deadline < now;
+      let deadline = null;
+      let daysUntil = null;
+      let isUrgent = false;
+      let isPastDeadline = false;
+      if (task.deadline) {
+        deadline = task.deadline.toDate ? task.deadline.toDate() : new Date(task.deadline);
+        daysUntil = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
+        isUrgent = daysUntil <= 3 && daysUntil > 0;
+        isPastDeadline = deadline < now;
+      }
       const isCompleted = userCompletions[task.id] || false;
-      
       // Determine task status class
       let statusClass = '';
       if (isCompleted) {
@@ -114,7 +120,6 @@ const UI = {
       } else if (isPastDeadline) {
         statusClass = 'incomplete';
       }
-
       // Edit: Admin can edit any task, users can only edit their own tasks
       const canEdit = isAdmin || (currentUserId && task.addedBy === currentUserId);
       const editButton = canEdit ? `
@@ -122,7 +127,6 @@ const UI = {
           <i class="fas fa-edit"></i>
         </button>
       ` : '';
-
       // Delete: Admin/CR can delete any task, users can only delete their own tasks
       const canDelete = isAdmin || isCR || (currentUserId && task.addedBy === currentUserId);
       const deleteButton = canDelete ? `
@@ -130,7 +134,6 @@ const UI = {
           <i class="fas fa-trash"></i>
         </button>
       ` : '';
-
       return `
         <div class="task-card ${statusClass}" data-task-id="${task.id}">
           <div class="task-card-inner">
@@ -168,7 +171,7 @@ const UI = {
               <div class="task-footer">
                 <span class="task-deadline ${isUrgent ? 'urgent' : ''} ${isPastDeadline && !isCompleted ? 'urgent' : ''}">
                   <i class="fas fa-clock"></i>
-                  ${Utils.formatDate(deadline)}
+                  ${task.deadline ? Utils.formatDate(deadline) : 'No official Time limit'}
                   ${isPastDeadline && !isCompleted ? '(Overdue!)' : ''}
                   ${isUrgent && !isPastDeadline ? `(${daysUntil} day${daysUntil !== 1 ? 's' : ''} left!)` : ''}
                 </span>

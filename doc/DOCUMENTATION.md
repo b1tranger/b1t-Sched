@@ -28,7 +28,7 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **Firebase Authentication** - Secure email/password login system with email verification and password reset
 - **User Profiles** - Student ID, department, semester, and section
 - **Personalized Dashboard** - Content filtered by user's academic details
-- **Task Management** - View pending assignments and exams with deadlines, with basic markdown (`**bold**`, `*italic*`, `` `code` ``, `[link](url)`), and clickable links, collapsible descriptions (2-line truncation)
+- **Task Management** - View pending assignments and exams with deadlines (or "No official Time limit"), with basic markdown (`**bold**`, `*italic*`, `` `code` ``, `[link](url)`), and clickable links, collapsible descriptions (2-line truncation)
 - **Task Completion** - Checkboxes to mark tasks complete, persistent per-user
 - **Task Editing** - Users can edit their own tasks; admins can edit all tasks; Course is required field
 - **Event Calendar** - Track upcoming academic events with basic markdown and clickable links
@@ -273,7 +273,7 @@ const db = firebase.firestore();   // Firestore instance
   semester: string,
   section: string,
   status: string,         // "active", "completed"
-  deadline: Timestamp
+  deadline: Timestamp | null // null means "No official Time limit"
 }
 ```
 
@@ -454,12 +454,12 @@ const db = firebase.firestore();   // Firestore instance
 | `setupAdminEventListeners()` | - | Setup admin-related event handlers |
 | `handleTaskCompletion(taskId, isCompleted)` | string, boolean | Toggle task completion |
 | `openAddTaskModal()` | - | Open add task modal |
-| `handleAddTask()` | - | Process add task form |
+| `handleAddTask()` | - | Process add task form. Supports two deadline options: (1) No official Time limit (stores deadline as null), or (2) a specific date/time. |
 | `openOldTasksModal()` | - | Open completed tasks modal |
 | `handleResetTasks()` | - | Reset all old tasks (admin or CR) |
 | `handleDeleteTask(taskId)` | string | Delete task (admin or CR) |
 | `openEditTaskModal(taskId)` | string | Open edit task modal with pre-filled data |
-| `handleEditTask()` | - | Process edit task form submission |
+| `handleEditTask()` | - | Process edit task form submission. Supports two deadline options: (1) No official Time limit (stores deadline as null), or (2) a specific date/time. |
 | `openAddEventModal()` | - | Open add event modal (admin) |
 | `handleAddEvent()` | - | Process add event form (admin) |
 | `handleDeleteEvent(eventId)` | string | Delete event (admin) |
@@ -892,6 +892,7 @@ service cloud.firestore {
 - **Events Sidebar (Mobile)** - Slide-out panel (40vw) with events and action buttons
 - **Modals:**
   - Add Task Modal - Task creation form with Course as required field
+    - Add Task Modal - Task creation form with Course as required field and two deadline options: "No official Time limit" or a specific date/time
   - Old Tasks Modal - List of tasks past 12h grace period (with completion status)
   - Add Event Modal (admin) - Event creation form
   - Old Events Modal - List of past events
@@ -990,6 +991,7 @@ Router.onRouteChange((routeName) => {
 | 2.11.0 | Feb 2026 | Admin User Management: view all users, filter by dept/sem/section/role, toggle isCR/isBlocked roles, edit user profiles; Blocked users restricted to read-only mode |
 | 2.12.0 | Feb 2026 | Task UI improvements: Course as required field (displayed first), collapsible descriptions with 2-line truncation, vertical edit/delete buttons, "View Old" shows past deadline tasks, compact spacing |
 | 2.13.0 | Feb 2026 | Admin: Firebase Dashboard button in Profile Settings; Markdown link support `[text](url)` in task descriptions; 12-hour grace period for overdue tasks before moving to Old Tasks |
+| 2.14.0 | Feb 2026 | Tasks now support "No official Time limit" as a deadline option. Add/Edit Task modals allow choosing between no deadline and a specific date/time. UI and schema updated. |
 
 ---
 
