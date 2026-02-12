@@ -68,17 +68,33 @@ const DB = {
         .where('status', '==', 'active')
         .get();
       
-      const tasks = [];
+      const tasksWithDeadline = [];
+      const tasksNoDeadline = [];
       snapshot.forEach(doc => {
         const data = doc.data();
-        const deadline = data.deadline ? data.deadline.toDate() : new Date();
-        // Include tasks that are NOT past the 12-hour grace period
-        // (deadline >= now - 12 hours)
-        if (deadline >= gracePeriodCutoff) {
-          tasks.push({ id: doc.id, ...data });
+        // Always include tasks with no deadline (null or missing)
+        if (!('deadline' in data) || data.deadline === null) {
+          tasksNoDeadline.push({ id: doc.id, ...data });
+        } else {
+          const deadline = data.deadline.toDate ? data.deadline.toDate() : new Date(data.deadline);
+          // Include tasks that are NOT past the 12-hour grace period
+          // (deadline >= now - 12 hours)
+          if (deadline >= gracePeriodCutoff) {
+            tasksWithDeadline.push({ id: doc.id, ...data });
+          }
         }
       });
-      
+
+      // Sort tasks with deadlines by deadline ascending (soonest first)
+      tasksWithDeadline.sort((a, b) => {
+        const aDeadline = a.deadline ? (a.deadline.toDate ? a.deadline.toDate() : new Date(a.deadline)) : new Date(8640000000000000); // max date
+        const bDeadline = b.deadline ? (b.deadline.toDate ? b.deadline.toDate() : new Date(b.deadline)) : new Date(8640000000000000);
+        return aDeadline - bDeadline;
+      });
+
+      // No-deadline tasks go at the bottom of pending list
+      const tasks = [...tasksWithDeadline, ...tasksNoDeadline];
+
       console.log(`Found ${tasks.length} pending tasks for sections: ${sectionsInGroup.join(', ')}`);
       return { success: true, data: tasks };
     } catch (error) {
@@ -98,7 +114,7 @@ const DB = {
         department: data.department,
         semester: data.semester,
         section: data.section,
-        deadline: firebase.firestore.Timestamp.fromDate(new Date(data.deadline)),
+        deadline: data.deadline ? firebase.firestore.Timestamp.fromDate(new Date(data.deadline)) : null,
         status: 'active',
         addedBy: userId,
         addedByName: userEmail.split('@')[0],
@@ -181,9 +197,10 @@ const DB = {
       const oldTasks = [];
       tasksSnapshot.forEach(doc => {
         const data = doc.data();
-        const deadline = data.deadline ? data.deadline.toDate() : new Date();
+        // Never include tasks with no deadline (null or missing) in old tasks
+        if (!('deadline' in data) || data.deadline === null) return;
+        const deadline = data.deadline.toDate ? data.deadline.toDate() : new Date(data.deadline);
         const isCompleted = completedTaskIds.includes(doc.id);
-        
         // Include tasks that are past the 12-hour grace period (deadline < now - 12 hours)
         if (deadline < gracePeriodCutoff) {
           oldTasks.push({
@@ -351,7 +368,9 @@ const DB = {
       
       snapshot.forEach(doc => {
         const data = doc.data();
-        const deadline = data.deadline ? data.deadline.toDate() : new Date();
+        // Skip tasks with no deadline (they should remain in pending indefinitely)
+        if (!data.deadline) return;
+        const deadline = data.deadline.toDate ? data.deadline.toDate() : new Date(data.deadline);
         // Delete tasks that are past their deadline
         if (deadline < now) {
           batch.delete(doc.ref);
@@ -407,7 +426,7 @@ const DB = {
         course: data.course || '',
         type: data.type || 'assignment',
         description: data.description || '',
-        deadline: firebase.firestore.Timestamp.fromDate(new Date(data.deadline)),
+        deadline: data.deadline ? firebase.firestore.Timestamp.fromDate(new Date(data.deadline)) : null,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       });
       console.log('Task updated:', taskId);

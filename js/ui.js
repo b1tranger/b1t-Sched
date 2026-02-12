@@ -92,10 +92,13 @@ const UI = {
       if (aCompleted !== bCompleted) {
         return aCompleted ? 1 : -1;
       }
-      // Sort by deadline (null deadlines go last)
-      if (!a.deadline && !b.deadline) return 0;
-      if (!a.deadline) return 1;
-      if (!b.deadline) return -1;
+      // Tasks with no deadline always go after all with a deadline (but before completed)
+      const aHasDeadline = !!a.deadline;
+      const bHasDeadline = !!b.deadline;
+      if (aHasDeadline && !bHasDeadline) return -1;
+      if (!aHasDeadline && bHasDeadline) return 1;
+      if (!aHasDeadline && !bHasDeadline) return 0;
+      // Both have deadlines, sort by soonest
       const aDeadline = a.deadline.toDate ? a.deadline.toDate() : new Date(a.deadline);
       const bDeadline = b.deadline.toDate ? b.deadline.toDate() : new Date(b.deadline);
       return aDeadline - bDeadline;

@@ -829,3 +829,11 @@ Made changes.
 User: please update the documentation at "doc/DOCUMENTATION.md"
 
 GitHub Copilot: 
+
+
+#target: fixing tasks with "No Official Time Limit" not appearing in Pendin tasks list
+
+#specification:
+- "no deadline" tasks are not listed in the Pending Tasks. They are being moved to Old Tasks. 
+- Tasks set with "No Official Time Limit" should be listed at the very bottom of the Pending Tasks list(just over "completed tasks" that the user marks complete), indefinitely.  
+- Unless the deadline is modified, or the task is deleted, they should remain in the list.

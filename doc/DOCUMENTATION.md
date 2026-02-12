@@ -623,7 +623,7 @@ Firestore Database
 │       ├── semester: string
 │       ├── section: string
 │       ├── status: string      # "active"|"completed"
-│       └── deadline: timestamp
+│       └── deadline: timestamp|null  # null = "No official Time limit"
 │
 ├── events/                     # Academic events
 │   └── {eventId}/
@@ -992,6 +992,7 @@ Router.onRouteChange((routeName) => {
 | 2.12.0 | Feb 2026 | Task UI improvements: Course as required field (displayed first), collapsible descriptions with 2-line truncation, vertical edit/delete buttons, "View Old" shows past deadline tasks, compact spacing |
 | 2.13.0 | Feb 2026 | Admin: Firebase Dashboard button in Profile Settings; Markdown link support `[text](url)` in task descriptions; 12-hour grace period for overdue tasks before moving to Old Tasks |
 | 2.14.0 | Feb 2026 | Tasks now support "No official Time limit" as a deadline option. Add/Edit Task modals allow choosing between no deadline and a specific date/time. UI and schema updated. |
+| 2.14.1 | Feb 2026 | Bugfix: No-deadline tasks now correctly stay in Pending Tasks instead of being moved to Old Tasks. Fixed `createTask()` and `updateTask()` to store `null` instead of epoch timestamp when no deadline is set. Fixed `resetOldTasks()` to skip no-deadline tasks. |
 
 ---
 
@@ -1006,4 +1007,4 @@ Router.onRouteChange((routeName) => {
 ---
 
 *Documentation last updated: February 12, 2026*
-*Version: 2.13.0*
+*Version: 2.14.1*
