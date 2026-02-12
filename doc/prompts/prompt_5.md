@@ -644,3 +644,173 @@ Replacing 17 lines with 26 lines in [](file:///e%3A/Git_WIP/2.%20Personal%20Repo
 Updated the documentation with the new `isSigningUp` flag and explanation of the signup race condition prevention.
 
 Made changes.
+
+
+User: [ Task-1 ]
+#target: adding Firebase dashboard button for admin role
+
+#specification:
+- besides "Manage Users" in Profile Settings, please add a button that redirects tohttps://console.firebase.google.com/u/0/project/b1t-sched/ 
+
+[ Task-2 ]
+#target: .md link in Tasks
+
+#specification:
+- I want to add links in .md format:
+example: [link](https://video.text.com/) should show as "link" in tasks list
+
+GitHub Copilot: Created 2 todos
+
+Searched for text `Manage Users`, 5 results
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/index.html#585-585), lines 585 to 620
+
+Searched for regex `task.*title|task.*description|renderTask`, 20 results
+
+Searched for text `escapeAndLinkify` (`**/js/utils.js`), 1 result
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/js/utils.js#150-150), lines 150 to 172
+
+Searched for text `applyBasicMarkdown` (`**/js/utils.js`), 2 results
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/js/utils.js#140-140), lines 140 to 165
+
+Now I have enough context. Let me implement both tasks: 
+
+Replacing 16 lines with 22 lines in [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/index.html), [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/js/utils.js)
+
+
+```
+
+```
+
+```
+
+```
+Now I need to ensure the Firebase Dashboard button is shown for admin users. Let me check how the admin visibility is handled: 
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/js/app.js#1110-1110), lines 1110 to 1140
+
+Searched for regex `admin-only.*display|manage-users-btn.*display`, 4 results
+
+Searched for regex `\.admin-only|admin-only.*block|admin-only.*flex`, 2 results
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/js/ui.js#310-310), lines 310 to 340
+
+The Firebase Dashboard button already has the `admin-only` class, so it will automatically be shown for admin users by the existing `toggleAdminControls` function.  
+
+Completed: *Add Firebase dashboard button for admin* (1/2)
+
+Checked [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/index.html), [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/js/utils.js), no problems found
+
+Both tasks completed:
+
+**Task-1**: Added a "Firebase Dashboard" button next to "Manage Users" in Profile Settings at index.html. It's only visible to admin users and opens the Firebase console in a new tab.
+
+**Task-2**: Added markdown link support in utils.js. The `applyBasicMarkdown` function now parses `[text](url)` format and renders clickable links in task descriptions/details.
+
+Made changes.
+
+User: the link inside the tasks appear as:
+`https://drive.google.com/file/d/1QAZIPzhngnx9VFIWenZ4skFnxzytVjqV/view?usp=classroom_web&authuser=0" target="_blank" rel="noopener noreferrer">task`
+
+not "task"
+
+GitHub Copilot: Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/js/utils.js#100-100), lines 100 to 172
+
+The issue is that `linkify` runs after `applyBasicMarkdown` and finds the URL inside the `href` attribute, trying to linkify it again. I need to fix the order and prevent double-processing: 
+
+Replacing 18 lines with 45 lines in [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/js/utils.js)
+
+
+```
+
+```
+Fixed. The issue was that `linkify` was finding URLs inside the `href` attributes created by markdown links and double-processing them.
+
+Now markdown links `[text](url)` are extracted first as placeholders, then plain URLs get linkified, and finally the markdown links are restored as proper anchor tags. This prevents double-processing.
+
+Made changes.
+
+User: could you check if tasks when past deadline get moved to "Old Tasks", or if it is possible to keep it in the "Pending Tasks" as "Overdue"
+
+GitHub Copilot: Searched for regex `old.*task|overdue|deadline|pending.*task`, 20 results
+
+Searched for regex `oldTasks|old.*tasks.*filter|isPast|getOld`, 20 results
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/js/db.js#100-100), lines 100 to 210
+
+Searched for regex `getTasks|deadline.*greater|deadline.*>=`, 5 results
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/js/db.js#50-50), lines 50 to 100
+
+Based on my analysis of the code:
+
+**Current behavior:**
+- **Pending Tasks** (db.js): Only shows tasks where `deadline >= now`
+- **Old Tasks** (db.js): Shows tasks where `deadline < now`
+
+Tasks automatically move from "Pending" to "Old Tasks" once the deadline passes. In the Old Tasks modal, incomplete tasks are displayed with an "Overdue" label and styling (ui.js).
+
+**It is possible** to keep overdue tasks in "Pending Tasks" instead. This would involve:
+1. Removing the deadline filter from `getTasks()` 
+2. Adding "Overdue!" indicator to tasks past deadline in the pending list (already partially implemented)
+3. Only moving tasks to "Old Tasks" when they are both past deadline AND completed
+
+Would you like me to implement this change so overdue tasks remain visible in "Pending Tasks"?
+
+User: No, I want a modified version of the Old Tasks modal:
+- it should show the tasks as "Overdue" once deadline is passed/crossed for 12 hours after deadline
+- but should move to Old Tasks once that 12 hours is passed, regardless of whether the user marks is complete or not
+
+Is it possible?
+
+GitHub Copilot: Yes, that's possible. I'll modify the logic so:
+- **Pending Tasks**: Shows tasks with `deadline >= now - 12 hours` (includes overdue within 12h)
+- **Old Tasks**: Shows tasks with `deadline < now - 12 hours` 
+
+Replacing 72 lines with 77 lines in [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/js/db.js)
+
+
+```
+
+```
+
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/js/db.js#185-185), lines 185 to 210
+
+Replacing 9 lines with 9 lines in [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/js/db.js)
+
+
+```
+
+```
+
+
+Read [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/index.html#415-415), lines 415 to 430
+
+Replacing 4 lines with 4 lines in [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/index.html)
+
+
+```
+
+```
+
+
+Checked [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/js/db.js), [](file:///e%3A/Git_WIP/2.%20Personal%20Repositories/b1t-Sched/index.html), no problems found
+
+Done. The behavior is now:
+
+- **Pending Tasks**: Shows tasks where deadline is in the future OR within 12 hours past deadline (displayed as "Overdue!")
+- **Old Tasks**: Shows tasks where deadline is more than 12 hours ago
+
+Changes made:
+- db.js: `getTasks()` now includes tasks within 12h grace period
+- db.js: `getOldTasks()` now only includes tasks past the 12h grace period
+- index.html: Updated empty state message
+
+Made changes.
+
+User: please update the documentation at "doc/DOCUMENTATION.md"
+
+GitHub Copilot: 

@@ -52,12 +52,14 @@ const DB = {
   },
 
   // Task operations - fetches tasks for the section group (A1+A2 merged, B1+B2 merged, etc.)
-  // Only returns pending tasks (not past deadline)
+  // Returns pending tasks + overdue tasks within 12 hours grace period
   async getTasks(department, semester, section) {
     try {
       // Get all sections in the same group (e.g., ['A1', 'A2'] for user in A1)
       const sectionsInGroup = Utils.getSectionsInGroup(section);
       const now = new Date();
+      // 12 hour grace period - tasks remain in pending for 12 hours after deadline
+      const gracePeriodCutoff = new Date(now.getTime() - (12 * 60 * 60 * 1000));
       
       const snapshot = await db.collection('tasks')
         .where('department', '==', department)
@@ -70,8 +72,9 @@ const DB = {
       snapshot.forEach(doc => {
         const data = doc.data();
         const deadline = data.deadline ? data.deadline.toDate() : new Date();
-        // Only include tasks that are NOT past deadline (pending tasks only)
-        if (deadline >= now) {
+        // Include tasks that are NOT past the 12-hour grace period
+        // (deadline >= now - 12 hours)
+        if (deadline >= gracePeriodCutoff) {
           tasks.push({ id: doc.id, ...data });
         }
       });
@@ -149,7 +152,7 @@ const DB = {
     }
   },
 
-  // Get old tasks (past deadline)
+  // Get old tasks (past deadline + 12 hour grace period)
   async getOldTasks(userId, department, semester, section) {
     try {
       // Get user's completed task IDs for marking completion status
@@ -163,8 +166,10 @@ const DB = {
         completionDates[doc.id] = doc.data().completedAt;
       });
 
-      // Get all tasks that are past deadline
+      // Get all tasks that are past the 12-hour grace period
       const now = new Date();
+      // 12 hour grace period - tasks move to old tasks after 12 hours past deadline
+      const gracePeriodCutoff = new Date(now.getTime() - (12 * 60 * 60 * 1000));
       const sectionsInGroup = Utils.getSectionsInGroup(section);
       const tasksSnapshot = await db.collection('tasks')
         .where('department', '==', department)
@@ -179,8 +184,8 @@ const DB = {
         const deadline = data.deadline ? data.deadline.toDate() : new Date();
         const isCompleted = completedTaskIds.includes(doc.id);
         
-        // Include all tasks that are past deadline (old tasks)
-        if (deadline < now) {
+        // Include tasks that are past the 12-hour grace period (deadline < now - 12 hours)
+        if (deadline < gracePeriodCutoff) {
           oldTasks.push({
             id: doc.id,
             ...data,
@@ -197,7 +202,7 @@ const DB = {
         return bDeadline - aDeadline;
       });
       
-      console.log(`Found ${oldTasks.length} old tasks (past deadline)`);
+      console.log(`Found ${oldTasks.length} old tasks (past 12h grace period)`);
       return { success: true, data: oldTasks };
     } catch (error) {
       console.error('Error getting old tasks:', error);

@@ -28,7 +28,7 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **Firebase Authentication** - Secure email/password login system with email verification and password reset
 - **User Profiles** - Student ID, department, semester, and section
 - **Personalized Dashboard** - Content filtered by user's academic details
-- **Task Management** - View pending assignments and exams with deadlines, with basic markdown and clickable links, collapsible descriptions (2-line truncation)
+- **Task Management** - View pending assignments and exams with deadlines, with basic markdown (`**bold**`, `*italic*`, `` `code` ``, `[link](url)`), and clickable links, collapsible descriptions (2-line truncation)
 - **Task Completion** - Checkboxes to mark tasks complete, persistent per-user
 - **Task Editing** - Users can edit their own tasks; admins can edit all tasks; Course is required field
 - **Event Calendar** - Track upcoming academic events with basic markdown and clickable links
@@ -251,12 +251,12 @@ const db = firebase.firestore();   // Firestore instance
 
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
-| `getTasks(department, semester, section)` | string, string, string | `{success, data/error}` | Get filtered tasks |
+| `getTasks(department, semester, section)` | string, string, string | `{success, data/error}` | Get pending tasks (includes overdue within 12h grace) |
 | `createTask(userId, userEmail, data)` | string, string, object | `{success, id/error}` | Create new task |
 | `updateTask(taskId, data)` | string, object | `{success, error?}` | Update existing task |
 | `getUserTaskCompletions(userId)` | string | `{success, data/error}` | Get user's completed tasks |
 | `toggleTaskCompletion(userId, taskId, isCompleted)` | string, string, boolean | `{success, error?}` | Toggle task completion |
-| `getOldTasks(userId, department, semester, section)` | strings | `{success, data/error}` | Get completed/past tasks |
+| `getOldTasks(userId, department, semester, section)` | strings | `{success, data/error}` | Get tasks past 12h grace period |
 | `deleteTask(taskId)` | string | `{success, error?}` | Delete task (admin or CR) |
 | `resetOldTasks(department, semester, section)` | strings | `{success, deletedCount/error}` | Delete all past tasks (admin or CR) |
 
@@ -367,7 +367,7 @@ const db = firebase.firestore();   // Firestore instance
 | `updateUserDetailsCard(email, dept, sem, section)` | strings | Update navbar user card |
 | `renderResourceLinks(links)` | array | Render resource link cards |
 | `renderTasks(tasks, userCompletions, isAdmin, isCR, currentUserId)` | array, object, boolean, boolean, string | Render task cards with checkboxes, collapsible descriptions, vertical edit/delete buttons |
-| `renderOldTasks(tasks)` | array | Render old tasks (past deadline) with completion status |
+| `renderOldTasks(tasks)` | array | Render old tasks (past 12h grace period) with completion status |
 | `renderEvents(events, isAdmin)` | array, boolean | Render event cards with edit/delete buttons |
 | `renderOldEvents(events)` | array | Render past events list |
 | `populateDropdown(elementId, items, selectedValue)` | string, array, string? | Populate select dropdown |
@@ -882,8 +882,9 @@ service cloud.firestore {
   - Course shown larger than Task Title; descriptions truncated to 2 lines with "Show more" toggle
   - Edit/delete buttons vertically stacked on right side below task type badge
   - "Added by" info appears only when description is expanded
+  - Overdue tasks (within 12h of deadline) remain visible with "Overdue!" label
   - Add Tasks button - Opens task creation modal (Course required)
-  - View Old button - Opens past deadline tasks modal
+  - View Old button - Opens tasks past 12h grace period
   - Reset Tasks button (admin/CR) - Clears past tasks
 - **Upcoming Events Section** - Calendar events with delete buttons (admin)
   - Add Event button (admin-only) - Opens event creation modal
@@ -891,7 +892,7 @@ service cloud.firestore {
 - **Events Sidebar (Mobile)** - Slide-out panel (40vw) with events and action buttons
 - **Modals:**
   - Add Task Modal - Task creation form with Course as required field
-  - Old Tasks Modal - List of past deadline tasks (with completion status)
+  - Old Tasks Modal - List of tasks past 12h grace period (with completion status)
   - Add Event Modal (admin) - Event creation form
   - Old Events Modal - List of past events
 
@@ -988,6 +989,7 @@ Router.onRouteChange((routeName) => {
 | 2.10.0 | Feb 2026 | CR info message for non-CR users; Profile change 30-day cooldown; Footer with credits and dynamic year |
 | 2.11.0 | Feb 2026 | Admin User Management: view all users, filter by dept/sem/section/role, toggle isCR/isBlocked roles, edit user profiles; Blocked users restricted to read-only mode |
 | 2.12.0 | Feb 2026 | Task UI improvements: Course as required field (displayed first), collapsible descriptions with 2-line truncation, vertical edit/delete buttons, "View Old" shows past deadline tasks, compact spacing |
+| 2.13.0 | Feb 2026 | Admin: Firebase Dashboard button in Profile Settings; Markdown link support `[text](url)` in task descriptions; 12-hour grace period for overdue tasks before moving to Old Tasks |
 
 ---
 
@@ -1002,4 +1004,4 @@ Router.onRouteChange((routeName) => {
 ---
 
 *Documentation last updated: February 12, 2026*
-*Version: 2.12.0*
+*Version: 2.13.0*

@@ -418,7 +418,7 @@
                         </div>
                         <div id="no-old-tasks-message" class="no-data-message compact" style="display: none;">
                             <i class="fas fa-archive"></i>
-                            <p>No old tasks (past deadline).</p>
+                            <p>No old tasks (past 12h grace period).</p>
                         </div>
                     </div>
                 </div>
@@ -592,6 +592,11 @@
                             <button id="manage-users-btn" class="btn btn-primary admin-only" style="display: none;">
                                 <i class="fas fa-users-cog"></i> Manage Users
                             </button>
+                           
+                            <!-- Admin: Firebase Dashboard Button -->
+                            <a id="firebase-dashboard-btn" href="https://console.firebase.google.com/u/0/project/b1t-sched/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary admin-only" style="display: none;margin: 5px;">
+                                <i class="fas fa-database"></i>Firebase
+                            </a>
                             <h1>Profile Settings</h1>
                         </div>
 
