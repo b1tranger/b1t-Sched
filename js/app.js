@@ -39,6 +39,7 @@ const App = {
     this.setupEventListeners();
     this.setupTaskEventListeners();
     this.setupEventsSidebarListeners();
+    NoticeViewer.init();
     this.setupAdminEventListeners();
     this.setupUserManagementListeners();
 
