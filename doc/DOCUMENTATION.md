@@ -31,18 +31,19 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **Task Management** - View pending assignments and exams with deadlines (or "No official Time limit"), with basic markdown (`**bold**`, `*italic*`, `` `code` ``, `[link](url)`), and clickable links, collapsible descriptions (2-line truncation)
 - **Task Completion** - Checkboxes to mark tasks complete, persistent per-user
 - **Task Editing** - Users can edit their own tasks; admins can edit all tasks; Course is required field
-- **Event Calendar** - Track upcoming academic events with basic markdown and clickable links
-- **Event Editing** - Admins can edit all events
+- **Event Calendar** - Track upcoming academic events with basic markdown, clickable links, collapsible descriptions (2-line truncation), and department scope badge (ALL/CSE/etc.)
+- **Event Editing** - Admins can edit all events; CRs can edit/delete their own events
 - **Resource Links** - Quick access to department-specific resources
 - **Responsive Design** - Works on desktop, tablet, and mobile
 - **Maroon Theme** - Professional dark maroon and off-white color scheme
-- **Admin Features** - Task reset, task/event delete, event creation (admin-only)
+- **Admin Features** - Task reset, task/event delete, event creation
 - **Admin User Management** - View all users, manage roles (CR/Blocked), edit user profiles
-- **CR Role** - Class Representatives can reset and delete tasks for their section
+- **CR Role** - Class Representatives can reset and delete tasks for their section, create events for their department, and edit/delete their own events
 - **Blocked Users** - Restricted accounts in read-only mode (cannot add/edit/delete tasks or change profile)
 - **CR Info Message** - Non-CR users see instructions to contact admin for CR role
 - **Profile Change Cooldown** - Users can only change profile once per 30 days (anti-spam)
 - **Two-Column Layout** - Events sidebar on desktop, slide-out panel (40vw) on mobile
+- **FAQ Section** - Collapsible accordion explaining how the site works, user roles, and profile settings
 - **Footer with Credits** - Source code link and dynamic copyright year
 
 ### Technology Stack
@@ -631,7 +632,8 @@ Firestore Database
 │       ├── description: string
 │       ├── department: string  # or "ALL"
 │       ├── date: timestamp
-│       ├── createdBy: string   # userId (admin)
+│       ├── createdBy: string   # userId (admin or CR)
+│       ├── createdByName: string # "Admin" or "CR"
 │       └── createdAt: timestamp
 │
 ├── resourceLinks/              # Department resources
@@ -734,10 +736,33 @@ service cloud.firestore {
       );
     }
     
-    // Events collection - Admin only for write operations
+    // Helper function to get user's department
+    function getUserDepartment() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.department;
+    }
+    
+    // Events collection - Admin full access, CR limited access
     match /events/{eventId} {
       allow read: if isSignedIn();
-      allow create, update, delete: if isAdmin();
+      
+      // Admin can create any event; CR can create events for their own department
+      allow create: if isAdmin() || (
+        isCR() && 
+        request.resource.data.createdBy == request.auth.uid &&
+        request.resource.data.department == getUserDepartment()
+      );
+      
+      // Admin can edit any event; CR can edit only their own events
+      allow update: if isAdmin() || (
+        isCR() && 
+        resource.data.createdBy == request.auth.uid
+      );
+      
+      // Admin can delete any event; CR can delete only their own events
+      allow delete: if isAdmin() || (
+        isCR() && 
+        resource.data.createdBy == request.auth.uid
+      );
     }
     
     // Resource links - read only for users, admin can write
@@ -768,7 +793,9 @@ service cloud.firestore {
 | Reset tasks | ✗ | ✗ | ✓ | ✓ |
 | Mark tasks complete | ✗ | ✓ | ✓ | ✓ |
 | Read events | ✓ | ✓ | ✓ | ✓ |
-| Create/Edit/Delete events | ✗ | ✗ | ✗ | ✓ |
+| Create events (own dept) | ✗ | ✗ | ✓ | ✓ |
+| Edit/Delete own events | ✗ | ✗ | ✓ | ✓ |
+| Edit/Delete any event | ✗ | ✗ | ✗ | ✓ |
 | Change own profile | ✗ | ✓ (30-day cooldown) | ✓ | ✓ |
 | Manage users | ✗ | ✗ | ✗ | ✓ |
 | Assign/remove roles | ✗ | ✗ | ✗ | ✓ |
@@ -886,15 +913,20 @@ service cloud.firestore {
   - Add Tasks button - Opens task creation modal (Course required)
   - View Old button - Opens tasks past 12h grace period
   - Reset Tasks button (admin/CR) - Clears past tasks
-- **Upcoming Events Section** - Calendar events with delete buttons (admin)
-  - Add Event button (admin-only) - Opens event creation modal
+- **Upcoming Events Section** - Calendar events with collapsible descriptions (2-line truncation with "Show more" toggle), department scope badge (ALL/CSE/etc.), "Added by Admin/CR" label, and edit/delete buttons
+  - Add Event button (admin/CR) - Opens event creation modal; CRs create events for their own department
   - Old Events button - Opens past events modal
+  - CRs can edit/delete their own events; admins can edit/delete any event
 - **Events Sidebar (Mobile)** - Slide-out panel (40vw) with events and action buttons
+- **FAQ Section** - Collapsible accordion with three items:
+  - How b1t-Sched works (shared tasks, individual checkboxes)
+  - User roles (Admin, CR, Blocked) and their permissions
+  - Profile settings and 30-day change cooldown disclaimer
 - **Modals:**
   - Add Task Modal - Task creation form with Course as required field
     - Add Task Modal - Task creation form with Course as required field and two deadline options: "No official Time limit" or a specific date/time
   - Old Tasks Modal - List of tasks past 12h grace period (with completion status)
-  - Add Event Modal (admin) - Event creation form
+  - Add Event Modal (admin/CR) - Event creation form
   - Old Events Modal - List of past events
 
 ### Profile Settings View Components

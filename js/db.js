@@ -60,14 +60,14 @@ const DB = {
       const now = new Date();
       // 12 hour grace period - tasks remain in pending for 12 hours after deadline
       const gracePeriodCutoff = new Date(now.getTime() - (12 * 60 * 60 * 1000));
-      
+
       const snapshot = await db.collection('tasks')
         .where('department', '==', department)
         .where('semester', '==', semester)
         .where('section', 'in', sectionsInGroup)
         .where('status', '==', 'active')
         .get();
-      
+
       const tasksWithDeadline = [];
       const tasksNoDeadline = [];
       snapshot.forEach(doc => {
@@ -133,12 +133,12 @@ const DB = {
     try {
       const snapshot = await db.collection('users').doc(userId)
         .collection('completedTasks').get();
-      
+
       const completions = {};
       snapshot.forEach(doc => {
         completions[doc.id] = doc.data();
       });
-      
+
       return { success: true, data: completions };
     } catch (error) {
       console.error('Error getting task completions:', error);
@@ -151,7 +151,7 @@ const DB = {
     try {
       const completionRef = db.collection('users').doc(userId)
         .collection('completedTasks').doc(taskId);
-      
+
       if (isCompleted) {
         await completionRef.set({
           completedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -159,7 +159,7 @@ const DB = {
       } else {
         await completionRef.delete();
       }
-      
+
       console.log(`Task ${taskId} completion toggled to ${isCompleted}`);
       return { success: true };
     } catch (error) {
@@ -174,7 +174,7 @@ const DB = {
       // Get user's completed task IDs for marking completion status
       const completionsSnapshot = await db.collection('users').doc(userId)
         .collection('completedTasks').get();
-      
+
       const completedTaskIds = [];
       const completionDates = {};
       completionsSnapshot.forEach(doc => {
@@ -193,7 +193,7 @@ const DB = {
         .where('section', 'in', sectionsInGroup)
         .where('status', '==', 'active')
         .get();
-      
+
       const oldTasks = [];
       tasksSnapshot.forEach(doc => {
         const data = doc.data();
@@ -211,14 +211,14 @@ const DB = {
           });
         }
       });
-      
+
       // Sort by deadline (most recent first)
       oldTasks.sort((a, b) => {
         const aDeadline = a.deadline ? a.deadline.toDate() : new Date(0);
         const bDeadline = b.deadline ? b.deadline.toDate() : new Date(0);
         return bDeadline - aDeadline;
       });
-      
+
       console.log(`Found ${oldTasks.length} old tasks (past 12h grace period)`);
       return { success: true, data: oldTasks };
     } catch (error) {
@@ -235,10 +235,10 @@ const DB = {
         .where('date', '>=', firebase.firestore.Timestamp.fromDate(now))
         .orderBy('date', 'asc')
         .limit(10);
-      
+
       const snapshot = await query.get();
       const events = [];
-      
+
       snapshot.forEach(doc => {
         const data = doc.data();
         // Show events for specific department or ALL departments
@@ -246,7 +246,7 @@ const DB = {
           events.push({ id: doc.id, ...data });
         }
       });
-      
+
       console.log(`Found ${events.length} events`);
       return { success: true, data: events };
     } catch (error) {
@@ -259,7 +259,7 @@ const DB = {
   async getResourceLinks(department) {
     try {
       const doc = await db.collection('resourceLinks').doc(department).get();
-      
+
       if (doc.exists) {
         const data = doc.data();
         return { success: true, data: data.resources || [] };
@@ -326,8 +326,8 @@ const DB = {
       const doc = await db.collection('users').doc(userId).get();
       if (doc.exists) {
         const data = doc.data();
-        return { 
-          success: true, 
+        return {
+          success: true,
           isAdmin: data.isAdmin === true,
           isCR: data.isCR === true,
           isBlocked: data.isBlocked === true
@@ -362,10 +362,10 @@ const DB = {
         .where('semester', '==', semester)
         .where('section', 'in', sectionsInGroup)
         .get();
-      
+
       const batch = db.batch();
       let deletedCount = 0;
-      
+
       snapshot.forEach(doc => {
         const data = doc.data();
         // Skip tasks with no deadline (they should remain in pending indefinitely)
@@ -377,7 +377,7 @@ const DB = {
           deletedCount++;
         }
       });
-      
+
       await batch.commit();
       console.log(`Reset ${deletedCount} old tasks`);
       return { success: true, deletedCount };
@@ -396,7 +396,8 @@ const DB = {
         date: firebase.firestore.Timestamp.fromDate(new Date(data.date)),
         department: data.department || 'ALL',
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        createdBy: data.createdBy
+        createdBy: data.createdBy,
+        createdByName: data.createdByName || 'Admin'
       });
       console.log('Event created:', docRef.id);
       return { success: true, id: docRef.id };
@@ -464,7 +465,7 @@ const DB = {
         .orderBy('date', 'desc')
         .limit(20)
         .get();
-      
+
       const events = [];
       snapshot.forEach(doc => {
         const data = doc.data();
@@ -473,7 +474,7 @@ const DB = {
           events.push({ id: doc.id, ...data });
         }
       });
-      
+
       console.log(`Found ${events.length} old events`);
       return { success: true, data: events };
     } catch (error) {

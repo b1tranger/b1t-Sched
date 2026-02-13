@@ -13,11 +13,12 @@ A single-page application (SPA) that helps students manage academic tasks, assig
 - 📱 **Single-Page Application** - Fast, seamless navigation
 - 🔐 **Firebase Authentication** - Secure email/password login with password reset
 - 👤 **User Profiles** - Set department, semester, and section once
-- 📋 **Personalized Tasks** - View tasks filtered by your academic details, with clickable links
-- ✏️ **Edit Entries** - Users can edit their own tasks; admins can edit all tasks and events
+- 📋 **Personalized Tasks** - View tasks filtered by your academic details, with clickable links and collapsible descriptions
+- ✏️ **Edit Entries** - Users can edit their own tasks; admins can edit all tasks and events; CRs can create department events and manage their own
 - 🔗 **Dynamic Resource Links** - Department-specific routine, calendar, and faculty contacts
-- 📅 **Event Calendar** - Track upcoming academic events with clickable links
-- ⚙️ **Profile Settings** - Update your details anytime
+- 📅 **Event Calendar** - Track upcoming academic events with collapsible descriptions, department scope badge, and clickable links
+- ⚙️ **Profile Settings** - Update your details anytime (30-day cooldown)
+- ❓ **FAQ Section** - Collapsible accordion explaining how the site works, user roles, and profile settings
 - 🎨 **Maroon Theme** - Professional dark maroon and off-white color scheme
 - 📱 **Fully Responsive** - Works on desktop, tablet, and mobile
 
@@ -383,8 +384,10 @@ tasks.forEach(async (task) => {
 Already set up in `FIREBASE_SETUP.md`. Rules ensure:
 - ✅ Only authenticated users can access data
 - ✅ Users can only edit their own profile
-- ✅ Tasks, events, and resource links are read-only
-- ✅ Admin write access can be added later
+- ✅ Users can create tasks and edit/delete their own
+- ✅ Admins have full control over all tasks and events
+- ✅ CRs can create department events and manage their own events
+- ✅ Blocked users are restricted to read-only mode
 
 ### API Key Safety
 

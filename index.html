@@ -327,7 +327,7 @@
 
                             <!-- Events Action Buttons -->
                             <div class="events-actions">
-                                <button id="add-event-btn" class="btn btn-secondary admin-only" style="display: none;">
+                                <button id="add-event-btn" class="btn btn-secondary cr-or-admin" style="display: none;">
                                     <i class="fas fa-plus"></i> Add Event
                                 </button>
                                 <button id="view-old-events-btn" class="btn btn-secondary">
@@ -358,7 +358,7 @@
                     </div>
                     <!-- Mobile Events Actions -->
                     <div class="events-sidebar-actions">
-                        <button id="add-event-btn-mobile" class="btn btn-secondary admin-only" style="display: none;">
+                        <button id="add-event-btn-mobile" class="btn btn-secondary cr-or-admin" style="display: none;">
                             <i class="fas fa-plus"></i> Add Event
                         </button>
                         <button id="view-old-events-btn-mobile" class="btn btn-secondary">
@@ -410,7 +410,8 @@
                                 <label for="deadline-none" style="margin-bottom: 0;">No official Time limit</label>
                                 <input type="radio" name="deadline-option" id="deadline-date" value="date">
                                 <label for="deadline-date" style="margin-bottom: 0;">Set Deadline</label>
-                                <input type="datetime-local" id="task-deadline" class="form-input" style="flex:1; min-width: 180px;" disabled>
+                                <input type="datetime-local" id="task-deadline" class="form-input"
+                                    style="flex:1; min-width: 180px;" disabled>
                             </div>
                         </div>
                     </form>
@@ -483,11 +484,13 @@
                         <div class="form-group">
                             <label for="edit-task-deadline">Deadline</label>
                             <div style="display: flex; gap: 8px; align-items: center;">
-                                <input type="radio" name="edit-deadline-option" id="edit-deadline-none" value="none" checked>
+                                <input type="radio" name="edit-deadline-option" id="edit-deadline-none" value="none"
+                                    checked>
                                 <label for="edit-deadline-none" style="margin-bottom: 0;">No official Time limit</label>
                                 <input type="radio" name="edit-deadline-option" id="edit-deadline-date" value="date">
                                 <label for="edit-deadline-date" style="margin-bottom: 0;">Set Deadline</label>
-                                <input type="datetime-local" id="edit-task-deadline" class="form-input" style="flex:1; min-width: 180px;" disabled>
+                                <input type="datetime-local" id="edit-task-deadline" class="form-input"
+                                    style="flex:1; min-width: 180px;" disabled>
                             </div>
                         </div>
                     </form>
@@ -500,7 +503,7 @@
                 </div>
             </div>
 
-            <!-- Add Event Modal (Admin Only) -->
+            <!-- Add Event Modal (Admin/CR) -->
             <div id="add-event-modal" class="modal" style="display: none;">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -545,7 +548,7 @@
                 </div>
             </div>
 
-            <!-- Edit Event Modal (Admin Only) -->
+            <!-- Edit Event Modal (Admin/CR) -->
             <div id="edit-event-modal" class="modal" style="display: none;">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -819,6 +822,63 @@
                     </div>
                 </div>
             </div>
+
+
+            <!-- FAQ Section (visible when logged in) -->
+            <section id="faq-section" class="faq-section" style="display: none;">
+                <h2 class="faq-heading"><i class="fas fa-question-circle"></i> Frequently Asked Questions</h2>
+
+                <details class="faq-item">
+                    <summary class="faq-question">
+                        <i class="fas fa-info-circle"></i> How does b1t-Sched work?
+                    </summary>
+                    <div class="faq-answer">
+                        <p>b1t-Sched groups students by their academic identity — <strong>Department</strong>,
+                            <strong>Semester</strong>, and <strong>Section</strong>. All users who share the same
+                            combination see the same "Pending Tasks" list and can add new tasks to it.</p>
+                        <p>However, <strong>task checkboxes are individual</strong> — marking a task as complete only
+                            affects your own dashboard. Other users in the same group won't see your completion status.
+                        </p>
+                        <p>Events are shown based on department (or marked as "ALL" for university-wide events) and are
+                            visible in the sidebar on desktop or in the slide-out panel on mobile.</p>
+                    </div>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">
+                        <i class="fas fa-user-shield"></i> What are the user roles?
+                    </summary>
+                    <div class="faq-answer">
+                        <p>There are three special roles in addition to regular users:</p>
+                        <ul>
+                            <li><strong>Admin</strong> — Full control: can create/edit/delete any task or event, manage
+                                all users, assign or remove roles, and access the Firebase dashboard.</li>
+                            <li><strong>CR (Class Representative)</strong> — Can delete or reset any task in their
+                                section. Can also create events for their own department and edit/delete events they
+                                created.</li>
+                            <li><strong>Blocked</strong> — Restricted to read-only mode. Cannot add, edit, or delete
+                                tasks, change their profile, or interact with events. A banner is shown at the top of
+                                the dashboard.</li>
+                        </ul>
+                        <p>Regular users can add tasks, edit/delete their own tasks, and mark tasks as complete.</p>
+                    </div>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">
+                        <i class="fas fa-cog"></i> Profile settings & changes
+                    </summary>
+                    <div class="faq-answer">
+                        <p>You can change your academic details (department, semester, section) from the <strong>Profile
+                                Settings</strong> page, accessible by clicking your user card in the navigation bar.</p>
+                        <p><strong>Important:</strong> Profile changes are limited to <strong>once every 30
+                                days</strong> to prevent misuse. If you need an earlier change, please contact the
+                            Admin.</p>
+                        <p>Your Student ID is set during initial registration and cannot be changed through the profile
+                            settings.</p>
+                    </div>
+                </details>
+            </section>
 
         </main>
 

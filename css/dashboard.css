@@ -18,6 +18,7 @@
 }
 
 @media (min-width: 1200px) {
+
     /* .mobile-only{
         display: none !important;
     } */
@@ -89,11 +90,6 @@
 
 .dashboard-sidebar .event-description {
     font-size: var(--font-sm);
-    display: -webkit-box;
-    -webkit-line-clamp: 5;
-    line-clamp: 5;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
 }
 
 /* Clickable links in descriptions */
@@ -219,7 +215,8 @@
 /* Reset Tasks button - full width on mobile */
 .tasks-actions .btn-danger {
     flex-basis: 100%;
-    order: 3; /* Ensure it appears last */
+    order: 3;
+    /* Ensure it appears last */
 }
 
 /* ============================================
@@ -342,11 +339,6 @@
 
 .events-container-mobile .event-description {
     font-size: var(--font-xs);
-    display: -webkit-box;
-    -webkit-line-clamp: 5;
-    line-clamp: 5;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
 }
 
 /* Events Overlay */
@@ -526,11 +518,12 @@
    ============================================ */
 
 @media (max-width: 768px) {
-    
 
-    .dashboard-main{
+
+    .dashboard-main {
         flex-direction: column-reverse;
     }
+
     .resource-links-container {
         grid-template-columns: repeat(2, 1fr);
         gap: var(--spacing-sm);
@@ -597,13 +590,15 @@
 .admin-only {
     /* Visibility controlled by JS - this ruleset intentionally has no styles */
     /* display style is set inline and toggled by UI.toggleAdminControls() */
-    display: none; /* Default hidden, shown via JS when admin */
+    display: none;
+    /* Default hidden, shown via JS when admin */
 }
 
 /* CR or Admin elements - visible to both roles */
 .cr-or-admin {
     /* Visibility controlled by JS */
-    display: none; /* Default hidden, shown via JS when admin or CR */
+    display: none;
+    /* Default hidden, shown via JS when admin or CR */
 }
 
 /* Task Delete Button */
@@ -646,7 +641,7 @@
     gap: var(--spacing-xs);
     flex-shrink: 0;
     z-index: 10;
-    
+
 }
 
 /* Vertical task actions (edit/delete buttons) */

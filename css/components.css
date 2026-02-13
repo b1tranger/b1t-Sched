@@ -234,7 +234,7 @@
   margin-bottom: 0;
 }
 
-.task-description-text.expanded + .task-added-by-hidden {
+.task-description-text.expanded+.task-added-by-hidden {
   display: block;
 }
 
@@ -388,8 +388,96 @@
 }
 
 .event-description {
-  color: var(--text-medium);
+  color: var(--text-dark);
   font-size: var(--font-sm);
+  line-height: 1.5;
+  margin-bottom: var(--spacing-sm);
+}
+
+.event-description-wrapper {
+  position: relative;
+}
+
+.event-description-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: all var(--transition-fast);
+}
+
+.event-description-text.expanded {
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+  display: block;
+}
+
+/* Hide event-added-by info until description is expanded */
+.event-added-by-hidden {
+  display: none;
+  margin-top: var(--spacing-sm);
+  margin-bottom: 0;
+}
+
+.event-description-text.expanded+.event-added-by-hidden {
+  display: block;
+}
+
+.event-description-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  color: var(--primary-maroon);
+  font-size: var(--font-xs);
+  cursor: pointer;
+  margin-top: var(--spacing-xs);
+  padding: 0;
+  background: none;
+  border: none;
+  opacity: 0.8;
+  transition: opacity var(--transition-fast);
+}
+
+.event-description-toggle:hover {
+  opacity: 1;
+}
+
+.event-description-toggle i {
+  font-size: 10px;
+  transition: transform var(--transition-fast);
+}
+
+.event-description-toggle.expanded i {
+  transform: rotate(180deg);
+}
+
+/* Event header with scope badge */
+.event-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-xs);
+}
+
+.event-scope-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-xs);
+  font-weight: var(--font-semibold);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.event-scope-badge.scope-all {
+  background-color: #80000026;
+  color: var(--primary-maroon, #800000);
+}
+
+.event-scope-badge.scope-dept {
+  background-color: #d4af3733;
+  color: #b8860b;
 }
 
 /* Confirmation Dialog (using browser confirm for now) */

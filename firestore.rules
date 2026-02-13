@@ -65,10 +65,33 @@ service cloud.firestore {
       );
     }
     
-    // Events collection - Admin only for write operations
+    // Helper function to get user's department
+    function getUserDepartment() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.department;
+    }
+    
+    // Events collection - Admin full access, CR limited access
     match /events/{eventId} {
       allow read: if isSignedIn();
-      allow create, update, delete: if isAdmin();
+      
+      // Admin can create any event; CR can create events for their own department
+      allow create: if isAdmin() || (
+        isCR() && 
+        request.resource.data.createdBy == request.auth.uid &&
+        request.resource.data.department == getUserDepartment()
+      );
+      
+      // Admin can edit any event; CR can edit only their own events
+      allow update: if isAdmin() || (
+        isCR() && 
+        resource.data.createdBy == request.auth.uid
+      );
+      
+      // Admin can delete any event; CR can delete only their own events
+      allow delete: if isAdmin() || (
+        isCR() && 
+        resource.data.createdBy == request.auth.uid
+      );
     }
     
     // Resource links - read only for users, admin can write

@@ -15,7 +15,7 @@ const App = {
 
   async init() {
     console.log('Initializing b1t-Sched...');
-    
+
     // Initialize router
     Router.init();
 
@@ -107,7 +107,7 @@ const App = {
       // Listen for department/semester changes to update sections
       const deptSelect = document.getElementById('set-department');
       const semSelect = document.getElementById('set-semester');
-      
+
       if (deptSelect && semSelect) {
         deptSelect.addEventListener('change', () => this.updateSetDetailsSections());
         semSelect.addEventListener('change', () => this.updateSetDetailsSections());
@@ -219,14 +219,14 @@ const App = {
           await this.handleTaskCompletion(taskId, isCompleted);
           return;
         }
-        
+
         // Handle description toggle
         const toggleBtn = e.target.closest('.task-description-toggle');
         if (toggleBtn) {
           const wrapper = toggleBtn.closest('.task-description-wrapper');
           const textEl = wrapper.querySelector('.task-description-text');
           const toggleText = toggleBtn.querySelector('.toggle-text');
-          
+
           const isExpanded = textEl.classList.toggle('expanded');
           toggleBtn.classList.toggle('expanded', isExpanded);
           toggleText.textContent = isExpanded ? 'Show less' : 'Show more';
@@ -259,6 +259,28 @@ const App = {
         UI.toggleEventsSidebar(false);
       });
     }
+
+    // Event description toggle delegation (works for all users)
+    const eventsContainers = [
+      document.getElementById('events-container'),
+      document.getElementById('events-container-mobile')
+    ];
+    eventsContainers.forEach(container => {
+      if (container) {
+        container.addEventListener('click', (e) => {
+          const toggleBtn = e.target.closest('.event-description-toggle');
+          if (toggleBtn) {
+            const wrapper = toggleBtn.closest('.event-description-wrapper');
+            const textEl = wrapper.querySelector('.event-description-text');
+            const toggleText = toggleBtn.querySelector('.toggle-text');
+
+            const isExpanded = textEl.classList.toggle('expanded');
+            toggleBtn.classList.toggle('expanded', isExpanded);
+            toggleText.textContent = isExpanded ? 'Show less' : 'Show more';
+          }
+        });
+      }
+    });
   },
 
   openAddTaskModal() {
@@ -267,7 +289,7 @@ const App = {
       alert('Your account has been restricted. You cannot add tasks.');
       return;
     }
-    
+
     // Set minimum date to now
     const deadlineInput = document.getElementById('task-deadline');
     const deadlineNone = document.getElementById('deadline-none');
@@ -293,12 +315,12 @@ const App = {
 
   async openOldTasksModal() {
     UI.showModal('old-tasks-modal');
-    
+
     if (!this.userProfile) return;
-    
+
     const userId = Auth.getUserId();
     const { department, semester, section } = this.userProfile;
-    
+
     const result = await DB.getOldTasks(userId, department, semester, section);
     if (result.success) {
       UI.renderOldTasks(result.data);
@@ -311,7 +333,7 @@ const App = {
       alert('Your account has been restricted. You cannot add tasks.');
       return;
     }
-    
+
     const title = document.getElementById('task-title').value.trim();
     const course = document.getElementById('task-course').value.trim();
     const type = document.getElementById('task-type').value;
@@ -364,7 +386,7 @@ const App = {
       alert('Your account has been restricted. You cannot edit tasks.');
       return;
     }
-    
+
     // Find the task in currentTasks
     const task = this.currentTasks.find(t => t.id === taskId);
     if (!task) {
@@ -422,7 +444,7 @@ const App = {
       alert('Your account has been restricted. You cannot edit tasks.');
       return;
     }
-    
+
     const taskId = document.getElementById('edit-task-id').value;
     const title = document.getElementById('edit-task-title').value.trim();
     const course = document.getElementById('edit-task-course').value.trim();
@@ -459,11 +481,6 @@ const App = {
   },
 
   async openEditEventModal(eventId) {
-    if (!this.isAdmin) {
-      alert('Only admins can edit events');
-      return;
-    }
-
     // Find the event in currentEvents
     const event = this.currentEvents.find(e => e.id === eventId);
     if (!event) {
@@ -471,12 +488,28 @@ const App = {
       return;
     }
 
+    const userId = Auth.getUserId();
+    const canEdit = this.isAdmin || (this.isCR && event.createdBy === userId);
+    if (!canEdit) {
+      alert('You do not have permission to edit this event');
+      return;
+    }
+
     // Populate the form
     document.getElementById('edit-event-id').value = eventId;
     document.getElementById('edit-event-title').value = event.title || '';
     document.getElementById('edit-event-description').value = event.description || '';
-    document.getElementById('edit-event-department').value = event.department || 'ALL';
-    
+
+    // CR can only edit events for their own department
+    const deptSelect = document.getElementById('edit-event-department');
+    deptSelect.value = event.department || 'ALL';
+    if (this.isCR && !this.isAdmin) {
+      deptSelect.value = this.userProfile.department;
+      deptSelect.disabled = true;
+    } else {
+      deptSelect.disabled = false;
+    }
+
     // Format date for datetime-local input
     const eventDate = event.date ? event.date.toDate() : new Date();
     eventDate.setMinutes(eventDate.getMinutes() - eventDate.getTimezoneOffset());
@@ -486,7 +519,7 @@ const App = {
   },
 
   async handleEditEvent() {
-    if (!this.isAdmin) return;
+    if (!this.isAdmin && !this.isCR) return;
 
     const eventId = document.getElementById('edit-event-id').value;
     const title = document.getElementById('edit-event-title').value.trim();
@@ -497,6 +530,16 @@ const App = {
     if (!title || !date) {
       alert('Please fill in the required fields (Title and Date)');
       return;
+    }
+
+    // CR can only edit their own events
+    if (this.isCR && !this.isAdmin) {
+      const event = this.currentEvents.find(e => e.id === eventId);
+      const userId = Auth.getUserId();
+      if (!event || event.createdBy !== userId) {
+        alert('You can only edit events you created');
+        return;
+      }
     }
 
     const result = await DB.updateEvent(eventId, {
@@ -515,6 +558,34 @@ const App = {
     }
   },
 
+  async handleDeleteEvent(eventId) {
+    // Admin can delete any event, CR can delete their own events
+    if (!this.isAdmin && !this.isCR) {
+      alert('You do not have permission to delete events');
+      return;
+    }
+
+    // CR can only delete their own events
+    if (this.isCR && !this.isAdmin) {
+      const event = this.currentEvents.find(e => e.id === eventId);
+      const userId = Auth.getUserId();
+      if (!event || event.createdBy !== userId) {
+        alert('You can only delete events you created');
+        return;
+      }
+    }
+
+    if (!confirm('Are you sure you want to delete this event?')) return;
+
+    const result = await DB.deleteEvent(eventId);
+    if (result.success) {
+      // Refresh events
+      await this.loadDashboardData();
+    } else {
+      alert('Failed to delete event: ' + result.error);
+    }
+  },
+
   async handleTaskCompletion(taskId, isCompleted) {
     // Check if user is blocked
     if (this.isBlocked) {
@@ -526,12 +597,12 @@ const App = {
       alert('Your account has been restricted. You cannot modify tasks.');
       return;
     }
-    
+
     const userId = Auth.getUserId();
     if (!userId) return;
 
     const result = await DB.toggleTaskCompletion(userId, taskId, isCompleted);
-    
+
     if (result.success) {
       // Update local state
       if (isCompleted) {
@@ -539,7 +610,7 @@ const App = {
       } else {
         delete this.userCompletions[taskId];
       }
-      
+
       // Re-render tasks with updated completions
       UI.renderTasks(this.currentTasks, this.userCompletions, this.isAdmin, this.isCR, Auth.getUserId());
     } else {
@@ -651,7 +722,7 @@ const App = {
     }
 
     UI.showLoading(true);
-    
+
     // Set flag to prevent auth state handling during signup
     this.isSigningUp = true;
 
@@ -693,19 +764,19 @@ const App = {
     if (profileResult.success) {
       // User has profile, load dashboard
       this.userProfile = profileResult.data;
-      
+
       // Check if user is admin, CR, or blocked
       const rolesResult = await DB.getUserRoles(user.uid);
       this.isAdmin = rolesResult.isAdmin || false;
       this.isCR = rolesResult.isCR || false;
       this.isBlocked = rolesResult.isBlocked || false;
-      
+
       // Save to localStorage
       Utils.storage.set('userProfile', this.userProfile);
       Utils.storage.set('isAdmin', this.isAdmin);
       Utils.storage.set('isCR', this.isCR);
       Utils.storage.set('isBlocked', this.isBlocked);
-      
+
       // Update user details card
       UI.updateUserDetailsCard(
         this.userProfile.email,
@@ -713,10 +784,10 @@ const App = {
         this.userProfile.semester,
         this.userProfile.section
       );
-      
+
       // Show/hide admin and CR controls
       UI.toggleAdminControls(this.isAdmin, this.isCR);
-      
+
       // Show blocked user warning if applicable
       UI.toggleBlockedUserMode(this.isBlocked);
 
@@ -744,7 +815,7 @@ const App = {
     this.isCR = false;
     this.isBlocked = false;
     Utils.storage.clear();
-    
+
     // Hide footer when not logged in
     const appFooter = document.getElementById('app-footer');
     if (appFooter) {
@@ -810,13 +881,13 @@ const App = {
 
     if (result.success) {
       UI.showMessage('set-details-message', 'Details saved! Loading dashboard...', 'success');
-      
+
       // Reload user profile
       const profileResult = await DB.getUserProfile(userId);
       if (profileResult.success) {
         this.userProfile = profileResult.data;
         Utils.storage.set('userProfile', this.userProfile);
-        
+
         UI.updateUserDetailsCard(
           this.userProfile.email,
           this.userProfile.department,
@@ -872,7 +943,7 @@ const App = {
     const eventsResult = await DB.getEvents(department);
     if (eventsResult.success) {
       this.currentEvents = eventsResult.data;
-      UI.renderEvents(this.currentEvents, this.isAdmin);
+      UI.renderEvents(this.currentEvents, this.isAdmin, this.isCR, userId);
     }
 
     UI.showLoading(false);
@@ -1026,13 +1097,13 @@ const App = {
 
   async handleResetTasks() {
     if (!this.isAdmin && !this.isCR) return;
-    
+
     const confirmed = confirm('Are you sure you want to reset all old/past tasks? This action cannot be undone.');
     if (!confirmed) return;
 
     const { department, semester, section } = this.userProfile;
     const result = await DB.resetOldTasks(department, semester, section);
-    
+
     if (result.success) {
       alert(`Successfully reset ${result.deletedCount} old tasks.`);
       await this.loadDashboardData();
@@ -1047,11 +1118,11 @@ const App = {
       alert('Your account has been restricted. You cannot delete tasks.');
       return;
     }
-    
+
     // Find the task to check ownership
     const task = this.currentTasks.find(t => t.id === taskId);
     if (!task) return;
-    
+
     // Check permissions: Admin/CR can delete any, users can only delete their own
     const userId = Auth.getUserId();
     const canDelete = this.isAdmin || this.isCR || (userId && task.addedBy === userId);
@@ -1059,12 +1130,12 @@ const App = {
       alert('You do not have permission to delete this task');
       return;
     }
-    
+
     const confirmed = confirm('Are you sure you want to delete this task?');
     if (!confirmed) return;
 
     const result = await DB.deleteTask(taskId);
-    
+
     if (result.success) {
       // Remove from local state and re-render
       this.currentTasks = this.currentTasks.filter(t => t.id !== taskId);
@@ -1082,10 +1153,19 @@ const App = {
       now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
       dateInput.min = now.toISOString().slice(0, 16);
     }
-    
+
     // Clear form
     document.getElementById('add-event-form').reset();
-    
+
+    // CR can only add events for their own department
+    const deptSelect = document.getElementById('event-department');
+    if (this.isCR && !this.isAdmin && deptSelect) {
+      deptSelect.value = this.userProfile.department;
+      deptSelect.disabled = true;
+    } else if (deptSelect) {
+      deptSelect.disabled = false;
+    }
+
     UI.showModal('add-event-modal');
   },
 
@@ -1093,7 +1173,7 @@ const App = {
     const title = document.getElementById('event-title').value.trim();
     const description = document.getElementById('event-description').value.trim();
     const date = document.getElementById('event-date').value;
-    const department = document.getElementById('event-department').value;
+    let department = document.getElementById('event-department').value;
 
     if (!title || !date) {
       alert('Please fill in the required fields (Title and Date)');
@@ -1102,12 +1182,21 @@ const App = {
 
     const userId = Auth.getUserId();
 
+    // CR can only create events for their own department
+    if (this.isCR && !this.isAdmin) {
+      department = this.userProfile.department;
+    }
+
+    // Determine the "Added by" label
+    const createdByName = this.isAdmin ? 'Admin' : 'CR';
+
     const result = await DB.createEvent({
       title,
       description,
       date,
       department,
-      createdBy: userId
+      createdBy: userId,
+      createdByName
     });
 
     if (result.success) {
@@ -1121,12 +1210,12 @@ const App = {
 
   async handleDeleteEvent(eventId) {
     if (!this.isAdmin) return;
-    
+
     const confirmed = confirm('Are you sure you want to delete this event?');
     if (!confirmed) return;
 
     const result = await DB.deleteEvent(eventId);
-    
+
     if (result.success) {
       // Remove from local state and re-render
       this.currentEvents = this.currentEvents.filter(e => e.id !== eventId);
@@ -1138,11 +1227,11 @@ const App = {
 
   async openOldEventsModal() {
     UI.showModal('old-events-modal');
-    
+
     if (!this.userProfile) return;
-    
+
     const { department } = this.userProfile;
-    
+
     const result = await DB.getOldEvents(department);
     if (result.success) {
       UI.renderOldEvents(result.data);
@@ -1255,7 +1344,7 @@ const App = {
     // Load filter dropdowns
     const deptResult = await DB.getDepartments();
     const semResult = await DB.getSemesters();
-    
+
     if (deptResult.success) {
       await UI.populateDropdown('filter-department', ['All', ...deptResult.data], 'All');
     }
@@ -1269,7 +1358,7 @@ const App = {
   renderUserList(users) {
     const container = document.getElementById('user-list-container');
     const countEl = document.getElementById('user-count');
-    
+
     if (!container) return;
 
     if (countEl) {
@@ -1347,7 +1436,7 @@ const App = {
       });
     }
     if (role !== 'All') {
-      switch(role) {
+      switch (role) {
         case 'Admin':
           filtered = filtered.filter(u => u.isAdmin === true);
           break;
@@ -1371,7 +1460,7 @@ const App = {
     const filterSem = document.getElementById('filter-semester');
     const filterSection = document.getElementById('filter-section');
     const filterRole = document.getElementById('filter-role');
-    
+
     if (filterDept) filterDept.value = 'All';
     if (filterSem) filterSem.value = 'All';
     if (filterSection) filterSection.value = 'All';
@@ -1425,14 +1514,14 @@ const App = {
     // Load dropdowns
     const deptResult = await DB.getDepartments();
     const semResult = await DB.getSemesters();
-    
+
     if (deptResult.success) {
       await UI.populateDropdown('edit-user-department', deptResult.data, user.department);
     }
     if (semResult.success) {
       await UI.populateDropdown('edit-user-semester', semResult.data, user.semester);
     }
-    
+
     // Load sections
     await this.updateEditUserSections(user.section);
 
@@ -1442,7 +1531,7 @@ const App = {
   async updateEditUserSections(selectedValue = null) {
     const department = document.getElementById('edit-user-department')?.value;
     const semester = document.getElementById('edit-user-semester')?.value;
-    
+
     if (department && semester) {
       const result = await DB.getSections(department, semester);
       if (result.success) {
@@ -1478,7 +1567,7 @@ const App = {
         this.allUsers[userIndex].semester = semester;
         this.allUsers[userIndex].section = section;
       }
-      
+
       UI.hideModal('edit-user-modal');
       this.filterUsers(); // Re-render
       alert('User profile updated successfully!');

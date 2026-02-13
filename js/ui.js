@@ -7,7 +7,7 @@ const UI = {
   showLoading(show = true) {
     const loadingScreen = document.getElementById('loading-screen');
     const appContainer = document.getElementById('app');
-    
+
     if (show) {
       loadingScreen.style.display = 'flex';
       appContainer.style.display = 'none';
@@ -72,7 +72,7 @@ const UI = {
   renderTasks(tasks, userCompletions = {}, isAdmin = false, isCR = false, currentUserId = null) {
     const container = document.getElementById('tasks-container');
     const noTasksMsg = document.getElementById('no-tasks-message');
-    
+
     if (!container) return;
 
     if (tasks.length === 0) {
@@ -82,7 +82,7 @@ const UI = {
     }
 
     noTasksMsg.style.display = 'none';
-    
+
     // Sort tasks: incomplete first, then by deadline, completed at bottom
     const now = new Date();
     const sortedTasks = [...tasks].sort((a, b) => {
@@ -103,7 +103,7 @@ const UI = {
       const bDeadline = b.deadline.toDate ? b.deadline.toDate() : new Date(b.deadline);
       return aDeadline - bDeadline;
     });
-    
+
     container.innerHTML = sortedTasks.map(task => {
       let deadline = null;
       let daysUntil = null;
@@ -190,7 +190,7 @@ const UI = {
   renderOldTasks(tasks) {
     const container = document.getElementById('old-tasks-container');
     const noOldTasksMsg = document.getElementById('no-old-tasks-message');
-    
+
     if (!container) return;
 
     if (tasks.length === 0) {
@@ -200,16 +200,16 @@ const UI = {
     }
 
     noOldTasksMsg.style.display = 'none';
-    
+
     container.innerHTML = tasks.map(task => {
       const deadline = task.deadline ? task.deadline.toDate() : new Date();
       const isCompleted = task.isCompleted || false;
       const completedDate = task.completedAt ? task.completedAt.toDate() : null;
-      
+
       // Show different icon and style based on completion status
       const iconClass = isCompleted ? 'fa-check-circle completed-icon' : 'fa-clock overdue-icon';
       const statusClass = isCompleted ? 'completed' : 'overdue';
-      
+
       return `
         <div class="old-task-item ${statusClass}">
           <i class="fas ${iconClass}"></i>
@@ -227,11 +227,13 @@ const UI = {
   },
 
   // Render events
-  renderEvents(events, isAdmin = false) {
+  // isAdmin: user has admin privileges (can edit/delete any event)
+  // isCR: user is a Class Representative (can edit/delete own events)
+  renderEvents(events, isAdmin = false, isCR = false, currentUserId = null) {
     const container = document.getElementById('events-container');
     const noEventsMsg = document.getElementById('no-events-message');
     const mobileContainer = document.getElementById('events-container-mobile');
-    
+
     if (!container) return;
 
     if (events.length === 0) {
@@ -247,17 +249,28 @@ const UI = {
       const day = eventDate.getDate();
       const month = eventDate.toLocaleDateString('en-US', { month: 'short' });
 
-      const editButton = isAdmin ? `
+      // Edit/Delete: Admin can manage any event, CR can manage their own events
+      const canEdit = isAdmin || (isCR && currentUserId && event.createdBy === currentUserId);
+      const canDelete = isAdmin || (isCR && currentUserId && event.createdBy === currentUserId);
+
+      const editButton = canEdit ? `
         <button class="event-edit-btn" data-event-id="${event.id}" title="Edit event">
           <i class="fas fa-edit"></i>
         </button>
       ` : '';
 
-      const deleteButton = isAdmin ? `
+      const deleteButton = canDelete ? `
         <button class="event-delete-btn" data-event-id="${event.id}" title="Delete event">
           <i class="fas fa-trash"></i>
         </button>
       ` : '';
+
+      // Scope badge showing target department
+      const scopeLabel = event.department || 'ALL';
+      const scopeClass = scopeLabel === 'ALL' ? 'scope-all' : 'scope-dept';
+
+      // "Added by" label
+      const addedByLabel = event.createdByName || 'Admin';
 
       return `
         <div class="event-card" data-event-id="${event.id}">
@@ -266,8 +279,20 @@ const UI = {
             <div class="event-month">${month}</div>
           </div>
           <div class="event-content">
-            <h3 class="event-title">${event.title || 'Untitled Event'}</h3>
-            <p class="event-description">${Utils.escapeAndLinkify(event.description) || 'No description available.'}</p>
+            <div class="event-header">
+              <h3 class="event-title">${event.title || 'Untitled Event'}</h3>
+              <span class="event-scope-badge ${scopeClass}">${scopeLabel}</span>
+            </div>
+            <div class="event-description">
+              <div class="event-description-wrapper">
+                <div class="event-description-text">${Utils.escapeAndLinkify(event.description) || 'No description available.'}</div>
+                <p class="event-added-by event-added-by-hidden">Added by ${addedByLabel}</p>
+                <button type="button" class="event-description-toggle" aria-label="Toggle description">
+                  <span class="toggle-text">Show more</span>
+                  <i class="fas fa-chevron-down"></i>
+                </button>
+              </div>
+            </div>
           </div>
           <div class="event-actions">
             ${editButton}
@@ -276,9 +301,9 @@ const UI = {
         </div>
       `;
     }).join('');
-    
+
     container.innerHTML = eventsHTML;
-    
+
     // Also render to mobile container
     if (mobileContainer) {
       mobileContainer.innerHTML = eventsHTML;
@@ -289,7 +314,7 @@ const UI = {
   renderOldEvents(events) {
     const container = document.getElementById('old-events-container');
     const noOldEventsMsg = document.getElementById('no-old-events-message');
-    
+
     if (!container) return;
 
     if (events.length === 0) {
@@ -299,10 +324,10 @@ const UI = {
     }
 
     noOldEventsMsg.style.display = 'none';
-    
+
     container.innerHTML = events.map(event => {
       const eventDate = event.date ? event.date.toDate() : new Date();
-      
+
       return `
         <div class="old-event-item">
           <i class="fas fa-calendar-check completed-icon"></i>
@@ -356,7 +381,7 @@ const UI = {
       crInfoMessage.style.display = (isAdmin || isCR) ? 'none' : 'block';
     }
 
-    // Show footer when logged in
+    // Show footer and FAQ when logged in
     const appFooter = document.getElementById('app-footer');
     if (appFooter) {
       appFooter.style.display = 'block';
@@ -366,17 +391,21 @@ const UI = {
         yearSpan.textContent = new Date().getFullYear();
       }
     }
+    const faqSection = document.getElementById('faq-section');
+    if (faqSection) {
+      faqSection.style.display = 'block';
+    }
   },
 
   // Toggle blocked user mode (read-only mode)
   toggleBlockedUserMode(isBlocked) {
     const blockedBanner = document.getElementById('blocked-user-banner');
     const addTaskBtn = document.getElementById('add-task-btn');
-    
+
     if (blockedBanner) {
       blockedBanner.style.display = isBlocked ? 'flex' : 'none';
     }
-    
+
     // Disable add task button for blocked users
     if (addTaskBtn) {
       if (isBlocked) {
@@ -404,7 +433,7 @@ const UI = {
     // Keep placeholder option
     const placeholder = dropdown.querySelector('option[disabled]');
     dropdown.innerHTML = '';
-    
+
     if (placeholder) {
       dropdown.appendChild(placeholder);
     }
@@ -442,7 +471,7 @@ const UI = {
   toggleEventsSidebar(open) {
     const sidebar = document.getElementById('events-sidebar');
     const overlay = document.getElementById('events-overlay');
-    
+
     if (sidebar && overlay) {
       if (open) {
         sidebar.classList.add('open');
