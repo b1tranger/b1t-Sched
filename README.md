@@ -484,4 +484,4 @@ For issues or questions:
 
 ---
 
-**Ready to get started? Follow [`FIREBASE_SETUP.md`](FIREBASE_SETUP.md) first!** 🚀
+**Ready to get started? Follow [`FIREBASE_SETUP.md`](doc/FIREBASE_SETUP.md) first!** 🚀
