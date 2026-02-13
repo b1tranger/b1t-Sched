@@ -19,7 +19,7 @@ To make a user an admin, manually add the `isAdmin: true` field to their user do
 
 | Feature | Description |
 |---------|-------------|
-| **Reset Tasks** | Deletes all past-deadline tasks for the current department/semester/section |
+| **Reset Tasks** | Deletes all tasks past 12h grace period for the current department/semester/section |
 | **Delete Task** | Remove individual tasks with click of a trash icon |
 
 ### Event Management
@@ -112,6 +112,8 @@ service cloud.firestore {
 
 ### Admin-Only Buttons
 
+- **Manage Users** - Appears in Profile Settings (opens User Management view)
+- **Firebase Dashboard** - Appears in Profile Settings (link to Firebase Console)
 - **Reset Tasks** - Appears in tasks section (danger button)
 - **Add Event** - Appears in events sidebar (desktop and mobile)
 - **Delete buttons** - Appear on each task card and event card
@@ -120,7 +122,7 @@ service cloud.firestore {
 
 - **View Old Events** - Button to view past events
 - **Add Tasks** - Regular users can still add tasks
-- **View Old Tasks** - View completed/past tasks
+- **View Old Tasks** - View tasks past 12h grace period (with completion status)
 
 ## Implementation Details
 

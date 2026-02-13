@@ -138,10 +138,12 @@ const Utils = {
   },
 
   // Apply basic markdown formatting
-  // Supports: **bold**, *italic*, `code`
+  // Supports: **bold**, *italic*, `code`, [text](url)
   applyBasicMarkdown(text) {
     if (!text) return '';
     return text
+      // Markdown links: [text](url)
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
       // Bold: **text**
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
       // Italic: *text* (single asterisks only, after bold is processed)
@@ -153,17 +155,44 @@ const Utils = {
   // Escape HTML to prevent XSS, apply markdown, then linkify
   escapeAndLinkify(text) {
     if (!text) return '';
-    // First escape HTML special characters
-    let result = text
+    
+    // Extract markdown links first and replace with placeholders
+    const markdownLinks = [];
+    let result = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, linkText, url) => {
+      const placeholder = `__MD_LINK_${markdownLinks.length}__`;
+      markdownLinks.push({ text: linkText, url: url });
+      return placeholder;
+    });
+    
+    // Escape HTML special characters
+    result = result
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
-    // Apply basic markdown formatting
-    result = this.applyBasicMarkdown(result);
-    // Convert URLs to clickable links
+    
+    // Apply basic markdown formatting (bold, italic, code - not links)
+    result = result
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+      .replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
+    
+    // Convert plain URLs to clickable links
     result = this.linkify(result);
+    
+    // Restore markdown links as anchor tags
+    markdownLinks.forEach((link, index) => {
+      const escapedText = link.text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+      result = result.replace(
+        `__MD_LINK_${index}__`,
+        `<a href="${link.url}" target="_blank" rel="noopener noreferrer">${escapedText}</a>`
+      );
+    });
+    
     // Convert line breaks to <br>
     result = result.replace(/\n/g, '<br>');
     return result;

@@ -52,24 +52,50 @@ const DB = {
   },
 
   // Task operations - fetches tasks for the section group (A1+A2 merged, B1+B2 merged, etc.)
+  // Returns pending tasks + overdue tasks within 12 hours grace period
   async getTasks(department, semester, section) {
     try {
       // Get all sections in the same group (e.g., ['A1', 'A2'] for user in A1)
       const sectionsInGroup = Utils.getSectionsInGroup(section);
-      
+      const now = new Date();
+      // 12 hour grace period - tasks remain in pending for 12 hours after deadline
+      const gracePeriodCutoff = new Date(now.getTime() - (12 * 60 * 60 * 1000));
+
       const snapshot = await db.collection('tasks')
         .where('department', '==', department)
         .where('semester', '==', semester)
         .where('section', 'in', sectionsInGroup)
         .where('status', '==', 'active')
         .get();
-      
-      const tasks = [];
+
+      const tasksWithDeadline = [];
+      const tasksNoDeadline = [];
       snapshot.forEach(doc => {
-        tasks.push({ id: doc.id, ...doc.data() });
+        const data = doc.data();
+        // Always include tasks with no deadline (null or missing)
+        if (!('deadline' in data) || data.deadline === null) {
+          tasksNoDeadline.push({ id: doc.id, ...data });
+        } else {
+          const deadline = data.deadline.toDate ? data.deadline.toDate() : new Date(data.deadline);
+          // Include tasks that are NOT past the 12-hour grace period
+          // (deadline >= now - 12 hours)
+          if (deadline >= gracePeriodCutoff) {
+            tasksWithDeadline.push({ id: doc.id, ...data });
+          }
+        }
       });
-      
-      console.log(`Found ${tasks.length} tasks for sections: ${sectionsInGroup.join(', ')}`);
+
+      // Sort tasks with deadlines by deadline ascending (soonest first)
+      tasksWithDeadline.sort((a, b) => {
+        const aDeadline = a.deadline ? (a.deadline.toDate ? a.deadline.toDate() : new Date(a.deadline)) : new Date(8640000000000000); // max date
+        const bDeadline = b.deadline ? (b.deadline.toDate ? b.deadline.toDate() : new Date(b.deadline)) : new Date(8640000000000000);
+        return aDeadline - bDeadline;
+      });
+
+      // No-deadline tasks go at the bottom of pending list
+      const tasks = [...tasksWithDeadline, ...tasksNoDeadline];
+
+      console.log(`Found ${tasks.length} pending tasks for sections: ${sectionsInGroup.join(', ')}`);
       return { success: true, data: tasks };
     } catch (error) {
       console.error('Error getting tasks:', error);
@@ -88,7 +114,7 @@ const DB = {
         department: data.department,
         semester: data.semester,
         section: data.section,
-        deadline: firebase.firestore.Timestamp.fromDate(new Date(data.deadline)),
+        deadline: data.deadline ? firebase.firestore.Timestamp.fromDate(new Date(data.deadline)) : null,
         status: 'active',
         addedBy: userId,
         addedByName: userEmail.split('@')[0],
@@ -107,12 +133,12 @@ const DB = {
     try {
       const snapshot = await db.collection('users').doc(userId)
         .collection('completedTasks').get();
-      
+
       const completions = {};
       snapshot.forEach(doc => {
         completions[doc.id] = doc.data();
       });
-      
+
       return { success: true, data: completions };
     } catch (error) {
       console.error('Error getting task completions:', error);
@@ -125,7 +151,7 @@ const DB = {
     try {
       const completionRef = db.collection('users').doc(userId)
         .collection('completedTasks').doc(taskId);
-      
+
       if (isCompleted) {
         await completionRef.set({
           completedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -133,7 +159,7 @@ const DB = {
       } else {
         await completionRef.delete();
       }
-      
+
       console.log(`Task ${taskId} completion toggled to ${isCompleted}`);
       return { success: true };
     } catch (error) {
@@ -142,13 +168,13 @@ const DB = {
     }
   },
 
-  // Get old/completed tasks
+  // Get old tasks (past deadline + 12 hour grace period)
   async getOldTasks(userId, department, semester, section) {
     try {
-      // Get user's completed task IDs
+      // Get user's completed task IDs for marking completion status
       const completionsSnapshot = await db.collection('users').doc(userId)
         .collection('completedTasks').get();
-      
+
       const completedTaskIds = [];
       const completionDates = {};
       completionsSnapshot.forEach(doc => {
@@ -156,45 +182,44 @@ const DB = {
         completionDates[doc.id] = doc.data().completedAt;
       });
 
-      if (completedTaskIds.length === 0) {
-        return { success: true, data: [] };
-      }
-
-      // Get tasks that are either:
-      // 1. Completed by user and past deadline
-      // 2. Status changed to 'archived' by admin
+      // Get all tasks that are past the 12-hour grace period
       const now = new Date();
+      // 12 hour grace period - tasks move to old tasks after 12 hours past deadline
+      const gracePeriodCutoff = new Date(now.getTime() - (12 * 60 * 60 * 1000));
       const sectionsInGroup = Utils.getSectionsInGroup(section);
       const tasksSnapshot = await db.collection('tasks')
         .where('department', '==', department)
         .where('semester', '==', semester)
         .where('section', 'in', sectionsInGroup)
+        .where('status', '==', 'active')
         .get();
-      
+
       const oldTasks = [];
       tasksSnapshot.forEach(doc => {
         const data = doc.data();
-        const deadline = data.deadline ? data.deadline.toDate() : new Date();
+        // Never include tasks with no deadline (null or missing) in old tasks
+        if (!('deadline' in data) || data.deadline === null) return;
+        const deadline = data.deadline.toDate ? data.deadline.toDate() : new Date(data.deadline);
         const isCompleted = completedTaskIds.includes(doc.id);
-        
-        // Include if completed and past deadline
-        if (isCompleted && deadline < now) {
+        // Include tasks that are past the 12-hour grace period (deadline < now - 12 hours)
+        if (deadline < gracePeriodCutoff) {
           oldTasks.push({
             id: doc.id,
             ...data,
-            completedAt: completionDates[doc.id]
+            isCompleted: isCompleted,
+            completedAt: completionDates[doc.id] || null
           });
         }
       });
-      
-      // Sort by completion date (newest first)
+
+      // Sort by deadline (most recent first)
       oldTasks.sort((a, b) => {
-        const aDate = a.completedAt ? a.completedAt.toDate() : new Date(0);
-        const bDate = b.completedAt ? b.completedAt.toDate() : new Date(0);
-        return bDate - aDate;
+        const aDeadline = a.deadline ? a.deadline.toDate() : new Date(0);
+        const bDeadline = b.deadline ? b.deadline.toDate() : new Date(0);
+        return bDeadline - aDeadline;
       });
-      
-      console.log(`Found ${oldTasks.length} old tasks`);
+
+      console.log(`Found ${oldTasks.length} old tasks (past 12h grace period)`);
       return { success: true, data: oldTasks };
     } catch (error) {
       console.error('Error getting old tasks:', error);
@@ -210,10 +235,10 @@ const DB = {
         .where('date', '>=', firebase.firestore.Timestamp.fromDate(now))
         .orderBy('date', 'asc')
         .limit(10);
-      
+
       const snapshot = await query.get();
       const events = [];
-      
+
       snapshot.forEach(doc => {
         const data = doc.data();
         // Show events for specific department or ALL departments
@@ -221,7 +246,7 @@ const DB = {
           events.push({ id: doc.id, ...data });
         }
       });
-      
+
       console.log(`Found ${events.length} events`);
       return { success: true, data: events };
     } catch (error) {
@@ -234,7 +259,7 @@ const DB = {
   async getResourceLinks(department) {
     try {
       const doc = await db.collection('resourceLinks').doc(department).get();
-      
+
       if (doc.exists) {
         const data = doc.data();
         return { success: true, data: data.resources || [] };
@@ -295,22 +320,23 @@ const DB = {
   // ADMIN OPERATIONS
   // ============================================
 
-  // Check if user is an admin or CR (flags set manually in Firestore)
+  // Check if user is an admin, CR, or blocked (flags set in Firestore)
   async getUserRoles(userId) {
     try {
       const doc = await db.collection('users').doc(userId).get();
       if (doc.exists) {
         const data = doc.data();
-        return { 
-          success: true, 
+        return {
+          success: true,
           isAdmin: data.isAdmin === true,
-          isCR: data.isCR === true
+          isCR: data.isCR === true,
+          isBlocked: data.isBlocked === true
         };
       }
-      return { success: true, isAdmin: false, isCR: false };
+      return { success: true, isAdmin: false, isCR: false, isBlocked: false };
     } catch (error) {
       console.error('Error checking user roles:', error);
-      return { success: false, isAdmin: false, isCR: false, error: error.message };
+      return { success: false, isAdmin: false, isCR: false, isBlocked: false, error: error.message };
     }
   },
 
@@ -336,20 +362,22 @@ const DB = {
         .where('semester', '==', semester)
         .where('section', 'in', sectionsInGroup)
         .get();
-      
+
       const batch = db.batch();
       let deletedCount = 0;
-      
+
       snapshot.forEach(doc => {
         const data = doc.data();
-        const deadline = data.deadline ? data.deadline.toDate() : new Date();
+        // Skip tasks with no deadline (they should remain in pending indefinitely)
+        if (!data.deadline) return;
+        const deadline = data.deadline.toDate ? data.deadline.toDate() : new Date(data.deadline);
         // Delete tasks that are past their deadline
         if (deadline < now) {
           batch.delete(doc.ref);
           deletedCount++;
         }
       });
-      
+
       await batch.commit();
       console.log(`Reset ${deletedCount} old tasks`);
       return { success: true, deletedCount };
@@ -368,7 +396,8 @@ const DB = {
         date: firebase.firestore.Timestamp.fromDate(new Date(data.date)),
         department: data.department || 'ALL',
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        createdBy: data.createdBy
+        createdBy: data.createdBy,
+        createdByName: data.createdByName || 'Admin'
       });
       console.log('Event created:', docRef.id);
       return { success: true, id: docRef.id };
@@ -398,7 +427,7 @@ const DB = {
         course: data.course || '',
         type: data.type || 'assignment',
         description: data.description || '',
-        deadline: firebase.firestore.Timestamp.fromDate(new Date(data.deadline)),
+        deadline: data.deadline ? firebase.firestore.Timestamp.fromDate(new Date(data.deadline)) : null,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       });
       console.log('Task updated:', taskId);
@@ -436,7 +465,7 @@ const DB = {
         .orderBy('date', 'desc')
         .limit(20)
         .get();
-      
+
       const events = [];
       snapshot.forEach(doc => {
         const data = doc.data();
@@ -445,11 +474,65 @@ const DB = {
           events.push({ id: doc.id, ...data });
         }
       });
-      
+
       console.log(`Found ${events.length} old events`);
       return { success: true, data: events };
     } catch (error) {
       console.error('Error getting old events:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  // ============================================
+  // USER MANAGEMENT (Admin Only)
+  // ============================================
+
+  // Get all users (admin only)
+  async getAllUsers() {
+    try {
+      const snapshot = await db.collection('users').get();
+      const users = [];
+      snapshot.forEach(doc => {
+        users.push({ id: doc.id, ...doc.data() });
+      });
+      console.log(`Found ${users.length} users`);
+      return { success: true, data: users };
+    } catch (error) {
+      console.error('Error getting all users:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Update user role (admin only)
+  async updateUserRole(userId, role, value) {
+    try {
+      const updateData = {
+        [role]: value,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      await db.collection('users').doc(userId).update(updateData);
+      console.log(`User ${userId} role ${role} set to ${value}`);
+      return { success: true };
+    } catch (error) {
+      console.error('Error updating user role:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Update user profile by admin (bypasses cooldown)
+  async adminUpdateUserProfile(userId, data) {
+    try {
+      await db.collection('users').doc(userId).update({
+        department: data.department,
+        semester: data.semester,
+        section: data.section,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        lastProfileChangeByAdmin: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      console.log('User profile updated by admin');
+      return { success: true };
+    } catch (error) {
+      console.error('Error updating user profile:', error);
       return { success: false, error: error.message };
     }
   }

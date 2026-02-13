@@ -28,19 +28,22 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **Firebase Authentication** - Secure email/password login system with email verification and password reset
 - **User Profiles** - Student ID, department, semester, and section
 - **Personalized Dashboard** - Content filtered by user's academic details
-- **Task Management** - View pending assignments and exams with deadlines, with basic markdown and clickable links
+- **Task Management** - View pending assignments and exams with deadlines (or "No official Time limit"), with basic markdown (`**bold**`, `*italic*`, `` `code` ``, `[link](url)`), and clickable links, collapsible descriptions (2-line truncation)
 - **Task Completion** - Checkboxes to mark tasks complete, persistent per-user
-- **Task Editing** - Users can edit their own tasks; admins can edit all tasks
-- **Event Calendar** - Track upcoming academic events with basic markdown and clickable links
-- **Event Editing** - Admins can edit all events
+- **Task Editing** - Users can edit their own tasks; admins can edit all tasks; Course is required field
+- **Event Calendar** - Track upcoming academic events with basic markdown, clickable links, collapsible descriptions (2-line truncation), and department scope badge (ALL/CSE/etc.)
+- **Event Editing** - Admins can edit all events; CRs can edit/delete their own events
 - **Resource Links** - Quick access to department-specific resources
 - **Responsive Design** - Works on desktop, tablet, and mobile
 - **Maroon Theme** - Professional dark maroon and off-white color scheme
-- **Admin Features** - Task reset, task/event delete, event creation (admin-only)
-- **CR Role** - Class Representatives can reset and delete tasks for their section
+- **Admin Features** - Task reset, task/event delete, event creation
+- **Admin User Management** - View all users, manage roles (CR/Blocked), edit user profiles
+- **CR Role** - Class Representatives can reset and delete tasks for their section, create events for their department, and edit/delete their own events
+- **Blocked Users** - Restricted accounts in read-only mode (cannot add/edit/delete tasks or change profile)
 - **CR Info Message** - Non-CR users see instructions to contact admin for CR role
 - **Profile Change Cooldown** - Users can only change profile once per 30 days (anti-spam)
 - **Two-Column Layout** - Events sidebar on desktop, slide-out panel (40vw) on mobile
+- **FAQ Section** - Collapsible accordion explaining how the site works, user roles, and profile settings
 - **Footer with Credits** - Source code link and dynamic copyright year
 
 ### Technology Stack
@@ -236,8 +239,10 @@ const db = firebase.firestore();   // Firestore instance
   semester: string,       // e.g., "1st", "2nd"
   section: string,        // e.g., "A1", "B2"
   isAdmin: boolean,       // Optional - admin privileges (set manually)
-  isCR: boolean,          // Optional - CR privileges (set manually)
+  isCR: boolean,          // Optional - CR privileges (set via admin panel)
+  isBlocked: boolean,     // Optional - blocked/restricted user (set via admin panel)
   lastProfileChange: Timestamp, // Optional - last profile edit timestamp (30-day cooldown)
+  lastProfileChangeByAdmin: Timestamp, // Optional - last admin edit timestamp
   createdAt: Timestamp,
   updatedAt: Timestamp
 }
@@ -247,14 +252,14 @@ const db = firebase.firestore();   // Firestore instance
 
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
-| `getTasks(department, semester, section)` | string, string, string | `{success, data/error}` | Get filtered tasks |
-| `createTask(userId, userEmail, data)` | string, string, object | `{success, id/error}` | Create new task |
-| `updateTask(taskId, data)` | string, object | `{success, error?}` | Update existing task |
+| `getTasks(department, semester, section)` | string, string, string | `{success, data/error}` | Get pending tasks (includes overdue within 12h grace period and no-deadline tasks) |
+| `createTask(userId, userEmail, data)` | string, string, object | `{success, id/error}` | Create new task. Deadline can be a timestamp or `null` ("No official Time limit") |
+| `updateTask(taskId, data)` | string, object | `{success, error?}` | Update existing task. Deadline can be changed between timestamp and `null` |
 | `getUserTaskCompletions(userId)` | string | `{success, data/error}` | Get user's completed tasks |
 | `toggleTaskCompletion(userId, taskId, isCompleted)` | string, string, boolean | `{success, error?}` | Toggle task completion |
-| `getOldTasks(userId, department, semester, section)` | strings | `{success, data/error}` | Get completed/past tasks |
+| `getOldTasks(userId, department, semester, section)` | strings | `{success, data/error}` | Get tasks past 12h grace period (excludes no-deadline tasks) |
 | `deleteTask(taskId)` | string | `{success, error?}` | Delete task (admin or CR) |
-| `resetOldTasks(department, semester, section)` | strings | `{success, deletedCount/error}` | Delete all past tasks (admin or CR) |
+| `resetOldTasks(department, semester, section)` | strings | `{success, deletedCount/error}` | Delete all past tasks, skipping no-deadline tasks (admin or CR) |
 
 **Task Schema:**
 ```javascript
@@ -269,7 +274,7 @@ const db = firebase.firestore();   // Firestore instance
   semester: string,
   section: string,
   status: string,         // "active", "completed"
-  deadline: Timestamp
+  deadline: Timestamp | null // null means "No official Time limit"
 }
 ```
 
@@ -278,16 +283,24 @@ const db = firebase.firestore();   // Firestore instance
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
 | `getEvents(department)` | string (default: 'ALL') | `{success, data/error}` | Get upcoming events |
-| `createEvent(data)` | object | `{success, id/error}` | Create event (admin) |
-| `updateEvent(eventId, data)` | string, object | `{success, error?}` | Update existing event (admin) |
-| `deleteEvent(eventId)` | string | `{success, error?}` | Delete event (admin) |
+| `createEvent(data)` | object | `{success, id/error}` | Create event (admin or CR for own department) |
+| `updateEvent(eventId, data)` | string, object | `{success, error?}` | Update existing event (admin or CR for own events) |
+| `deleteEvent(eventId)` | string | `{success, error?}` | Delete event (admin or CR for own events) |
 | `getOldEvents(department)` | string | `{success, data/error}` | Get past events |
 
 #### Role Operations
 
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
-| `getUserRoles(userId)` | string | `{success, isAdmin, isCR/error}` | Check user's admin/CR status |
+| `getUserRoles(userId)` | string | `{success, isAdmin, isCR, isBlocked/error}` | Check user's admin/CR/blocked status |
+
+#### User Management Operations (Admin Only)
+
+| Method | Parameters | Returns | Description |
+|--------|------------|---------|-------------|
+| `getAllUsers()` | - | `{success, data/error}` | Get all users for admin panel |
+| `updateUserRole(userId, role, value)` | string, string, boolean | `{success, error?}` | Set user role (isCR, isBlocked) |
+| `adminUpdateUserProfile(userId, data)` | string, object | `{success, error?}` | Admin edit user profile (bypasses cooldown) |
 
 **Event Schema:**
 ```javascript
@@ -329,8 +342,7 @@ const db = firebase.firestore();   // Firestore instance
 | `""` (empty) | login | `login-view` |
 | `#/dashboard` | dashboard | `dashboard-view` |
 | `#/profile-settings` | profile-settings | `profile-settings-view` |
-| `#/set-details` | set-details | `set-details-view` |
-
+| `#/set-details` | set-details | `set-details-view` || `#/user-management` | user-management | `user-management-view` |
 #### Methods
 
 | Method | Parameters | Description |
@@ -355,8 +367,8 @@ const db = firebase.firestore();   // Firestore instance
 | `hideMessage(elementId)` | string | Hide message element |
 | `updateUserDetailsCard(email, dept, sem, section)` | strings | Update navbar user card |
 | `renderResourceLinks(links)` | array | Render resource link cards |
-| `renderTasks(tasks, userCompletions, isAdmin, isCR, currentUserId)` | array, object, boolean, boolean, string | Render task cards with checkboxes, edit/delete buttons based on permissions |
-| `renderOldTasks(tasks)` | array | Render completed tasks list |
+| `renderTasks(tasks, userCompletions, isAdmin, isCR, currentUserId)` | array, object, boolean, boolean, string | Render task cards with checkboxes, collapsible descriptions, vertical edit/delete buttons |
+| `renderOldTasks(tasks)` | array | Render old tasks (past 12h grace period) with completion status |
 | `renderEvents(events, isAdmin)` | array, boolean | Render event cards with edit/delete buttons |
 | `renderOldEvents(events)` | array | Render past events list |
 | `populateDropdown(elementId, items, selectedValue)` | string, array, string? | Populate select dropdown |
@@ -364,6 +376,7 @@ const db = firebase.firestore();   // Firestore instance
 | `hideModal(modalId)` | string | Hide modal dialog |
 | `toggleEventsSidebar(open)` | boolean | Open/close mobile events sidebar |
 | `toggleAdminControls(isAdmin, isCR)` | boolean, boolean | Show/hide admin-only and CR elements |
+| `toggleBlockedUserMode(isBlocked)` | boolean | Enable/disable read-only mode for blocked users |
 
 ---
 
@@ -442,18 +455,27 @@ const db = firebase.firestore();   // Firestore instance
 | `setupAdminEventListeners()` | - | Setup admin-related event handlers |
 | `handleTaskCompletion(taskId, isCompleted)` | string, boolean | Toggle task completion |
 | `openAddTaskModal()` | - | Open add task modal |
-| `handleAddTask()` | - | Process add task form |
+| `handleAddTask()` | - | Process add task form. Supports two deadline options: (1) No official Time limit (stores deadline as null), or (2) a specific date/time. |
 | `openOldTasksModal()` | - | Open completed tasks modal |
 | `handleResetTasks()` | - | Reset all old tasks (admin or CR) |
 | `handleDeleteTask(taskId)` | string | Delete task (admin or CR) |
 | `openEditTaskModal(taskId)` | string | Open edit task modal with pre-filled data |
-| `handleEditTask()` | - | Process edit task form submission |
+| `handleEditTask()` | - | Process edit task form submission. Supports two deadline options: (1) No official Time limit (stores deadline as null), or (2) a specific date/time. |
 | `openAddEventModal()` | - | Open add event modal (admin) |
 | `handleAddEvent()` | - | Process add event form (admin) |
 | `handleDeleteEvent(eventId)` | string | Delete event (admin) |
 | `openEditEventModal(eventId)` | string | Open edit event modal with pre-filled data (admin) |
 | `handleEditEvent()` | - | Process edit event form submission (admin) |
 | `openOldEventsModal()` | - | Open past events modal |
+| `setupUserManagementListeners()` | - | Setup user management event handlers |
+| `loadUserManagement()` | - | Load all users for admin panel |
+| `renderUserList(users)` | array | Render user cards in admin panel |
+| `filterUsers()` | - | Filter users by department/semester/section/role |
+| `clearUserFilters()` | - | Reset all user filters |
+| `toggleUserRole(userId, role, value)` | strings, boolean | Toggle user role (isCR, isBlocked) |
+| `openEditUserModal(userId)` | string | Open edit user modal |
+| `updateEditUserSections(selectedValue)` | string? | Update sections in edit user modal |
+| `handleEditUser()` | - | Process edit user form (admin) |
 
 **Application State:**
 ```javascript
@@ -469,7 +491,18 @@ App.currentTasks = []         // Loaded tasks
 App.currentEvents = []        // Loaded events
 App.isAdmin = false           // Admin privileges
 App.isCR = false              // CR (Class Representative) privileges
+App.isBlocked = false         // Blocked/restricted user status
+App.allUsers = []             // All users (admin panel)
+App.isSigningUp = false       // Flag to prevent auth state handling during signup
 ```
+
+**Signup Race Condition Prevention:**
+
+During signup, Firebase triggers `onAuthStateChanged` immediately when the user is created (before email verification). Without protection, this would cause `handleAuthenticatedUser()` to run and display an error message ("Please verify your email...") that overwrites the success message. The `isSigningUp` flag prevents auth state handling during the signup process:
+
+1. Flag is set before `Auth.signup()` is called
+2. `onAuthStateChanged` callback checks the flag and skips handling
+3. Flag is cleared after logout completes (success) or on error
 
 ---
 
@@ -571,7 +604,9 @@ Firestore Database
 │       ├── section: string
 │       ├── isAdmin: boolean    # Optional - admin privileges
 │       ├── isCR: boolean       # Optional - CR privileges
+│       ├── isBlocked: boolean  # Optional - blocked/restricted user
 │       ├── lastProfileChange: timestamp  # Optional - 30-day cooldown
+│       ├── lastProfileChangeByAdmin: timestamp  # Optional - admin edit
 │       ├── createdAt: timestamp
 │       ├── updatedAt: timestamp
 │       └── completedTasks/     # Subcollection: task completions
@@ -589,7 +624,7 @@ Firestore Database
 │       ├── semester: string
 │       ├── section: string
 │       ├── status: string      # "active"|"completed"
-│       └── deadline: timestamp
+│       └── deadline: timestamp|null  # null = "No official Time limit"
 │
 ├── events/                     # Academic events
 │   └── {eventId}/
@@ -597,7 +632,8 @@ Firestore Database
 │       ├── description: string
 │       ├── department: string  # or "ALL"
 │       ├── date: timestamp
-│       ├── createdBy: string   # userId (admin)
+│       ├── createdBy: string   # userId (admin or CR)
+│       ├── createdByName: string # "Admin" or "CR"
 │       └── createdAt: timestamp
 │
 ├── resourceLinks/              # Department resources
@@ -651,42 +687,82 @@ service cloud.firestore {
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isCR == true;
     }
     
-    // Users collection - users can only read/write their own data
+    // Helper function to check if user is blocked
+    function isBlocked() {
+      return isSignedIn() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isBlocked == true;
+    }
+    
+    // Users collection
     match /users/{userId} {
-      allow read: if isOwner(userId);
+      // Users can read their own profile; Admins can read all users
+      allow read: if isOwner(userId) || isAdmin();
+      
+      // Users can create their own profile
       allow create: if isSignedIn() && request.auth.uid == userId;
-      allow update: if isOwner(userId);
-      allow delete: if false; // Prevent deletion
+      
+      // Users can update their own profile (if not blocked); Admins can update any
+      allow update: if (isOwner(userId) && !isBlocked()) || isAdmin();
+      
+      // Only admins can delete user profiles
+      allow delete: if isAdmin();
     }
     
     // Task completions subcollection (user's personal completion status)
-    match /users/{userId}/taskCompletions/{taskId} {
-      allow read, write: if isOwner(userId);
+    match /users/{userId}/completedTasks/{taskId} {
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId) && !isBlocked();
     }
     
     // Tasks collection
-    // - Anyone can read (authenticated)
-    // - Anyone can create (authenticated)
-    // - Edit: Admin or task owner
-    // - Delete: Admin, CR, or task owner
     match /tasks/{taskId} {
+      // Anyone authenticated can read
       allow read: if isSignedIn();
-      allow create: if isSignedIn();
+      
+      // Create: authenticated and not blocked
+      allow create: if isSignedIn() && !isBlocked();
+      
+      // Update: Admin or task owner (if not blocked)
       allow update: if isSignedIn() && (
         isAdmin() || 
-        resource.data.addedBy == request.auth.uid
+        (resource.data.addedBy == request.auth.uid && !isBlocked())
       );
+      
+      // Delete: Admin, CR, or task owner (if not blocked)
       allow delete: if isSignedIn() && (
         isAdmin() || 
         isCR() || 
-        resource.data.addedBy == request.auth.uid
+        (resource.data.addedBy == request.auth.uid && !isBlocked())
       );
     }
     
-    // Events collection - Admin only for write operations
+    // Helper function to get user's department
+    function getUserDepartment() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.department;
+    }
+    
+    // Events collection - Admin full access, CR limited access
     match /events/{eventId} {
       allow read: if isSignedIn();
-      allow create, update, delete: if isAdmin();
+      
+      // Admin can create any event; CR can create events for their own department
+      allow create: if isAdmin() || (
+        isCR() && 
+        request.resource.data.createdBy == request.auth.uid &&
+        request.resource.data.department == getUserDepartment()
+      );
+      
+      // Admin can edit any event; CR can edit only their own events
+      allow update: if isAdmin() || (
+        isCR() && 
+        resource.data.createdBy == request.auth.uid
+      );
+      
+      // Admin can delete any event; CR can delete only their own events
+      allow delete: if isAdmin() || (
+        isCR() && 
+        resource.data.createdBy == request.auth.uid
+      );
     }
     
     // Resource links - read only for users, admin can write
@@ -706,17 +782,23 @@ service cloud.firestore {
 
 ### User Role Permissions Summary
 
-| Action | Regular User | CR | Admin |
-|--------|-------------|-----|-------|
-| Read tasks | ✓ | ✓ | ✓ |
-| Create tasks | ✓ | ✓ | ✓ |
-| Edit own tasks | ✓ | ✓ | ✓ |
-| Edit any task | ✗ | ✗ | ✓ |
-| Delete own tasks | ✓ | ✓ | ✓ |
-| Delete any task | ✗ | ✓ | ✓ |
-| Reset tasks | ✗ | ✓ | ✓ |
-| Read events | ✓ | ✓ | ✓ |
-| Create/Edit/Delete events | ✗ | ✗ | ✓ |
+| Action | Blocked User | Regular User | CR | Admin |
+|--------|-------------|--------------|-----|-------|
+| Read tasks | ✓ (read-only) | ✓ | ✓ | ✓ |
+| Create tasks | ✗ | ✓ | ✓ | ✓ |
+| Edit own tasks | ✗ | ✓ | ✓ | ✓ |
+| Edit any task | ✗ | ✗ | ✗ | ✓ |
+| Delete own tasks | ✗ | ✓ | ✓ | ✓ |
+| Delete any task | ✗ | ✗ | ✓ | ✓ |
+| Reset tasks | ✗ | ✗ | ✓ | ✓ |
+| Mark tasks complete | ✗ | ✓ | ✓ | ✓ |
+| Read events | ✓ | ✓ | ✓ | ✓ |
+| Create events (own dept) | ✗ | ✗ | ✓ | ✓ |
+| Edit/Delete own events | ✗ | ✗ | ✓ | ✓ |
+| Edit/Delete any event | ✗ | ✗ | ✗ | ✓ |
+| Change own profile | ✗ | ✓ (30-day cooldown) | ✓ | ✓ |
+| Manage users | ✗ | ✗ | ✗ | ✓ |
+| Assign/remove roles | ✗ | ✗ | ✗ | ✓ |
 
 ---
 
@@ -823,18 +905,29 @@ service cloud.firestore {
 ### Dashboard View Components
 - **Resource Links Section** - Department-specific quick links
   - Mobile: "Quick Links" header, icons hidden, external "All Resources" link
-- **Pending Tasks Section** - Task cards with checkboxes, deadlines, delete buttons (admin/CR)
-  - Add Tasks button - Opens task creation modal
-  - View Old button - Opens completed tasks modal
-  - Reset Tasks button (admin/CR) - Clears past tasks
-- **Upcoming Events Section** - Calendar events with delete buttons (admin)
-  - Add Event button (admin-only) - Opens event creation modal
+- **Pending Tasks Section** - Task cards with Course Title (primary), collapsible descriptions, vertical edit/delete buttons
+  - Course shown larger than Task Title; descriptions truncated to 2 lines with "Show more" toggle
+  - Edit/delete buttons vertically stacked on right side below task type badge
+  - "Added by" info appears only when description is expanded
+  - Overdue tasks (within 12h of deadline) remain visible with "Overdue!" label; move to Old Tasks after 12h
+  - Tasks with "No official Time limit" remain in Pending Tasks indefinitely, sorted to the bottom (just above completed tasks)
+  - Add Tasks button - Opens task creation modal (Course required, two deadline options: "No official Time limit" or specific date/time)
+  - View Old button - Opens tasks past 12h grace period (excludes no-deadline tasks)
+  - Reset Tasks button (admin/CR) - Clears past tasks (skips no-deadline tasks)
+- **Upcoming Events Section** - Calendar events with collapsible descriptions (2-line truncation with "Show more" toggle), department scope badge (ALL/CSE/etc.), "Added by Admin/CR" label, and edit/delete buttons
+  - Add Event button (admin/CR) - Opens event creation modal; CRs create events for their own department
   - Old Events button - Opens past events modal
+  - CRs can edit/delete their own events; admins can edit/delete any event
 - **Events Sidebar (Mobile)** - Slide-out panel (40vw) with events and action buttons
+- **FAQ Section** - Collapsible accordion with three items:
+  - How b1t-Sched works (shared tasks, individual checkboxes)
+  - User roles (Admin, CR, Blocked) and their permissions
+  - Profile settings and 30-day change cooldown disclaimer
 - **Modals:**
-  - Add Task Modal - Task creation form
-  - Old Tasks Modal - List of completed/past tasks
-  - Add Event Modal (admin) - Event creation form
+  - Add Task Modal - Task creation form with Course as required field
+    - Add Task Modal - Task creation form with Course as required field and two deadline options: "No official Time limit" or a specific date/time
+  - Old Tasks Modal - List of tasks past 12h grace period (with completion status)
+  - Add Event Modal (admin/CR) - Event creation form
   - Old Events Modal - List of past events
 
 ### Profile Settings View Components
@@ -928,6 +1021,12 @@ Router.onRouteChange((routeName) => {
 | 2.9.0 | Feb 2026 | Edit functionality: Users can edit own tasks; admins can edit all tasks and events |
 | 2.9.1 | Feb 2026 | Permissions fix: Regular users can now delete their own tasks; clarified role permissions |
 | 2.10.0 | Feb 2026 | CR info message for non-CR users; Profile change 30-day cooldown; Footer with credits and dynamic year |
+| 2.11.0 | Feb 2026 | Admin User Management: view all users, filter by dept/sem/section/role, toggle isCR/isBlocked roles, edit user profiles; Blocked users restricted to read-only mode |
+| 2.12.0 | Feb 2026 | Task UI improvements: Course as required field (displayed first), collapsible descriptions with 2-line truncation, vertical edit/delete buttons, "View Old" shows past deadline tasks, compact spacing |
+| 2.13.0 | Feb 2026 | Admin: Firebase Dashboard button in Profile Settings; Markdown link support `[text](url)` in task descriptions; 12-hour grace period for overdue tasks before moving to Old Tasks |
+| 2.14.0 | Feb 2026 | Tasks now support "No official Time limit" as a deadline option. Add/Edit Task modals allow choosing between no deadline and a specific date/time. UI and schema updated. |
+| 2.14.1 | Feb 2026 | Bugfix: No-deadline tasks now correctly stay in Pending Tasks instead of being moved to Old Tasks. Fixed `createTask()` and `updateTask()` to store `null` instead of epoch timestamp when no deadline is set. Fixed `resetOldTasks()` to skip no-deadline tasks. |
+| 2.15.0 | Feb 2026 | Events UI: collapsible descriptions (2-line truncation with "Show more" toggle), department scope badge (ALL/CSE/etc.), "Added by Admin/CR" label. CR event privileges: CRs can create events for their own department, edit/delete their own events. FAQ section: collapsible accordion at bottom of page (how the site works, user roles, profile settings). Updated Firestore security rules for CR event access. |
 
 ---
 
@@ -941,5 +1040,5 @@ Router.onRouteChange((routeName) => {
 
 ---
 
-*Documentation last updated: February 11, 2026*
-*Version: 2.10.0*
+*Documentation last updated: February 13, 2026*
+*Version: 2.15.0*
