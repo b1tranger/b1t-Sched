@@ -252,14 +252,14 @@ const db = firebase.firestore();   // Firestore instance
 
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
-| `getTasks(department, semester, section)` | string, string, string | `{success, data/error}` | Get pending tasks (includes overdue within 12h grace) |
-| `createTask(userId, userEmail, data)` | string, string, object | `{success, id/error}` | Create new task |
-| `updateTask(taskId, data)` | string, object | `{success, error?}` | Update existing task |
+| `getTasks(department, semester, section)` | string, string, string | `{success, data/error}` | Get pending tasks (includes overdue within 12h grace period and no-deadline tasks) |
+| `createTask(userId, userEmail, data)` | string, string, object | `{success, id/error}` | Create new task. Deadline can be a timestamp or `null` ("No official Time limit") |
+| `updateTask(taskId, data)` | string, object | `{success, error?}` | Update existing task. Deadline can be changed between timestamp and `null` |
 | `getUserTaskCompletions(userId)` | string | `{success, data/error}` | Get user's completed tasks |
 | `toggleTaskCompletion(userId, taskId, isCompleted)` | string, string, boolean | `{success, error?}` | Toggle task completion |
-| `getOldTasks(userId, department, semester, section)` | strings | `{success, data/error}` | Get tasks past 12h grace period |
+| `getOldTasks(userId, department, semester, section)` | strings | `{success, data/error}` | Get tasks past 12h grace period (excludes no-deadline tasks) |
 | `deleteTask(taskId)` | string | `{success, error?}` | Delete task (admin or CR) |
-| `resetOldTasks(department, semester, section)` | strings | `{success, deletedCount/error}` | Delete all past tasks (admin or CR) |
+| `resetOldTasks(department, semester, section)` | strings | `{success, deletedCount/error}` | Delete all past tasks, skipping no-deadline tasks (admin or CR) |
 
 **Task Schema:**
 ```javascript
@@ -283,9 +283,9 @@ const db = firebase.firestore();   // Firestore instance
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
 | `getEvents(department)` | string (default: 'ALL') | `{success, data/error}` | Get upcoming events |
-| `createEvent(data)` | object | `{success, id/error}` | Create event (admin) |
-| `updateEvent(eventId, data)` | string, object | `{success, error?}` | Update existing event (admin) |
-| `deleteEvent(eventId)` | string | `{success, error?}` | Delete event (admin) |
+| `createEvent(data)` | object | `{success, id/error}` | Create event (admin or CR for own department) |
+| `updateEvent(eventId, data)` | string, object | `{success, error?}` | Update existing event (admin or CR for own events) |
+| `deleteEvent(eventId)` | string | `{success, error?}` | Delete event (admin or CR for own events) |
 | `getOldEvents(department)` | string | `{success, data/error}` | Get past events |
 
 #### Role Operations
@@ -909,10 +909,11 @@ service cloud.firestore {
   - Course shown larger than Task Title; descriptions truncated to 2 lines with "Show more" toggle
   - Edit/delete buttons vertically stacked on right side below task type badge
   - "Added by" info appears only when description is expanded
-  - Overdue tasks (within 12h of deadline) remain visible with "Overdue!" label
-  - Add Tasks button - Opens task creation modal (Course required)
-  - View Old button - Opens tasks past 12h grace period
-  - Reset Tasks button (admin/CR) - Clears past tasks
+  - Overdue tasks (within 12h of deadline) remain visible with "Overdue!" label; move to Old Tasks after 12h
+  - Tasks with "No official Time limit" remain in Pending Tasks indefinitely, sorted to the bottom (just above completed tasks)
+  - Add Tasks button - Opens task creation modal (Course required, two deadline options: "No official Time limit" or specific date/time)
+  - View Old button - Opens tasks past 12h grace period (excludes no-deadline tasks)
+  - Reset Tasks button (admin/CR) - Clears past tasks (skips no-deadline tasks)
 - **Upcoming Events Section** - Calendar events with collapsible descriptions (2-line truncation with "Show more" toggle), department scope badge (ALL/CSE/etc.), "Added by Admin/CR" label, and edit/delete buttons
   - Add Event button (admin/CR) - Opens event creation modal; CRs create events for their own department
   - Old Events button - Opens past events modal
@@ -1025,6 +1026,7 @@ Router.onRouteChange((routeName) => {
 | 2.13.0 | Feb 2026 | Admin: Firebase Dashboard button in Profile Settings; Markdown link support `[text](url)` in task descriptions; 12-hour grace period for overdue tasks before moving to Old Tasks |
 | 2.14.0 | Feb 2026 | Tasks now support "No official Time limit" as a deadline option. Add/Edit Task modals allow choosing between no deadline and a specific date/time. UI and schema updated. |
 | 2.14.1 | Feb 2026 | Bugfix: No-deadline tasks now correctly stay in Pending Tasks instead of being moved to Old Tasks. Fixed `createTask()` and `updateTask()` to store `null` instead of epoch timestamp when no deadline is set. Fixed `resetOldTasks()` to skip no-deadline tasks. |
+| 2.15.0 | Feb 2026 | Events UI: collapsible descriptions (2-line truncation with "Show more" toggle), department scope badge (ALL/CSE/etc.), "Added by Admin/CR" label. CR event privileges: CRs can create events for their own department, edit/delete their own events. FAQ section: collapsible accordion at bottom of page (how the site works, user roles, profile settings). Updated Firestore security rules for CR event access. |
 
 ---
 
@@ -1038,5 +1040,5 @@ Router.onRouteChange((routeName) => {
 
 ---
 
-*Documentation last updated: February 12, 2026*
-*Version: 2.14.1*
+*Documentation last updated: February 13, 2026*
+*Version: 2.15.0*
