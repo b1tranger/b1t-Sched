@@ -7,14 +7,15 @@
 ## Table of Contents
 
 1. [Project Overview](#project-overview)
-2. [Architecture](#architecture)
-3. [Project Structure](#project-structure)
-4. [JavaScript Modules](#javascript-modules)
-5. [Styling System](#styling-system)
-6. [Firebase/Firestore Data Model](#firebasefirestore-data-model)
-7. [User Flows](#user-flows)
-8. [Views & Components](#views--components)
-9. [API Reference](#api-reference)
+2. [Technology Stack (Detailed)](#technology-stack-detailed)
+3. [Architecture](#architecture)
+4. [Project Structure](#project-structure)
+5. [JavaScript Modules](#javascript-modules)
+6. [Styling System](#styling-system)
+7. [Firebase/Firestore Data Model](#firebasefirestore-data-model)
+8. [User Flows](#user-flows)
+9. [Views & Components](#views--components)
+10. [API Reference](#api-reference)
 
 ---
 
@@ -43,16 +44,79 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **CR Info Message** - Non-CR users see instructions to contact admin for CR role
 - **Profile Change Cooldown** - Users can only change profile once per 30 days (anti-spam)
 - **Two-Column Layout** - Events sidebar on desktop, slide-out panel (40vw) on mobile
+- **Notice Viewer** - View UCAM university notices with PDF preview (desktop modal with split-pane layout; mobile slide-out sidebar), powered by Vercel serverless backend with local caching
 - **FAQ Section** - Collapsible accordion explaining how the site works, user roles, and profile settings
 - **Footer with Credits** - Source code link and dynamic copyright year
 
-### Technology Stack
+### Technology Stack (Summary)
 | Category | Technology |
 |----------|------------|
 | Frontend | HTML5, CSS3, Vanilla JavaScript |
-| Backend | Firebase (Firestore, Authentication) |
+| Backend (Database & Auth) | Firebase (Firestore, Authentication) |
+| Backend (Notice API) | Vercel Serverless Functions (Node.js) |
 | Icons | Font Awesome 6.5 |
-| Hosting | Static hosting (Netlify compatible) |
+| Hosting | Netlify (frontend), Vercel (backend API) |
+
+---
+
+## Technology Stack (Detailed)
+
+This section provides a comprehensive breakdown of every library, framework, service, and tool used in the project.
+
+### Frontend Technologies
+
+| Technology | Version | Purpose | Delivery |
+|-----------|---------|---------|----------|
+| **HTML5** | — | Page structure, semantic markup | Native |
+| **CSS3** | — | Styling, layouts, responsive design, CSS custom properties (variables) | Native |
+| **Vanilla JavaScript (ES6+)** | — | Application logic, DOM manipulation, SPA routing | Native |
+
+### Firebase SDK
+
+| Package | Version | Purpose | Delivery |
+|---------|---------|---------|----------|
+| **firebase-app-compat** | 10.7.1 | Firebase core initialization | CDN (`gstatic.com`) |
+| **firebase-auth-compat** | 10.7.1 | Email/password authentication, email verification, password reset | CDN (`gstatic.com`) |
+| **firebase-firestore-compat** | 10.7.1 | NoSQL cloud database (Firestore) for users, tasks, events, resources, metadata | CDN (`gstatic.com`) |
+
+> **Note:** The project uses the Firebase **compat** (v8-style) SDK loaded via CDN `<script>` tags, not the modular v9+ import style.
+
+### Icons & Fonts
+
+| Library | Version | Purpose | Delivery |
+|---------|---------|---------|----------|
+| **Font Awesome** | 6.5.0 | UI icons (navigation, buttons, status indicators, task/event icons) | CDN (`cdnjs.cloudflare.com`) |
+
+### Backend Services
+
+| Service | Purpose | Details |
+|---------|---------|----------|
+| **Firebase Authentication** | User sign-up, login, email verification, password reset | Email/password provider |
+| **Cloud Firestore** | Primary database for all application data | Collections: `users`, `tasks`, `events`, `resourceLinks`, `metadata` |
+| **Vercel Serverless Functions** | Notice scraping API backend (`b1t-acad-backend.vercel.app`) | Node.js runtime; scrapes UCAM portal notices, proxies PDF downloads |
+
+### Hosting & Deployment
+
+| Platform | Purpose | Details |
+|---------|---------|----------|
+| **Netlify** | Frontend static hosting | Deploys `index.html` + CSS/JS assets; domain: `b1tsched.netlify.app` |
+| **Vercel** | Backend API hosting | Serverless functions for notice scraping; domain: `b1t-acad-backend.vercel.app` |
+
+### Browser APIs & Web Standards Used
+
+| API | Purpose |
+|-----|----------|
+| **localStorage** | Client-side caching (notice data, user preferences) |
+| **Fetch API** | HTTP requests to Vercel backend for notices/PDFs |
+| **Hash-based Routing** (`hashchange` event) | SPA navigation without page reloads |
+| **Blob API** | PDF handling for notice downloads |
+
+### Development & Configuration
+
+| Tool | Purpose |
+|------|----------|
+| **Firestore Security Rules** | Server-side access control (role-based: Admin, CR, Blocked, Regular) |
+| **Git** | Version control |
 
 ---
 
@@ -77,6 +141,10 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 │  │ profile.js  │  │  ui.js   │  │utils.js│  │  app.js    │  │
 │  │             │  │          │  │        │  │  (Main)    │  │
 │  └─────────────┘  └──────────┘  └────────┘  └────────────┘  │
+│  ┌─────────────┐                                             │
+│  │ notice.js   │                                             │
+│  │             │                                             │
+│  └─────────────┘                                             │
 └─────────────────────────────────────────────────────────────┘
                           │
                           ▼
@@ -92,6 +160,16 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 │                           │  └────────────┘ └────────────┘││
 │                           └────────────────────────────────┘│
 └─────────────────────────────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────────┐
+│              Vercel Serverless Backend                       │
+│  ┌─────────────────────┐  ┌────────────────────────────────┐│
+│  │   api/notices.js    │  │       api/pdf.js               ││
+│  │  (Scrape notice     │  │  (Proxy PDF downloads          ││
+│  │   list from UCAM)   │  │   from UCAM portal)            ││
+│  └─────────────────────┘  └────────────────────────────────┘│
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ### Module Dependencies
@@ -103,10 +181,14 @@ app.js (Main Application)
 ├── UI (ui.js)
 ├── Router (routing.js)
 ├── Profile (profile.js)
-└── Utils (utils.js)
+├── Utils (utils.js)
+└── NoticeViewer (notice.js)
 
 firebase-config.js (Loaded First)
 └── Initializes: auth, db (Firestore instances)
+
+notice.js (Independent Module)
+└── Fetches from: Vercel backend API (b1t-acad-backend.vercel.app)
 ```
 
 ---
@@ -129,8 +211,11 @@ b1t-Sched/
 │   ├── dashboard.css            # Dashboard layout, modals, admin controls
 │   ├── navbar.css               # Navigation bar styles
 │   ├── user-details-card.css    # User profile card styles
+│   ├── notice.css               # Notice viewer modal, sidebar, PDF panel styles
 │   ├── responsive.css           # Mobile/tablet breakpoints
 │   ├── buttons.css              # Button variations
+│   ├── drop-down.css            # Dropdown menu styles
+│   ├── menu-bar.css             # Menu bar styles
 │   ├── selector.css             # Dropdown/select styles
 │   └── styles.css               # Additional styles
 │
@@ -142,6 +227,7 @@ b1t-Sched/
 │   ├── routing.js               # SPA hash-based routing
 │   ├── profile.js               # Profile management
 │   ├── utils.js                 # Utility functions
+│   ├── notice.js                # Notice viewer module (UCAM notices + PDF)
 │   └── app.js                   # Main application logic
 │
 ├── doc/                          # Documentation
@@ -403,7 +489,44 @@ const db = firebase.firestore();   // Firestore instance
 
 ---
 
-### 7. Utils (utils.js)
+### 7. NoticeViewer (notice.js)
+
+**Purpose:** UCAM university notice viewer with PDF preview
+
+#### Configuration
+
+```javascript
+NoticeViewer.API_BASE = 'https://b1t-acad-backend.vercel.app'  // Vercel backend
+NoticeViewer.CACHE_KEY = 'b1tSched_notices'                    // localStorage key
+NoticeViewer.CACHE_DURATION = 30 * 60 * 1000                   // 30-minute cache TTL
+```
+
+#### Methods
+
+| Method | Parameters | Description |
+|--------|------------|-------------|
+| `init()` | - | Initialize notice viewer: setup event listeners for desktop modal and mobile sidebar; attach load/close buttons |
+| `checkCache()` | - | Check localStorage for cached notices within TTL; returns cached data or `null` |
+| `saveToCache(notices)` | array | Save fetched notices to localStorage with timestamp |
+| `loadNotices()` | - | Fetch notices from Vercel backend (or cache); renders to desktop and mobile containers |
+| `renderAllNotices()` | - | Render notice lists in both desktop and mobile containers |
+| `renderNoticeList(containerId, isMobile)` | string, boolean | Render notice list items into a given container (desktop: clickable list with PDF preview) |
+| `renderNoticeListMobile(containerId)` | string | Render mobile-optimized notice list (tap to open PDF in new tab) |
+| `selectNotice(id, clickedItem, listContainer)` | string, element, element | Select a notice: highlight it, load PDF into iframe (desktop only) |
+| `openNoticePdfInNewTab(id)` | string | Open notice PDF in a new browser tab (mobile) |
+| `showLoadingState()` | - | Show loading spinner in notice containers |
+| `showErrorState(message)` | string | Show error message with retry button in notice containers |
+| `toggleNoticeSidebar(open)` | boolean | Toggle mobile notice sidebar open/closed with overlay |
+| `openNoticeModal()` | - | Open desktop notice modal |
+| `closeNoticeModal()` | - | Close desktop notice modal |
+
+**Desktop Flow:** Navbar "Notice" button → Modal opens → Click "Load Notices" → Notice list + PDF preview panel (split-pane layout) → Click notice → PDF loads in embedded iframe → Open/Download buttons
+
+**Mobile Flow:** Floating "Notices" toggle → Sidebar slides in → Click "Load Notices" → Notice list → Tap notice → PDF opens in new tab
+
+---
+
+### 8. Utils (utils.js)
 
 **Purpose:** Utility functions
 
@@ -433,7 +556,7 @@ const db = firebase.firestore();   // Firestore instance
 
 ---
 
-### 8. App (app.js)
+### 9. App (app.js)
 
 **Purpose:** Main application controller
 
@@ -521,6 +644,7 @@ dashboard.css       → Dashboard Layout, Modals, Admin Controls
     ↓
 navbar.css          → Navigation Specific
 user-details-card.css → User Card Specific
+notice.css          → Notice Viewer (Modal + Sidebar + PDF panel)
     ↓
 responsive.css      → Media Queries
 ```
@@ -919,16 +1043,18 @@ service cloud.firestore {
   - Old Events button - Opens past events modal
   - CRs can edit/delete their own events; admins can edit/delete any event
 - **Events Sidebar (Mobile)** - Slide-out panel (40vw) with events and action buttons
+- **Notice Viewer (Desktop)** - Modal with split-pane layout: notice list panel (left) + PDF preview panel (right) with Open/Download actions; "Load Notices" on-demand button to fetch from UCAM via Vercel backend
+- **Notice Sidebar (Mobile)** - Slide-out panel with notice list; tapping a notice opens PDF in a new tab
 - **FAQ Section** - Collapsible accordion with three items:
   - How b1t-Sched works (shared tasks, individual checkboxes)
   - User roles (Admin, CR, Blocked) and their permissions
   - Profile settings and 30-day change cooldown disclaimer
 - **Modals:**
-  - Add Task Modal - Task creation form with Course as required field
-    - Add Task Modal - Task creation form with Course as required field and two deadline options: "No official Time limit" or a specific date/time
+  - Add Task Modal - Task creation form with Course as required field and two deadline options: "No official Time limit" or a specific date/time
   - Old Tasks Modal - List of tasks past 12h grace period (with completion status)
   - Add Event Modal (admin/CR) - Event creation form
   - Old Events Modal - List of past events
+  - Notice Viewer Modal (desktop) - University notice list + embedded PDF viewer
 
 ### Profile Settings View Components
 - Back button
@@ -1027,6 +1153,7 @@ Router.onRouteChange((routeName) => {
 | 2.14.0 | Feb 2026 | Tasks now support "No official Time limit" as a deadline option. Add/Edit Task modals allow choosing between no deadline and a specific date/time. UI and schema updated. |
 | 2.14.1 | Feb 2026 | Bugfix: No-deadline tasks now correctly stay in Pending Tasks instead of being moved to Old Tasks. Fixed `createTask()` and `updateTask()` to store `null` instead of epoch timestamp when no deadline is set. Fixed `resetOldTasks()` to skip no-deadline tasks. |
 | 2.15.0 | Feb 2026 | Events UI: collapsible descriptions (2-line truncation with "Show more" toggle), department scope badge (ALL/CSE/etc.), "Added by Admin/CR" label. CR event privileges: CRs can create events for their own department, edit/delete their own events. FAQ section: collapsible accordion at bottom of page (how the site works, user roles, profile settings). Updated Firestore security rules for CR event access. |
+| 2.16.0 | Feb 2026 | Notice Viewer: View UCAM university notices with PDF preview. Desktop: modal with split-pane layout (notice list + embedded PDF iframe with Open/Download). Mobile: slide-out sidebar with notice list (tap to open PDF in new tab). On-demand loading via Vercel serverless backend (`b1t-acad-backend.vercel.app`). 30-minute localStorage cache for notice data. New files: `js/notice.js`, `css/notice.css`. |
 
 ---
 
@@ -1040,5 +1167,5 @@ Router.onRouteChange((routeName) => {
 
 ---
 
-*Documentation last updated: February 13, 2026*
-*Version: 2.15.0*
+*Documentation last updated: February 14, 2026*
+*Version: 2.16.0*
