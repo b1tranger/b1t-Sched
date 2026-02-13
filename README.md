@@ -484,4 +484,19 @@ For issues or questions:
 
 ---
 
+## Feature Request:
+from [@MuhammadShishir](https://github.com/MuhammadShishir):
+   1. Time tracking,
+   2. Adding documents,
+   3. Adding AI support, 
+   4. Add a timeline view and table view ....
+
+from [@foxxie911](https://github.com/foxxie911)
+   1. need to refine data/files 
+   2. add PDF viewer: need to view resources inside the website/app (otherwise I am depending on outside sources --> not convincing)
+   3. Faculty-side
+
+
+---
+
 **Ready to get started? Follow [`FIREBASE_SETUP.md`](doc/FIREBASE_SETUP.md) first!** 🚀
