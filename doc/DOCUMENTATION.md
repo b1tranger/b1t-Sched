@@ -498,7 +498,7 @@ const db = firebase.firestore();   // Firestore instance
 ```javascript
 NoticeViewer.API_BASE = 'https://b1t-acad-backend.vercel.app'  // Vercel backend
 NoticeViewer.CACHE_KEY = 'b1tSched_notices'                    // localStorage key
-NoticeViewer.CACHE_DURATION = 30 * 60 * 1000                   // 30-minute cache TTL
+NoticeViewer.CACHE_TTL = 7 * 24 * 60 * 60 * 1000               // 7-day cache TTL
 ```
 
 #### Methods
@@ -1153,7 +1153,7 @@ Router.onRouteChange((routeName) => {
 | 2.14.0 | Feb 2026 | Tasks now support "No official Time limit" as a deadline option. Add/Edit Task modals allow choosing between no deadline and a specific date/time. UI and schema updated. |
 | 2.14.1 | Feb 2026 | Bugfix: No-deadline tasks now correctly stay in Pending Tasks instead of being moved to Old Tasks. Fixed `createTask()` and `updateTask()` to store `null` instead of epoch timestamp when no deadline is set. Fixed `resetOldTasks()` to skip no-deadline tasks. |
 | 2.15.0 | Feb 2026 | Events UI: collapsible descriptions (2-line truncation with "Show more" toggle), department scope badge (ALL/CSE/etc.), "Added by Admin/CR" label. CR event privileges: CRs can create events for their own department, edit/delete their own events. FAQ section: collapsible accordion at bottom of page (how the site works, user roles, profile settings). Updated Firestore security rules for CR event access. |
-| 2.16.0 | Feb 2026 | Notice Viewer: View UCAM university notices with PDF preview. Desktop: modal with split-pane layout (notice list + embedded PDF iframe with Open/Download). Mobile: slide-out sidebar with notice list (tap to open PDF in new tab). On-demand loading via Vercel serverless backend (`b1t-acad-backend.vercel.app`). 30-minute localStorage cache for notice data. New files: `js/notice.js`, `css/notice.css`. |
+| 2.16.0 | Feb 2026 | Notice Viewer: View UCAM university notices with PDF preview. Desktop: modal with split-pane layout (notice list + embedded PDF iframe with Open/Download). Mobile: slide-out sidebar with notice list (tap to open PDF in new tab). On-demand loading via Vercel serverless backend (`b1t-acad-backend.vercel.app`). 7-day localStorage cache for notice data. New files: `js/notice.js`, `css/notice.css`. |
 
 ---
 

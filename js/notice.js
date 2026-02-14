@@ -6,7 +6,7 @@ const NoticeViewer = {
     // Configuration
     API_BASE: 'https://b1t-acad-backend.vercel.app',
     CACHE_KEY: 'b1tSched_notices',
-    CACHE_TTL: 24 * 60 * 60 * 1000, // 24 hours in milliseconds
+    CACHE_TTL: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
 
     // State
     noticesLoaded: false,
