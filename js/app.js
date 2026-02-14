@@ -40,6 +40,7 @@ const App = {
     this.setupTaskEventListeners();
     this.setupEventsSidebarListeners();
     NoticeViewer.init();
+    UI.initPdfViewer();
     this.setupAdminEventListeners();
     this.setupUserManagementListeners();
 

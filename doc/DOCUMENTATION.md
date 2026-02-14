@@ -34,7 +34,7 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **Task Editing** - Users can edit their own tasks; admins can edit all tasks; Course is required field
 - **Event Calendar** - Track upcoming academic events with basic markdown, clickable links, collapsible descriptions (2-line truncation), and department scope badge (ALL/CSE/etc.)
 - **Event Editing** - Admins can edit all events; CRs can edit/delete their own events
-- **Resource Links** - Quick access to department-specific resources
+- **Resource Links** - Quick access to department-specific resources with built-in PDF viewer (desktop: Google Docs Viewer in modal; mobile: opens in new tab)
 - **Responsive Design** - Works on desktop, tablet, and mobile
 - **Maroon Theme** - Professional dark maroon and off-white color scheme
 - **Admin Features** - Task reset, task/event delete, event creation
@@ -211,7 +211,7 @@ b1t-Sched/
 │   ├── dashboard.css            # Dashboard layout, modals, admin controls
 │   ├── navbar.css               # Navigation bar styles
 │   ├── user-details-card.css    # User profile card styles
-│   ├── notice.css               # Notice viewer modal, sidebar, PDF panel styles
+│   ├── notice.css               # Notice viewer modal, sidebar, PDF panel styles; Quick Links PDF viewer modal
 │   ├── responsive.css           # Mobile/tablet breakpoints
 │   ├── buttons.css              # Button variations
 │   ├── drop-down.css            # Dropdown menu styles
@@ -452,7 +452,10 @@ const db = firebase.firestore();   // Firestore instance
 | `showMessage(elementId, message, type)` | string, string, string | Display message (error/success/info) |
 | `hideMessage(elementId)` | string | Hide message element |
 | `updateUserDetailsCard(email, dept, sem, section)` | strings | Update navbar user card |
-| `renderResourceLinks(links)` | array | Render resource link cards |
+| `renderResourceLinks(links)` | array | Render resource link cards; detects `.pdf` URLs and intercepts clicks (desktop: opens PDF viewer modal; mobile: opens in new tab) |
+| `initPdfViewer()` | - | Initialize PDF viewer modal: close button and backdrop click listeners |
+| `openPdfViewer(url, title)` | string, string | Open PDF in viewer modal using Google Docs Viewer iframe |
+| `closePdfViewer()` | - | Close PDF viewer modal and clear iframe |
 | `renderTasks(tasks, userCompletions, isAdmin, isCR, currentUserId)` | array, object, boolean, boolean, string | Render task cards with checkboxes, collapsible descriptions, vertical edit/delete buttons |
 | `renderOldTasks(tasks)` | array | Render old tasks (past 12h grace period) with completion status |
 | `renderEvents(events, isAdmin)` | array, boolean | Render event cards with edit/delete buttons |
@@ -644,7 +647,7 @@ dashboard.css       → Dashboard Layout, Modals, Admin Controls
     ↓
 navbar.css          → Navigation Specific
 user-details-card.css → User Card Specific
-notice.css          → Notice Viewer (Modal + Sidebar + PDF panel)
+notice.css          → Notice Viewer (Modal + Sidebar + PDF panel) + Quick Links PDF Viewer Modal
     ↓
 responsive.css      → Media Queries
 ```
@@ -1154,6 +1157,7 @@ Router.onRouteChange((routeName) => {
 | 2.14.1 | Feb 2026 | Bugfix: No-deadline tasks now correctly stay in Pending Tasks instead of being moved to Old Tasks. Fixed `createTask()` and `updateTask()` to store `null` instead of epoch timestamp when no deadline is set. Fixed `resetOldTasks()` to skip no-deadline tasks. |
 | 2.15.0 | Feb 2026 | Events UI: collapsible descriptions (2-line truncation with "Show more" toggle), department scope badge (ALL/CSE/etc.), "Added by Admin/CR" label. CR event privileges: CRs can create events for their own department, edit/delete their own events. FAQ section: collapsible accordion at bottom of page (how the site works, user roles, profile settings). Updated Firestore security rules for CR event access. |
 | 2.16.0 | Feb 2026 | Notice Viewer: View UCAM university notices with PDF preview. Desktop: modal with split-pane layout (notice list + embedded PDF iframe with Open/Download). Mobile: slide-out sidebar with notice list (tap to open PDF in new tab). On-demand loading via Vercel serverless backend (`b1t-acad-backend.vercel.app`). 7-day localStorage cache for notice data. New files: `js/notice.js`, `css/notice.css`. |
+| 2.17.0 | Feb 2026 | Quick Links PDF Viewer: Resource links pointing to `.pdf` files now open in an in-page viewer modal (Google Docs Viewer in iframe) with Open-in-Tab and Download buttons. Mobile: PDF links open directly in a new tab. New HTML modal (`#pdf-viewer-modal`) in `index.html`, new methods (`initPdfViewer`, `openPdfViewer`, `closePdfViewer`) in `ui.js`, PDF viewer styles in `notice.css`, init wired in `app.js`. |
 
 ---
 
@@ -1167,5 +1171,5 @@ Router.onRouteChange((routeName) => {
 
 ---
 
-*Documentation last updated: February 14, 2026*
-*Version: 2.16.0*
+*Documentation last updated: February 15, 2026*
+*Version: 2.17.0*

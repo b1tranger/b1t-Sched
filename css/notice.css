@@ -386,3 +386,48 @@
         max-height: 30vh;
     }
 }
+
+/* ============================================
+   PDF VIEWER MODAL (Quick Links)
+   ============================================ */
+
+.pdf-viewer-modal-content {
+    max-width: 900px;
+    max-height: 85vh;
+    width: 90vw;
+}
+
+.pdf-viewer-modal-body {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+
+.pdf-viewer-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid var(--border-light);
+    background-color: var(--bg-lighter);
+}
+
+.pdf-viewer-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.pdf-viewer-actions .btn {
+    font-size: var(--font-xs);
+    padding: 0.35rem 0.75rem;
+}
+
+.pdf-viewer-frame {
+    flex: 1;
+    width: 100%;
+    border: none;
+    min-height: 70vh;
+    background-color: var(--bg-lighter);
+}

@@ -57,13 +57,89 @@ const UI = {
       return;
     }
 
-    container.innerHTML = links.map(link => `
+    container.innerHTML = links.map(link => {
+      const isPdf = /\.pdf(\?.*)?$/i.test(link.url);
+      if (isPdf) {
+        return `
+      <a href="${link.url}" class="resource-link-card" data-pdf-url="${link.url}" data-pdf-title="${link.title}">
+        <div class="resource-icon">${link.icon}</div>
+        <h3>${link.title}</h3>
+        <p>${link.description}</p>
+      </a>
+    `;
+      }
+      return `
       <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="resource-link-card">
         <div class="resource-icon">${link.icon}</div>
         <h3>${link.title}</h3>
         <p>${link.description}</p>
       </a>
-    `).join('');
+    `;
+    }).join('');
+
+    // Intercept PDF link clicks
+    container.querySelectorAll('.resource-link-card[data-pdf-url]').forEach(card => {
+      card.addEventListener('click', (e) => {
+        e.preventDefault();
+        const pdfUrl = card.dataset.pdfUrl;
+        const pdfTitle = card.dataset.pdfTitle || 'PDF Viewer';
+
+        // Mobile: open in new tab (same as Notice PDFs)
+        if (window.innerWidth <= 768) {
+          window.open(pdfUrl, '_blank');
+          return;
+        }
+
+        // Desktop: open in PDF viewer modal
+        this.openPdfViewer(pdfUrl, pdfTitle);
+      });
+    });
+  },
+
+  // ──────────────────────────────────────────────
+  // PDF VIEWER (for Quick Links)
+  // ──────────────────────────────────────────────
+
+  initPdfViewer() {
+    const closeBtn = document.getElementById('close-pdf-viewer-modal');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => this.closePdfViewer());
+    }
+
+    const modal = document.getElementById('pdf-viewer-modal');
+    if (modal) {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) this.closePdfViewer();
+      });
+    }
+  },
+
+  openPdfViewer(url, title) {
+    const titleEl = document.getElementById('pdf-viewer-title');
+    const openBtn = document.getElementById('pdf-viewer-open');
+    const downloadBtn = document.getElementById('pdf-viewer-download');
+    const frame = document.getElementById('pdf-viewer-frame');
+
+    if (titleEl) titleEl.textContent = title;
+    if (openBtn) openBtn.href = url;
+    if (downloadBtn) {
+      downloadBtn.href = url;
+      // Extract filename from URL
+      const filename = url.split('/').pop().split('?')[0] || 'document.pdf';
+      downloadBtn.download = filename;
+    }
+    if (frame) {
+      // Use Google Docs Viewer to render PDFs inline (avoids download prompts from external servers)
+      frame.src = `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}`;
+    }
+
+    this.showModal('pdf-viewer-modal');
+  },
+
+  closePdfViewer() {
+    const frame = document.getElementById('pdf-viewer-frame');
+    if (frame) frame.src = '';
+    this.hideModal('pdf-viewer-modal');
   },
 
   // Render tasks with checkboxes

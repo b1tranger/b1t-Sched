@@ -700,6 +700,34 @@
                 </div>
             </div>
 
+            <!-- PDF Viewer Modal (for Quick Links) -->
+            <div id="pdf-viewer-modal" class="modal" style="display: none;">
+                <div class="modal-content pdf-viewer-modal-content">
+                    <div class="modal-header">
+                        <h2 class="modal-title">
+                            <i class="fas fa-file-pdf"></i>
+                            <span id="pdf-viewer-title">PDF Viewer</span>
+                        </h2>
+                        <button id="close-pdf-viewer-modal" class="btn btn-icon">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body pdf-viewer-modal-body">
+                        <div class="pdf-viewer-toolbar">
+                            <div class="pdf-viewer-actions">
+                                <a id="pdf-viewer-open" class="btn btn-secondary btn-sm" href="#" target="_blank">
+                                    <i class="fas fa-external-link-alt"></i> Open in Tab
+                                </a>
+                                <a id="pdf-viewer-download" class="btn btn-primary btn-sm" href="#" download>
+                                    <i class="fas fa-download"></i> Download
+                                </a>
+                            </div>
+                        </div>
+                        <iframe id="pdf-viewer-frame" class="pdf-viewer-frame" title="PDF Viewer"></iframe>
+                    </div>
+                </div>
+            </div>
+
             <!-- Profile Settings View -->
             <div id="profile-settings-view" class="view" style="display: none;">
                 <div class="profile-settings-container">
