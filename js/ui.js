@@ -84,9 +84,9 @@ const UI = {
         const pdfUrl = card.dataset.pdfUrl;
         const pdfTitle = card.dataset.pdfTitle || 'PDF Viewer';
 
-        // Mobile: open in new tab (same as Notice PDFs)
+        // Mobile: open via Google Docs Viewer in new tab
         if (window.innerWidth <= 768) {
-          window.open(pdfUrl, '_blank');
+          window.open(`https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(pdfUrl)}`, '_blank');
           return;
         }
 
