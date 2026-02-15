@@ -357,6 +357,18 @@
     /* Enable ellipsis */
 }
 
+.item-course-badge {
+    display: inline-block;
+    background-color: var(--classroom-bg-secondary);
+    color: var(--classroom-text-secondary);
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin-bottom: 4px;
+    border: 1px solid var(--classroom-border);
+}
+
 .item-title {
     font-weight: 500;
     color: var(--classroom-text);

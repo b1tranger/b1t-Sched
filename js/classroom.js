@@ -138,9 +138,12 @@ const Classroom = {
         if (!this.accessToken) {
             this.renderLoginState();
         } else {
-            // Check if we have courses loaded, if not load them
+            // Load all assignments from all courses
             if (this.courses.length === 0) {
-                this.fetchCourses();
+                this.fetchCoursesAndLoadAll();
+            } else {
+                // Already have courses, load all assignments
+                this.loadAllAssignments();
             }
         }
     },
@@ -222,6 +225,127 @@ const Classroom = {
             console.error(error);
             this.renderError('Failed to load courses. Please try logging in again.');
             this.accessToken = null; // Reset token on failure
+        }
+    },
+
+    async fetchCoursesAndLoadAll() {
+        this.renderLoading('Loading courses...');
+
+        try {
+            const response = await fetch('https://classroom.googleapis.com/v1/courses?courseStates=ACTIVE', {
+                headers: {
+                    'Authorization': `Bearer ${this.accessToken}`
+                }
+            });
+
+            if (!response.ok) throw new Error('Failed to fetch courses');
+
+            const data = await response.json();
+            this.courses = data.courses || [];
+
+            // After loading courses, load all assignments
+            await this.loadAllAssignments();
+
+        } catch (error) {
+            console.error(error);
+            this.renderError('Failed to load courses. Please try logging in again.');
+            this.accessToken = null; // Reset token on failure
+        }
+    },
+
+    async loadAllAssignments() {
+        this.currentView = 'todo';
+        this.renderLoading('Loading assignments from all courses...');
+
+        try {
+            const allAssignments = [];
+
+            // Fetch assignments from all courses
+            for (const course of this.courses) {
+                try {
+                    const response = await fetch(`https://classroom.googleapis.com/v1/courses/${course.id}/courseWork?orderBy=dueDate desc`, {
+                        headers: {
+                            'Authorization': `Bearer ${this.accessToken}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        const courseWork = data.courseWork || [];
+                        
+                        // Add course info to each assignment
+                        courseWork.forEach(work => {
+                            work.courseName = course.name;
+                            work.courseId = course.id;
+                        });
+
+                        allAssignments.push(...courseWork);
+                    }
+                } catch (err) {
+                    console.warn(`Failed to load assignments for course ${course.name}:`, err);
+                }
+            }
+
+            // Sort by due date (most recent first)
+            allAssignments.sort((a, b) => {
+                if (!a.dueDate) return 1;
+                if (!b.dueDate) return -1;
+                const dateA = new Date(a.dueDate.year, a.dueDate.month - 1, a.dueDate.day);
+                const dateB = new Date(b.dueDate.year, b.dueDate.month - 1, b.dueDate.day);
+                return dateA - dateB;
+            });
+
+            this.renderAllItems(allAssignments, 'todo');
+
+        } catch (error) {
+            console.error(error);
+            this.renderError('Failed to load assignments.');
+        }
+    },
+
+    async loadAllAnnouncements() {
+        this.currentView = 'notifications';
+        this.renderLoading('Loading announcements from all courses...');
+
+        try {
+            const allAnnouncements = [];
+
+            // Fetch announcements from all courses
+            for (const course of this.courses) {
+                try {
+                    const response = await fetch(`https://classroom.googleapis.com/v1/courses/${course.id}/announcements?orderBy=updateTime desc`, {
+                        headers: {
+                            'Authorization': `Bearer ${this.accessToken}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        const announcements = data.announcements || [];
+                        
+                        // Add course info to each announcement
+                        announcements.forEach(announcement => {
+                            announcement.courseName = course.name;
+                            announcement.courseId = course.id;
+                        });
+
+                        allAnnouncements.push(...announcements);
+                    }
+                } catch (err) {
+                    console.warn(`Failed to load announcements for course ${course.name}:`, err);
+                }
+            }
+
+            // Sort by update time (most recent first)
+            allAnnouncements.sort((a, b) => {
+                return new Date(b.updateTime) - new Date(a.updateTime);
+            });
+
+            this.renderAllItems(allAnnouncements, 'notifications');
+
+        } catch (error) {
+            console.error(error);
+            this.renderError('Failed to load announcements.');
         }
     },
 
@@ -379,6 +503,92 @@ const Classroom = {
         });
     },
 
+    renderAllItems(items, viewType) {
+        // Header with Toggle
+        const headerHtml = `
+            <div class="classroom-view-header">
+                <div style="display: flex; align-items: center;">
+                    <span style="font-weight: 500; font-size: 1.1rem;">
+                        All Courses
+                    </span>
+                </div>
+                <div class="classroom-view-toggle">
+                    <button class="view-toggle-btn ${viewType === 'todo' ? 'active' : ''}" onclick="Classroom.switchView('todo')">
+                        To-Do
+                    </button>
+                    <button class="view-toggle-btn ${viewType === 'notifications' ? 'active' : ''}" onclick="Classroom.switchView('notifications')">
+                        Notices
+                    </button>
+                </div>
+            </div>
+        `;
+
+        let listHtml = '';
+        if (items.length === 0) {
+            listHtml = `
+                <div class="classroom-empty">
+                    <i class="fas fa-${viewType === 'todo' ? 'clipboard-check' : 'bullhorn'}"></i>
+                    <p>No ${viewType === 'todo' ? 'assignments' : 'announcements'} found.</p>
+                </div>
+            `;
+        } else {
+            listHtml = `
+                <div class="classroom-list-container">
+                    ${items.map(item => this.renderUnifiedListItem(item, viewType)).join('')}
+                </div>
+            `;
+        }
+
+        const fullHtml = headerHtml + `<div style="flex: 1; overflow-y: auto;">${listHtml}</div>`;
+
+        const containers = this.getContainers();
+        containers.forEach(container => {
+            if (container) container.innerHTML = fullHtml;
+        });
+    },
+
+    renderUnifiedListItem(item, type) {
+        let title, date, link, icon, snippet, courseName;
+
+        courseName = item.courseName || 'Unknown Course';
+
+        if (type === 'todo') {
+            title = item.title;
+            // Format due date if exists
+            if (item.dueDate) {
+                const due = new Date(item.dueDate.year, item.dueDate.month - 1, item.dueDate.day, item.dueTime?.hours || 23, item.dueTime?.minutes || 59);
+                date = `Due: ${Utils.formatDateShort(due)}`;
+            } else {
+                date = 'No due date';
+            }
+            link = item.alternateLink;
+            icon = 'clipboard-list';
+            snippet = item.description ? Utils.truncate(item.description, 60) : '';
+        } else {
+            title = 'Announcement';
+            date = Utils.formatDateShort(new Date(item.updateTime));
+            link = item.alternateLink;
+            icon = 'bullhorn';
+            snippet = item.text ? Utils.truncate(item.text, 80) : 'No content';
+        }
+
+        return `
+            <a href="${link}" target="_blank" class="classroom-item">
+                <div class="item-icon ${type === 'todo' ? 'assignment' : 'announcement'}">
+                    <i class="fas fa-${icon}"></i>
+                </div>
+                <div class="item-content">
+                    <div class="item-course-badge">${courseName}</div>
+                    <h4 class="item-title">${title}</h4>
+                    <div class="item-meta">
+                        <span class="item-date">${date}</span>
+                    </div>
+                    ${snippet ? `<div class="item-snippet">${snippet}</div>` : ''}
+                </div>
+            </a>
+        `;
+    },
+
     openCourse(courseId) {
         this.currentCourseId = courseId;
         this.currentView = 'todo'; // Default view
@@ -388,9 +598,9 @@ const Classroom = {
     switchView(view) {
         this.currentView = view;
         if (view === 'todo') {
-            this.fetchCourseWork(this.currentCourseId);
+            this.loadAllAssignments();
         } else {
-            this.fetchAnnouncements(this.currentCourseId);
+            this.loadAllAnnouncements();
         }
     },
 
