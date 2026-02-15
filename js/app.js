@@ -47,6 +47,9 @@ const App = {
     // Initialize Profile module
     await Profile.init();
 
+    // Initialize Google Classroom
+    Classroom.init();
+
     // Handle route-specific data loading
     Router.onRouteChange(async (route) => {
       if (route === 'profile-settings') {
