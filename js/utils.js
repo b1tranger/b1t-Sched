@@ -6,29 +6,29 @@ const Utils = {
   // Format date to readable string
   formatDate(date) {
     if (!date) return 'No date';
-    
+
     const d = date instanceof Date ? date : new Date(date);
-    const options = { 
-      year: 'numeric', 
-      month: 'short', 
+    const options = {
+      year: 'numeric',
+      month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
     };
-    
+
     return d.toLocaleDateString('en-US', options);
   },
 
   // Format date to short form
   formatDateShort(date) {
     if (!date) return 'No date';
-    
+
     const d = date instanceof Date ? date : new Date(date);
-    const options = { 
-      month: 'short', 
+    const options = {
+      month: 'short',
       day: 'numeric'
     };
-    
+
     return d.toLocaleDateString('en-US', options);
   },
 
@@ -131,10 +131,17 @@ const Utils = {
   // Convert URLs in text to clickable links
   linkify(text) {
     if (!text) return '';
-    // URL regex pattern
-    const urlPattern = /(https?:\/\/[^\s<>"'\)\]]+)/g;
-    // Replace URLs with anchor tags
-    return text.replace(urlPattern, '<a href="$1" target="_blank" rel="noopener noreferrer" class="description-link">$1</a>');
+    // URL regex pattern (modified to support www.)
+    const urlPattern = /((https?:\/\/|www\.)[^\s<>"'\)\]]+)/g;
+
+    // Replace URLs with anchor tags, ensuring http:// for www. links
+    return text.replace(urlPattern, (match) => {
+      let href = match;
+      if (!/^https?:\/\//i.test(href)) {
+        href = 'https://' + href;
+      }
+      return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="description-link">${match}</a>`;
+    });
   },
 
   // Apply basic markdown formatting
@@ -155,7 +162,7 @@ const Utils = {
   // Escape HTML to prevent XSS, apply markdown, then linkify
   escapeAndLinkify(text) {
     if (!text) return '';
-    
+
     // Extract markdown links first and replace with placeholders
     const markdownLinks = [];
     let result = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, linkText, url) => {
@@ -163,7 +170,7 @@ const Utils = {
       markdownLinks.push({ text: linkText, url: url });
       return placeholder;
     });
-    
+
     // Escape HTML special characters
     result = result
       .replace(/&/g, '&amp;')
@@ -171,16 +178,16 @@ const Utils = {
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
-    
+
     // Apply basic markdown formatting (bold, italic, code - not links)
     result = result
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*([^*]+)\*/g, '<em>$1</em>')
       .replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
-    
+
     // Convert plain URLs to clickable links
     result = this.linkify(result);
-    
+
     // Restore markdown links as anchor tags
     markdownLinks.forEach((link, index) => {
       const escapedText = link.text
@@ -192,7 +199,7 @@ const Utils = {
         `<a href="${link.url}" target="_blank" rel="noopener noreferrer">${escapedText}</a>`
       );
     });
-    
+
     // Convert line breaks to <br>
     result = result.replace(/\n/g, '<br>');
     return result;

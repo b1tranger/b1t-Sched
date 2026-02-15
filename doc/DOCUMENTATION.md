@@ -1163,6 +1163,7 @@ Router.onRouteChange((routeName) => {
 | 2.16.0 | Feb 2026 | Notice Viewer: View UCAM university notices with PDF preview. Desktop: modal with split-pane layout (notice list + embedded PDF iframe with Open/Download). Mobile: slide-out sidebar with notice list (tap to open PDF in new tab). On-demand loading via Vercel serverless backend (`b1t-acad-backend.vercel.app`). 7-day localStorage cache for notice data. New files: `js/notice.js`, `css/notice.css`. |
 | 2.17.0 | Feb 2026 | Quick Links PDF Viewer: Resource links pointing to `.pdf` files now open in an in-page viewer modal (Google Docs Viewer in iframe) with Open-in-Tab and Download buttons. Mobile: PDF links open directly in a new tab. New HTML modal (`#pdf-viewer-modal`) in `index.html`, new methods (`initPdfViewer`, `openPdfViewer`, `closePdfViewer`) in `ui.js`, PDF viewer styles in `notice.css`, init wired in `app.js`. |
 | 2.18.0 | Feb 2026 | New Features: Task Filtering (by type), Global Contribution List (with toggle for all-department view), Total User Counter (live badge), and Mobile UI fixes (login scroll, zoom). |
+| 2.18.0.1 | Feb 2026 | Reverted back to "open links in new tab" for Pending Tasks and Events descriptions. |
 
 ---
 
