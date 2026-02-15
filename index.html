@@ -18,6 +18,7 @@
     <link rel="stylesheet" href="css/user-details-card.css">
     <link rel="stylesheet" href="css/dashboard.css">
     <link rel="stylesheet" href="css/notice.css">
+    <link rel="stylesheet" href="css/classroom.css">
     <link rel="stylesheet" href="css/responsive.css">
 
     <!-- Font Awesome for icons -->
@@ -47,6 +48,7 @@
                         <li><a href="https://b1tacad.netlify.app/departments" target="_blank" rel="noopener noreferrer"
                                 class="nav-link">Resources</a></li>
                         <li><a href="#" id="notice-nav-btn" class="nav-link">Notice</a></li>
+                        <li><a href="#" id="classroom-nav-btn" class="nav-link">Classroom</a></li>
                     </ul>
                 </div>
                 <div class="nav-right">
@@ -432,6 +434,48 @@
                     </div>
                 </div>
                 <div id="notice-overlay" class="notice-overlay mobile-only"></div>
+
+                <!-- Google Classroom Toggle (Floating Action Button) -->
+                <!-- Google Classroom Toggle (Mobile Sidebar Tab) -->
+                <div id="classroom-toggle" class="classroom-toggle mobile-only">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                </div>
+
+                <!-- Google Classroom Sidebar (Mobile) -->
+                <div id="classroom-sidebar" class="classroom-sidebar mobile-only">
+                    <div class="classroom-header">
+                        <h3><i class="fas fa-chalkboard"></i> Classroom</h3>
+                        <button id="close-classroom-sidebar" class="classroom-close-btn">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div id="classroom-content-mobile" class="classroom-content">
+                        <!-- Content loaded dynamically -->
+                        <div class="classroom-auth-container">
+                            <p class="classroom-loading">Initializing...</p>
+                        </div>
+                    </div>
+                </div>
+                <div id="classroom-overlay" class="classroom-overlay mobile-only"></div>
+
+            </div>
+
+            <!-- Google Classroom Modal (Desktop) -->
+            <div id="classroom-modal" class="modal" style="display: none;">
+                <div class="modal-content classroom-modal-content">
+                    <div class="classroom-modal-header">
+                        <h2 class="classroom-modal-title"><i class="fas fa-chalkboard"></i> Google Classroom</h2>
+                        <button id="close-classroom-modal" class="btn btn-icon" style="color: white;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div id="classroom-content-desktop" class="classroom-modal-body">
+                        <!-- Content loaded dynamically -->
+                        <div class="classroom-auth-container">
+                            <p class="classroom-loading">Initializing...</p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Add Task Modal -->
@@ -1083,6 +1127,9 @@
         </footer>
     </div>
 
+    <!-- Google Identity Services (for Classroom OAuth) -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
     <!-- Firebase SDKs (CDN) -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -1097,6 +1144,7 @@
     <script src="js/profile.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/notice.js"></script>
+    <script src="js/classroom.js"></script>
     <script src="js/app.js"></script>
 </body>
 
