@@ -24,9 +24,23 @@ const Classroom = {
         // Wait for Google Identity Services script to load
         if (typeof google === 'undefined' || !google.accounts || !google.accounts.oauth2) {
             console.warn('Google Identity Services not loaded yet. Retrying in 500ms...');
-            setTimeout(() => this.init(), 500);
-            return;
+            
+            // Retry up to 10 times
+            if (!this.initRetryCount) this.initRetryCount = 0;
+            this.initRetryCount++;
+            
+            if (this.initRetryCount <= 10) {
+                console.log(`Retry attempt ${this.initRetryCount}/10`);
+                setTimeout(() => this.init(), 500);
+                return;
+            } else {
+                console.error('Failed to load Google Identity Services after 10 retries');
+                this.renderError('Google Classroom is currently unavailable. Please check your internet connection and refresh the page.');
+                return;
+            }
         }
+
+        console.log('Google Identity Services detected successfully');
 
         // Initialize Token Client
         this.tokenClient = google.accounts.oauth2.initTokenClient({
@@ -44,28 +58,40 @@ const Classroom = {
             },
         });
 
+        console.log('Token client initialized successfully');
+
         this.setupEventListeners();
         this.isInitialized = true;
         this.renderInitialState();
+        console.log('Google Classroom module initialized successfully');
     },
 
     setupEventListeners() {
-        // Toggle Buttons (Desktop & Mobile)
-        // Toggle Buttons (Desktop & Mobile)
+        console.log('Setting up Classroom event listeners...');
+        
+        // Mobile Toggle Button
         const toggleBtn = document.getElementById('classroom-toggle');
-        const navBtn = document.getElementById('classroom-nav-btn');
-
         if (toggleBtn) {
+            console.log('Attaching click listener to mobile toggle button');
             toggleBtn.addEventListener('click', () => {
+                console.log('Mobile toggle clicked');
                 this.openClassroomParams();
             });
+        } else {
+            console.warn('Mobile toggle button (classroom-toggle) not found in DOM');
         }
 
+        // Desktop Navigation Button
+        const navBtn = document.getElementById('classroom-nav-btn');
         if (navBtn) {
+            console.log('Attaching click listener to desktop nav button');
             navBtn.addEventListener('click', (e) => {
                 e.preventDefault();
+                console.log('Desktop nav button clicked');
                 this.openClassroomParams();
             });
+        } else {
+            console.warn('Desktop nav button (classroom-nav-btn) not found in DOM');
         }
 
         // Close Buttons
@@ -73,9 +99,28 @@ const Classroom = {
         const closeDesktop = document.getElementById('close-classroom-modal');
         const overlay = document.getElementById('classroom-overlay');
 
-        if (closeMobile) closeMobile.addEventListener('click', () => this.toggleSidebar(false));
-        if (closeDesktop) closeDesktop.addEventListener('click', () => this.toggleModal(false));
-        if (overlay) overlay.addEventListener('click', () => this.toggleSidebar(false));
+        if (closeMobile) {
+            closeMobile.addEventListener('click', () => this.toggleSidebar(false));
+            console.log('Attached listener to close-classroom-sidebar');
+        } else {
+            console.warn('close-classroom-sidebar not found in DOM');
+        }
+        
+        if (closeDesktop) {
+            closeDesktop.addEventListener('click', () => this.toggleModal(false));
+            console.log('Attached listener to close-classroom-modal');
+        } else {
+            console.warn('close-classroom-modal not found in DOM');
+        }
+        
+        if (overlay) {
+            overlay.addEventListener('click', () => this.toggleSidebar(false));
+            console.log('Attached listener to classroom-overlay');
+        } else {
+            console.warn('classroom-overlay not found in DOM');
+        }
+        
+        console.log('Event listeners setup complete');
     },
 
     // =========================================
