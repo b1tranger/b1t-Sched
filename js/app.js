@@ -793,6 +793,12 @@ const App = {
       // Show blocked user warning if applicable
       UI.toggleBlockedUserMode(this.isBlocked);
 
+      // Show footer and contributions section
+      const appFooter = document.getElementById('app-footer');
+      const contribSection = document.getElementById('contributions-section');
+      if (appFooter) appFooter.style.display = 'block';
+      if (contribSection) contribSection.style.display = 'block';
+
       // Navigate based on current route
       if (Router.getCurrentRoute() === 'profile-settings') {
         await Profile.loadProfile();
@@ -820,8 +826,12 @@ const App = {
 
     // Hide footer when not logged in
     const appFooter = document.getElementById('app-footer');
+    const contribSection = document.getElementById('contributions-section');
     if (appFooter) {
       appFooter.style.display = 'none';
+    }
+    if (contribSection) {
+      contribSection.style.display = 'none';
     }
   },
 
