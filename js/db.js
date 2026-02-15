@@ -103,6 +103,26 @@ const DB = {
     }
   },
 
+  // Get all active tasks (across all departments/semesters) for global contributions
+  async getAllActiveTasks() {
+    try {
+      const snapshot = await db.collection('tasks')
+        .where('status', '==', 'active')
+        .get();
+
+      const tasks = [];
+      snapshot.forEach(doc => {
+        tasks.push({ id: doc.id, ...doc.data() });
+      });
+
+      console.log(`Found ${tasks.length} active tasks globally`);
+      return { success: true, data: tasks };
+    } catch (error) {
+      console.error('Error getting all active tasks:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
   // Create a new task (user-added)
   async createTask(userId, userEmail, data) {
     try {

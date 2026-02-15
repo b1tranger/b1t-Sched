@@ -45,6 +45,9 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **Profile Change Cooldown** - Users can only change profile once per 30 days (anti-spam)
 - **Two-Column Layout** - Events sidebar on desktop, slide-out panel (40vw) on mobile
 - **Notice Viewer** - View UCAM university notices with PDF preview (desktop modal with split-pane layout; mobile slide-out sidebar), powered by Vercel serverless backend with local caching
+- **Task Filtering** - Filter pending tasks by type (Assignment, Homework, Exam, Project, Presentation, Other)
+- **Global Contributions** - View a leaderboard of top contributors (group-specific or global across all departments)
+- **User Counter** - Live count of total registered users displayed on the dashboard
 - **FAQ Section** - Collapsible accordion explaining how the site works, user roles, and profile settings
 - **Footer with Credits** - Source code link and dynamic copyright year
 
@@ -339,6 +342,7 @@ const db = firebase.firestore();   // Firestore instance
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
 | `getTasks(department, semester, section)` | string, string, string | `{success, data/error}` | Get pending tasks (includes overdue within 12h grace period and no-deadline tasks) |
+| `getAllActiveTasks()` | - | `{success, data/error}` | Get all active tasks across all departments (for global contributions) |
 | `createTask(userId, userEmail, data)` | string, string, object | `{success, id/error}` | Create new task. Deadline can be a timestamp or `null` ("No official Time limit") |
 | `updateTask(taskId, data)` | string, object | `{success, error?}` | Update existing task. Deadline can be changed between timestamp and `null` |
 | `getUserTaskCompletions(userId)` | string | `{success, data/error}` | Get user's completed tasks |
@@ -1158,6 +1162,7 @@ Router.onRouteChange((routeName) => {
 | 2.15.0 | Feb 2026 | Events UI: collapsible descriptions (2-line truncation with "Show more" toggle), department scope badge (ALL/CSE/etc.), "Added by Admin/CR" label. CR event privileges: CRs can create events for their own department, edit/delete their own events. FAQ section: collapsible accordion at bottom of page (how the site works, user roles, profile settings). Updated Firestore security rules for CR event access. |
 | 2.16.0 | Feb 2026 | Notice Viewer: View UCAM university notices with PDF preview. Desktop: modal with split-pane layout (notice list + embedded PDF iframe with Open/Download). Mobile: slide-out sidebar with notice list (tap to open PDF in new tab). On-demand loading via Vercel serverless backend (`b1t-acad-backend.vercel.app`). 7-day localStorage cache for notice data. New files: `js/notice.js`, `css/notice.css`. |
 | 2.17.0 | Feb 2026 | Quick Links PDF Viewer: Resource links pointing to `.pdf` files now open in an in-page viewer modal (Google Docs Viewer in iframe) with Open-in-Tab and Download buttons. Mobile: PDF links open directly in a new tab. New HTML modal (`#pdf-viewer-modal`) in `index.html`, new methods (`initPdfViewer`, `openPdfViewer`, `closePdfViewer`) in `ui.js`, PDF viewer styles in `notice.css`, init wired in `app.js`. |
+| 2.18.0 | Feb 2026 | New Features: Task Filtering (by type), Global Contribution List (with toggle for all-department view), Total User Counter (live badge), and Mobile UI fixes (login scroll, zoom). |
 
 ---
 
@@ -1172,4 +1177,4 @@ Router.onRouteChange((routeName) => {
 ---
 
 *Documentation last updated: February 15, 2026*
-*Version: 2.17.0*
+*Version: 2.18.0*

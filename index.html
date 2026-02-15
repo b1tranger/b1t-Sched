@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description" content="b1t-Sched - Academic Task Scheduler for Students">
     <title>b1t-Sched | Academic Task Scheduler</title>
 
@@ -77,9 +77,8 @@
                         <div class="auth-logo">
                             <img src="Social-Preview.webp" alt="b1t-Sched Logo" class="auth-logo-img">
                             <h1>b1t-Sched</h1>
-                            <p class="auth-subtitle">b1t-Sched is a web-based academic task scheduler designed for
-                                university students. It provides a personalized dashboard with tasks, events, and
-                                resource links filtered by the student's department, semester, and section.</p>
+                            <p class="auth-subtitle">A web-based academic task scheduler designed for
+                                university students.</p>
                         </div>
 
                         <!-- Login Form -->
@@ -239,6 +238,11 @@
 
             <!-- Dashboard View -->
             <div id="dashboard-view" class="view" style="display: none;">
+                <!-- Total User Counter (bottom-right) -->
+                <div id="total-user-counter" class="total-user-counter" style="display: none;">
+                    <i class="fas fa-users"></i>
+                    <span id="total-user-count">0</span>
+                </div>
                 <!-- Blocked User Banner -->
                 <div id="blocked-user-banner" class="blocked-user-banner" style="display: none;">
                     <i class="fas fa-exclamation-triangle"></i>
@@ -263,7 +267,7 @@
                                 class="resource-link-card external-resources-link mobile-only">
                                 <div class="resource-icon"><i class="fas fa-external-link-alt"></i></div>
                                 <h3>All Resources</h3>
-                                <p>Browse all academic resources department-wise</p>
+                                <!-- <p>Browse all academic resources department-wise</p> -->
                             </a>
                         </section>
 
@@ -295,7 +299,37 @@
                                 </p>
                             </div>
 
-                            <br>
+                            <!-- Task Type Filter -->
+                            <div class="task-filter-row">
+                                <label class="task-filter-label">
+                                    <input type="radio" name="task-filter" value="assignment">
+                                    <span>Assignment</span>
+                                </label>
+                                <label class="task-filter-label">
+                                    <input type="radio" name="task-filter" value="homework">
+                                    <span>Homework</span>
+                                </label>
+                                <label class="task-filter-label">
+                                    <input type="radio" name="task-filter" value="exam">
+                                    <span>Exam</span>
+                                </label>
+                                <label class="task-filter-label">
+                                    <input type="radio" name="task-filter" value="project">
+                                    <span>Project</span>
+                                </label>
+                                <label class="task-filter-label">
+                                    <input type="radio" name="task-filter" value="presentation">
+                                    <span>Presentation</span>
+                                </label>
+                                <label class="task-filter-label">
+                                    <input type="radio" name="task-filter" value="other">
+                                    <span>Other</span>
+                                </label>
+                                <button id="clear-task-filter-btn" class="btn btn-sm btn-text task-filter-clear"
+                                    style="display: none;">
+                                    <i class="fas fa-times"></i> Clear
+                                </button>
+                            </div>
 
 
                             <div id="tasks-container" class="tasks-container">
@@ -342,9 +376,9 @@
                 </div>
 
                 <!-- Mobile Events Sidebar Toggle -->
-                <div id="events-toggle" class="events-toggle mobile-only">
+                <div id="events-toggle" class="events-toggle mobile-only" style="margin-top: -50px;">
                     <i class="fas fa-calendar-alt"></i>
-                    <span>Events</span>
+                    <!-- <span>Events</span> -->
                 </div>
 
                 <!-- Mobile Events Sidebar -->
@@ -371,9 +405,9 @@
                 <div id="events-overlay" class="events-overlay mobile-only"></div>
 
                 <!-- Mobile Notice Sidebar Toggle -->
-                <div id="notice-toggle" class="notice-toggle mobile-only">
+                <div id="notice-toggle" class="notice-toggle mobile-only" style="margin-top: -80px;">
                     <i class="fas fa-bullhorn"></i>
-                    <span>Notices</span>
+                    <!-- <span>Notices</span> -->
                 </div>
 
                 <!-- Mobile Notice Sidebar -->
@@ -993,6 +1027,46 @@
                     </div>
                 </details>
             </section>
+
+            <!-- Contributions Button -->
+            <div id="contributions-section" class="contributions-section">
+                <button id="contributions-btn" class="btn btn-secondary contributions-btn">
+                    <i class="fas fa-hands-helping"></i> Contributions
+                </button>
+            </div>
+
+            <!-- Contributions Modal -->
+            <div id="contributions-modal" class="modal" style="display: none;">
+                <div class="modal-content modal-content-md">
+                    <div class="modal-header">
+                        <h2 class="modal-title"><i class="fas fa-hands-helping"></i> Contributions</h2>
+
+                        <div class="contributions-toggle-wrapper">
+                            <label class="switch">
+                                <input type="checkbox" id="contributions-scope-toggle">
+                                <span class="slider round"></span>
+                            </label>
+                            <span class="toggle-label">Show All Depts</span>
+                        </div>
+
+                        <button id="close-contributions-modal" class="btn btn-icon">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="contributions-subtitle">People who have added tasks in your group</p>
+                        <div id="contributions-container" class="contributions-container">
+                            <!-- Contributions table will be rendered here -->
+                        </div>
+                        <div id="no-contributions-message" class="no-data-message compact" style="display: none;">
+                            <i class="fas fa-user-friends"></i>
+                            <p>No contributions yet.</p>
+                        </div>
+                        <br>
+                        <p class="contributions-subtitle">Note: clearing Old Tasks will reset this list</p>
+                    </div>
+                </div>
+            </div>
 
         </main>
 

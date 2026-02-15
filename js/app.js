@@ -948,6 +948,12 @@ const App = {
       UI.renderEvents(this.currentEvents, this.isAdmin, this.isCR, userId);
     }
 
+    // Setup new features listeners (safe to call multiple times as they replace old ones or we can check init)
+    this.setupTaskFilterListeners();
+
+    // Update total user count
+    this.updateUserCount();
+
     UI.showLoading(false);
   },
 
@@ -1094,6 +1100,185 @@ const App = {
         e.preventDefault();
         await this.handleEditEvent();
       });
+    }
+  },
+
+  setupTaskFilterListeners() {
+    // Task Filter Radio Buttons
+    const filterRadios = document.querySelectorAll('input[name="task-filter"]');
+    const clearFilterBtn = document.getElementById('clear-task-filter-btn');
+
+    filterRadios.forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        const type = e.target.value;
+        this.filterTasksByType(type);
+        if (clearFilterBtn) clearFilterBtn.style.display = 'inline-flex';
+      });
+    });
+
+    if (clearFilterBtn) {
+      clearFilterBtn.addEventListener('click', () => {
+        // Uncheck all radios
+        filterRadios.forEach(radio => radio.checked = false);
+        // Show all tasks
+        this.filterTasksByType('all');
+        clearFilterBtn.style.display = 'none';
+      });
+    }
+
+    // Contributions Button
+    const contributionsBtn = document.getElementById('contributions-btn');
+    if (contributionsBtn) {
+      contributionsBtn.addEventListener('click', () => {
+        this.showContributionsModal(false); // Default to local
+      });
+    }
+
+    // Contributions Toggle
+    const contributionsToggle = document.getElementById('contributions-scope-toggle');
+    if (contributionsToggle) {
+      contributionsToggle.addEventListener('change', (e) => {
+        this.showContributionsModal(e.target.checked);
+      });
+    }
+
+    // Contributions Modal Close
+    const closeContributionsModal = document.getElementById('close-contributions-modal');
+    if (closeContributionsModal) {
+      closeContributionsModal.addEventListener('click', () => UI.hideModal('contributions-modal'));
+    }
+  },
+
+  filterTasksByType(type) {
+    const tasks = document.querySelectorAll('.task-card');
+    let visibleCount = 0;
+
+    tasks.forEach(task => {
+      if (type === 'all' || task.dataset.type === type) {
+        task.style.display = 'block';
+        visibleCount++;
+      } else {
+        task.style.display = 'none';
+      }
+    });
+
+    // Handle no tasks message
+    const noTasksMsg = document.getElementById('no-tasks-message');
+    if (noTasksMsg) {
+      if (visibleCount === 0) {
+        noTasksMsg.style.display = 'block';
+        noTasksMsg.querySelector('p').textContent = type === 'all'
+          ? "No pending tasks! You're all caught up."
+          : `No pending ${type}s found.`;
+      } else {
+        noTasksMsg.style.display = 'none';
+      }
+    }
+  },
+
+  async showContributionsModal(isGlobal = false) {
+    const container = document.getElementById('contributions-container');
+    const noDataMsg = document.getElementById('no-contributions-message');
+    const toggle = document.getElementById('contributions-scope-toggle');
+    const subtitle = document.querySelector('.contributions-subtitle');
+
+    // Sync toggle state if called from button click
+    if (toggle && toggle.checked !== isGlobal) {
+      toggle.checked = isGlobal;
+    }
+
+    container.innerHTML = '<div class="loading-spinner" style="margin: 20px auto;"></div>';
+    UI.showModal('contributions-modal');
+
+    // Update subtitle based on scope
+    if (subtitle) {
+      subtitle.textContent = isGlobal
+        ? "Top contributors across all departments"
+        : "People who have added tasks in your group";
+    }
+
+    let tasksToCount = [];
+
+    if (isGlobal) {
+      const result = await DB.getAllActiveTasks();
+      if (result.success) {
+        tasksToCount = result.data;
+      } else {
+        console.error('Failed to load global tasks');
+        container.innerHTML = '<p class="text-danger">Failed to load global data.</p>';
+        return;
+      }
+    } else {
+      tasksToCount = this.currentTasks || [];
+    }
+
+    if (tasksToCount.length === 0) {
+      container.innerHTML = '';
+      noDataMsg.style.display = 'block';
+      return;
+    }
+
+    noDataMsg.style.display = 'none';
+
+    // Aggregate contributions
+    const contributions = {};
+    tasksToCount.forEach(task => {
+      // Use addedByName (name part of email) or 'Unknown'
+      const contributor = task.addedByName || 'Unknown';
+      contributions[contributor] = (contributions[contributor] || 0) + 1;
+    });
+
+    // Convert to array and sort
+    const sortedContributors = Object.entries(contributions)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
+
+    // Render table
+    let html = `
+      <table class="contributions-table">
+        <thead>
+          <tr>
+            <th class="rank-col">#</th>
+            <th>Contributor</th>
+            <th class="count-col">Tasks</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    html += sortedContributors.map((c, index) => `
+      <tr>
+        <td class="rank-col">${index + 1}</td>
+        <td>${c.name}</td>
+        <td class="count-col">${c.count}</td>
+      </tr>
+    `).join('');
+
+    html += `</tbody></table>`;
+    container.innerHTML = html;
+  },
+
+  async updateUserCount() {
+    const countEl = document.getElementById('total-user-count');
+    const counterContainer = document.getElementById('total-user-counter');
+
+    if (!countEl || !counterContainer) return;
+
+    try {
+      // Try to get all users to count them
+      // Note: This might fail if user doesn't have permissions
+      // If so, we just hide the counter
+      const result = await DB.getAllUsers();
+      if (result.success) {
+        countEl.textContent = result.data.length;
+        counterContainer.style.display = 'flex';
+      } else {
+        console.warn('Could not fetch user count (likely permission issue):', result.error);
+        counterContainer.style.display = 'none';
+      }
+    } catch (e) {
+      console.warn('Error fetching user count:', e);
+      counterContainer.style.display = 'none';
     }
   },
 

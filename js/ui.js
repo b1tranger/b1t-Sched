@@ -214,7 +214,7 @@ const UI = {
         </button>
       ` : '';
       return `
-        <div class="task-card ${statusClass}" data-task-id="${task.id}">
+        <div class="task-card ${statusClass}" data-task-id="${task.id}" data-type="${task.type || 'other'}">
           <div class="task-card-inner">
             <div class="task-checkbox-wrapper">
               <input type="checkbox" class="task-checkbox" 
