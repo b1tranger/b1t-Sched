@@ -6,6 +6,9 @@ const Classroom = {
     // Configuration
     CLIENT_ID: '142195418679-0ripc2dn76otvkvfnk6kdk2aitdd29rm.apps.googleusercontent.com',
     SCOPES: 'https://www.googleapis.com/auth/classroom.courses.readonly https://www.googleapis.com/auth/classroom.coursework.me.readonly https://www.googleapis.com/auth/classroom.announcements.readonly',
+    
+    // Date filter configuration (in months)
+    DATE_FILTER_MONTHS: 6, // Only show items from the last 6 months
 
     // State
     tokenClient: null,
@@ -259,9 +262,20 @@ const Classroom = {
 
         try {
             const allAssignments = [];
+            
+            // Set cutoff date based on configuration
+            const cutoffDate = new Date();
+            cutoffDate.setMonth(cutoffDate.getMonth() - this.DATE_FILTER_MONTHS);
+            console.log(`Filtering assignments from the last ${this.DATE_FILTER_MONTHS} months (since ${cutoffDate.toLocaleDateString()})`);
 
-            // Fetch assignments from all courses
+            // Fetch assignments from all ACTIVE courses only
             for (const course of this.courses) {
+                // Skip if course is not ACTIVE
+                if (course.courseState !== 'ACTIVE') {
+                    console.log(`Skipping non-active course: ${course.name} (${course.courseState})`);
+                    continue;
+                }
+
                 try {
                     const response = await fetch(`https://classroom.googleapis.com/v1/courses/${course.id}/courseWork?orderBy=dueDate desc`, {
                         headers: {
@@ -273,13 +287,28 @@ const Classroom = {
                         const data = await response.json();
                         const courseWork = data.courseWork || [];
                         
-                        // Add course info to each assignment
+                        // Filter by date and add course info to each assignment
                         courseWork.forEach(work => {
+                            // Check if assignment has a due date
+                            if (work.dueDate) {
+                                const dueDate = new Date(work.dueDate.year, work.dueDate.month - 1, work.dueDate.day);
+                                // Skip assignments older than cutoff date
+                                if (dueDate < cutoffDate) {
+                                    return;
+                                }
+                            } else if (work.creationTime) {
+                                // If no due date, check creation time
+                                const creationDate = new Date(work.creationTime);
+                                if (creationDate < cutoffDate) {
+                                    return;
+                                }
+                            }
+                            
                             work.courseName = course.name;
                             work.courseId = course.id;
+                            work.courseState = course.courseState;
+                            allAssignments.push(work);
                         });
-
-                        allAssignments.push(...courseWork);
                     }
                 } catch (err) {
                     console.warn(`Failed to load assignments for course ${course.name}:`, err);
@@ -295,6 +324,7 @@ const Classroom = {
                 return dateA - dateB;
             });
 
+            console.log(`Loaded ${allAssignments.length} assignments from ${this.courses.filter(c => c.courseState === 'ACTIVE').length} active courses`);
             this.renderAllItems(allAssignments, 'todo');
 
         } catch (error) {
@@ -309,9 +339,20 @@ const Classroom = {
 
         try {
             const allAnnouncements = [];
+            
+            // Set cutoff date based on configuration
+            const cutoffDate = new Date();
+            cutoffDate.setMonth(cutoffDate.getMonth() - this.DATE_FILTER_MONTHS);
+            console.log(`Filtering announcements from the last ${this.DATE_FILTER_MONTHS} months (since ${cutoffDate.toLocaleDateString()})`);
 
-            // Fetch announcements from all courses
+            // Fetch announcements from all ACTIVE courses only
             for (const course of this.courses) {
+                // Skip if course is not ACTIVE
+                if (course.courseState !== 'ACTIVE') {
+                    console.log(`Skipping non-active course: ${course.name} (${course.courseState})`);
+                    continue;
+                }
+
                 try {
                     const response = await fetch(`https://classroom.googleapis.com/v1/courses/${course.id}/announcements?orderBy=updateTime desc`, {
                         headers: {
@@ -323,13 +364,28 @@ const Classroom = {
                         const data = await response.json();
                         const announcements = data.announcements || [];
                         
-                        // Add course info to each announcement
+                        // Filter by date and add course info to each announcement
                         announcements.forEach(announcement => {
+                            // Check update time
+                            if (announcement.updateTime) {
+                                const updateDate = new Date(announcement.updateTime);
+                                // Skip announcements older than cutoff date
+                                if (updateDate < cutoffDate) {
+                                    return;
+                                }
+                            } else if (announcement.creationTime) {
+                                // Fallback to creation time
+                                const creationDate = new Date(announcement.creationTime);
+                                if (creationDate < cutoffDate) {
+                                    return;
+                                }
+                            }
+                            
                             announcement.courseName = course.name;
                             announcement.courseId = course.id;
+                            announcement.courseState = course.courseState;
+                            allAnnouncements.push(announcement);
                         });
-
-                        allAnnouncements.push(...announcements);
                     }
                 } catch (err) {
                     console.warn(`Failed to load announcements for course ${course.name}:`, err);
@@ -341,6 +397,7 @@ const Classroom = {
                 return new Date(b.updateTime) - new Date(a.updateTime);
             });
 
+            console.log(`Loaded ${allAnnouncements.length} announcements from ${this.courses.filter(c => c.courseState === 'ACTIVE').length} active courses`);
             this.renderAllItems(allAnnouncements, 'notifications');
 
         } catch (error) {

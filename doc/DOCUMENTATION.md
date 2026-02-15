@@ -35,6 +35,7 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **Event Calendar** - Track upcoming academic events with basic markdown, clickable links, collapsible descriptions (2-line truncation), and department scope badge (ALL/CSE/etc.)
 - **Event Editing** - Admins can edit all events; CRs can edit/delete their own events
 - **Resource Links** - Quick access to department-specific resources with built-in PDF viewer (desktop: Google Docs Viewer in modal; mobile: opens in new tab)
+- **Google Classroom Integration** - View all assignments and announcements from enrolled courses in a unified interface with OAuth authentication
 - **Responsive Design** - Works on desktop, tablet, and mobile
 - **Maroon Theme** - Professional dark maroon and off-white color scheme
 - **Admin Features** - Task reset, task/event delete, event creation
@@ -83,6 +84,12 @@ This section provides a comprehensive breakdown of every library, framework, ser
 | **firebase-firestore-compat** | 10.7.1 | NoSQL cloud database (Firestore) for users, tasks, events, resources, metadata | CDN (`gstatic.com`) |
 
 > **Note:** The project uses the Firebase **compat** (v8-style) SDK loaded via CDN `<script>` tags, not the modular v9+ import style.
+
+### Google APIs
+
+| Library | Version | Purpose | Delivery |
+|---------|---------|---------|----------|
+| **Google Identity Services** | Latest | OAuth 2.0 authentication for Google Classroom API access | CDN (`accounts.google.com/gsi/client`) |
 
 ### Icons & Fonts
 
@@ -215,6 +222,7 @@ b1t-Sched/
 │   ├── navbar.css               # Navigation bar styles
 │   ├── user-details-card.css    # User profile card styles
 │   ├── notice.css               # Notice viewer modal, sidebar, PDF panel styles; Quick Links PDF viewer modal
+│   ├── classroom.css            # Google Classroom integration styles (sidebar, modal, course badges)
 │   ├── responsive.css           # Mobile/tablet breakpoints
 │   ├── buttons.css              # Button variations
 │   ├── drop-down.css            # Dropdown menu styles
@@ -231,6 +239,7 @@ b1t-Sched/
 │   ├── profile.js               # Profile management
 │   ├── utils.js                 # Utility functions
 │   ├── notice.js                # Notice viewer module (UCAM notices + PDF)
+│   ├── classroom.js             # Google Classroom API integration
 │   └── app.js                   # Main application logic
 │
 ├── doc/                          # Documentation
@@ -633,6 +642,64 @@ During signup, Firebase triggers `onAuthStateChanged` immediately when the user 
 1. Flag is set before `Auth.signup()` is called
 2. `onAuthStateChanged` callback checks the flag and skips handling
 3. Flag is cleared after logout completes (success) or on error
+
+---
+
+### 10. Classroom (classroom.js)
+
+**Purpose:** Google Classroom API integration for viewing assignments and announcements
+
+#### Configuration
+
+```javascript
+Classroom.CLIENT_ID = '142195418679-0ripc2dn76otvkvfnk6kdk2aitdd29rm.apps.googleusercontent.com'
+Classroom.SCOPES = 'https://www.googleapis.com/auth/classroom.courses.readonly ...'
+Classroom.DATE_FILTER_MONTHS = 6  // Only show items from last 6 months
+```
+
+#### Methods
+
+| Method | Parameters | Description |
+|--------|------------|-------------|
+| `init()` | - | Initialize Google Classroom module with retry logic for Google Identity Services |
+| `setupEventListeners()` | - | Attach click listeners to toggle buttons and close buttons with null checks |
+| `openClassroomParams()` | - | Open classroom interface (sidebar on mobile, modal on desktop) |
+| `toggleSidebar(open)` | boolean | Open/close mobile classroom sidebar |
+| `toggleModal(open)` | boolean | Open/close desktop classroom modal |
+| `login()` | - | Request Google OAuth access token |
+| `logout()` | - | Revoke Google OAuth access token |
+| `handleAuthSuccess()` | - | Handle successful authentication |
+| `fetchCoursesAndLoadAll()` | - | Fetch all active courses and load unified assignments view |
+| `loadAllAssignments()` | - | Load all assignments from all active courses (unified view) |
+| `loadAllAnnouncements()` | - | Load all announcements from all active courses (unified view) |
+| `switchView(view)` | string | Toggle between 'todo' and 'notifications' views |
+| `renderAllItems(items, viewType)` | array, string | Render unified list of assignments or announcements |
+| `renderUnifiedListItem(item, type)` | object, string | Render individual item with course badge |
+| `renderInitialState()` | - | Render login prompt |
+| `renderLoading(message)` | string | Show loading indicator |
+| `renderError(message)` | string | Show error message |
+
+**Features:**
+- **Unified View:** Shows all assignments/announcements from all enrolled courses in one list
+- **Course Filtering:** Only fetches from ACTIVE courses (excludes archived/deleted courses)
+- **Date Filtering:** Configurable date range (default: last 6 months) to exclude old items
+- **Course Badges:** Each item displays which course it belongs to
+- **Toggle View:** Switch between To-Do (assignments) and Notices (announcements)
+- **Responsive:** Mobile sidebar and desktop modal
+- **OAuth Authentication:** Separate from Firebase auth, uses Google Identity Services
+- **Retry Logic:** Automatically retries initialization if Google Identity Services isn't loaded yet
+
+**Date Filter Configuration:**
+
+To adjust the time range for fetching assignments/announcements, modify the `DATE_FILTER_MONTHS` constant at the top of `classroom.js`:
+
+```javascript
+DATE_FILTER_MONTHS: 6,  // Change to 3, 12, etc.
+```
+
+**Desktop Flow:** Navbar "Classroom" button → Modal opens → Sign in with Google → View all assignments (default) → Toggle to Notices → Click item to open in Google Classroom
+
+**Mobile Flow:** Green "Classroom" toggle on right edge → Sidebar slides in → Sign in with Google → View all assignments (default) → Toggle to Notices → Click item to open in Google Classroom
 
 ---
 
@@ -1052,6 +1119,8 @@ service cloud.firestore {
 - **Events Sidebar (Mobile)** - Slide-out panel (40vw) with events and action buttons
 - **Notice Viewer (Desktop)** - Modal with split-pane layout: notice list panel (left) + PDF preview panel (right) with Open/Download actions; "Load Notices" on-demand button to fetch from UCAM via Vercel backend
 - **Notice Sidebar (Mobile)** - Slide-out panel with notice list; tapping a notice opens PDF in a new tab
+- **Google Classroom Viewer (Desktop)** - Modal with unified view of all assignments/announcements from enrolled courses; toggle between To-Do and Notices; OAuth authentication with Google
+- **Google Classroom Sidebar (Mobile)** - Slide-out panel with unified assignments/announcements view; green toggle button on right edge
 - **FAQ Section** - Collapsible accordion with three items:
   - How b1t-Sched works (shared tasks, individual checkboxes)
   - User roles (Admin, CR, Blocked) and their permissions
@@ -1062,6 +1131,7 @@ service cloud.firestore {
   - Add Event Modal (admin/CR) - Event creation form
   - Old Events Modal - List of past events
   - Notice Viewer Modal (desktop) - University notice list + embedded PDF viewer
+  - Google Classroom Modal (desktop) - Unified assignments/announcements from all enrolled courses
 
 ### Profile Settings View Components
 - Back button
@@ -1164,6 +1234,7 @@ Router.onRouteChange((routeName) => {
 | 2.17.0 | Feb 2026 | Quick Links PDF Viewer: Resource links pointing to `.pdf` files now open in an in-page viewer modal (Google Docs Viewer in iframe) with Open-in-Tab and Download buttons. Mobile: PDF links open directly in a new tab. New HTML modal (`#pdf-viewer-modal`) in `index.html`, new methods (`initPdfViewer`, `openPdfViewer`, `closePdfViewer`) in `ui.js`, PDF viewer styles in `notice.css`, init wired in `app.js`. |
 | 2.18.0 | Feb 2026 | New Features: Task Filtering (by type), Global Contribution List (with toggle for all-department view), Total User Counter (live badge), and Mobile UI fixes (login scroll, zoom). |
 | 2.18.0.1 | Feb 2026 | Reverted back to "open links in new tab" for Pending Tasks and Events descriptions. |
+| 2.19.0 | Feb 2026 | Google Classroom Integration: View all assignments and announcements from enrolled Google Classroom courses in a unified interface. Features: OAuth authentication with Google Identity Services, unified To-Do/Notices view with toggle, course badges for each item, filters only ACTIVE courses (excludes archived), configurable date filter (default: last 6 months), responsive design (mobile sidebar with green toggle, desktop modal). New files: `js/classroom.js`, `css/classroom.css`. Google Identity Services SDK loaded via CDN. |
 
 ---
 
@@ -1174,8 +1245,9 @@ Router.onRouteChange((routeName) => {
 - [REDESIGN_PLAN.md](REDESIGN_PLAN.md) - Original redesign planning document
 - [ADMIN_FEATURES.md](ADMIN_FEATURES.md) - Admin functionality documentation
 - [FIRESTORE_TASK_CHANGES.md](FIRESTORE_TASK_CHANGES.md) - Task completion schema changes
+- [doc/plan/g-class-api/](doc/plan/g-class-api/) - Google Classroom API setup and implementation plans
 
 ---
 
-*Documentation last updated: February 15, 2026*
-*Version: 2.18.0*
+*Documentation last updated: February 16, 2026*
+*Version: 2.19.0*
