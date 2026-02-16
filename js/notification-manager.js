@@ -1,0 +1,172 @@
+// ============================================
+// NOTIFICATION MANAGER
+// ============================================
+
+/**
+ * Core component that manages notification lifecycle, content generation, and user interactions
+ */
+const NotificationManager = {
+  isInitialized: false,
+
+  /**
+   * Checks if notifications are supported in the browser
+   * @returns {boolean}
+   */
+  isSupported() {
+    return 'Notification' in window;
+  },
+
+  /**
+   * Initializes the notification system
+   * @returns {Promise<{success: boolean, error?: string}>}
+   */
+  async init() {
+    if (this.isInitialized) {
+      return { success: true };
+    }
+
+    // Check browser support
+    if (!this.isSupported()) {
+      console.warn('Web Notifications API not supported in this browser');
+      console.warn('Browser:', navigator.userAgent);
+      return { 
+        success: false, 
+        error: 'Notifications not supported in this browser' 
+      };
+    }
+
+    // Initialize permission manager listeners
+    PermissionManager.initPromptListeners();
+
+    // Check if we should show permission prompt
+    if (PermissionManager.shouldShowPrompt()) {
+      PermissionManager.showPermissionPrompt();
+    }
+
+    this.isInitialized = true;
+    console.log('Notification system initialized');
+    
+    return { success: true };
+  },
+
+  /**
+   * Shows a notification for a new task
+   * @param {TaskDocument} task - Task data from Firestore
+   * @returns {Promise<Notification|null>}
+   */
+  async showTaskNotification(task) {
+    // Check permission
+    if (!PermissionManager.isGranted()) {
+      console.log('Notification permission not granted, skipping task notification');
+      return null;
+    }
+
+    try {
+      // Format notification content
+      const notificationData = NotificationContentFormatter.formatTaskNotification(task);
+      
+      // Create notification
+      const notification = new Notification(notificationData.title, {
+        body: notificationData.body,
+        icon: notificationData.icon,
+        tag: notificationData.tag,
+        requireInteraction: notificationData.requireInteraction,
+        data: notificationData.data
+      });
+
+      // Handle click event
+      notification.onclick = () => {
+        this.handleNotificationClick('task', task.id);
+        notification.close();
+      };
+
+      console.log('Task notification displayed:', task.id);
+      return notification;
+    } catch (error) {
+      console.error('Failed to display task notification:', error);
+      console.error('Task ID:', task.id);
+      console.error('Task title:', task.title);
+      return null;
+    }
+  },
+
+  /**
+   * Shows a notification for a new event
+   * @param {EventDocument} event - Event data from Firestore
+   * @returns {Promise<Notification|null>}
+   */
+  async showEventNotification(event) {
+    // Check permission
+    if (!PermissionManager.isGranted()) {
+      console.log('Notification permission not granted, skipping event notification');
+      return null;
+    }
+
+    try {
+      // Format notification content
+      const notificationData = NotificationContentFormatter.formatEventNotification(event);
+      
+      // Create notification
+      const notification = new Notification(notificationData.title, {
+        body: notificationData.body,
+        icon: notificationData.icon,
+        tag: notificationData.tag,
+        requireInteraction: notificationData.requireInteraction,
+        data: notificationData.data
+      });
+
+      // Handle click event
+      notification.onclick = () => {
+        this.handleNotificationClick('event', event.id);
+        notification.close();
+      };
+
+      console.log('Event notification displayed:', event.id);
+      return notification;
+    } catch (error) {
+      console.error('Failed to display event notification:', error);
+      console.error('Event ID:', event.id);
+      console.error('Event title:', event.title);
+      return null;
+    }
+  },
+
+  /**
+   * Handles notification click events
+   * @param {string} type - 'task' or 'event'
+   * @param {string} id - Document ID
+   */
+  handleNotificationClick(type, id) {
+    // Focus or open the application window
+    if (window.focus) {
+      window.focus();
+    }
+
+    // Navigate to appropriate view
+    if (type === 'task') {
+      // Navigate to dashboard (where tasks are displayed)
+      if (window.Router) {
+        Router.navigate('dashboard');
+      } else {
+        window.location.hash = '#/dashboard';
+      }
+    } else if (type === 'event') {
+      // Navigate to dashboard (where events are displayed in sidebar)
+      if (window.Router) {
+        Router.navigate('dashboard');
+      } else {
+        window.location.hash = '#/dashboard';
+      }
+    }
+
+    console.log(`Notification clicked: ${type} ${id}`);
+  },
+
+  /**
+   * Resets the notification system (called on logout)
+   */
+  reset() {
+    this.isInitialized = false;
+    console.log('Notification system reset');
+  }
+};

@@ -6,7 +6,7 @@ This implementation adds a new Faculty role to the application with department-b
 
 ## Tasks
 
-- [ ] 1. Update Firestore data model and security rules
+- [x] 1. Update Firestore data model and security rules
   - Add `role` field to users collection (values: "Student", "CR", "Admin", "Faculty")
   - Add `isFaculty` boolean field to users collection for backward compatibility
   - Update Firestore security rules to allow Faculty users to create tasks
@@ -14,45 +14,45 @@ This implementation adds a new Faculty role to the application with department-b
   - Create `facultyTokens` collection with security rules
   - _Requirements: 1.2, 1.3, 8.3_
 
-- [ ] 2. Implement role management in database module
-  - [ ] 2.1 Add `getUserRole()` function to db.js
+- [x] 2. Implement role management in database module
+  - [x] 2.1 Add `getUserRole()` function to db.js
     - Fetch user document and return role field
     - Handle legacy `isAdmin`, `isCR` fields for backward compatibility
     - _Requirements: 1.1, 1.2_
   
-  - [ ] 2.2 Add `assignFacultyRole()` function to db.js
+  - [x] 2.2 Add `assignFacultyRole()` function to db.js
     - Validate admin permissions before assignment
     - Update user document with `role: "Faculty"` and `isFaculty: true`
     - Set semester and section to null for Faculty users
     - _Requirements: 1.1, 1.2, 1.4_
   
-  - [ ] 2.3 Add `removeFacultyRole()` function to db.js
+  - [x] 2.3 Add `removeFacultyRole()` function to db.js
     - Validate admin permissions
     - Update user document to remove Faculty role
     - Revert to Student role by default
     - _Requirements: 1.5_
 
-- [ ] 3. Create Faculty profile management
-  - [ ] 3.1 Update Profile.loadProfile() to handle Faculty users
+- [x] 3. Create Faculty profile management
+  - [x] 3.1 Update Profile.loadProfile() to handle Faculty users
     - Check if user has Faculty role
     - Skip semester/section loading for Faculty users
     - Load only department field
     - _Requirements: 2.1, 4.3_
   
-  - [ ] 3.2 Update Profile.renderFacultyProfileUI()
+  - [x] 3.2 Update Profile.renderFacultyProfileUI()
     - Render semester field as readonly with "Not Available For Faculty" text
     - Render section field as readonly with "Not Available For Faculty" text
     - Keep department field editable
     - _Requirements: 4.1, 4.2, 4.3_
   
-  - [ ] 3.3 Update Profile.handleSaveProfile() for Faculty users
+  - [x] 3.3 Update Profile.handleSaveProfile() for Faculty users
     - Skip semester/section validation for Faculty users
     - Allow only department updates
     - Remove 30-day cooldown for Faculty users
     - _Requirements: 4.4_
 
-- [ ] 4. Implement Faculty task management
-  - [ ] 4.1 Update task creation to support Faculty users
+- [-] 4. Implement Faculty task management
+  - [x] 4.1 Update task creation to support Faculty users
     - Modify task creation form to detect Faculty role
     - Associate tasks with Faculty user's department only
     - Set `addedByRole: "Faculty"` field on task documents

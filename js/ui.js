@@ -457,7 +457,7 @@ const UI = {
       crInfoMessage.style.display = (isAdmin || isCR) ? 'none' : 'block';
     }
 
-    // Show footer and FAQ when logged in
+    // Show footer when logged in
     const appFooter = document.getElementById('app-footer');
     if (appFooter) {
       appFooter.style.display = 'block';
@@ -466,10 +466,6 @@ const UI = {
       if (yearSpan) {
         yearSpan.textContent = new Date().getFullYear();
       }
-    }
-    const faqSection = document.getElementById('faq-section');
-    if (faqSection) {
-      faqSection.style.display = 'block';
     }
   },
 
@@ -558,6 +554,28 @@ const UI = {
         overlay.classList.remove('active');
         document.body.style.overflow = '';
       }
+    }
+  },
+
+  // Update FAQ and Contribution section visibility based on route
+  updateSectionVisibility(routeName) {
+    const faqSection = document.getElementById('faq-section');
+    const contribSection = document.getElementById('contributions-section');
+
+    if (!faqSection) {
+      console.warn('FAQ section not found in DOM');
+    }
+    if (!contribSection) {
+      console.warn('Contributions section not found in DOM');
+    }
+
+    // Show sections only on dashboard, hide on all other routes
+    if (routeName === 'dashboard') {
+      if (faqSection) faqSection.style.display = 'block';
+      if (contribSection) contribSection.style.display = 'block';
+    } else {
+      if (faqSection) faqSection.style.display = 'none';
+      if (contribSection) contribSection.style.display = 'none';
     }
   }
 };

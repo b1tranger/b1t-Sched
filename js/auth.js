@@ -4,6 +4,15 @@
 
 const Auth = {
   currentUser: null,
+  cacheManager: null,
+
+  // Initialize cache manager
+  initCacheManager() {
+    if (!this.cacheManager && typeof CacheManager !== 'undefined') {
+      this.cacheManager = new CacheManager();
+      console.log('[Auth] Cache manager initialized');
+    }
+  },
 
   // Sign up new user
   async signup(email, password) {
@@ -28,6 +37,17 @@ const Auth = {
       const userCredential = await auth.signInWithEmailAndPassword(email, password);
       this.currentUser = userCredential.user;
       console.log('User logged in:', this.currentUser.uid);
+      
+      // Cache authentication state
+      this.initCacheManager();
+      if (this.cacheManager) {
+        await this.cacheManager.cacheAuthState({
+          uid: this.currentUser.uid,
+          email: this.currentUser.email,
+          emailVerified: this.currentUser.emailVerified
+        });
+      }
+      
       return { success: true, user: this.currentUser };
     } catch (error) {
       console.error('Login error:', error);
@@ -38,6 +58,20 @@ const Auth = {
   // Logout user
   async logout() {
     try {
+      // Clean up notification system
+      if (window.FirestoreListenerManager) {
+        FirestoreListenerManager.unsubscribeAll();
+      }
+      if (window.NotificationManager) {
+        NotificationManager.reset();
+      }
+      
+      // Clear cached data
+      this.initCacheManager();
+      if (this.cacheManager) {
+        await this.cacheManager.clearUserCaches();
+      }
+      
       await auth.signOut();
       this.currentUser = null;
       localStorage.clear(); // Clear all stored data
@@ -49,10 +83,43 @@ const Auth = {
     }
   },
 
+  // Load cached auth state on app initialization
+  async loadCachedAuthState() {
+    this.initCacheManager();
+    if (!this.cacheManager) {
+      return null;
+    }
+    
+    try {
+      const cachedAuth = await this.cacheManager.getCachedAuthState();
+      if (cachedAuth) {
+        console.log('[Auth] Loaded cached auth state');
+        return cachedAuth;
+      }
+    } catch (error) {
+      console.error('[Auth] Error loading cached auth state:', error);
+    }
+    
+    return null;
+  },
+
   // Check authentication state
   onAuthStateChanged(callback) {
     return auth.onAuthStateChanged((user) => {
       this.currentUser = user;
+      
+      // Cache auth state when user is authenticated
+      if (user) {
+        this.initCacheManager();
+        if (this.cacheManager) {
+          this.cacheManager.cacheAuthState({
+            uid: user.uid,
+            email: user.email,
+            emailVerified: user.emailVerified
+          });
+        }
+      }
+      
       callback(user);
     });
   },
@@ -84,7 +151,7 @@ const Auth = {
       'auth/user-disabled': 'This account has been disabled. Please contact support.',
       'auth/user-not-found': 'No account found with this email. Please sign up first.',
       'auth/wrong-password': 'Incorrect password. Please try again.',
-      'auth/invalid-credential': 'Invalid email or password. Please try again.',
+      'auth/invalid-credential': 'Invalid email or password. Please try again. If you haven\'t verified your email yet, please check your inbox (or spam folder) for the verification link, then login.',
       'auth/too-many-requests': 'Too many failed attempts. Please try again later.',
       'auth/network-request-failed': 'Network error. Please check your internet connection.'
     };

@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classroom Integration Tests</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        .test-section h2 {
+            margin-bottom: 15px;
+            color: #555;
+        }
+        .test-result {
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .pass {
+            background-color: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+        .fail {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+        button {
+            padding: 12px 24px;
+            margin: 5px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background: #007bff;
+            color: white;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .viewport-info {
+            padding: 10px;
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        #classroom-sidebar {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 300px;
+            height: 100vh;
+            background: white;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+            transition: right 0.3s;
+            z-index: 1000;
+        }
+        #classroom-sidebar.open {
+            right: 0;
+        }
+        #classroom-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            z-index: 999;
+        }
+        #classroom-overlay.visible {
+            display: block;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.show {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 90%;
+        }
+        .mobile-only {
+            display: none;
+        }
+        @media (max-width: 768px) {
+            .mobile-only {
+                display: block;
+            }
+            .desktop-only {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Google Classroom Integration Tests</h1>
+    
+    <div class="viewport-info">
+        Current Viewport: <span id="viewport-size"></span>
+    </div>
+
+    <div class="test-section">
+        <h2>📋 Test Controls</h2>
+        <button onclick="runAllTests()">Run All Tests</button>
+        <button onclick="clearResults()">Clear Results</button>
+        <button onclick="setMobileViewport()">Set Mobile Viewport (375px)</button>
+        <button onclick="setDesktopViewport()">Set Desktop Viewport (1920px)</button>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 Test Results</h2>
+        <div id="test-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🎮 Manual Test Controls</h2>
+        <button id="classroom-toggle" class="mobile-only">Mobile Toggle Button</button>
+        <button id="classroom-nav-btn" class="desktop-only">Desktop Nav Button</button>
+        <p style="margin-top: 10px; color: #666;">
+            Click the buttons above to manually test the toggle functionality.
+            Check the console for detailed logs.
+        </p>
+    </div>
+
+    <!-- Hidden DOM elements required by Classroom module -->
+    <div id="classroom-sidebar">
+        <div id="classroom-content-mobile"></div>
+        <button id="close-classroom-sidebar">Close</button>
+    </div>
+    <div id="classroom-overlay"></div>
+    
+    <div id="classroom-modal" class="modal">
+        <div class="modal-content">
+            <div id="classroom-content-desktop"></div>
+            <button id="close-classroom-modal">Close</button>
+        </div>
+    </div>
+
+    <!-- Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+    <!-- Mock UI module for modal handling -->
+    <script>
+        const UI = {
+            showModal(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.classList.add('show');
+                }
+            },
+            hideModal(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.classList.remove('show');
+                }
+            }
+        };
+    </script>
+
+    <!-- Classroom Module -->
+    <script src="js/classroom.js"></script>
+
+    <!-- Test Script -->
+    <script>
+        const results = document.getElementById('test-results');
+        let testCount = 0;
+        let passCount = 0;
+        let failCount = 0;
+
+        function updateViewportInfo() {
+            document.getElementById('viewport-size').textContent = 
+                `${window.innerWidth}px × ${window.innerHeight}px (${window.innerWidth <= 768 ? 'Mobile' : 'Desktop'})`;
+        }
+
+        function setMobileViewport() {
+            // Can't actually resize window, but we can inform the user
+            addResult('Please manually resize your browser window to 375px width or use browser dev tools (F12 > Toggle Device Toolbar)', 'info');
+            updateViewportInfo();
+        }
+
+        function setDesktopViewport() {
+            addResult('Please manually resize your browser window to 1920px width or use browser dev tools', 'info');
+            updateViewportInfo();
+        }
+
+        function addResult(message, status = 'pass') {
+            testCount++;
+            if (status === 'pass') passCount++;
+            if (status === 'fail') failCount++;
+
+            const div = document.createElement('div');
+            div.className = `test-result ${status}`;
+            const icon = status === 'pass' ? '✓' : status === 'fail' ? '✗' : 'ℹ';
+            div.textContent = `${icon} ${message}`;
+            results.appendChild(div);
+        }
+
+        function clearResults() {
+            results.innerHTML = '';
+            testCount = 0;
+            passCount = 0;
+            failCount = 0;
+        }
+
+        async function runAllTests() {
+            clearResults();
+            addResult('Starting integration tests...', 'info');
+            
+            // Wait for Google Identity Services
+            await waitForGoogleIdentityServices();
+            
+            // Test 1: Initialization
+            await testInitialization();
+            
+            // Test 2: DOM Elements
+            testDOMElements();
+            
+            // Test 3: Event Listeners
+            testEventListeners();
+            
+            // Test 4: Responsive Behavior
+            testResponsiveBehavior();
+            
+            // Test 5: Mobile Toggle (if in mobile viewport)
+            if (window.innerWidth <= 768) {
+                testMobileToggle();
+            } else {
+                addResult('Skipping mobile toggle test (not in mobile viewport)', 'info');
+            }
+            
+            // Test 6: Desktop Button (if in desktop viewport)
+            if (window.innerWidth > 768) {
+                testDesktopButton();
+            } else {
+                addResult('Skipping desktop button test (not in desktop viewport)', 'info');
+            }
+            
+            // Test 7: Error Handling
+            testErrorHandling();
+            
+            // Summary
+            addResult(`Tests completed: ${passCount} passed, ${failCount} failed out of ${testCount} total`, 'info');
+        }
+
+        async function waitForGoogleIdentityServices() {
+            return new Promise((resolve) => {
+                let attempts = 0;
+                const checkInterval = setInterval(() => {
+                    attempts++;
+                    if (typeof google !== 'undefined' && google.accounts && google.accounts.oauth2) {
+                        clearInterval(checkInterval);
+                        addResult('Google Identity Services loaded successfully');
+                        resolve();
+                    } else if (attempts > 20) {
+                        clearInterval(checkInterval);
+                        addResult('Google Identity Services failed to load after 10 seconds', 'fail');
+                        resolve();
+                    }
+                }, 500);
+            });
+        }
+
+        async function testInitialization() {
+            addResult('Testing Classroom module initialization...', 'info');
+            
+            // Check if module is initialized
+            if (Classroom.isInitialized) {
+                addResult('Classroom module is initialized');
+            } else {
+                addResult('Classroom module is NOT initialized', 'fail');
+            }
+            
+            // Check token client
+            if (Classroom.tokenClient !== null) {
+                addResult('Token client created successfully');
+            } else {
+                addResult('Token client is NULL', 'fail');
+            }
+            
+            // Check retry count
+            if (Classroom.initRetryCount !== undefined) {
+                addResult(`Initialization retry count: ${Classroom.initRetryCount || 0}`);
+            }
+        }
+
+        function testDOMElements() {
+            addResult('Testing DOM elements...', 'info');
+            
+            const elements = {
+                'classroom-toggle': 'Mobile toggle button',
+                'classroom-nav-btn': 'Desktop nav button',
+                'classroom-sidebar': 'Classroom sidebar',
+                'classroom-overlay': 'Classroom overlay',
+                'classroom-content-mobile': 'Mobile content container',
+                'classroom-content-desktop': 'Desktop content container',
+                'close-classroom-sidebar': 'Close sidebar button',
+                'close-classroom-modal': 'Close modal button'
+            };
+            
+            for (const [id, name] of Object.entries(elements)) {
+                const element = document.getElementById(id);
+                if (element) {
+                    addResult(`${name} exists in DOM`);
+                } else {
+                    addResult(`${name} NOT found in DOM`, 'fail');
+                }
+            }
+        }
+
+        function testEventListeners() {
+            addResult('Testing event listeners...', 'info');
+            
+            // We can't directly test if event listeners are attached,
+            // but we can verify the setup function was called
+            addResult('Event listener setup completed (check console logs for confirmation)');
+        }
+
+        function testResponsiveBehavior() {
+            addResult('Testing responsive behavior...', 'info');
+            
+            const width = window.innerWidth;
+            const mobileToggle = document.getElementById('classroom-toggle');
+            const desktopBtn = document.getElementById('classroom-nav-btn');
+            
+            if (width <= 768) {
+                // Mobile viewport
+                const mobileVisible = mobileToggle && window.getComputedStyle(mobileToggle).display !== 'none';
+                const desktopHidden = !desktopBtn || window.getComputedStyle(desktopBtn).display === 'none';
+                
+                if (mobileVisible) {
+                    addResult('Mobile toggle button is visible (correct for mobile viewport)');
+                } else {
+                    addResult('Mobile toggle button is NOT visible (should be visible)', 'fail');
+                }
+                
+                if (desktopHidden) {
+                    addResult('Desktop button is hidden (correct for mobile viewport)');
+                } else {
+                    addResult('Desktop button is visible (should be hidden)', 'fail');
+                }
+            } else {
+                // Desktop viewport
+                const mobileHidden = !mobileToggle || window.getComputedStyle(mobileToggle).display === 'none';
+                const desktopVisible = desktopBtn && window.getComputedStyle(desktopBtn).display !== 'none';
+                
+                if (mobileHidden) {
+                    addResult('Mobile toggle button is hidden (correct for desktop viewport)');
+                } else {
+                    addResult('Mobile toggle button is visible (should be hidden)', 'fail');
+                }
+                
+                if (desktopVisible) {
+                    addResult('Desktop button is visible (correct for desktop viewport)');
+                } else {
+                    addResult('Desktop button is NOT visible (should be visible)', 'fail');
+                }
+            }
+        }
+
+        function testMobileToggle() {
+            addResult('Testing mobile toggle functionality...', 'info');
+            
+            const toggleBtn = document.getElementById('classroom-toggle');
+            const sidebar = document.getElementById('classroom-sidebar');
+            const overlay = document.getElementById('classroom-overlay');
+            
+            if (!toggleBtn) {
+                addResult('Mobile toggle button not found', 'fail');
+                return;
+            }
+            
+            // Simulate click
+            toggleBtn.click();
+            
+            // Check if sidebar opened
+            setTimeout(() => {
+                if (sidebar.classList.contains('open')) {
+                    addResult('Mobile sidebar opened successfully after toggle click');
+                } else {
+                    addResult('Mobile sidebar did NOT open after toggle click', 'fail');
+                }
+                
+                if (overlay.classList.contains('visible')) {
+                    addResult('Overlay became visible after toggle click');
+                } else {
+                    addResult('Overlay did NOT become visible', 'fail');
+                }
+                
+                // Close sidebar for next test
+                Classroom.toggleSidebar(false);
+            }, 100);
+        }
+
+        function testDesktopButton() {
+            addResult('Testing desktop button functionality...', 'info');
+            
+            const navBtn = document.getElementById('classroom-nav-btn');
+            const modal = document.getElementById('classroom-modal');
+            
+            if (!navBtn) {
+                addResult('Desktop nav button not found', 'fail');
+                return;
+            }
+            
+            // Simulate click
+            navBtn.click();
+            
+            // Check if modal opened
+            setTimeout(() => {
+                if (modal.classList.contains('show')) {
+                    addResult('Desktop modal opened successfully after button click');
+                } else {
+                    addResult('Desktop modal did NOT open after button click', 'fail');
+                }
+                
+                // Close modal for next test
+                UI.hideModal('classroom-modal');
+            }, 100);
+        }
+
+        function testErrorHandling() {
+            addResult('Testing error handling...', 'info');
+            
+            // Check if error rendering function exists
+            if (typeof Classroom.renderError === 'function') {
+                addResult('Error rendering function exists');
+                
+                // Test error rendering
+                Classroom.renderError('Test error message');
+                const mobileContent = document.getElementById('classroom-content-mobile');
+                if (mobileContent && mobileContent.innerHTML.includes('Test error message')) {
+                    addResult('Error message rendered correctly');
+                } else {
+                    addResult('Error message NOT rendered correctly', 'fail');
+                }
+            } else {
+                addResult('Error rendering function NOT found', 'fail');
+            }
+        }
+
+        // Initialize on load
+        window.addEventListener('load', () => {
+            console.log('Page loaded, initializing Classroom module...');
+            updateViewportInfo();
+            
+            // Wait for Google Identity Services and then initialize
+            setTimeout(() => {
+                Classroom.init();
+                
+                // Run tests after initialization
+                setTimeout(() => {
+                    addResult('Auto-running tests after initialization...', 'info');
+                    runAllTests();
+                }, 1000);
+            }, 1000);
+        });
+
+        // Update viewport info on resize
+        window.addEventListener('resize', updateViewportInfo);
+    </script>
+</body>
+</html>

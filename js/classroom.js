@@ -20,6 +20,15 @@ const Classroom = {
 
     // Cache
     cache: {},
+    cacheManager: null,
+
+    // Initialize cache manager
+    initCacheManager() {
+        if (!this.cacheManager && typeof CacheManager !== 'undefined') {
+            this.cacheManager = new CacheManager();
+            console.log('[Classroom] Cache manager initialized');
+        }
+    },
 
     init() {
         console.log('Initializing Google Classroom module...');
@@ -198,6 +207,13 @@ const Classroom = {
                 this.accessToken = null;
                 this.courses = [];
                 this.currentCourseId = null;
+                
+                // Clear cached classroom data
+                this.initCacheManager();
+                if (this.cacheManager) {
+                    this.cacheManager.clearUserCaches();
+                }
+                
                 this.renderLoginState();
             });
         }
@@ -258,6 +274,20 @@ const Classroom = {
 
     async loadAllAssignments() {
         this.currentView = 'todo';
+        
+        // Initialize cache manager
+        this.initCacheManager();
+        
+        // Check for cached data first
+        if (this.cacheManager) {
+            const cachedData = await this.cacheManager.getCachedClassroomData('assignments');
+            if (cachedData && cachedData.fresh) {
+                console.log('[Classroom] Using cached assignments data');
+                this.renderAllItems(cachedData.data, 'todo');
+                return;
+            }
+        }
+        
         this.renderLoading('Loading assignments from all courses...');
 
         try {
@@ -325,6 +355,12 @@ const Classroom = {
             });
 
             console.log(`Loaded ${allAssignments.length} assignments from ${this.courses.filter(c => c.courseState === 'ACTIVE').length} active courses`);
+            
+            // Cache the data
+            if (this.cacheManager) {
+                await this.cacheManager.cacheClassroomData('assignments', allAssignments);
+            }
+            
             this.renderAllItems(allAssignments, 'todo');
 
         } catch (error) {
@@ -335,6 +371,20 @@ const Classroom = {
 
     async loadAllAnnouncements() {
         this.currentView = 'notifications';
+        
+        // Initialize cache manager
+        this.initCacheManager();
+        
+        // Check for cached data first
+        if (this.cacheManager) {
+            const cachedData = await this.cacheManager.getCachedClassroomData('announcements');
+            if (cachedData && cachedData.fresh) {
+                console.log('[Classroom] Using cached announcements data');
+                this.renderAllItems(cachedData.data, 'notifications');
+                return;
+            }
+        }
+        
         this.renderLoading('Loading announcements from all courses...');
 
         try {
@@ -398,6 +448,12 @@ const Classroom = {
             });
 
             console.log(`Loaded ${allAnnouncements.length} announcements from ${this.courses.filter(c => c.courseState === 'ACTIVE').length} active courses`);
+            
+            // Cache the data
+            if (this.cacheManager) {
+                await this.cacheManager.cacheClassroomData('announcements', allAnnouncements);
+            }
+            
             this.renderAllItems(allAnnouncements, 'notifications');
 
         } catch (error) {

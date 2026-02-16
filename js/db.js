@@ -126,18 +126,26 @@ const DB = {
   // Create a new task (user-added)
   async createTask(userId, userEmail, data) {
     try {
+      // Determine user role for the task
+      const rolesResult = await this.getUserRoles(userId);
+      let addedByRole = 'Student';
+      if (rolesResult.isAdmin) addedByRole = 'Admin';
+      else if (rolesResult.isFaculty) addedByRole = 'Faculty';
+      else if (rolesResult.isCR) addedByRole = 'CR';
+      
       const docRef = await db.collection('tasks').add({
         title: data.title,
         course: data.course || '',
         type: data.type || 'assignment',
         description: data.description || '',
         department: data.department,
-        semester: data.semester,
-        section: data.section,
+        semester: data.semester || null,
+        section: data.section || null,
         deadline: data.deadline ? firebase.firestore.Timestamp.fromDate(new Date(data.deadline)) : null,
         status: 'active',
         addedBy: userId,
         addedByName: userEmail.split('@')[0],
+        addedByRole: addedByRole,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
       console.log('Task created:', docRef.id);
@@ -350,13 +358,89 @@ const DB = {
           success: true,
           isAdmin: data.isAdmin === true,
           isCR: data.isCR === true,
+          isFaculty: data.isFaculty === true,
           isBlocked: data.isBlocked === true
         };
       }
-      return { success: true, isAdmin: false, isCR: false, isBlocked: false };
+      return { success: true, isAdmin: false, isCR: false, isFaculty: false, isBlocked: false };
     } catch (error) {
       console.error('Error checking user roles:', error);
-      return { success: false, isAdmin: false, isCR: false, isBlocked: false, error: error.message };
+      return { success: false, isAdmin: false, isCR: false, isFaculty: false, isBlocked: false, error: error.message };
+    }
+  },
+
+  // Get user role (returns "Admin", "Faculty", "CR", or "Student")
+  async getUserRole(userId) {
+    try {
+      const doc = await db.collection('users').doc(userId).get();
+      if (doc.exists) {
+        const data = doc.data();
+        // Check role field first (new system)
+        if (data.role) {
+          return { success: true, role: data.role };
+        }
+        // Fall back to legacy boolean fields
+        if (data.isAdmin === true) return { success: true, role: 'Admin' };
+        if (data.isFaculty === true) return { success: true, role: 'Faculty' };
+        if (data.isCR === true) return { success: true, role: 'CR' };
+        return { success: true, role: 'Student' };
+      }
+      return { success: true, role: 'Student' };
+    } catch (error) {
+      console.error('Error getting user role:', error);
+      return { success: false, role: 'Student', error: error.message };
+    }
+  },
+
+  // Assign Faculty role to a user (admin only)
+  async assignFacultyRole(userId, adminId) {
+    try {
+      // Validate admin permissions
+      const adminRoles = await this.getUserRoles(adminId);
+      if (!adminRoles.isAdmin) {
+        console.warn(`Unauthorized Faculty role assignment attempt by ${adminId}`);
+        return { success: false, error: 'You do not have permission to assign roles' };
+      }
+
+      // Update user document
+      await db.collection('users').doc(userId).update({
+        role: 'Faculty',
+        isFaculty: true,
+        semester: null,
+        section: null,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      console.log(`Faculty role assigned to user ${userId} by admin ${adminId}`);
+      return { success: true };
+    } catch (error) {
+      console.error('Error assigning Faculty role:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Remove Faculty role from a user (admin only)
+  async removeFacultyRole(userId, adminId) {
+    try {
+      // Validate admin permissions
+      const adminRoles = await this.getUserRoles(adminId);
+      if (!adminRoles.isAdmin) {
+        console.warn(`Unauthorized Faculty role removal attempt by ${adminId}`);
+        return { success: false, error: 'You do not have permission to remove roles' };
+      }
+
+      // Update user document - revert to Student role
+      await db.collection('users').doc(userId).update({
+        role: 'Student',
+        isFaculty: false,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      console.log(`Faculty role removed from user ${userId} by admin ${adminId}`);
+      return { success: true };
+    } catch (error) {
+      console.error('Error removing Faculty role:', error);
+      return { success: false, error: error.message };
     }
   },
 

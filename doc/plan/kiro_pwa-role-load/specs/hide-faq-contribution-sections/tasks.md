@@ -6,7 +6,7 @@ This implementation will add conditional visibility logic for the FAQ and Contri
 
 ## Tasks
 
-- [ ] 1. Restructure FAQ section HTML with nested dropdown
+- [x] 1. Restructure FAQ section HTML with nested dropdown
   - Wrap the three existing FAQ items inside a parent `<details>` element
   - Move the FAQ heading text into the parent `<summary>` element
   - Add appropriate CSS classes for styling consistency
@@ -18,8 +18,8 @@ This implementation will add conditional visibility logic for the FAQ and Contri
   - Test that FAQ content is preserved after restructuring
   - _Requirements: 3.3, 3.5_
 
-- [ ] 2. Create visibility controller function
-  - [ ] 2.1 Implement `updateSectionVisibility(routeName)` function in a new or existing JavaScript file
+- [x] 2. Create visibility controller function
+  - [x] 2.1 Implement `updateSectionVisibility(routeName)` function in a new or existing JavaScript file
     - Accept route name as parameter
     - Get references to FAQ and Contribution section DOM elements
     - Show both sections when route is 'dashboard'
@@ -40,8 +40,8 @@ This implementation will add conditional visibility logic for the FAQ and Contri
     - Test unknown route names default to hiding sections
     - _Requirements: 1.2, 2.2_
 
-- [ ] 3. Integrate visibility controller with Router
-  - [ ] 3.1 Add Router.onRouteChange callback in app initialization
+- [x] 3. Integrate visibility controller with Router
+  - [x] 3.1 Add Router.onRouteChange callback in app initialization
     - Register the visibility controller as a callback
     - Ensure callback is registered after DOM is loaded
     - Place registration in appropriate initialization file (likely `js/app.js` or `js/routing.js`)
@@ -56,8 +56,8 @@ This implementation will add conditional visibility logic for the FAQ and Contri
     - Test that visibility updates occur on route changes
     - _Requirements: 4.1_
 
-- [ ] 4. Handle initial page load and refresh scenarios
-  - [ ] 4.1 Ensure visibility controller runs on initial page load
+- [x] 4. Handle initial page load and refresh scenarios
+  - [x] 4.1 Ensure visibility controller runs on initial page load
     - Call visibility controller after Router initialization
     - Verify correct visibility state on page refresh for all routes
     - _Requirements: 1.4, 2.4_
@@ -72,8 +72,8 @@ This implementation will add conditional visibility logic for the FAQ and Contri
     - Test page refresh on different routes
     - _Requirements: 4.2, 4.3_
 
-- [ ] 5. Verify existing functionality is not affected
-  - [ ] 5.1 Test that navbar, footer, and other UI elements continue to work correctly
+- [x] 5. Verify existing functionality is not affected
+  - [x] 5.1 Test that navbar, footer, and other UI elements continue to work correctly
     - Verify navbar visibility logic is unchanged
     - Verify footer visibility logic is unchanged
     - Verify user details card visibility is unchanged
@@ -84,7 +84,7 @@ This implementation will add conditional visibility logic for the FAQ and Contri
     - Test that other element visibility changes don't affect FAQ/Contribution sections
     - _Requirements: 4.4_
 
-- [ ] 6. Checkpoint - Ensure all tests pass
+- [x] 6. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

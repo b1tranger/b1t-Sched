@@ -26,13 +26,25 @@ service cloud.firestore {
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isCR == true;
     }
     
+    // Helper function to check if user is Faculty
+    function isFaculty() {
+      return isSignedIn() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isFaculty == true;
+    }
+    
     // Users collection - users can read/write their own data, admins can read all
     match /users/{userId} {
       // Allow read: own document OR admin
       allow read: if isOwner(userId) || isAdmin();
       allow create: if isSignedIn() && request.auth.uid == userId;
       // Allow update: own document OR admin (for blocking users, etc.)
-      allow update: if isOwner(userId) || isAdmin();
+      // Validate noteContent field if present (max 1MB size)
+      allow update: if (isOwner(userId) || isAdmin()) && (
+        !request.resource.data.keys().hasAny(['noteContent']) ||
+        (request.resource.data.noteContent is string && 
+         request.resource.data.noteContent.size() <= 1000000)
+      );
       allow delete: if false; // Prevent deletion
       
       // Task completions subcollection (user's personal completion status)
@@ -44,8 +56,8 @@ service cloud.firestore {
     // Tasks collection
     // - Anyone authenticated can read
     // - Anyone authenticated can create (must set addedBy to their own uid)
-    // - Edit: Admin or task owner
-    // - Delete: Admin, CR, or task owner
+    // - Edit: Admin, Faculty (own tasks), or task owner
+    // - Delete: Admin, CR, Faculty (own tasks), or task owner
     match /tasks/{taskId} {
       allow read: if isSignedIn();
       
@@ -55,12 +67,14 @@ service cloud.firestore {
       
       allow update: if isSignedIn() && (
         isAdmin() || 
+        isFaculty() && resource.data.addedBy == request.auth.uid ||
         resource.data.addedBy == request.auth.uid
       );
       
       allow delete: if isSignedIn() && (
         isAdmin() || 
-        isCR() || 
+        isCR() ||
+        isFaculty() && resource.data.addedBy == request.auth.uid ||
         resource.data.addedBy == request.auth.uid
       );
     }
@@ -70,21 +84,40 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.department;
     }
     
+    // Helper function to get user's semester
+    function getUserSemester() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.semester;
+    }
+    
+    // Helper function to validate required event fields
+    function hasRequiredEventFields() {
+      return request.resource.data.keys().hasAll(['title', 'description', 'date', 'department', 'semester', 'createdBy']) &&
+        request.resource.data.title is string && request.resource.data.title.size() > 0 &&
+        request.resource.data.description is string && request.resource.data.description.size() > 0 &&
+        request.resource.data.department is string && request.resource.data.department.size() > 0 &&
+        request.resource.data.semester is string && request.resource.data.semester.size() > 0 &&
+        request.resource.data.createdBy is string && request.resource.data.createdBy.size() > 0;
+    }
+    
     // Events collection - Admin full access, CR limited access
     match /events/{eventId} {
       allow read: if isSignedIn();
       
-      // Admin can create any event; CR can create events for their own department
+      // Admin can create any event; CR can create events for their own semester
       allow create: if isAdmin() || (
         isCR() && 
         request.resource.data.createdBy == request.auth.uid &&
-        request.resource.data.department == getUserDepartment()
+        request.resource.data.semester == getUserSemester() &&
+        hasRequiredEventFields()
       );
       
       // Admin can edit any event; CR can edit only their own events
+      // CR cannot modify createdBy field or change semester to different value
       allow update: if isAdmin() || (
         isCR() && 
-        resource.data.createdBy == request.auth.uid
+        resource.data.createdBy == request.auth.uid &&
+        request.resource.data.createdBy == resource.data.createdBy &&
+        (!request.resource.data.keys().hasAny(['semester']) || request.resource.data.semester == getUserSemester())
       );
       
       // Admin can delete any event; CR can delete only their own events
@@ -103,6 +136,19 @@ service cloud.firestore {
     // Metadata - read only for users, admin can write
     match /metadata/{document=**} {
       allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+    
+    // Faculty tokens collection - only accessible by token owner and admins
+    match /facultyTokens/{facultyId} {
+      allow read: if isOwner(facultyId) || isAdmin();
+      allow write: if isOwner(facultyId) || isAdmin();
+      allow delete: if isOwner(facultyId) || isAdmin();
+    }
+    
+    // Admin logs collection - only admins can read and write
+    match /adminLogs/{logId} {
+      allow read: if isAdmin();
       allow write: if isAdmin();
     }
   }

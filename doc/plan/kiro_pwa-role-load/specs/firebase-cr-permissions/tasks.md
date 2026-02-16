@@ -6,7 +6,7 @@ This implementation plan addresses the bug in Firebase Firestore security rules 
 
 ## Tasks
 
-- [ ] 1. Update Firebase security rules for CR event creation
+- [x] 1. Update Firebase security rules for CR event creation
   - Modify the events collection create rule to check user's semester instead of department
   - Add getUserSemester() helper function to retrieve CR user's assigned semester
   - Update create rule to validate event.semester matches user.semester for CR users
@@ -14,26 +14,26 @@ This implementation plan addresses the bug in Firebase Firestore security rules 
   - Add validation for required fields (title, description, date, department, semester, createdBy)
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 5.1, 5.3_
 
-- [ ] 2. Update Firebase security rules for CR event editing
+- [x] 2. Update Firebase security rules for CR event editing
   - Update the events collection update rule to check ownership (createdBy matches user ID)
   - Add validation to prevent modification of createdBy field during updates
   - Add validation to prevent CR users from changing semester to a different value than their assigned semester
   - Ensure Admin users can still edit any event
   - _Requirements: 2.1, 2.2, 2.3, 2.4_
 
-- [ ] 3. Update Firebase security rules for CR event deletion
+- [x] 3. Update Firebase security rules for CR event deletion
   - Update the events collection delete rule to check ownership (createdBy matches user ID)
   - Ensure Admin users can still delete any event
   - _Requirements: 3.1, 3.2_
 
-- [ ] 4. Verify role-based access control rules
+- [x] 4. Verify role-based access control rules
   - Confirm Student users cannot create, edit, or delete events
   - Confirm Admin users can perform all operations
   - Confirm unauthenticated users are denied all write operations
   - Confirm all authenticated users can read events
   - _Requirements: 4.1, 4.2, 4.3, 4.4_
 
-- [ ] 5. Set up Firebase Rules testing environment
+- [x] 5. Set up Firebase Rules testing environment
   - Install @firebase/rules-unit-testing package
   - Install fast-check package for property-based testing
   - Create test configuration file for Firebase emulator
@@ -41,7 +41,7 @@ This implementation plan addresses the bug in Firebase Firestore security rules 
   - Create utility functions for initializing authenticated and unauthenticated contexts
   - _Requirements: All (testing infrastructure)_
 
-- [ ] 6. Checkpoint - Ensure rules are updated and test environment is ready
+- [x] 6. Checkpoint - Ensure rules are updated and test environment is ready
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ]* 7. Write property-based tests for CR event creation rules

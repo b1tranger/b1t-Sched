@@ -7,6 +7,7 @@ const Profile = {
 
   async init() {
     this.setupEventListeners();
+    this.setupNotificationSettingsListeners();
   },
 
   setupEventListeners() {
@@ -91,6 +92,9 @@ const Profile = {
     if (result.success) {
       this.currentProfile = result.data;
       
+      // Check if user is Faculty
+      const isFaculty = this.currentProfile.isFaculty === true || this.currentProfile.role === 'Faculty';
+      
       // Populate form fields
       document.getElementById('profile-email').textContent = this.currentProfile.email;
       document.getElementById('profile-student-id').textContent = `Student ID: ${this.currentProfile.studentId || 'Not set'}`;
@@ -100,21 +104,55 @@ const Profile = {
       
       // Load dropdown options
       const deptResult = await DB.getDepartments();
-      const semResult = await DB.getSemesters();
       
       if (deptResult.success) {
         await UI.populateDropdown('profile-department', deptResult.data, this.currentProfile.department);
       }
       
-      if (semResult.success) {
-        await UI.populateDropdown('profile-semester', semResult.data, this.currentProfile.semester);
+      if (isFaculty) {
+        // Faculty users: semester and section are readonly
+        await this.renderFacultyProfileUI();
+      } else {
+        // Regular users: load semester and section normally
+        const semResult = await DB.getSemesters();
+        
+        if (semResult.success) {
+          await UI.populateDropdown('profile-semester', semResult.data, this.currentProfile.semester);
+        }
+        
+        // Load sections
+        await this.updateSectionDropdown('profile-section', this.currentProfile.department, this.currentProfile.semester, this.currentProfile.section);
       }
-      
-      // Load sections
-      await this.updateSectionDropdown('profile-section', this.currentProfile.department, this.currentProfile.semester, this.currentProfile.section);
     }
 
+    // Update notification status
+    this.updateNotificationStatus();
+
     UI.showLoading(false);
+  },
+
+  // Render Faculty-specific profile UI with readonly semester/section
+  async renderFacultyProfileUI() {
+    const semesterSelect = document.getElementById('profile-semester');
+    const sectionSelect = document.getElementById('profile-section');
+    
+    if (semesterSelect) {
+      // Replace semester dropdown with readonly text
+      const semesterContainer = semesterSelect.parentElement;
+      semesterContainer.innerHTML = `
+        <label for="profile-semester">Semester</label>
+        <input type="text" id="profile-semester" value="Not Available For Faculty" readonly class="readonly-field" />
+      `;
+    }
+    
+    if (sectionSelect) {
+      // Replace section dropdown with readonly text
+      const sectionContainer = sectionSelect.parentElement;
+      sectionContainer.innerHTML = `
+        <label for="profile-section">Section</label>
+        <input type="text" id="profile-section" value="Not Available For Faculty" readonly class="readonly-field" />
+      `;
+    }
   },
 
   async updateSectionDropdown(elementId, department, semester, selectedValue = null) {
@@ -161,12 +199,29 @@ const Profile = {
         return;
       }
 
-      const department = document.getElementById('profile-department').value;
-      const semester = document.getElementById('profile-semester').value;
-      const section = document.getElementById('profile-section').value;
+      // Check if user is Faculty
+      const isFaculty = this.currentProfile && (this.currentProfile.isFaculty === true || this.currentProfile.role === 'Faculty');
 
-      if (!department || !semester || !section) {
-        UI.showMessage('profile-message', 'Please select all fields', 'error');
+      const department = document.getElementById('profile-department').value;
+      let semester, section;
+      
+      if (isFaculty) {
+        // Faculty users: skip semester/section validation
+        semester = null;
+        section = null;
+      } else {
+        // Regular users: validate semester and section
+        semester = document.getElementById('profile-semester').value;
+        section = document.getElementById('profile-section').value;
+        
+        if (!semester || !section) {
+          UI.showMessage('profile-message', 'Please select all fields', 'error');
+          return;
+        }
+      }
+
+      if (!department) {
+        UI.showMessage('profile-message', 'Please select department', 'error');
         return;
       }
 
@@ -181,16 +236,25 @@ const Profile = {
       }
 
       // Check if anything changed
-      if (department === this.currentProfile.department && 
-          semester === this.currentProfile.semester && 
-          section === this.currentProfile.section) {
-        UI.showMessage('profile-message', 'No changes detected', 'info');
-        return;
+      if (isFaculty) {
+        // For Faculty, only check department
+        if (department === this.currentProfile.department) {
+          UI.showMessage('profile-message', 'No changes detected', 'info');
+          return;
+        }
+      } else {
+        // For regular users, check all fields
+        if (department === this.currentProfile.department && 
+            semester === this.currentProfile.semester && 
+            section === this.currentProfile.section) {
+          UI.showMessage('profile-message', 'No changes detected', 'info');
+          return;
+        }
       }
 
-      // Check profile change cooldown (30 days) - skip for admins
+      // Check profile change cooldown (30 days) - skip for admins and Faculty
       const isAdmin = App.isAdmin || false;
-      if (!isAdmin && this.currentProfile.lastProfileChange) {
+      if (!isAdmin && !isFaculty && this.currentProfile.lastProfileChange) {
         const lastChange = this.currentProfile.lastProfileChange.toDate ? 
           this.currentProfile.lastProfileChange.toDate() : 
           new Date(this.currentProfile.lastProfileChange);
@@ -207,40 +271,60 @@ const Profile = {
       }
 
       // Confirm changes
-      const confirmed = confirm(`Are you sure you want to change your settings to:\n\nDepartment: ${department}\nSemester: ${semester}\nSection: ${section}\n\nThis will update your personalized dashboard.\n\nNote: You won't be able to change again for 30 days.`);
+      let confirmMessage;
+      if (isFaculty) {
+        confirmMessage = `Are you sure you want to change your department to:\n\nDepartment: ${department}\n\nThis will update your personalized dashboard.`;
+      } else {
+        confirmMessage = `Are you sure you want to change your settings to:\n\nDepartment: ${department}\nSemester: ${semester}\nSection: ${section}\n\nThis will update your personalized dashboard.\n\nNote: You won't be able to change again for 30 days.`;
+      }
+      
+      const confirmed = confirm(confirmMessage);
       
       if (!confirmed) return;
 
       UI.showLoading(true);
 
       const userId = Auth.getUserId();
-      const result = await DB.updateUserProfile(userId, {
+      const updateData = {
         department,
-        semester,
-        section,
-        lastProfileChange: firebase.firestore.FieldValue.serverTimestamp()
-      });
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      
+      if (!isFaculty) {
+        updateData.semester = semester;
+        updateData.section = section;
+        updateData.lastProfileChange = firebase.firestore.FieldValue.serverTimestamp();
+      }
+      
+      const result = await DB.updateUserProfile(userId, updateData);
 
       if (result.success) {
         // Update current profile
         this.currentProfile.department = department;
-        this.currentProfile.semester = semester;
-        this.currentProfile.section = section;
-        this.currentProfile.lastProfileChange = new Date();
+        if (!isFaculty) {
+          this.currentProfile.semester = semester;
+          this.currentProfile.section = section;
+          this.currentProfile.lastProfileChange = new Date();
+        }
 
         // Update localStorage
-        localStorage.setItem('userProfile', JSON.stringify({
+        const profileData = {
           department,
-          semester,
-          section,
           email: this.currentProfile.email
-        }));
+        };
+        if (!isFaculty) {
+          profileData.semester = semester;
+          profileData.section = section;
+        }
+        localStorage.setItem('userProfile', JSON.stringify(profileData));
 
         // Update App's userProfile so dashboard reloads correctly
         if (App.userProfile) {
           App.userProfile.department = department;
-          App.userProfile.semester = semester;
-          App.userProfile.section = section;
+          if (!isFaculty) {
+            App.userProfile.semester = semester;
+            App.userProfile.section = section;
+          }
         }
 
         UI.showMessage('profile-message', 'Profile updated successfully! Redirecting...', 'success');
@@ -258,6 +342,70 @@ const Profile = {
       console.error('Error saving profile:', error);
       UI.showMessage('profile-message', 'An error occurred. Please try again.', 'error');
       UI.showLoading(false);
+    }
+  },
+
+  /**
+   * Updates notification status display in profile settings
+   */
+  updateNotificationStatus() {
+    const statusText = document.getElementById('notification-status-text');
+    const enableBtn = document.getElementById('enable-notifications-settings-btn');
+    const instructions = document.getElementById('notification-settings-instructions');
+    const instructionsText = document.getElementById('notification-settings-instructions-text');
+
+    if (!statusText || !enableBtn) return;
+
+    // Check if notifications are supported
+    if (!('Notification' in window)) {
+      statusText.textContent = 'Not supported in this browser';
+      statusText.style.color = 'var(--text-secondary)';
+      enableBtn.style.display = 'none';
+      return;
+    }
+
+    const permission = Notification.permission;
+
+    if (permission === 'granted') {
+      statusText.textContent = 'Enabled - You will receive notifications';
+      statusText.style.color = 'var(--success-color)';
+      enableBtn.style.display = 'none';
+      if (instructions) instructions.style.display = 'none';
+    } else if (permission === 'denied') {
+      statusText.textContent = 'Blocked - Enable in browser settings';
+      statusText.style.color = 'var(--danger-color)';
+      enableBtn.style.display = 'none';
+      
+      // Show instructions
+      if (instructions && instructionsText && PermissionManager) {
+        instructionsText.textContent = PermissionManager.getEnableInstructions();
+        instructions.style.display = 'flex';
+      }
+    } else {
+      statusText.textContent = 'Not enabled';
+      statusText.style.color = 'var(--text-secondary)';
+      enableBtn.style.display = 'inline-block';
+      if (instructions) instructions.style.display = 'none';
+    }
+  },
+
+  /**
+   * Sets up notification settings event listeners
+   */
+  setupNotificationSettingsListeners() {
+    const enableBtn = document.getElementById('enable-notifications-settings-btn');
+    
+    if (enableBtn) {
+      enableBtn.addEventListener('click', async () => {
+        if (PermissionManager) {
+          const result = await PermissionManager.requestPermission();
+          this.updateNotificationStatus();
+          
+          if (result.granted && NotificationManager) {
+            await NotificationManager.init();
+          }
+        }
+      });
     }
   }
 };

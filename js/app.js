@@ -1,4 +1,121 @@
 // ============================================
+// FILTER POPUP CLASS
+// ============================================
+
+class FilterPopup {
+  constructor() {
+    this.popup = document.getElementById('filter-popup');
+    this.addFilterBtn = document.getElementById('add-filter-btn');
+    this.closeBtn = document.getElementById('close-filter-popup');
+    this.applyBtn = document.getElementById('apply-filters-btn');
+    this.clearBtn = document.getElementById('clear-filters-btn');
+    this.badge = document.getElementById('filter-badge');
+    this.activeFilters = 0;
+  }
+
+  open() {
+    if (this.popup) {
+      this.popup.style.display = 'flex';
+    }
+  }
+
+  close() {
+    if (this.popup) {
+      this.popup.style.display = 'none';
+    }
+  }
+
+  updateBadge() {
+    const filters = this.getActiveFilters();
+    this.activeFilters = filters.length;
+    
+    if (this.badge) {
+      if (this.activeFilters > 0) {
+        this.badge.textContent = this.activeFilters;
+        this.badge.style.display = 'inline-flex';
+      } else {
+        this.badge.style.display = 'none';
+      }
+    }
+  }
+
+  getActiveFilters() {
+    const filters = [];
+    const dept = document.getElementById('filter-department')?.value;
+    const sem = document.getElementById('filter-semester')?.value;
+    const section = document.getElementById('filter-section')?.value;
+    const role = document.getElementById('filter-role')?.value;
+
+    if (dept && dept !== 'All') filters.push('department');
+    if (sem && sem !== 'All') filters.push('semester');
+    if (section && section !== 'All') filters.push('section');
+    if (role && role !== 'All') filters.push('role');
+
+    return filters;
+  }
+
+  clearFilters() {
+    const filterDept = document.getElementById('filter-department');
+    const filterSem = document.getElementById('filter-semester');
+    const filterSection = document.getElementById('filter-section');
+    const filterRole = document.getElementById('filter-role');
+
+    if (filterDept) filterDept.value = 'All';
+    if (filterSem) filterSem.value = 'All';
+    if (filterSection) filterSection.value = 'All';
+    if (filterRole) filterRole.value = 'All';
+    
+    this.updateBadge();
+  }
+}
+
+// ============================================
+// DELETE USER DIALOG CLASS
+// ============================================
+
+class DeleteUserDialog {
+  constructor() {
+    this.modal = document.getElementById('delete-user-modal');
+    this.emailDisplay = document.getElementById('delete-user-email');
+    this.confirmBtn = document.getElementById('confirm-delete-user');
+    this.cancelBtn = document.getElementById('cancel-delete-user');
+    this.closeBtn = document.getElementById('close-delete-modal');
+    this.currentUserId = null;
+    this.currentUserEmail = null;
+  }
+
+  open(userId, userEmail) {
+    this.currentUserId = userId;
+    this.currentUserEmail = userEmail;
+    if (this.emailDisplay) {
+      this.emailDisplay.textContent = userEmail;
+    }
+    if (this.modal) {
+      this.modal.style.display = 'flex';
+    }
+  }
+
+  close() {
+    if (this.modal) {
+      this.modal.style.display = 'none';
+    }
+    this.currentUserId = null;
+    this.currentUserEmail = null;
+    if (this.emailDisplay) {
+      this.emailDisplay.textContent = '';
+    }
+  }
+
+  getUserId() {
+    return this.currentUserId;
+  }
+
+  getUserEmail() {
+    return this.currentUserEmail;
+  }
+}
+
+// ============================================
 // MAIN APPLICATION
 // ============================================
 
@@ -8,7 +125,10 @@ const App = {
   currentTasks: [],
   currentEvents: [],
   isAdmin: false,
+  filterPopup: null,
+  deleteUserDialog: null,
   isCR: false,
+  isFaculty: false,
   isBlocked: false,
   allUsers: [],
   isSigningUp: false, // Flag to prevent auth state handling during signup
@@ -18,6 +138,10 @@ const App = {
 
     // Initialize router
     Router.init();
+
+    // Initialize UI components
+    this.filterPopup = new FilterPopup();
+    this.deleteUserDialog = new DeleteUserDialog();
 
     // Setup authentication state listener
     Auth.onAuthStateChanged(async (user) => {
@@ -50,8 +174,14 @@ const App = {
     // Initialize Google Classroom
     Classroom.init();
 
+    // Initialize Note Manager
+    NoteManager.init();
+
     // Handle route-specific data loading
     Router.onRouteChange(async (route) => {
+      // Update FAQ and Contribution section visibility
+      UI.updateSectionVisibility(route);
+
       if (route === 'profile-settings') {
         await Profile.loadProfile();
       } else if (route === 'dashboard') {
@@ -60,6 +190,12 @@ const App = {
         await this.loadUserManagement();
       }
     });
+
+    // Call visibility controller for current route on initial load
+    const currentRoute = Router.getCurrentRoute();
+    if (currentRoute) {
+      UI.updateSectionVisibility(currentRoute);
+    }
   },
 
   setupEventListeners() {
@@ -365,16 +501,19 @@ const App = {
     const userEmail = Auth.getUserEmail();
     const { department, semester, section } = this.userProfile;
 
-    const result = await DB.createTask(userId, userEmail, {
+    // Faculty users: semester and section are null
+    const taskData = {
       title,
       course,
       type,
       description,
       deadline,
       department,
-      semester,
-      section
-    });
+      semester: this.isFaculty ? null : semester,
+      section: this.isFaculty ? null : section
+    };
+
+    const result = await DB.createTask(userId, userEmail, taskData);
 
     if (result.success) {
       UI.hideModal('add-task-modal');
@@ -770,16 +909,18 @@ const App = {
       // User has profile, load dashboard
       this.userProfile = profileResult.data;
 
-      // Check if user is admin, CR, or blocked
+      // Check if user is admin, CR, Faculty, or blocked
       const rolesResult = await DB.getUserRoles(user.uid);
       this.isAdmin = rolesResult.isAdmin || false;
       this.isCR = rolesResult.isCR || false;
+      this.isFaculty = rolesResult.isFaculty || false;
       this.isBlocked = rolesResult.isBlocked || false;
 
       // Save to localStorage
       Utils.storage.set('userProfile', this.userProfile);
       Utils.storage.set('isAdmin', this.isAdmin);
       Utils.storage.set('isCR', this.isCR);
+      Utils.storage.set('isFaculty', this.isFaculty);
       Utils.storage.set('isBlocked', this.isBlocked);
 
       // Update user details card
@@ -796,11 +937,15 @@ const App = {
       // Show blocked user warning if applicable
       UI.toggleBlockedUserMode(this.isBlocked);
 
-      // Show footer and contributions section
+      // Show footer when logged in
       const appFooter = document.getElementById('app-footer');
-      const contribSection = document.getElementById('contributions-section');
       if (appFooter) appFooter.style.display = 'block';
-      if (contribSection) contribSection.style.display = 'block';
+
+      // Initialize notification system
+      await NotificationManager.init();
+      
+      // Set up Firestore listeners for notifications
+      await FirestoreListenerManager.setupListeners(this.userProfile);
 
       // Navigate based on current route
       if (Router.getCurrentRoute() === 'profile-settings') {
@@ -824,6 +969,7 @@ const App = {
     this.userProfile = null;
     this.isAdmin = false;
     this.isCR = false;
+    this.isFaculty = false;
     this.isBlocked = false;
     Utils.storage.clear();
 
@@ -1464,35 +1610,130 @@ const App = {
     filterInputs.forEach(inputId => {
       const input = document.getElementById(inputId);
       if (input) {
-        input.addEventListener('change', () => this.filterUsers());
+        input.addEventListener('change', () => {
+          this.filterUsers();
+          if (this.filterPopup) {
+            this.filterPopup.updateBadge();
+          }
+        });
       }
     });
 
-    // Clear filters button
+    // Filter popup event listeners
+    if (this.filterPopup) {
+      // Add Filter button - open popup
+      if (this.filterPopup.addFilterBtn) {
+        this.filterPopup.addFilterBtn.addEventListener('click', () => {
+          this.filterPopup.open();
+        });
+      }
+
+      // Close button - close popup
+      if (this.filterPopup.closeBtn) {
+        this.filterPopup.closeBtn.addEventListener('click', () => {
+          this.filterPopup.close();
+        });
+      }
+
+      // Apply button - close popup and apply filters
+      if (this.filterPopup.applyBtn) {
+        this.filterPopup.applyBtn.addEventListener('click', () => {
+          this.filterPopup.close();
+          this.filterUsers();
+        });
+      }
+
+      // Clear Filters button
+      if (this.filterPopup.clearBtn) {
+        this.filterPopup.clearBtn.addEventListener('click', () => {
+          this.filterPopup.clearFilters();
+          this.clearUserFilters();
+        });
+      }
+
+      // Click outside popup to close
+      if (this.filterPopup.popup) {
+        this.filterPopup.popup.addEventListener('click', (e) => {
+          if (e.target === this.filterPopup.popup) {
+            this.filterPopup.close();
+          }
+        });
+      }
+
+      // Escape key to close popup
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && this.filterPopup.popup && this.filterPopup.popup.style.display === 'flex') {
+          this.filterPopup.close();
+        }
+      });
+    }
+
+    // Clear filters button (legacy - now in popup)
     const clearFiltersBtn = document.getElementById('clear-filters-btn');
     if (clearFiltersBtn) {
-      clearFiltersBtn.addEventListener('click', () => this.clearUserFilters());
+      clearFiltersBtn.addEventListener('click', () => {
+        if (this.filterPopup) {
+          this.filterPopup.clearFilters();
+        }
+        this.clearUserFilters();
+      });
     }
 
     // User list delegation for role toggles and edit buttons
     const userListContainer = document.getElementById('user-list-container');
     if (userListContainer) {
       userListContainer.addEventListener('click', async (e) => {
+        // Password reset button
+        if (e.target.closest('.send-reset-btn')) {
+          const btn = e.target.closest('.send-reset-btn');
+          const userId = btn.dataset.userId;
+          const userEmail = btn.dataset.userEmail;
+          await this.handlePasswordReset(userId, userEmail);
+        }
+        // Delete user button
+        if (e.target.closest('.delete-user-btn')) {
+          const btn = e.target.closest('.delete-user-btn');
+          const userId = btn.dataset.userId;
+          const userEmail = btn.dataset.userEmail;
+          this.openDeleteUserDialog(userId, userEmail);
+        }
+        // Toggle CR button
         if (e.target.closest('.toggle-cr-btn')) {
           const userId = e.target.closest('.toggle-cr-btn').dataset.userId;
           const currentValue = e.target.closest('.toggle-cr-btn').dataset.currentValue === 'true';
           await this.toggleUserRole(userId, 'isCR', !currentValue);
         }
+        // Toggle blocked button
         if (e.target.closest('.toggle-blocked-btn')) {
           const userId = e.target.closest('.toggle-blocked-btn').dataset.userId;
           const currentValue = e.target.closest('.toggle-blocked-btn').dataset.currentValue === 'true';
           await this.toggleUserRole(userId, 'isBlocked', !currentValue);
         }
+        // Edit user button
         if (e.target.closest('.edit-user-btn')) {
           const userId = e.target.closest('.edit-user-btn').dataset.userId;
           await this.openEditUserModal(userId);
         }
       });
+    }
+
+    // Delete User confirmation dialog listeners
+    if (this.deleteUserDialog) {
+      if (this.deleteUserDialog.cancelBtn) {
+        this.deleteUserDialog.cancelBtn.addEventListener('click', () => {
+          this.deleteUserDialog.close();
+        });
+      }
+      if (this.deleteUserDialog.closeBtn) {
+        this.deleteUserDialog.closeBtn.addEventListener('click', () => {
+          this.deleteUserDialog.close();
+        });
+      }
+      if (this.deleteUserDialog.confirmBtn) {
+        this.deleteUserDialog.confirmBtn.addEventListener('click', async () => {
+          await this.handleDeleteUser();
+        });
+      }
     }
 
     // Edit User modal listeners
@@ -1552,6 +1793,11 @@ const App = {
       await UI.populateDropdown('filter-semester', ['All', ...semResult.data], 'All');
     }
 
+    // Initialize filter badge
+    if (this.filterPopup) {
+      this.filterPopup.updateBadge();
+    }
+
     UI.showLoading(false);
   },
 
@@ -1593,14 +1839,34 @@ const App = {
           </div>
           <div class="user-card-actions">
             ${!user.isAdmin ? `
-              <button class="btn btn-sm toggle-cr-btn ${user.isCR ? 'active' : ''}" data-user-id="${user.id}" data-current-value="${user.isCR || false}" title="${user.isCR ? 'Remove CR role' : 'Make CR'}">
+              <button class="btn btn-sm btn-action send-reset-btn" 
+                      data-user-id="${user.id}" 
+                      data-user-email="${user.email || ''}"
+                      title="Send password reset link">
+                <i class="fas fa-key"></i> Reset Password
+              </button>
+              <button class="btn btn-sm btn-action btn-danger delete-user-btn" 
+                      data-user-id="${user.id}" 
+                      data-user-email="${user.email || ''}"
+                      title="Delete user account">
+                <i class="fas fa-trash-alt"></i> Delete
+              </button>
+              <button class="btn btn-sm btn-action toggle-cr-btn ${user.isCR ? 'active' : ''}" 
+                      data-user-id="${user.id}" 
+                      data-current-value="${user.isCR || false}" 
+                      title="${user.isCR ? 'Remove CR role' : 'Make CR'}">
                 <i class="fas fa-user-graduate"></i> ${user.isCR ? 'Remove CR' : 'Make CR'}
               </button>
-              <button class="btn btn-sm toggle-blocked-btn ${user.isBlocked ? 'active danger' : ''}" data-user-id="${user.id}" data-current-value="${user.isBlocked || false}" title="${user.isBlocked ? 'Unblock user' : 'Block user'}">
+              <button class="btn btn-sm btn-action toggle-blocked-btn ${user.isBlocked ? 'active danger' : ''}" 
+                      data-user-id="${user.id}" 
+                      data-current-value="${user.isBlocked || false}" 
+                      title="${user.isBlocked ? 'Unblock user' : 'Block user'}">
                 <i class="fas fa-${user.isBlocked ? 'unlock' : 'ban'}"></i> ${user.isBlocked ? 'Unblock' : 'Block'}
               </button>
             ` : '<span class="admin-protected">Admin account</span>'}
-            <button class="btn btn-sm edit-user-btn" data-user-id="${user.id}" title="Edit user profile">
+            <button class="btn btn-sm btn-action edit-user-btn" 
+                    data-user-id="${user.id}" 
+                    title="Edit user profile">
               <i class="fas fa-edit"></i> Edit
             </button>
           </div>
@@ -1667,6 +1933,80 @@ const App = {
     if (filterRole) filterRole.value = 'All';
 
     this.renderUserList(this.allUsers);
+  },
+
+  async handlePasswordReset(userId, userEmail) {
+    if (!this.isAdmin) return;
+
+    const confirmed = confirm(`Send password reset link to ${userEmail}?`);
+    if (!confirmed) return;
+
+    UI.showLoading(true);
+
+    try {
+      const result = await adminAPI.sendPasswordReset(userId);
+      UI.showNotification('success', result.message || 'Password reset link sent successfully');
+    } catch (error) {
+      console.error('Password reset error:', error);
+      if (error.message.includes('network')) {
+        UI.showNotification('error', 'Network error. Please check your connection.');
+      } else if (error.message.includes('permission')) {
+        UI.showNotification('error', 'You do not have permission to perform this action.');
+      } else {
+        UI.showNotification('error', error.message || 'Failed to send password reset link');
+      }
+    } finally {
+      UI.showLoading(false);
+    }
+  },
+
+  openDeleteUserDialog(userId, userEmail) {
+    if (!this.isAdmin) return;
+    if (this.deleteUserDialog) {
+      this.deleteUserDialog.open(userId, userEmail);
+    }
+  },
+
+  async handleDeleteUser() {
+    if (!this.isAdmin || !this.deleteUserDialog) return;
+
+    const userId = this.deleteUserDialog.getUserId();
+    const userEmail = this.deleteUserDialog.getUserEmail();
+
+    if (!userId) return;
+
+    UI.showLoading(true);
+
+    try {
+      const result = await adminAPI.deleteUser(userId);
+      
+      // Close dialog
+      this.deleteUserDialog.close();
+      
+      // Remove user from local state
+      this.allUsers = this.allUsers.filter(u => u.id !== userId);
+      
+      // Re-render user list
+      this.renderUserList(this.allUsers);
+      
+      // Show success notification
+      UI.showNotification('success', result.message || 'User deleted successfully');
+    } catch (error) {
+      console.error('Delete user error:', error);
+      
+      // Close dialog
+      this.deleteUserDialog.close();
+      
+      if (error.message.includes('network')) {
+        UI.showNotification('error', 'Network error. Please check your connection.');
+      } else if (error.message.includes('permission')) {
+        UI.showNotification('error', 'You do not have permission to perform this action.');
+      } else {
+        UI.showNotification('error', error.message || 'Failed to delete user');
+      }
+    } finally {
+      UI.showLoading(false);
+    }
   },
 
   async toggleUserRole(userId, role, value) {

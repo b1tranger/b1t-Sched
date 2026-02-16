@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classroom Module Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 3px;
+        }
+        .pass {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .fail {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Google Classroom Module Initialization Test</h1>
+    
+    <div class="test-section">
+        <h2>Test Setup</h2>
+        <p>This page tests the Classroom module initialization and event listener setup.</p>
+        <div id="test-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>DOM Elements</h2>
+        <button id="classroom-toggle">Mobile Toggle</button>
+        <button id="classroom-nav-btn">Desktop Nav Button</button>
+        <div id="close-classroom-sidebar" style="display:none;">Close Sidebar</div>
+        <div id="close-classroom-modal" style="display:none;">Close Modal</div>
+        <div id="classroom-overlay" style="display:none;">Overlay</div>
+        <div id="classroom-content-mobile"></div>
+        <div id="classroom-content-desktop"></div>
+        <div id="classroom-sidebar"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Manual Tests</h2>
+        <button onclick="runTests()">Run Initialization Tests</button>
+        <button onclick="testMobileToggle()">Test Mobile Toggle Click</button>
+        <button onclick="testDesktopButton()">Test Desktop Button Click</button>
+    </div>
+
+    <!-- Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+    <!-- Classroom Module -->
+    <script src="js/classroom.js"></script>
+
+    <!-- Test Script -->
+    <script>
+        const results = document.getElementById('test-results');
+        
+        function addResult(message, passed) {
+            const div = document.createElement('div');
+            div.className = `test-result ${passed ? 'pass' : 'fail'}`;
+            div.textContent = `${passed ? '✓' : '✗'} ${message}`;
+            results.appendChild(div);
+        }
+
+        function runTests() {
+            results.innerHTML = '<h3>Test Results:</h3>';
+            
+            // Test 1: Google Identity Services loaded
+            setTimeout(() => {
+                const gisLoaded = typeof google !== 'undefined' && 
+                                 google.accounts && 
+                                 google.accounts.oauth2;
+                addResult('Google Identity Services loaded', gisLoaded);
+                
+                // Test 2: Classroom module initialized
+                const moduleInit = Classroom.isInitialized === true;
+                addResult('Classroom module initialized', moduleInit);
+                
+                // Test 3: Token client created
+                const tokenClientExists = Classroom.tokenClient !== null;
+                addResult('Token client created', tokenClientExists);
+                
+                // Test 4: DOM elements exist
+                const mobileToggle = document.getElementById('classroom-toggle');
+                const desktopBtn = document.getElementById('classroom-nav-btn');
+                addResult('Mobile toggle element exists', mobileToggle !== null);
+                addResult('Desktop nav button element exists', desktopBtn !== null);
+                
+                // Test 5: Event listeners attached (check by triggering)
+                let mobileClicked = false;
+                let desktopClicked = false;
+                
+                // Override openClassroomParams to detect calls
+                const originalOpen = Classroom.openClassroomParams;
+                Classroom.openClassroomParams = function() {
+                    console.log('openClassroomParams called');
+                };
+                
+                // Simulate clicks
+                if (mobileToggle) {
+                    mobileToggle.click();
+                    addResult('Mobile toggle click handler attached', true);
+                }
+                
+                if (desktopBtn) {
+                    desktopBtn.click();
+                    addResult('Desktop button click handler attached', true);
+                }
+                
+                // Restore original function
+                Classroom.openClassroomParams = originalOpen;
+                
+            }, 2000); // Wait for Google Identity Services to load
+        }
+
+        function testMobileToggle() {
+            console.log('Testing mobile toggle...');
+            const btn = document.getElementById('classroom-toggle');
+            if (btn) {
+                btn.click();
+                addResult('Mobile toggle clicked - check console for logs', true);
+            }
+        }
+
+        function testDesktopButton() {
+            console.log('Testing desktop button...');
+            const btn = document.getElementById('classroom-nav-btn');
+            if (btn) {
+                btn.click();
+                addResult('Desktop button clicked - check console for logs', true);
+            }
+        }
+
+        // Auto-run tests after page load
+        window.addEventListener('load', () => {
+            console.log('Page loaded, waiting for Google Identity Services...');
+            setTimeout(() => {
+                console.log('Initializing Classroom module...');
+                Classroom.init();
+                setTimeout(runTests, 1000);
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

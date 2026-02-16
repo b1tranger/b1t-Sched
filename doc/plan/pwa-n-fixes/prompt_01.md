@@ -1,10 +1,6 @@
 [Task-1]
 
-
-
 # target: Checking PWA and adding mobile functionality
-
-
 
 # specification:
 
@@ -16,15 +12,9 @@
 
 
 
-
-
 [Task-2]
 
-
-
 # target: notifications for new tasks and events
-
-
 
 # specification:
 
@@ -34,11 +24,7 @@
 
 [Task-3]
 
-
-
 # target: fixing permission issue for CR
-
-
 
 #specification:
 
@@ -46,15 +32,9 @@
 
 
 
-
-
 [Task-4]
 
-
-
 # target: new role "Faculty" and their priviledges
-
-
 
 # specification:
 
@@ -66,13 +46,9 @@
 
 
 
-
-
 [Task-5]
 
 # target: User Management interface update for admins
-
-
 
 # specification:
 
@@ -84,13 +60,9 @@
 
 
 
-
-
 [Task-6]
 
 # target: hiding redundant "FAQ" and "Contribution" section
-
-
 
 # specification:
 
@@ -100,11 +72,7 @@
 
 [Task-7]
 
-
-
 # target: adding Note Taking feature
-
-
 
 # specification:
 
@@ -118,6 +86,28 @@
 
 - inside the Note taking interface, there will be a button "Upload Files" that will drop-down a list of temporary file upload sites: 
 
+https://tmpfiles.org/
+
+https://www.file.io/
+
+https://filebin.net/
+
+https://temp.sh/
+
+https://limewire.com/
+
+and there will be an instruction saying that "Paste links in the Note or in Task. Hese are temporary files, be sure to back up anything important within their expiry. Markdown link format is: [text](link)"
+
+- Will I need to add a Note document in the Firebase database?
+
+[Task-8]
+
+# target: caching and reducing loading time 
+
+# specification:
+
+- the first loading time after logging in (or Authenticating a logged in session) takes longer. Is there a way to reduce them?
+- is there a way to cache Classroom data (To-do and assignments) so they do not load everytime I use the toggle button?
 
 
 [general Task]
@@ -125,6 +115,3 @@
 - prepare a new Firebase rule to copy and paste that addresses all the above changes and updates
 
 - make the FAQ section compact by moving the 3 drop-down menu inside another drop-down menu
-
-
-

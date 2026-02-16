@@ -1,3 +1,8 @@
+
+
+
+
+
 /* ============================================
    DASHBOARD LAYOUT & NEW FEATURES
    ============================================ */
@@ -1035,14 +1040,14 @@ body.user-blocked .task-edit-btn {
 .user-card-actions {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--spacing-sm);
-    padding-top: var(--spacing-md);
+    gap: 8px;
+    padding: 12px;
     border-top: 1px solid var(--border-light);
 }
 
 .user-card-actions .btn-sm {
-    padding: var(--spacing-xs) var(--spacing-sm);
-    font-size: var(--font-sm);
+    padding: 6px 12px;
+    font-size: 13px;
 }
 
 .user-card-actions .btn-sm i {
@@ -1121,12 +1126,12 @@ body.user-blocked .task-edit-btn {
     }
 
     .user-card-actions {
-        flex-direction: column;
+        gap: 6px;
     }
 
     .user-card-actions .btn-sm {
-        width: 100%;
-        justify-content: center;
+        padding: 6px 10px;
+        font-size: 12px;
     }
 }
 
@@ -1194,10 +1199,14 @@ body.user-blocked .task-edit-btn {
 
 .total-user-counter {
     position: fixed;
+    /* width: fit-content; */
     bottom: 20px;
+    /* left: 20px; */
     right: 20px;
-    background-color: var(--primary-maroon);
-    color: var(--text-white);
+    color: rgb(255, 255, 255);
+    background-color: rgba(0, 0, 0, 0.192);
+    /* background-color: var(--primary-maroon); */
+    /* color: var(--text-white); */
     padding: 8px 16px;
     border-radius: 30px;
     font-size: var(--font-sm);
@@ -1368,5 +1377,153 @@ input:checked+.slider:before {
         width: 100%;
         margin-top: var(--spacing-sm);
         order: 3;
+    }
+}
+
+/* ============================================
+   NOTIFICATION PERMISSION PROMPT
+   ============================================ */
+
+.notification-permission-prompt {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: white;
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-lg);
+    box-shadow: var(--shadow-md);
+}
+
+.notification-prompt-content {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+.notification-prompt-content > i {
+    font-size: 2rem;
+    opacity: 0.9;
+}
+
+.notification-prompt-text {
+    flex: 1;
+    min-width: 200px;
+}
+
+.notification-prompt-text strong {
+    display: block;
+    font-size: 1.1rem;
+    margin-bottom: 0.25rem;
+}
+
+.notification-prompt-text p {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 0.9rem;
+}
+
+.notification-prompt-content .btn {
+    margin-left: auto;
+}
+
+.notification-prompt-content .btn-text {
+    color: white;
+    opacity: 0.8;
+}
+
+.notification-prompt-content .btn-text:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.notification-instructions {
+    margin-top: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+}
+
+.notification-instructions i {
+    margin-top: 0.2rem;
+    opacity: 0.8;
+}
+
+.notification-instructions p {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+    .notification-prompt-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .notification-prompt-content .btn {
+        margin-left: 0;
+        width: 100%;
+    }
+}
+
+/* ============================================
+   NOTIFICATION SETTINGS (Profile Page)
+   ============================================ */
+
+.notification-settings-section {
+    background: var(--bg-light);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.notification-status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+}
+
+.notification-status-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    flex: 1;
+}
+
+.notification-status-info > i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+.notification-status-info strong {
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.notification-status-info p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.notification-help-text {
+    margin: var(--spacing-sm) 0 0 0;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+@media (max-width: 768px) {
+    .notification-status {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .notification-status button {
+        width: 100%;
     }
 }
