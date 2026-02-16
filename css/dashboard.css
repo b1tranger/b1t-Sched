@@ -1495,7 +1495,7 @@ input:checked+.slider:before {
 }
 
 .notification-prompt-text {
-    color: black;
+    /* color: black; */
     flex: 1;
     min-width: 200px;
 }
