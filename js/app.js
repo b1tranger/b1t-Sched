@@ -1633,7 +1633,7 @@ const App = {
 
     const userId = Auth.getUserId();
 
-    // CR can only create events for their own department
+    // CR can only create events for their own semester
     if (this.isCR && !this.isAdmin) {
       department = this.userProfile.department;
     }
@@ -1646,6 +1646,7 @@ const App = {
       description,
       date,
       department,
+      semester: this.userProfile.semester, // Include semester for CR validation
       createdBy: userId,
       createdByName
     });
@@ -1656,23 +1657,6 @@ const App = {
       await this.loadDashboardData();
     } else {
       alert('Failed to add event: ' + result.error);
-    }
-  },
-
-  async handleDeleteEvent(eventId) {
-    if (!this.isAdmin) return;
-
-    const confirmed = confirm('Are you sure you want to delete this event?');
-    if (!confirmed) return;
-
-    const result = await DB.deleteEvent(eventId);
-
-    if (result.success) {
-      // Remove from local state and re-render
-      this.currentEvents = this.currentEvents.filter(e => e.id !== eventId);
-      UI.renderEvents(this.currentEvents, this.isAdmin);
-    } else {
-      alert('Failed to delete event: ' + result.error);
     }
   },
 

@@ -491,7 +491,7 @@ const DB = {
     }
   },
 
-  // Create a new event (admin only)
+  // Create a new event (admin or CR)
   async createEvent(data) {
     try {
       const docRef = await db.collection('events').add({
@@ -499,6 +499,7 @@ const DB = {
         description: data.description || '',
         date: firebase.firestore.Timestamp.fromDate(new Date(data.date)),
         department: data.department || 'ALL',
+        semester: data.semester || null,
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         createdBy: data.createdBy,
         createdByName: data.createdByName || 'Admin'
