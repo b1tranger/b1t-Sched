@@ -25,6 +25,20 @@ class FilterPopup {
     }
   }
 
+  // Hide semester and section filters for Faculty users
+  hideSemesterSectionForFaculty(isFaculty) {
+    const semesterGroup = document.querySelector('#filter-semester')?.closest('.form-group');
+    const sectionGroup = document.querySelector('#filter-section')?.closest('.form-group');
+
+    if (isFaculty) {
+      if (semesterGroup) semesterGroup.style.display = 'none';
+      if (sectionGroup) sectionGroup.style.display = 'none';
+    } else {
+      if (semesterGroup) semesterGroup.style.display = 'block';
+      if (sectionGroup) sectionGroup.style.display = 'block';
+    }
+  }
+
   updateBadge() {
     const filters = this.getActiveFilters();
     this.activeFilters = filters.length;
@@ -47,8 +61,12 @@ class FilterPopup {
     const role = document.getElementById('filter-role')?.value;
 
     if (dept && dept !== 'All') filters.push('department');
-    if (sem && sem !== 'All') filters.push('semester');
-    if (section && section !== 'All') filters.push('section');
+    // Skip semester and section for Faculty users (they're hidden)
+    const semesterGroup = document.querySelector('#filter-semester')?.closest('.form-group');
+    if (semesterGroup && semesterGroup.style.display !== 'none') {
+      if (sem && sem !== 'All') filters.push('semester');
+      if (section && section !== 'All') filters.push('section');
+    }
     if (role && role !== 'All') filters.push('role');
 
     return filters;
@@ -61,8 +79,12 @@ class FilterPopup {
     const filterRole = document.getElementById('filter-role');
 
     if (filterDept) filterDept.value = 'All';
-    if (filterSem) filterSem.value = 'All';
-    if (filterSection) filterSection.value = 'All';
+    // Only clear semester/section if they're visible (not Faculty user)
+    const semesterGroup = document.querySelector('#filter-semester')?.closest('.form-group');
+    if (semesterGroup && semesterGroup.style.display !== 'none') {
+      if (filterSem) filterSem.value = 'All';
+      if (filterSection) filterSection.value = 'All';
+    }
     if (filterRole) filterRole.value = 'All';
     
     this.updateBadge();
@@ -539,6 +561,7 @@ const App = {
     }
 
     // Check if user can edit this task
+    // Admin can edit any task, Faculty can edit their own tasks, users can edit their own tasks
     const userId = Auth.getUserId();
     const canEdit = this.isAdmin || (userId && task.addedBy === userId);
     if (!canEdit) {
@@ -947,6 +970,11 @@ const App = {
       // Set up Firestore listeners for notifications
       await FirestoreListenerManager.setupListeners(this.userProfile);
 
+      // Initialize Faculty Classroom module if user is Faculty
+      if (this.isFaculty) {
+        await FacultyClassroom.init(user.uid);
+      }
+
       // Navigate based on current route
       if (Router.getCurrentRoute() === 'profile-settings') {
         await Profile.loadProfile();
@@ -1285,6 +1313,11 @@ const App = {
       });
     }
 
+    // Faculty Department Filter
+    if (this.isFaculty) {
+      this.setupFacultyDepartmentFilter();
+    }
+
     // Contributions Button
     const contributionsBtn = document.getElementById('contributions-btn');
     if (contributionsBtn) {
@@ -1329,6 +1362,78 @@ const App = {
         noTasksMsg.querySelector('p').textContent = type === 'all'
           ? "No pending tasks! You're all caught up."
           : `No pending ${type}s found.`;
+      } else {
+        noTasksMsg.style.display = 'none';
+      }
+    }
+  },
+
+  setupFacultyDepartmentFilter() {
+    const filterContainer = document.getElementById('faculty-department-filter');
+    const filterSelect = document.getElementById('faculty-dept-filter');
+
+    if (!filterContainer || !filterSelect) return;
+
+    // Show the filter for Faculty users
+    filterContainer.style.display = 'flex';
+
+    // Populate department options from current tasks
+    const departments = new Set();
+    this.currentTasks.forEach(task => {
+      if (task.addedByRole === 'Faculty' && task.department) {
+        departments.add(task.department);
+      }
+    });
+
+    // Clear existing options except "All Departments"
+    filterSelect.innerHTML = '<option value="all">All Departments</option>';
+
+    // Add department options
+    Array.from(departments).sort().forEach(dept => {
+      const option = document.createElement('option');
+      option.value = dept;
+      option.textContent = dept;
+      filterSelect.appendChild(option);
+    });
+
+    // Add change event listener
+    filterSelect.addEventListener('change', (e) => {
+      this.filterTasksByDepartment(e.target.value);
+    });
+  },
+
+  filterTasksByDepartment(department) {
+    const facultyGroups = document.querySelectorAll('.faculty-task-group');
+    let visibleCount = 0;
+
+    facultyGroups.forEach(group => {
+      const header = group.querySelector('.faculty-task-group-header span');
+      if (!header) return;
+
+      const groupDept = header.textContent.replace('Faculty Tasks - ', '').trim();
+
+      if (department === 'all' || groupDept === department) {
+        group.style.display = 'block';
+        // Count visible tasks in this group
+        const tasks = group.querySelectorAll('.task-card');
+        tasks.forEach(task => {
+          if (task.style.display !== 'none') {
+            visibleCount++;
+          }
+        });
+      } else {
+        group.style.display = 'none';
+      }
+    });
+
+    // Handle no tasks message
+    const noTasksMsg = document.getElementById('no-tasks-message');
+    if (noTasksMsg && this.isFaculty) {
+      if (visibleCount === 0) {
+        noTasksMsg.style.display = 'block';
+        noTasksMsg.querySelector('p').textContent = department === 'all'
+          ? "No Faculty tasks found."
+          : `No Faculty tasks found for ${department}.`;
       } else {
         noTasksMsg.style.display = 'none';
       }
@@ -1625,6 +1730,7 @@ const App = {
       if (this.filterPopup.addFilterBtn) {
         this.filterPopup.addFilterBtn.addEventListener('click', () => {
           this.filterPopup.open();
+          this.filterPopup.hideSemesterSectionForFaculty(this.isFaculty);
         });
       }
 
@@ -1886,21 +1992,27 @@ const App = {
     if (department !== 'All') {
       filtered = filtered.filter(u => u.department === department);
     }
-    if (semester !== 'All') {
-      filtered = filtered.filter(u => u.semester === semester);
+    
+    // Only apply semester/section filters if they're visible (not Faculty user)
+    const semesterGroup = document.querySelector('#filter-semester')?.closest('.form-group');
+    if (semesterGroup && semesterGroup.style.display !== 'none') {
+      if (semester !== 'All') {
+        filtered = filtered.filter(u => u.semester === semester);
+      }
+      if (section !== 'All') {
+        // Handle section groups: A matches A1, A2; B matches B1, B2, etc.
+        filtered = filtered.filter(u => {
+          if (!u.section) return false;
+          // If filter is a group (single letter like A, B, C)
+          if (section.length === 1) {
+            return u.section.startsWith(section);
+          }
+          // Otherwise exact match
+          return u.section === section;
+        });
+      }
     }
-    if (section !== 'All') {
-      // Handle section groups: A matches A1, A2; B matches B1, B2, etc.
-      filtered = filtered.filter(u => {
-        if (!u.section) return false;
-        // If filter is a group (single letter like A, B, C)
-        if (section.length === 1) {
-          return u.section.startsWith(section);
-        }
-        // Otherwise exact match
-        return u.section === section;
-      });
-    }
+    
     if (role !== 'All') {
       switch (role) {
         case 'Admin':

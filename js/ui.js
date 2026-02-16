@@ -159,28 +159,73 @@ const UI = {
 
     noTasksMsg.style.display = 'none';
 
-    // Sort tasks: incomplete first, then by deadline, completed at bottom
-    const now = new Date();
-    const sortedTasks = [...tasks].sort((a, b) => {
-      const aCompleted = userCompletions[a.id] || false;
-      const bCompleted = userCompletions[b.id] || false;
-      // Completed tasks go to bottom
-      if (aCompleted !== bCompleted) {
-        return aCompleted ? 1 : -1;
+    // Separate Faculty tasks from other tasks
+    const facultyTasks = tasks.filter(task => task.addedByRole === 'Faculty');
+    const otherTasks = tasks.filter(task => task.addedByRole !== 'Faculty');
+
+    // Group Faculty tasks by department
+    const facultyTasksByDept = {};
+    facultyTasks.forEach(task => {
+      const dept = task.department || 'Unknown';
+      if (!facultyTasksByDept[dept]) {
+        facultyTasksByDept[dept] = [];
       }
-      // Tasks with no deadline always go after all with a deadline (but before completed)
-      const aHasDeadline = !!a.deadline;
-      const bHasDeadline = !!b.deadline;
-      if (aHasDeadline && !bHasDeadline) return -1;
-      if (!aHasDeadline && bHasDeadline) return 1;
-      if (!aHasDeadline && !bHasDeadline) return 0;
-      // Both have deadlines, sort by soonest
-      const aDeadline = a.deadline.toDate ? a.deadline.toDate() : new Date(a.deadline);
-      const bDeadline = b.deadline.toDate ? b.deadline.toDate() : new Date(b.deadline);
-      return aDeadline - bDeadline;
+      facultyTasksByDept[dept].push(task);
     });
 
-    container.innerHTML = sortedTasks.map(task => {
+    // Sort tasks: incomplete first, then by deadline, completed at bottom
+    const now = new Date();
+    const sortTasks = (taskList) => {
+      return [...taskList].sort((a, b) => {
+        const aCompleted = userCompletions[a.id] || false;
+        const bCompleted = userCompletions[b.id] || false;
+        // Completed tasks go to bottom
+        if (aCompleted !== bCompleted) {
+          return aCompleted ? 1 : -1;
+        }
+        // Tasks with no deadline always go after all with a deadline (but before completed)
+        const aHasDeadline = !!a.deadline;
+        const bHasDeadline = !!b.deadline;
+        if (aHasDeadline && !bHasDeadline) return -1;
+        if (!aHasDeadline && bHasDeadline) return 1;
+        if (!aHasDeadline && !bHasDeadline) return 0;
+        // Both have deadlines, sort by soonest
+        const aDeadline = a.deadline.toDate ? a.deadline.toDate() : new Date(a.deadline);
+        const bDeadline = b.deadline.toDate ? b.deadline.toDate() : new Date(b.deadline);
+        return aDeadline - bDeadline;
+      });
+    };
+
+    const sortedOtherTasks = sortTasks(otherTasks);
+
+    // Build HTML: Faculty tasks grouped by department first, then other tasks
+    let html = '';
+
+    // Render Faculty tasks grouped by department
+    const deptNames = Object.keys(facultyTasksByDept).sort();
+    deptNames.forEach(dept => {
+      const deptTasks = sortTasks(facultyTasksByDept[dept]);
+      if (deptTasks.length > 0) {
+        html += `
+          <div class="faculty-task-group">
+            <div class="faculty-task-group-header">
+              <i class="fas fa-chalkboard-teacher"></i>
+              <span>Faculty Tasks - ${dept}</span>
+            </div>
+            ${deptTasks.map(task => this.renderTaskCard(task, userCompletions, isAdmin, isCR, currentUserId, now, true)).join('')}
+          </div>
+        `;
+      }
+    });
+
+    // Render other tasks
+    html += sortedOtherTasks.map(task => this.renderTaskCard(task, userCompletions, isAdmin, isCR, currentUserId, now, false)).join('');
+
+    container.innerHTML = html;
+  },
+
+  // Helper function to render a single task card
+  renderTaskCard(task, userCompletions, isAdmin, isCR, currentUserId, now, isFacultyTask) {
       let deadline = null;
       let daysUntil = null;
       let isUrgent = false;
@@ -199,7 +244,7 @@ const UI = {
       } else if (isPastDeadline) {
         statusClass = 'incomplete';
       }
-      // Edit: Admin can edit any task, users can only edit their own tasks
+      // Edit: Admin can edit any task, Faculty can edit their own tasks, users can only edit their own tasks
       const canEdit = isAdmin || (currentUserId && task.addedBy === currentUserId);
       const editButton = canEdit ? `
         <button class="task-edit-btn" data-task-id="${task.id}" title="Edit task">
@@ -213,8 +258,12 @@ const UI = {
           <i class="fas fa-trash"></i>
         </button>
       ` : '';
+      
+      // Add Faculty badge if this is a Faculty task
+      const facultyBadge = isFacultyTask ? `<span class="task-faculty-badge"><i class="fas fa-chalkboard-teacher"></i> Faculty</span>` : '';
+      
       return `
-        <div class="task-card ${statusClass}" data-task-id="${task.id}" data-type="${task.type || 'other'}">
+        <div class="task-card ${statusClass} ${isFacultyTask ? 'faculty-task' : ''}" data-task-id="${task.id}" data-type="${task.type || 'other'}">
           <div class="task-card-inner">
             <div class="task-checkbox-wrapper">
               <input type="checkbox" class="task-checkbox" 
@@ -229,6 +278,7 @@ const UI = {
                   <h3 class="task-title">${task.title || ''}</h3>
                 </div>
                 <div class="task-header-right">
+                  ${facultyBadge}
                   <span class="task-type-badge ${task.type}">${task.type || 'task'}</span>
                   <div class="task-actions-vertical">
                     ${editButton}
@@ -239,7 +289,7 @@ const UI = {
               <div class="task-description">
                 <div class="task-description-wrapper">
                   <div class="task-description-text">${Utils.escapeAndLinkify(task.description) || 'No description available.'}</div>
-                  ${task.addedBy ? `<p class="task-added-by task-added-by-hidden">Added by ${task.addedByName || 'User'}${task.section ? ` (${task.section})` : ''}</p>` : ''}
+                  ${task.addedBy ? `<p class="task-added-by task-added-by-hidden">Added by ${task.addedByName || 'User'}${task.section ? ` (${task.section})` : ''}${isFacultyTask && task.department ? ` - ${task.department}` : ''}</p>` : ''}
                   <button type="button" class="task-description-toggle" aria-label="Toggle description">
                     <span class="toggle-text">Show more</span>
                     <i class="fas fa-chevron-down"></i>
@@ -259,7 +309,6 @@ const UI = {
           </div>
         </div>
       `;
-    }).join('');
   },
 
   // Render old tasks (past deadline - compact view)

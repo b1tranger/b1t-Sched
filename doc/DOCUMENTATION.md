@@ -36,11 +36,13 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **Event Editing** - Admins can edit all events; CRs can edit/delete their own events
 - **Resource Links** - Quick access to department-specific resources with built-in PDF viewer (desktop: Google Docs Viewer in modal; mobile: opens in new tab)
 - **Google Classroom Integration** - View all assignments and announcements from enrolled courses in a unified interface with OAuth authentication
+- **Progressive Web App (PWA)** - Installable app with offline support, service worker caching, and automatic updates
+- **Push Notifications** - Real-time browser notifications for new tasks and events
 - **Responsive Design** - Works on desktop, tablet, and mobile
 - **Maroon Theme** - Professional dark maroon and off-white color scheme
-- **Admin Features** - Task reset, task/event delete, event creation
-- **Admin User Management** - View all users, manage roles (CR/Blocked), edit user profiles
-- **CR Role** - Class Representatives can reset and delete tasks for their section, create events for their department, and edit/delete their own events
+- **Admin Features** - Task reset, task/event delete, event creation, user management with password reset and deletion
+- **Admin User Management** - View all users, manage roles (CR/Blocked), edit user profiles, send password resets, delete users
+- **CR Role** - Class Representatives can reset and delete tasks for their section, create events for their semester, and edit/delete their own events
 - **Blocked Users** - Restricted accounts in read-only mode (cannot add/edit/delete tasks or change profile)
 - **CR Info Message** - Non-CR users see instructions to contact admin for CR role
 - **Profile Change Cooldown** - Users can only change profile once per 30 days (anti-spam)
@@ -209,6 +211,8 @@ notice.js (Independent Module)
 b1t-Sched/
 │
 ├── index.html                    # Main SPA entry point
+├── manifest.json                 # PWA manifest
+├── sw.js                         # Service worker
 ├── Social-Preview.webp           # Logo/favicon
 ├── Social-Preview.ico            # Favicon (ICO format)
 ├── LICENSE                       # Project license
@@ -240,6 +244,20 @@ b1t-Sched/
 │   ├── utils.js                 # Utility functions
 │   ├── notice.js                # Notice viewer module (UCAM notices + PDF)
 │   ├── classroom.js             # Google Classroom API integration
+│   ├── admin-api.js             # Admin API client (password reset, user deletion)
+│   ├── pwa-detector.js          # PWA detection
+│   ├── manifest-generator.js    # Manifest generation
+│   ├── cache-manager.js         # Data caching
+│   ├── install-prompt.js        # Install prompt management
+│   ├── offline-indicator.js     # Offline UI indicator
+│   ├── offline-manager.js       # Offline operation queue
+│   ├── sw-update-manager.js     # Service worker updates
+│   ├── pwa-init.js              # PWA initialization
+│   ├── notifications-types.js   # Notification type definitions
+│   ├── permission-manager.js    # Notification permission management
+│   ├── notification-content-formatter.js # Notification content formatting
+│   ├── notification-manager.js  # Core notification logic
+│   ├── firestore-listener-manager.js # Firestore real-time listeners
 │   └── app.js                   # Main application logic
 │
 ├── doc/                          # Documentation
@@ -249,6 +267,14 @@ b1t-Sched/
 │   ├── REDESIGN_PLAN.md         # Design documentation
 │   ├── ADMIN_FEATURES.md        # Admin functionality docs
 │   └── FIRESTORE_TASK_CHANGES.md # Task schema changes
+│
+├── functions/                    # Firebase Cloud Functions
+│   ├── index.js                 # Functions entry point
+│   ├── admin/                   # Admin functions
+│   │   ├── sendPasswordReset.js # Password reset function
+│   │   └── deleteUser.js        # User deletion function
+│   ├── package.json             # Functions dependencies
+│   └── DEPLOYMENT_GUIDE.md      # Functions deployment guide
 │
 ├── images/                       # Image assets
 │   ├── logo/                    # Logo variations
@@ -615,6 +641,9 @@ NoticeViewer.CACHE_TTL = 7 * 24 * 60 * 60 * 1000               // 7-day cache TT
 | `openEditUserModal(userId)` | string | Open edit user modal |
 | `updateEditUserSections(selectedValue)` | string? | Update sections in edit user modal |
 | `handleEditUser()` | - | Process edit user form (admin) |
+| `handlePasswordReset(userId)` | string | Send password reset email (admin) |
+| `openDeleteUserDialog(userId, email)` | string, string | Open delete user confirmation dialog |
+| `handleDeleteUser(userId)` | string | Delete user account (admin) |
 
 **Application State:**
 ```javascript
@@ -645,7 +674,87 @@ During signup, Firebase triggers `onAuthStateChanged` immediately when the user 
 
 ---
 
-### 10. Classroom (classroom.js)
+### 10. PWA Modules
+
+**Purpose:** Progressive Web App functionality for offline support, caching, and installability
+
+#### PWA Detector (`js/pwa-detector.js`)
+- Detects existing PWA configuration
+- Validates manifest file and service worker registration
+- Generates recommendations for missing components
+
+#### Manifest Generator (`js/manifest-generator.js`)
+- Creates web app manifest with required fields
+- Validates manifest completeness
+- Links manifest in HTML head
+
+#### Cache Manager (`js/cache-manager.js`)
+- Caches authentication state (24-hour expiration)
+- Caches Google Classroom data (1-hour expiration)
+- Independent caching for assignments and announcements
+- Cache freshness checking and storage quota management
+
+#### Install Prompt Manager (`js/install-prompt.js`)
+- Captures `beforeinstallprompt` event
+- Shows custom install prompt UI
+- Handles user dismissal preferences
+- Detects if app is already installed
+- iOS-specific installation instructions
+
+#### Offline Manager (`js/offline-manager.js`)
+- Queues write operations when offline
+- Processes queued operations when connection restored
+- Supports task and event operations
+- Background sync capability
+
+#### Offline Indicator (`js/offline-indicator.js`)
+- Visual indicator when user is offline
+- Shows "You're offline. Showing cached content."
+- Automatically hides when connection restored
+
+#### SW Update Manager (`js/sw-update-manager.js`)
+- Detects service worker updates
+- Notifies user when new version available
+- Handles update acceptance and reload
+- Periodic update checks (every hour)
+
+#### PWA Initialization (`js/pwa-init.js`)
+- Orchestrates all PWA components
+- Auto-initializes on page load
+- Graceful degradation if features unavailable
+
+---
+
+### 11. Push Notifications System
+
+**Purpose:** Real-time browser notifications for new tasks and events
+
+#### Permission Manager (`js/permission-manager.js`)
+- Manages notification permission state
+- Requests permission from users
+- Provides browser-specific instructions for enabling notifications
+- Handles permission prompt UI interactions
+
+#### Notification Content Formatter (`js/notification-content-formatter.js`)
+- Formats task and event data for notifications
+- Truncates content to fit notification size constraints (50 chars title, 150 chars body)
+- Formats dates/times in user-friendly format
+
+#### Notification Manager (`js/notification-manager.js`)
+- Core notification system controller
+- Checks browser API support
+- Displays task and event notifications
+- Handles notification click events (navigates to dashboard)
+
+#### Firestore Listener Manager (`js/firestore-listener-manager.js`)
+- Sets up real-time listeners on tasks and events collections
+- Detects new documents (ignores initial load)
+- Filters by user's department, semester, and section
+- Triggers notifications when new items are added
+
+---
+
+### 12. Classroom (classroom.js)
 
 **Purpose:** Google Classroom API integration for viewing assignments and announcements
 
@@ -934,26 +1043,40 @@ service cloud.firestore {
       );
     }
     
-    // Helper function to get user's department
-    function getUserDepartment() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.department;
+    // Helper function to get user's semester
+    function getUserSemester() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.semester;
     }
     
-    // Events collection - Admin full access, CR limited access
+    // Helper function to validate required event fields
+    function hasRequiredEventFields() {
+      return request.resource.data.keys().hasAll(['title', 'description', 'date', 'department', 'semester', 'createdBy']) &&
+             request.resource.data.title is string && request.resource.data.title.size() > 0 &&
+             request.resource.data.description is string && request.resource.data.description.size() > 0 &&
+             request.resource.data.department is string && request.resource.data.department.size() > 0 &&
+             request.resource.data.semester is string && request.resource.data.semester.size() > 0 &&
+             request.resource.data.createdBy is string && request.resource.data.createdBy.size() > 0;
+    }
+    
+    // Events collection - Admin full access, CR limited access (semester-based)
     match /events/{eventId} {
       allow read: if isSignedIn();
       
-      // Admin can create any event; CR can create events for their own department
+      // Admin can create any event; CR can create events for their own semester
       allow create: if isAdmin() || (
         isCR() && 
+        hasRequiredEventFields() &&
         request.resource.data.createdBy == request.auth.uid &&
-        request.resource.data.department == getUserDepartment()
+        request.resource.data.semester == getUserSemester()
       );
       
-      // Admin can edit any event; CR can edit only their own events
+      // Admin can edit any event; CR can edit only their own events (cannot change createdBy or semester)
       allow update: if isAdmin() || (
         isCR() && 
-        resource.data.createdBy == request.auth.uid
+        resource.data.createdBy == request.auth.uid &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['createdBy']) &&
+        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['semester']) || 
+         request.resource.data.semester == getUserSemester())
       );
       
       // Admin can delete any event; CR can delete only their own events
@@ -961,6 +1084,11 @@ service cloud.firestore {
         isCR() && 
         resource.data.createdBy == request.auth.uid
       );
+    }
+    
+    // Admin logs collection - Admin only
+    match /adminLogs/{logId} {
+      allow read, write: if isAdmin();
     }
     
     // Resource links - read only for users, admin can write
@@ -991,12 +1119,14 @@ service cloud.firestore {
 | Reset tasks | ✗ | ✗ | ✓ | ✓ |
 | Mark tasks complete | ✗ | ✓ | ✓ | ✓ |
 | Read events | ✓ | ✓ | ✓ | ✓ |
-| Create events (own dept) | ✗ | ✗ | ✓ | ✓ |
+| Create events (own semester) | ✗ | ✗ | ✓ | ✓ |
 | Edit/Delete own events | ✗ | ✗ | ✓ | ✓ |
 | Edit/Delete any event | ✗ | ✗ | ✗ | ✓ |
 | Change own profile | ✗ | ✓ (30-day cooldown) | ✓ | ✓ |
 | Manage users | ✗ | ✗ | ✗ | ✓ |
 | Assign/remove roles | ✗ | ✗ | ✗ | ✓ |
+| Send password reset | ✗ | ✗ | ✗ | ✓ |
+| Delete users | ✗ | ✗ | ✗ | ✓ |
 
 ---
 
@@ -1235,6 +1365,10 @@ Router.onRouteChange((routeName) => {
 | 2.18.0 | Feb 2026 | New Features: Task Filtering (by type), Global Contribution List (with toggle for all-department view), Total User Counter (live badge), and Mobile UI fixes (login scroll, zoom). |
 | 2.18.0.1 | Feb 2026 | Reverted back to "open links in new tab" for Pending Tasks and Events descriptions. |
 | 2.19.0 | Feb 2026 | Google Classroom Integration: View all assignments and announcements from enrolled Google Classroom courses in a unified interface. Features: OAuth authentication with Google Identity Services, unified To-Do/Notices view with toggle, course badges for each item, filters only ACTIVE courses (excludes archived), configurable date filter (default: last 6 months), responsive design (mobile sidebar with green toggle, desktop modal). New files: `js/classroom.js`, `css/classroom.css`. Google Identity Services SDK loaded via CDN. |
+| 2.20.0 | Feb 2026 | Progressive Web App (PWA) Setup: Installable app with offline support, service worker caching (cache-first for static assets, network-first for API calls), automatic cache cleanup, install prompt management, offline operation queue, offline indicator, service worker update notifications. New files: `manifest.json`, `sw.js`, `js/pwa-detector.js`, `js/manifest-generator.js`, `js/cache-manager.js`, `js/install-prompt.js`, `js/offline-manager.js`, `js/offline-indicator.js`, `js/sw-update-manager.js`, `js/pwa-init.js`. Auth and Classroom modules updated with caching support. |
+| 2.21.0 | Feb 2026 | Push Notifications System: Real-time browser notifications for new tasks and events using Web Notifications API and Firestore real-time listeners. Features: permission management with browser-specific instructions, content formatting with truncation, click-to-navigate, initial load detection, automatic cleanup on logout. New files: `js/notifications-types.js`, `js/permission-manager.js`, `js/notification-content-formatter.js`, `js/notification-manager.js`, `js/firestore-listener-manager.js`. Notification prompt UI added to dashboard. |
+| 2.22.0 | Feb 2026 | Firebase CR Permissions Fix: Updated Firestore security rules for CR event creation/editing. Changed from department-based to semester-based validation. CRs can now create events for their semester, edit/delete only their own events. Added field immutability checks (createdBy, semester). New helper functions: `getUserSemester()`, `hasRequiredEventFields()`. |
+| 2.23.0 | Feb 2026 | User Management UI Updates: Admin features for password reset and user deletion via Firebase Cloud Functions. Features: filter popup with badge showing active filter count, action button optimizations, delete confirmation dialog, admin logs collection. New files: `functions/index.js`, `functions/admin/sendPasswordReset.js`, `functions/admin/deleteUser.js`, `functions/DEPLOYMENT_GUIDE.md`, `js/admin-api.js`. Updated `index.html`, `css/components.css`, `css/dashboard.css`, `js/app.js`, `firestore.rules`. |
 
 ---
 
@@ -1249,5 +1383,5 @@ Router.onRouteChange((routeName) => {
 
 ---
 
-*Documentation last updated: February 16, 2026*
-*Version: 2.19.0*
+*Documentation last updated: February 17, 2026*
+*Version: 2.23.0*

@@ -355,6 +355,16 @@
                                 </button>
                             </div>
 
+                            <!-- Faculty Department Filter (hidden by default, shown for Faculty users) -->
+                            <div id="faculty-department-filter" class="faculty-filter-row" style="display: none;">
+                                <label for="faculty-dept-filter" class="filter-label">
+                                    <i class="fas fa-building"></i> Filter by Department:
+                                </label>
+                                <select id="faculty-dept-filter" class="form-select">
+                                    <option value="all">All Departments</option>
+                                </select>
+                            </div>
+
 
                             <div id="tasks-container" class="tasks-container">
                                 <!-- Task cards will be dynamically loaded -->
@@ -1322,6 +1332,7 @@
     <script src="js/utils.js"></script>
     <script src="js/notice.js"></script>
     <script src="js/classroom.js"></script>
+    <script src="js/facultyClassroom.js"></script>
     <script src="js/notes.js"></script>
     <script src="js/admin-api.js"></script>
     <!-- Notification System Modules -->
