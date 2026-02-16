@@ -490,6 +490,17 @@ from [@MuhammadShishir](https://github.com/MuhammadShishir):
    2. Adding documents,
    3. Adding AI support, 
    4. Add a timeline view and table view ....
+```
+I will need some elaboration:
+1. Time Tracking: Timeline? like who posted what and when? Is it a different feature?
+2. Document adding: I will be making a Qbank, Insha Allah. Will import that feature (adding questions) as other file upload here.
+3. AI support: how about a model trained with my whole resources dump of all questions, notes, outlines collected?
+```
+   Install clickup and see, 
+   1. Time tracking is per task time tracking using a stop watch or timer button per task
+   2. In a task many documents r generated or given to use, if we add them here it will be easy to maintain and later we can just share the link to people who need it
+   3. AI support is for updating tasks, creating files and answering questions
+   4. The two views I mentioned r the easiest, just call ur tasks into two tabs, one should look like a table of task and another will have calender view and tasks in them showing u ur work timeline, just go to clickup for reference ....
 
 from [@foxxie911](https://github.com/foxxie911)
    1. need to refine data/files 
