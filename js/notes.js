@@ -58,10 +58,16 @@ const NoteManager = {
       clearBtn.addEventListener('click', () => this.handleClear());
     }
 
-    // Upload files button toggle
+    // Upload files button - trigger file input
     const uploadBtn = document.getElementById('upload-files-btn');
     if (uploadBtn) {
-      uploadBtn.addEventListener('click', () => this.toggleUploadDropdown());
+      uploadBtn.addEventListener('click', () => this.triggerFileUpload());
+    }
+
+    // File input change handler
+    const fileInput = document.getElementById('note-file-input');
+    if (fileInput) {
+      fileInput.addEventListener('change', (e) => this.handleFileSelect(e));
     }
 
     // Textarea input for preview updates and auto-save
@@ -168,20 +174,118 @@ const NoteManager = {
       if (noteToggle) noteToggle.setAttribute('aria-expanded', 'false');
       if (noteButtonDesktop) noteButtonDesktop.setAttribute('aria-expanded', 'false');
     }
+  },
 
-    // Hide upload dropdown
-    const dropdown = document.getElementById('upload-sites-dropdown');
-    if (dropdown) {
-      dropdown.style.display = 'none';
+  // Trigger file input click
+  triggerFileUpload() {
+    const fileInput = document.getElementById('note-file-input');
+    if (fileInput) {
+      fileInput.click();
     }
   },
 
-  // Toggle upload sites dropdown
-  toggleUploadDropdown() {
-    const dropdown = document.getElementById('upload-sites-dropdown');
-    if (dropdown) {
-      dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+  // Handle file selection
+  async handleFileSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file size (max 100MB as per tmpfiles.org limit)
+    const maxSize = 100 * 1024 * 1024; // 100MB
+    if (file.size > maxSize) {
+      this.showMessage('File is too large. Maximum size is 100MB.', 'error');
+      return;
     }
+
+    // Show upload status
+    const uploadBtn = document.getElementById('upload-files-btn');
+    const originalText = uploadBtn ? uploadBtn.innerHTML : '';
+    if (uploadBtn) {
+      uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+      uploadBtn.disabled = true;
+    }
+
+    try {
+      const url = await this.uploadToTmpFiles(file);
+      
+      // Insert markdown link into textarea at cursor position
+      this.insertLinkIntoNote(file.name, url);
+      
+      this.showMessage('File uploaded successfully!', 'success');
+    } catch (error) {
+      console.error('Upload error:', error);
+      this.showMessage('Failed to upload file: ' + error.message, 'error');
+    } finally {
+      // Reset button
+      if (uploadBtn) {
+        uploadBtn.innerHTML = originalText;
+        uploadBtn.disabled = false;
+      }
+      
+      // Clear file input
+      event.target.value = '';
+    }
+  },
+
+  // Upload file to tmpfiles.org
+  async uploadToTmpFiles(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch('https://tmpfiles.org/api/v1/upload', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error(`Upload failed with status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      // Check if upload was successful
+      if (data.status !== 'success' || !data.data || !data.data.url) {
+        throw new Error('Invalid response from upload service');
+      }
+
+      // tmpfiles.org returns a URL like: https://tmpfiles.org/12345/filename.jpg
+      // We need to convert it to the direct download URL: https://tmpfiles.org/dl/12345/filename.jpg
+      let url = data.data.url;
+      url = url.replace('tmpfiles.org/', 'tmpfiles.org/dl/');
+
+      return url;
+    } catch (error) {
+      throw new Error(error.message || 'Network error during upload');
+    }
+  },
+
+  // Insert markdown link into textarea at cursor position
+  insertLinkIntoNote(filename, url) {
+    const textarea = document.getElementById('note-textarea');
+    if (!textarea) return;
+
+    const markdownLink = `[${filename}](${url})`;
+    
+    // Get cursor position
+    const startPos = textarea.selectionStart;
+    const endPos = textarea.selectionEnd;
+    const textBefore = textarea.value.substring(0, startPos);
+    const textAfter = textarea.value.substring(endPos);
+    
+    // Insert link at cursor position
+    const newValue = textBefore + markdownLink + textAfter;
+    textarea.value = newValue;
+    
+    // Set cursor position after inserted link
+    const newCursorPos = startPos + markdownLink.length;
+    textarea.setSelectionRange(newCursorPos, newCursorPos);
+    
+    // Focus textarea
+    textarea.focus();
+    
+    // Update preview and trigger auto-save
+    this.updatePreview(newValue);
+    this.setupAutoSave(newValue);
   },
 
   // Update preview with formatted content

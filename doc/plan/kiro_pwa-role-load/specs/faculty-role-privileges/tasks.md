@@ -51,32 +51,32 @@ This implementation adds a new Faculty role to the application with department-b
     - Remove 30-day cooldown for Faculty users
     - _Requirements: 4.4_
 
-- [-] 4. Implement Faculty task management
+- [x] 4. Implement Faculty task management
   - [x] 4.1 Update task creation to support Faculty users
     - Modify task creation form to detect Faculty role
     - Associate tasks with Faculty user's department only
     - Set `addedByRole: "Faculty"` field on task documents
     - _Requirements: 3.1_
   
-  - [ ] 4.2 Update task rendering to group Faculty tasks by department
+  - [x] 4.2 Update task rendering to group Faculty tasks by department
     - Modify UI.renderTasks() to handle Faculty-created tasks
     - Display department badge for Faculty tasks
     - Group Faculty tasks separately from student tasks
     - _Requirements: 3.2, 3.3_
   
-  - [ ] 4.3 Update task filtering for Faculty view
+  - [x] 4.3 Update task filtering for Faculty view
     - Add department-based filtering for Faculty users
     - Remove semester/section filters from Faculty UI
     - _Requirements: 3.4, 10.5_
   
-  - [ ] 4.4 Update task edit permissions for Faculty
+  - [x] 4.4 Update task edit permissions for Faculty
     - Allow Faculty users to edit their own tasks
     - Allow admins to edit any Faculty task
     - Prevent other users from editing Faculty tasks
     - _Requirements: 9.1, 9.2_
 
 - [ ] 5. Create Faculty Classroom interface module
-  - [ ] 5.1 Create facultyClassroom.js module
+  - [x] 5.1 Create facultyClassroom.js module
     - Initialize Faculty Classroom interface
     - Set up event listeners for Faculty controls
     - Detect Faculty role and render appropriate UI

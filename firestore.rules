@@ -89,6 +89,11 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.semester;
     }
     
+    // Helper function to get user's department
+    function getUserDepartment() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.department;
+    }
+    
     // Helper function to validate required event fields
     function hasRequiredEventFields() {
       return request.resource.data.keys().hasAll(['title', 'description', 'date', 'department', 'semester', 'createdBy']) &&
@@ -99,30 +104,42 @@ service cloud.firestore {
         request.resource.data.createdBy is string && request.resource.data.createdBy.size() > 0;
     }
     
-    // Events collection - Admin full access, CR limited access
+    // Events collection - Admin full access, CR limited access (semester-based), Faculty limited access (department-based)
     match /events/{eventId} {
       allow read: if isSignedIn();
       
-      // Admin can create any event; CR can create events for their own semester
+      // Admin can create any event; CR can create events for their own semester; Faculty can create events for their own department
       allow create: if isAdmin() || (
         isCR() && 
         request.resource.data.createdBy == request.auth.uid &&
         request.resource.data.semester == getUserSemester() &&
         hasRequiredEventFields()
+      ) || (
+        isFaculty() &&
+        request.resource.data.createdBy == request.auth.uid &&
+        request.resource.data.department == getUserDepartment() &&
+        hasRequiredEventFields()
       );
       
-      // Admin can edit any event; CR can edit only their own events
+      // Admin can edit any event; CR can edit only their own events; Faculty can edit only their own events
       // CR cannot modify createdBy field or change semester to different value
       allow update: if isAdmin() || (
         isCR() && 
         resource.data.createdBy == request.auth.uid &&
         request.resource.data.createdBy == resource.data.createdBy &&
         (!request.resource.data.keys().hasAny(['semester']) || request.resource.data.semester == getUserSemester())
+      ) || (
+        isFaculty() &&
+        resource.data.createdBy == request.auth.uid &&
+        request.resource.data.createdBy == resource.data.createdBy
       );
       
-      // Admin can delete any event; CR can delete only their own events
+      // Admin can delete any event; CR can delete only their own events; Faculty can delete only their own events
       allow delete: if isAdmin() || (
         isCR() && 
+        resource.data.createdBy == request.auth.uid
+      ) || (
+        isFaculty() &&
         resource.data.createdBy == request.auth.uid
       );
     }

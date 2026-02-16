@@ -656,7 +656,7 @@ const App = {
     }
 
     const userId = Auth.getUserId();
-    const canEdit = this.isAdmin || (this.isCR && event.createdBy === userId);
+    const canEdit = this.isAdmin || (this.isCR && event.createdBy === userId) || (this.isFaculty && event.createdBy === userId);
     if (!canEdit) {
       alert('You do not have permission to edit this event');
       return;
@@ -667,10 +667,10 @@ const App = {
     document.getElementById('edit-event-title').value = event.title || '';
     document.getElementById('edit-event-description').value = event.description || '';
 
-    // CR can only edit events for their own department
+    // CR and Faculty can only edit events for their own department
     const deptSelect = document.getElementById('edit-event-department');
     deptSelect.value = event.department || 'ALL';
-    if (this.isCR && !this.isAdmin) {
+    if ((this.isCR || this.isFaculty) && !this.isAdmin) {
       deptSelect.value = this.userProfile.department;
       deptSelect.disabled = true;
     } else {
@@ -686,7 +686,7 @@ const App = {
   },
 
   async handleEditEvent() {
-    if (!this.isAdmin && !this.isCR) return;
+    if (!this.isAdmin && !this.isCR && !this.isFaculty) return;
 
     const eventId = document.getElementById('edit-event-id').value;
     const title = document.getElementById('edit-event-title').value.trim();
@@ -699,8 +699,8 @@ const App = {
       return;
     }
 
-    // CR can only edit their own events
-    if (this.isCR && !this.isAdmin) {
+    // CR and Faculty can only edit their own events
+    if ((this.isCR || this.isFaculty) && !this.isAdmin) {
       const event = this.currentEvents.find(e => e.id === eventId);
       const userId = Auth.getUserId();
       if (!event || event.createdBy !== userId) {
@@ -726,14 +726,14 @@ const App = {
   },
 
   async handleDeleteEvent(eventId) {
-    // Admin can delete any event, CR can delete their own events
-    if (!this.isAdmin && !this.isCR) {
+    // Admin can delete any event, CR and Faculty can delete their own events
+    if (!this.isAdmin && !this.isCR && !this.isFaculty) {
       alert('You do not have permission to delete events');
       return;
     }
 
-    // CR can only delete their own events
-    if (this.isCR && !this.isAdmin) {
+    // CR and Faculty can only delete their own events
+    if ((this.isCR || this.isFaculty) && !this.isAdmin) {
       const event = this.currentEvents.find(e => e.id === eventId);
       const userId = Auth.getUserId();
       if (!event || event.createdBy !== userId) {
@@ -954,8 +954,8 @@ const App = {
         this.userProfile.section
       );
 
-      // Show/hide admin and CR controls
-      UI.toggleAdminControls(this.isAdmin, this.isCR);
+      // Show/hide admin, CR, and Faculty controls
+      UI.toggleAdminControls(this.isAdmin, this.isCR, this.isFaculty);
 
       // Show blocked user warning if applicable
       UI.toggleBlockedUserMode(this.isBlocked);
@@ -1115,8 +1115,14 @@ const App = {
       this.userCompletions = completionsResult.data;
     }
 
-    // Load tasks
-    const tasksResult = await DB.getTasks(department, semester, section);
+    // Load tasks - Faculty users get department-wide tasks, others get section-specific tasks
+    let tasksResult;
+    if (this.isFaculty) {
+      tasksResult = await DB.getFacultyTasks(department);
+    } else {
+      tasksResult = await DB.getTasks(department, semester, section);
+    }
+    
     if (tasksResult.success) {
       this.currentTasks = tasksResult.data;
       UI.renderTasks(this.currentTasks, this.userCompletions, this.isAdmin, this.isCR, userId);
@@ -1132,7 +1138,7 @@ const App = {
     const eventsResult = await DB.getEvents(department);
     if (eventsResult.success) {
       this.currentEvents = eventsResult.data;
-      UI.renderEvents(this.currentEvents, this.isAdmin, this.isCR, userId);
+      UI.renderEvents(this.currentEvents, this.isAdmin, this.isCR, this.isFaculty, userId);
     }
 
     // Setup new features listeners (safe to call multiple times as they replace old ones or we can check init)
@@ -1633,13 +1639,15 @@ const App = {
 
     const userId = Auth.getUserId();
 
-    // CR can only create events for their own semester
-    if (this.isCR && !this.isAdmin) {
+    // CR can only create events for their own semester, Faculty can only create events for their own department
+    if ((this.isCR || this.isFaculty) && !this.isAdmin) {
       department = this.userProfile.department;
     }
 
     // Determine the "Added by" label
-    const createdByName = this.isAdmin ? 'Admin' : 'CR';
+    let createdByName = 'Admin';
+    if (this.isCR) createdByName = 'CR';
+    else if (this.isFaculty) createdByName = 'Faculty';
 
     const result = await DB.createEvent({
       title,
@@ -1793,6 +1801,12 @@ const App = {
           const currentValue = e.target.closest('.toggle-cr-btn').dataset.currentValue === 'true';
           await this.toggleUserRole(userId, 'isCR', !currentValue);
         }
+        // Toggle Faculty button
+        if (e.target.closest('.toggle-faculty-btn')) {
+          const userId = e.target.closest('.toggle-faculty-btn').dataset.userId;
+          const currentValue = e.target.closest('.toggle-faculty-btn').dataset.currentValue === 'true';
+          await this.toggleUserRole(userId, 'isFaculty', !currentValue);
+        }
         // Toggle blocked button
         if (e.target.closest('.toggle-blocked-btn')) {
           const userId = e.target.closest('.toggle-blocked-btn').dataset.userId;
@@ -1910,6 +1924,7 @@ const App = {
       const roles = [];
       if (user.isAdmin) roles.push('<span class="role-badge admin">Admin</span>');
       if (user.isCR) roles.push('<span class="role-badge cr">CR</span>');
+      if (user.isFaculty) roles.push('<span class="role-badge faculty">Faculty</span>');
       if (user.isBlocked) roles.push('<span class="role-badge blocked">Blocked</span>');
 
       return `
@@ -1946,6 +1961,12 @@ const App = {
                       data-current-value="${user.isCR || false}" 
                       title="${user.isCR ? 'Remove CR role' : 'Make CR'}">
                 <i class="fas fa-user-graduate"></i> ${user.isCR ? 'Remove CR' : 'Make CR'}
+              </button>
+              <button class="btn btn-sm btn-action toggle-faculty-btn ${user.isFaculty ? 'active' : ''}" 
+                      data-user-id="${user.id}" 
+                      data-current-value="${user.isFaculty || false}" 
+                      title="${user.isFaculty ? 'Remove Faculty role' : 'Make Faculty'}">
+                <i class="fas fa-chalkboard-teacher"></i> ${user.isFaculty ? 'Remove Faculty' : 'Make Faculty'}
               </button>
               <button class="btn btn-sm btn-action toggle-blocked-btn ${user.isBlocked ? 'active danger' : ''}" 
                       data-user-id="${user.id}" 
@@ -2005,11 +2026,14 @@ const App = {
         case 'CR':
           filtered = filtered.filter(u => u.isCR === true);
           break;
+        case 'Faculty':
+          filtered = filtered.filter(u => u.isFaculty === true);
+          break;
         case 'Blocked':
           filtered = filtered.filter(u => u.isBlocked === true);
           break;
         case 'User':
-          filtered = filtered.filter(u => !u.isAdmin && !u.isCR && !u.isBlocked);
+          filtered = filtered.filter(u => !u.isAdmin && !u.isCR && !u.isFaculty && !u.isBlocked);
           break;
       }
     }
@@ -2110,6 +2134,7 @@ const App = {
 
     const roleNames = {
       'isCR': 'CR',
+      'isFaculty': 'Faculty',
       'isBlocked': value ? 'Block' : 'Unblock'
     };
 

@@ -354,7 +354,7 @@ const UI = {
   // Render events
   // isAdmin: user has admin privileges (can edit/delete any event)
   // isCR: user is a Class Representative (can edit/delete own events)
-  renderEvents(events, isAdmin = false, isCR = false, currentUserId = null) {
+  renderEvents(events, isAdmin = false, isCR = false, isFaculty = false, currentUserId = null) {
     const container = document.getElementById('events-container');
     const noEventsMsg = document.getElementById('no-events-message');
     const mobileContainer = document.getElementById('events-container-mobile');
@@ -374,9 +374,9 @@ const UI = {
       const day = eventDate.getDate();
       const month = eventDate.toLocaleDateString('en-US', { month: 'short' });
 
-      // Edit/Delete: Admin can manage any event, CR can manage their own events
-      const canEdit = isAdmin || (isCR && currentUserId && event.createdBy === currentUserId);
-      const canDelete = isAdmin || (isCR && currentUserId && event.createdBy === currentUserId);
+      // Edit/Delete: Admin can manage any event, CR can manage their own events, Faculty can manage their own events
+      const canEdit = isAdmin || (isCR && currentUserId && event.createdBy === currentUserId) || (isFaculty && currentUserId && event.createdBy === currentUserId);
+      const canDelete = isAdmin || (isCR && currentUserId && event.createdBy === currentUserId) || (isFaculty && currentUserId && event.createdBy === currentUserId);
 
       const editButton = canEdit ? `
         <button class="event-edit-btn" data-event-id="${event.id}" title="Edit event">
@@ -469,7 +469,7 @@ const UI = {
   },
 
   // Toggle admin and CR controls visibility
-  toggleAdminControls(isAdmin, isCR = false) {
+  toggleAdminControls(isAdmin, isCR = false, isFaculty = false) {
     // Admin-only controls (events management)
     const adminControls = document.querySelectorAll('.admin-only');
     adminControls.forEach(control => {
@@ -500,10 +500,25 @@ const UI = {
       }
     });
 
-    // Show CR info message for non-CR/non-Admin users
+    // CR, Faculty, or Admin controls (add events)
+    const crFacultyOrAdminControls = document.querySelectorAll('.cr-faculty-or-admin');
+    crFacultyOrAdminControls.forEach(control => {
+      const parentDisplay = window.getComputedStyle(control.parentElement).display;
+      if (isAdmin || isCR || isFaculty) {
+        if (parentDisplay === 'flex' || control.classList.contains('btn')) {
+          control.style.display = 'inline-flex';
+        } else {
+          control.style.display = 'block';
+        }
+      } else {
+        control.style.display = 'none';
+      }
+    });
+
+    // Show CR info message for non-CR/non-Admin/non-Faculty users
     const crInfoMessage = document.getElementById('cr-info-message');
     if (crInfoMessage) {
-      crInfoMessage.style.display = (isAdmin || isCR) ? 'none' : 'block';
+      crInfoMessage.style.display = (isAdmin || isCR || isFaculty) ? 'none' : 'block';
     }
 
     // Show footer when logged in

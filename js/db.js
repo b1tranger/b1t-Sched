@@ -123,6 +123,53 @@ const DB = {
     }
   },
 
+  // Get Faculty tasks (department-wide, no semester/section filtering)
+  async getFacultyTasks(department) {
+    try {
+      const now = new Date();
+      const gracePeriodCutoff = new Date(now.getTime() - (12 * 60 * 60 * 1000));
+
+      const snapshot = await db.collection('tasks')
+        .where('department', '==', department)
+        .where('semester', '==', null)
+        .where('section', '==', null)
+        .where('status', '==', 'active')
+        .get();
+
+      const tasksWithDeadline = [];
+      const tasksNoDeadline = [];
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        // Always include tasks with no deadline (null or missing)
+        if (!('deadline' in data) || data.deadline === null) {
+          tasksNoDeadline.push({ id: doc.id, ...data });
+        } else {
+          const deadline = data.deadline.toDate ? data.deadline.toDate() : new Date(data.deadline);
+          // Include tasks that are NOT past the 12-hour grace period
+          if (deadline >= gracePeriodCutoff) {
+            tasksWithDeadline.push({ id: doc.id, ...data });
+          }
+        }
+      });
+
+      // Sort tasks with deadlines by deadline ascending (soonest first)
+      tasksWithDeadline.sort((a, b) => {
+        const aDeadline = a.deadline ? (a.deadline.toDate ? a.deadline.toDate() : new Date(a.deadline)) : new Date(8640000000000000);
+        const bDeadline = b.deadline ? (b.deadline.toDate ? b.deadline.toDate() : new Date(b.deadline)) : new Date(8640000000000000);
+        return aDeadline - bDeadline;
+      });
+
+      // No-deadline tasks go at the bottom of pending list
+      const tasks = [...tasksWithDeadline, ...tasksNoDeadline];
+
+      console.log(`Found ${tasks.length} Faculty tasks for department: ${department}`);
+      return { success: true, data: tasks };
+    } catch (error) {
+      console.error('Error getting Faculty tasks:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
   // Create a new task (user-added)
   async createTask(userId, userEmail, data) {
     try {

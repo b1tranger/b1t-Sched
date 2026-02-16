@@ -1084,6 +1084,11 @@ body.user-blocked .task-edit-btn {
     color: var(--text-white);
 }
 
+.role-badge.faculty {
+    background-color: #007bff;
+    color: var(--text-white);
+}
+
 .role-badge.blocked {
     background-color: var(--danger);
     color: var(--text-white);
@@ -1492,10 +1497,11 @@ input:checked+.slider:before {
 .notification-prompt-content > i {
     font-size: 2rem;
     opacity: 0.9;
+    /* color removed - use inline style */
 }
 
 .notification-prompt-text {
-    /* color: black; */
+    /* color removed - use inline style */
     flex: 1;
     min-width: 200px;
 }
@@ -1504,12 +1510,14 @@ input:checked+.slider:before {
     display: block;
     font-size: 1.1rem;
     margin-bottom: 0.25rem;
+    /* color inherited from parent */
 }
 
 .notification-prompt-text p {
     margin: 0;
     opacity: 0.9;
     font-size: 0.9rem;
+    /* color inherited from parent */
 }
 
 .notification-prompt-content .btn {
@@ -1517,7 +1525,7 @@ input:checked+.slider:before {
 }
 
 .notification-prompt-content .btn-text {
-    color: white;
+    /* color removed - use inline style */
     opacity: 0.8;
 }
 

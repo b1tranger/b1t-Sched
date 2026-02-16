@@ -41,13 +41,15 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **Responsive Design** - Works on desktop, tablet, and mobile
 - **Maroon Theme** - Professional dark maroon and off-white color scheme
 - **Admin Features** - Task reset, task/event delete, event creation, user management with password reset and deletion
-- **Admin User Management** - View all users, manage roles (CR/Blocked), edit user profiles, send password resets, delete users
+- **Admin User Management** - View all users, manage roles (CR/Faculty/Blocked), edit user profiles, send password resets, delete users
 - **CR Role** - Class Representatives can reset and delete tasks for their section, create events for their semester, and edit/delete their own events
+- **Faculty Role** - Faculty members can view department-wide tasks (no semester/section filtering), create events for their department, and edit/delete their own events
 - **Blocked Users** - Restricted accounts in read-only mode (cannot add/edit/delete tasks or change profile)
 - **CR Info Message** - Non-CR users see instructions to contact admin for CR role
 - **Profile Change Cooldown** - Users can only change profile once per 30 days (anti-spam)
 - **Two-Column Layout** - Events sidebar on desktop, slide-out panel (40vw) on mobile
 - **Notice Viewer** - View UCAM university notices with PDF preview (desktop modal with split-pane layout; mobile slide-out sidebar), powered by Vercel serverless backend with local caching
+- **Note Taking** - Personal note-taking feature with markdown support, auto-save, and automatic file upload via tmpfiles.org API
 - **Task Filtering** - Filter pending tasks by type (Assignment, Homework, Exam, Project, Presentation, Other)
 - **Global Contributions** - View a leaderboard of top contributors (group-specific or global across all departments)
 - **User Counter** - Live count of total registered users displayed on the dashboard
@@ -243,6 +245,7 @@ b1t-Sched/
 │   ├── profile.js               # Profile management
 │   ├── utils.js                 # Utility functions
 │   ├── notice.js                # Notice viewer module (UCAM notices + PDF)
+│   ├── notes.js                 # Note-taking module with file upload
 │   ├── classroom.js             # Google Classroom API integration
 │   ├── admin-api.js             # Admin API client (password reset, user deletion)
 │   ├── pwa-detector.js          # PWA detection
@@ -360,15 +363,18 @@ const db = firebase.firestore();   // Firestore instance
   email: string,
   studentId: string,      // 10-16 digit student ID
   department: string,     // e.g., "CSE", "IT"
-  semester: string,       // e.g., "1st", "2nd"
-  section: string,        // e.g., "A1", "B2"
+  semester: string,       // e.g., "1st", "2nd" (null for Faculty)
+  section: string,        // e.g., "A1", "B2" (null for Faculty)
   isAdmin: boolean,       // Optional - admin privileges (set manually)
   isCR: boolean,          // Optional - CR privileges (set via admin panel)
+  isFaculty: boolean,     // Optional - Faculty privileges (set via admin panel)
   isBlocked: boolean,     // Optional - blocked/restricted user (set via admin panel)
   lastProfileChange: Timestamp, // Optional - last profile edit timestamp (30-day cooldown)
   lastProfileChangeByAdmin: Timestamp, // Optional - last admin edit timestamp
   createdAt: Timestamp,
-  updatedAt: Timestamp
+  updatedAt: Timestamp,
+  noteContent: string,    // Optional - user's personal notes (max 1MB)
+  noteUpdatedAt: Timestamp // Optional - last note update timestamp
 }
 ```
 
@@ -377,6 +383,7 @@ const db = firebase.firestore();   // Firestore instance
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
 | `getTasks(department, semester, section)` | string, string, string | `{success, data/error}` | Get pending tasks (includes overdue within 12h grace period and no-deadline tasks) |
+| `getFacultyTasks(department)` | string | `{success, data/error}` | Get department-wide tasks for Faculty users (no semester/section filtering) |
 | `getAllActiveTasks()` | - | `{success, data/error}` | Get all active tasks across all departments (for global contributions) |
 | `createTask(userId, userEmail, data)` | string, string, object | `{success, id/error}` | Create new task. Deadline can be a timestamp or `null` ("No official Time limit") |
 | `updateTask(taskId, data)` | string, object | `{success, error?}` | Update existing task. Deadline can be changed between timestamp and `null` |
@@ -568,7 +575,63 @@ NoticeViewer.CACHE_TTL = 7 * 24 * 60 * 60 * 1000               // 7-day cache TT
 
 ---
 
-### 8. Utils (utils.js)
+### 8. NoteManager (notes.js)
+
+**Purpose:** Personal note-taking with markdown support and automatic file upload
+
+#### Configuration
+
+```javascript
+NoteManager.autoSaveTimer = null           // Auto-save debounce timer
+NoteManager.currentUserId = null           // Current authenticated user
+```
+
+#### Methods
+
+| Method | Parameters | Description |
+|--------|------------|-------------|
+| `init()` | - | Initialize note module with auth listener |
+| `setupEventListeners()` | - | Attach event listeners for modal, buttons, file input |
+| `enableNoteFeature()` | - | Show note toggle buttons for authenticated users |
+| `disableNoteFeature()` | - | Hide note toggle buttons for unauthenticated users |
+| `openModal()` | - | Open note modal and load user's note |
+| `closeModal()` | - | Close note modal |
+| `triggerFileUpload()` | - | Trigger hidden file input click |
+| `handleFileSelect(event)` | Event | Handle file selection and upload |
+| `uploadToTmpFiles(file)` | File | Upload file to tmpfiles.org API, returns direct download URL |
+| `insertLinkIntoNote(filename, url)` | string, string | Insert markdown link at cursor position in textarea |
+| `updatePreview(content)` | string | Update preview pane with formatted markdown |
+| `setupAutoSave(content)` | string | Setup auto-save with 500ms debounce |
+| `loadNote(userId)` | string | Load note from Firestore |
+| `saveNote(userId, content)` | string, string | Save note to Firestore (max 1MB) |
+| `handleSave()` | - | Handle manual save button click |
+| `handleClear()` | - | Handle clear button click with confirmation |
+| `clearNote(userId)` | string | Clear note from Firestore |
+| `validateNoteContent(content)` | string | Validate note size (max 1MB) |
+| `showMessage(message, type)` | string, string | Display message to user |
+
+**Features:**
+- **Auto-save:** Saves note content automatically with 500ms debounce
+- **File Upload:** Automatic upload to tmpfiles.org API (max 100MB per file)
+- **Direct Download URLs:** Converts tmpfiles.org URLs to direct download format (`/dl/` path)
+- **Markdown Links:** Inserts `[filename](url)` at cursor position after upload
+- **Preview Pane:** Live preview with markdown rendering (bold, italic, code, links)
+- **Persistent Storage:** Notes stored in Firestore user document (max 1MB)
+- **Upload Progress:** Shows spinner during file upload
+- **Error Handling:** Validates file size and handles upload failures
+
+**Upload Flow:** Click "Upload Files" → Select file → Auto-upload to tmpfiles.org → Insert markdown link at cursor → Auto-save note
+
+**tmpfiles.org API:**
+- Endpoint: `https://tmpfiles.org/api/v1/upload`
+- Method: POST with FormData
+- Max file size: 100MB
+- Response: `{status: "success", data: {url: "https://tmpfiles.org/12345/file.jpg"}}`
+- URL conversion: `tmpfiles.org/` → `tmpfiles.org/dl/` for direct downloads
+
+---
+
+### 9. Utils (utils.js)
 
 **Purpose:** Utility functions
 
@@ -598,7 +661,7 @@ NoticeViewer.CACHE_TTL = 7 * 24 * 60 * 60 * 1000               // 7-day cache TT
 
 ---
 
-### 9. App (app.js)
+### 10. App (app.js)
 
 **Purpose:** Main application controller
 
@@ -659,6 +722,7 @@ App.currentTasks = []         // Loaded tasks
 App.currentEvents = []        // Loaded events
 App.isAdmin = false           // Admin privileges
 App.isCR = false              // CR (Class Representative) privileges
+App.isFaculty = false         // Faculty privileges
 App.isBlocked = false         // Blocked/restricted user status
 App.allUsers = []             // All users (admin panel)
 App.isSigningUp = false       // Flag to prevent auth state handling during signup
@@ -674,7 +738,7 @@ During signup, Firebase triggers `onAuthStateChanged` immediately when the user 
 
 ---
 
-### 10. PWA Modules
+### 11. PWA Modules
 
 **Purpose:** Progressive Web App functionality for offline support, caching, and installability
 
@@ -725,7 +789,7 @@ During signup, Firebase triggers `onAuthStateChanged` immediately when the user 
 
 ---
 
-### 11. Push Notifications System
+### 12. Push Notifications System
 
 **Purpose:** Real-time browser notifications for new tasks and events
 
@@ -754,7 +818,7 @@ During signup, Firebase triggers `onAuthStateChanged` immediately when the user 
 
 ---
 
-### 12. Classroom (classroom.js)
+### 13. Classroom (classroom.js)
 
 **Purpose:** Google Classroom API integration for viewing assignments and announcements
 
@@ -911,9 +975,12 @@ Firestore Database
 │       ├── section: string
 │       ├── isAdmin: boolean    # Optional - admin privileges
 │       ├── isCR: boolean       # Optional - CR privileges
+│       ├── isFaculty: boolean  # Optional - Faculty privileges
 │       ├── isBlocked: boolean  # Optional - blocked/restricted user
 │       ├── lastProfileChange: timestamp  # Optional - 30-day cooldown
 │       ├── lastProfileChangeByAdmin: timestamp  # Optional - admin edit
+│       ├── noteContent: string # Optional - user's personal notes (max 1MB)
+│       ├── noteUpdatedAt: timestamp # Optional - last note update
 │       ├── createdAt: timestamp
 │       ├── updatedAt: timestamp
 │       └── completedTasks/     # Subcollection: task completions
@@ -1108,25 +1175,25 @@ service cloud.firestore {
 
 ### User Role Permissions Summary
 
-| Action | Blocked User | Regular User | CR | Admin |
-|--------|-------------|--------------|-----|-------|
-| Read tasks | ✓ (read-only) | ✓ | ✓ | ✓ |
-| Create tasks | ✗ | ✓ | ✓ | ✓ |
-| Edit own tasks | ✗ | ✓ | ✓ | ✓ |
-| Edit any task | ✗ | ✗ | ✗ | ✓ |
-| Delete own tasks | ✗ | ✓ | ✓ | ✓ |
-| Delete any task | ✗ | ✗ | ✓ | ✓ |
-| Reset tasks | ✗ | ✗ | ✓ | ✓ |
-| Mark tasks complete | ✗ | ✓ | ✓ | ✓ |
-| Read events | ✓ | ✓ | ✓ | ✓ |
-| Create events (own semester) | ✗ | ✗ | ✓ | ✓ |
-| Edit/Delete own events | ✗ | ✗ | ✓ | ✓ |
-| Edit/Delete any event | ✗ | ✗ | ✗ | ✓ |
-| Change own profile | ✗ | ✓ (30-day cooldown) | ✓ | ✓ |
-| Manage users | ✗ | ✗ | ✗ | ✓ |
-| Assign/remove roles | ✗ | ✗ | ✗ | ✓ |
-| Send password reset | ✗ | ✗ | ✗ | ✓ |
-| Delete users | ✗ | ✗ | ✗ | ✓ |
+| Action | Blocked User | Regular User | CR | Faculty | Admin |
+|--------|-------------|--------------|-----|---------|-------|
+| Read tasks | ✓ (read-only) | ✓ | ✓ | ✓ (dept-wide) | ✓ |
+| Create tasks | ✗ | ✓ | ✓ | ✓ | ✓ |
+| Edit own tasks | ✗ | ✓ | ✓ | ✓ | ✓ |
+| Edit any task | ✗ | ✗ | ✗ | ✗ | ✓ |
+| Delete own tasks | ✗ | ✓ | ✓ | ✓ | ✓ |
+| Delete any task | ✗ | ✗ | ✓ | ✗ | ✓ |
+| Reset tasks | ✗ | ✗ | ✓ | ✗ | ✓ |
+| Mark tasks complete | ✗ | ✓ | ✓ | ✓ | ✓ |
+| Read events | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Create events (own dept/sem) | ✗ | ✗ | ✓ (semester) | ✓ (department) | ✓ |
+| Edit/Delete own events | ✗ | ✗ | ✓ | ✓ | ✓ |
+| Edit/Delete any event | ✗ | ✗ | ✗ | ✗ | ✓ |
+| Change own profile | ✗ | ✓ (30-day cooldown) | ✓ | ✓ | ✓ |
+| Manage users | ✗ | ✗ | ✗ | ✗ | ✓ |
+| Assign/remove roles | ✗ | ✗ | ✗ | ✗ | ✓ |
+| Send password reset | ✗ | ✗ | ✗ | ✗ | ✓ |
+| Delete users | ✗ | ✗ | ✗ | ✗ | ✓ |
 
 ---
 
@@ -1253,8 +1320,9 @@ service cloud.firestore {
 - **Google Classroom Sidebar (Mobile)** - Slide-out panel with unified assignments/announcements view; green toggle button on right edge
 - **FAQ Section** - Collapsible accordion with three items:
   - How b1t-Sched works (shared tasks, individual checkboxes)
-  - User roles (Admin, CR, Blocked) and their permissions
+  - User roles (Admin, CR, Faculty, Blocked) and their permissions
   - Profile settings and 30-day change cooldown disclaimer
+- **Note Taking** - Personal note modal with markdown support, auto-save, file upload via tmpfiles.org API, and live preview
 - **Modals:**
   - Add Task Modal - Task creation form with Course as required field and two deadline options: "No official Time limit" or a specific date/time
   - Old Tasks Modal - List of tasks past 12h grace period (with completion status)
@@ -1369,6 +1437,8 @@ Router.onRouteChange((routeName) => {
 | 2.21.0 | Feb 2026 | Push Notifications System: Real-time browser notifications for new tasks and events using Web Notifications API and Firestore real-time listeners. Features: permission management with browser-specific instructions, content formatting with truncation, click-to-navigate, initial load detection, automatic cleanup on logout. New files: `js/notifications-types.js`, `js/permission-manager.js`, `js/notification-content-formatter.js`, `js/notification-manager.js`, `js/firestore-listener-manager.js`. Notification prompt UI added to dashboard. |
 | 2.22.0 | Feb 2026 | Firebase CR Permissions Fix: Updated Firestore security rules for CR event creation/editing. Changed from department-based to semester-based validation. CRs can now create events for their semester, edit/delete only their own events. Added field immutability checks (createdBy, semester). New helper functions: `getUserSemester()`, `hasRequiredEventFields()`. |
 | 2.23.0 | Feb 2026 | User Management UI Updates: Admin features for password reset and user deletion via Firebase Cloud Functions. Features: filter popup with badge showing active filter count, action button optimizations, delete confirmation dialog, admin logs collection. New files: `functions/index.js`, `functions/admin/sendPasswordReset.js`, `functions/admin/deleteUser.js`, `functions/DEPLOYMENT_GUIDE.md`, `js/admin-api.js`. Updated `index.html`, `css/components.css`, `css/dashboard.css`, `js/app.js`, `firestore.rules`. |
+| 2.24.0 | Feb 2026 | Faculty Role Implementation: Faculty users can view department-wide tasks (no semester/section filtering), create events for their department, edit/delete their own events. Faculty toggle available in user management. Updated Firestore security rules with `isFaculty()` helper. New method: `DB.getFacultyTasks()`. Updated `js/db.js`, `js/app.js`, `js/ui.js`, `firestore.rules`. |
+| 2.25.0 | Feb 2026 | Note Taking Feature: Personal note-taking with markdown support, auto-save (500ms debounce), automatic file upload via tmpfiles.org API (max 100MB), live preview pane. Files uploaded automatically insert markdown links at cursor position. Notes stored in Firestore (max 1MB). New files: `js/notes.js`, `css/note.css`. Updated `index.html` with note modal and hidden file input. |
 
 ---
 
@@ -1384,4 +1454,4 @@ Router.onRouteChange((routeName) => {
 ---
 
 *Documentation last updated: February 17, 2026*
-*Version: 2.23.0*
+*Version: 2.25.0*

@@ -266,7 +266,8 @@
                             <p>Get notified when new tasks or events are added</p>
                         </div>
                         <button id="enable-notifications-btn" class="btn btn-primary">Enable</button>
-                        <button id="dismiss-notifications-btn" class="btn btn-text" style="color: black;">Not now</button>
+                        <button id="dismiss-notifications-btn" class="btn btn-text" style="color: black;">Not
+                            now</button>
                     </div>
                     <div id="notification-instructions" class="notification-instructions" style="display: none;">
                         <i class="fas fa-info-circle"></i>
@@ -397,7 +398,7 @@
 
                             <!-- Events Action Buttons -->
                             <div class="events-actions">
-                                <button id="add-event-btn" class="btn btn-secondary cr-or-admin" style="display: none;">
+                                <button id="add-event-btn" class="btn btn-secondary cr-faculty-or-admin" style="display: none;">
                                     <i class="fas fa-plus"></i> Add Event
                                 </button>
                                 <button id="view-old-events-btn" class="btn btn-secondary">
@@ -428,7 +429,7 @@
                     </div>
                     <!-- Mobile Events Actions -->
                     <div class="events-sidebar-actions">
-                        <button id="add-event-btn-mobile" class="btn btn-secondary cr-or-admin" style="display: none;">
+                        <button id="add-event-btn-mobile" class="btn btn-secondary cr-faculty-or-admin" style="display: none;">
                             <i class="fas fa-plus"></i> Add Event
                         </button>
                         <button id="view-old-events-btn-mobile" class="btn btn-secondary">
@@ -511,18 +512,21 @@
             </div>
 
             <!-- Note Toggle Button (Mobile) -->
-            <div id="note-toggle" class="note-toggle mobile-only" style="display: none;" aria-label="Open notes" aria-expanded="false" role="button" tabindex="0">
+            <div id="note-toggle" class="note-toggle mobile-only" style="display: none;" aria-label="Open notes"
+                aria-expanded="false" role="button" tabindex="0">
                 <i class="fas fa-sticky-note" aria-hidden="true"></i>
             </div>
 
             <!-- Note Button (Desktop) -->
-            <div id="note-button-desktop" class="note-button-desktop desktop-only" style="display: none;" aria-label="Open notes" aria-expanded="false" role="button" tabindex="0">
+            <div id="note-button-desktop" class="note-button-desktop desktop-only" style="display: none;"
+                aria-label="Open notes" aria-expanded="false" role="button" tabindex="0">
                 <i class="fas fa-sticky-note" aria-hidden="true"></i>
                 <span>Notes</span>
             </div>
 
             <!-- Note Modal -->
-            <div id="note-modal" class="modal" style="display: none;" role="dialog" aria-labelledby="note-modal-title" aria-modal="false">
+            <div id="note-modal" class="modal" style="display: none;" role="dialog" aria-labelledby="note-modal-title"
+                aria-modal="false">
                 <div class="modal-content note-modal-content">
                     <div class="modal-header">
                         <h2 id="note-modal-title" class="modal-title">
@@ -532,17 +536,14 @@
                             <i class="fas fa-times" aria-hidden="true"></i>
                         </button>
                     </div>
-                    
+
                     <div class="modal-body note-modal-body">
                         <!-- Note Editor -->
                         <div class="note-editor">
-                            <textarea 
-                                id="note-textarea" 
-                                class="note-textarea" 
-                                placeholder="Start typing your notes here... Supports markdown formatting!"
-                            ></textarea>
+                            <textarea id="note-textarea" class="note-textarea"
+                                placeholder="Start typing your notes here... Supports markdown formatting!"></textarea>
                         </div>
-                        
+
                         <!-- Note Preview (rendered with markdown) -->
                         <div class="note-preview">
                             <h3>Preview</h3>
@@ -550,29 +551,20 @@
                                 <p class="note-empty-message">Your formatted notes will appear here...</p>
                             </div>
                         </div>
-                        
+
                         <!-- Upload Sites Section -->
                         <div class="note-upload-section">
-                            <button id="upload-files-btn" class="btn btn-secondary">
+                            <button id="upload-files-btn" class="btn btn-secondary" type="button">
                                 <i class="fas fa-upload"></i> Upload Files
                             </button>
-                            
-                            <div id="upload-sites-dropdown" class="upload-sites-dropdown" style="display: none;">
-                                <p class="upload-instruction">
-                                    <i class="fas fa-info-circle"></i>
-                                    Paste links in the Note or in Task. These are temporary files, be sure to back up anything important within their expiry. Markdown link format is: [text](link)
-                                </p>
-                                <ul class="upload-sites-list">
-                                    <li><a href="https://tmpfiles.org/" target="_blank" rel="noopener noreferrer">tmpfiles.org</a></li>
-                                    <li><a href="https://www.file.io/" target="_blank" rel="noopener noreferrer">file.io</a></li>
-                                    <li><a href="https://filebin.net/" target="_blank" rel="noopener noreferrer">filebin.net</a></li>
-                                    <li><a href="https://temp.sh/" target="_blank" rel="noopener noreferrer">temp.sh</a></li>
-                                    <li><a href="https://limewire.com/" target="_blank" rel="noopener noreferrer">limewire.com</a></li>
-                                </ul>
-                            </div>
+                            <input type="file" id="note-file-input" style="display: none;" accept="image/*,application/pdf,.doc,.docx,.txt,.zip,.rar">
+                            <p class="upload-instruction">
+                                <i class="fas fa-info-circle"></i>
+                                Upload files to tmpfiles.org. Link will be inserted as markdown. Files are temporary, back up important content.
+                            </p>
                         </div>
                     </div>
-                    
+
                     <div class="modal-footer">
                         <button id="clear-note-btn" class="btn btn-danger">
                             <i class="fas fa-trash"></i> Clear
@@ -995,14 +987,16 @@
                                             <p id="notification-status-text">Checking...</p>
                                         </div>
                                     </div>
-                                    <button type="button" id="enable-notifications-settings-btn" class="btn btn-primary" style="display: none;">
+                                    <button type="button" id="enable-notifications-settings-btn" class="btn btn-primary"
+                                        style="display: none;">
                                         Enable Notifications
                                     </button>
                                 </div>
                                 <p class="notification-help-text">
                                     Get notified when new tasks or events are added to your dashboard.
                                 </p>
-                                <div id="notification-settings-instructions" class="notification-instructions" style="display: none;">
+                                <div id="notification-settings-instructions" class="notification-instructions"
+                                    style="display: none;">
                                     <i class="fas fa-info-circle"></i>
                                     <p id="notification-settings-instructions-text"></p>
                                 </div>
@@ -1148,6 +1142,7 @@
                                     <option value="All">All Roles</option>
                                     <option value="Admin">Admin</option>
                                     <option value="CR">CR</option>
+                                    <option value="Faculty">Faculty</option>
                                     <option value="Blocked">Blocked</option>
                                     <option value="User">Regular User</option>
                                 </select>
@@ -1210,13 +1205,17 @@
                             </summary>
                             <div class="faq-answer">
                                 <p>b1t-Sched groups students by their academic identity — <strong>Department</strong>,
-                                    <strong>Semester</strong>, and <strong>Section</strong>. All users who share the same
+                                    <strong>Semester</strong>, and <strong>Section</strong>. All users who share the
+                                    same
                                     combination see the same "Pending Tasks" list and can add new tasks to it.
                                 </p>
-                                <p>However, <strong>task checkboxes are individual</strong> — marking a task as complete only
-                                    affects your own dashboard. Other users in the same group won't see your completion status.
+                                <p>However, <strong>task checkboxes are individual</strong> — marking a task as complete
+                                    only
+                                    affects your own dashboard. Other users in the same group won't see your completion
+                                    status.
                                 </p>
-                                <p>Events are shown based on department (or marked as "ALL" for university-wide events) and are
+                                <p>Events are shown based on department (or marked as "ALL" for university-wide events)
+                                    and are
                                     visible in the sidebar on desktop or in the slide-out panel on mobile.</p>
                             </div>
                         </details>
@@ -1226,18 +1225,24 @@
                                 <i class="fas fa-user-shield"></i> What are the user roles?
                             </summary>
                             <div class="faq-answer">
-                                <p>There are three special roles in addition to regular users:</p>
+                                <p>There are four special roles in addition to regular users:</p>
                                 <ul>
-                                    <li><strong>Admin</strong> — Full control: can create/edit/delete any task or event, manage
+                                    <li><strong>Admin</strong> — Full control: can create/edit/delete any task or event,
+                                        manage
                                         all users, assign or remove roles, and access the Firebase dashboard.</li>
-                                    <li><strong>CR (Class Representative)</strong> — Can delete or reset any task in their
-                                        section. Can also create events for their own department and edit/delete events they
+                                    <li><strong>CR (Class Representative)</strong> — Can delete or reset any task in
+                                        their
+                                        section. Can also create events for their own department and edit/delete events
+                                        they
                                         created.</li>
-                                    <li><strong>Blocked</strong> — Restricted to read-only mode. Cannot add, edit, or delete
-                                        tasks, change their profile, or interact with events. A banner is shown at the top of
+                                    <li><strong>Faculty</strong> — Can view department-wide tasks (no semester/section filtering). Can create events for their own department and edit/delete events they created. Cannot modify semester or section in profile settings.</li>
+                                    <li><strong>Blocked</strong> — Restricted to read-only mode. Cannot add, edit, or
+                                        delete
+                                        tasks, change their profile, or interact with events. A banner is shown at the
+                                        top of
                                         the dashboard.</li>
+                                    <li><strong>Regular users</strong> — Can add tasks, edit/delete their own tasks, and mark tasks as complete.</li>
                                 </ul>
-                                <p>Regular users can add tasks, edit/delete their own tasks, and mark tasks as complete.</p>
                             </div>
                         </details>
 
@@ -1246,12 +1251,16 @@
                                 <i class="fas fa-cog"></i> Profile settings & changes
                             </summary>
                             <div class="faq-answer">
-                                <p>You can change your academic details (department, semester, section) from the <strong>Profile
-                                        Settings</strong> page, accessible by clicking your user card in the navigation bar.</p>
+                                <p>You can change your academic details (department, semester, section) from the
+                                    <strong>Profile
+                                        Settings</strong> page, accessible by clicking your user card in the navigation
+                                    bar.</p>
                                 <p><strong>Important:</strong> Profile changes are limited to <strong>once every 30
-                                        days</strong> to prevent misuse. If you need an earlier change, please contact the
+                                        days</strong> to prevent misuse. If you need an earlier change, please contact
+                                    the
                                     Admin.</p>
-                                <p>Your Student ID is set during initial registration and cannot be changed through the profile
+                                <p>Your Student ID is set during initial registration and cannot be changed through the
+                                    profile
                                     settings.</p>
                             </div>
                         </details>
