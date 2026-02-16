@@ -557,7 +557,7 @@ NoticeViewer.CACHE_TTL = 7 * 24 * 60 * 60 * 1000               // 7-day cache TT
 | `init()` | - | Initialize notice viewer: setup event listeners for desktop modal and mobile sidebar; attach load/close buttons |
 | `checkCache()` | - | Check localStorage for cached notices within TTL; returns cached data or `null` |
 | `saveToCache(notices)` | array | Save fetched notices to localStorage with timestamp |
-| `loadNotices()` | - | Fetch notices from Vercel backend (or cache); renders to desktop and mobile containers |
+| `loadNotices()` | - | Fetch notices from Vercel backend with cache fallback; renders to desktop and mobile containers. On server error (503), attempts to load from cache and displays warning banner. |
 | `renderAllNotices()` | - | Render notice lists in both desktop and mobile containers |
 | `renderNoticeList(containerId, isMobile)` | string, boolean | Render notice list items into a given container (desktop: clickable list with PDF preview) |
 | `renderNoticeListMobile(containerId)` | string | Render mobile-optimized notice list (tap to open PDF in new tab) |
@@ -572,6 +572,8 @@ NoticeViewer.CACHE_TTL = 7 * 24 * 60 * 60 * 1000               // 7-day cache TT
 **Desktop Flow:** Navbar "Notice" button → Modal opens → Click "Load Notices" → Notice list + PDF preview panel (split-pane layout) → Click notice → PDF loads in embedded iframe → Open/Download buttons
 
 **Mobile Flow:** Floating "Notices" toggle → Sidebar slides in → Click "Load Notices" → Notice list → Tap notice → PDF opens in new tab
+
+**Error Handling:** When the Vercel backend is unavailable (503 error), the app automatically falls back to cached notices (if available within 7-day TTL) and displays a warning banner: "Server unavailable. Showing cached notices." This ensures users can still access notices even when the backend is down.
 
 ---
 
@@ -1439,6 +1441,7 @@ Router.onRouteChange((routeName) => {
 | 2.23.0 | Feb 2026 | User Management UI Updates: Admin features for password reset and user deletion via Firebase Cloud Functions. Features: filter popup with badge showing active filter count, action button optimizations, delete confirmation dialog, admin logs collection. New files: `functions/index.js`, `functions/admin/sendPasswordReset.js`, `functions/admin/deleteUser.js`, `functions/DEPLOYMENT_GUIDE.md`, `js/admin-api.js`. Updated `index.html`, `css/components.css`, `css/dashboard.css`, `js/app.js`, `firestore.rules`. |
 | 2.24.0 | Feb 2026 | Faculty Role Implementation: Faculty users can view department-wide tasks (no semester/section filtering), create events for their department, edit/delete their own events. Faculty toggle available in user management. Updated Firestore security rules with `isFaculty()` helper. New method: `DB.getFacultyTasks()`. Updated `js/db.js`, `js/app.js`, `js/ui.js`, `firestore.rules`. |
 | 2.25.0 | Feb 2026 | Note Taking Feature: Personal note-taking with markdown support, auto-save (500ms debounce), automatic file upload via tmpfiles.org API (max 100MB), live preview pane. Files uploaded automatically insert markdown links at cursor position. Notes stored in Firestore (max 1MB). New files: `js/notes.js`, `css/note.css`. Updated `index.html` with note modal and hidden file input. |
+| 2.25.1 | Feb 2026 | Bug Fixes: Added Faculty toggle button active state CSS (blue background). Improved notice API error handling with cache fallback - when server returns 503, app loads cached notices with warning banner. Fixed notification prompt inline color styles. Updated `css/dashboard.css`, `js/notice.js`. |
 
 ---
 
@@ -1454,4 +1457,4 @@ Router.onRouteChange((routeName) => {
 ---
 
 *Documentation last updated: February 17, 2026*
-*Version: 2.25.0*
+*Version: 2.25.1*

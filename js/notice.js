@@ -152,7 +152,31 @@ const NoticeViewer = {
 
         } catch (error) {
             console.error('Fetch notices error:', error);
-            this.showErrorState(`Failed to load notices: ${error.message}`);
+            
+            // Try to load from cache if server is unavailable
+            const cached = this.checkCache();
+            if (cached) {
+                console.log('Server unavailable, loading from cache');
+                this.notices = cached;
+                this.noticesLoaded = true;
+                this.renderAllNotices();
+                
+                // Show a warning that data might be stale
+                const containers = [
+                    document.getElementById('notice-list-desktop'),
+                    document.getElementById('notice-list-mobile')
+                ];
+                containers.forEach(container => {
+                    if (container) {
+                        const warning = document.createElement('div');
+                        warning.style.cssText = 'padding: 10px; background: #fff3cd; color: #856404; border-radius: 4px; margin-bottom: 10px; font-size: 14px;';
+                        warning.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Server unavailable. Showing cached notices.';
+                        container.insertBefore(warning, container.firstChild);
+                    }
+                });
+            } else {
+                this.showErrorState(`Failed to load notices: ${error.message}. Please try again later.`);
+            }
         }
     },
 

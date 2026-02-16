@@ -1121,6 +1121,11 @@ body.user-blocked .task-edit-btn {
     color: var(--text-white);
 }
 
+.toggle-faculty-btn.active {
+    background-color: #007bff;
+    color: var(--text-white);
+}
+
 .toggle-blocked-btn.active.danger {
     background-color: var(--danger);
     color: var(--text-white);
