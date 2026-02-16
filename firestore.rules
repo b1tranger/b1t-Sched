@@ -89,11 +89,6 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.semester;
     }
     
-    // Helper function to get user's department
-    function getUserDepartment() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.department;
-    }
-    
     // Helper function to validate required event fields
     function hasRequiredEventFields() {
       return request.resource.data.keys().hasAll(['title', 'description', 'date', 'department', 'semester', 'createdBy']) &&
@@ -167,6 +162,13 @@ service cloud.firestore {
     match /adminLogs/{logId} {
       allow read: if isAdmin();
       allow write: if isAdmin();
+    }
+    
+    // Activity logs collection - authenticated users can create, admins can read all
+    match /activity_logs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isSignedIn();
+      allow update, delete: if false; // Activity logs are immutable
     }
   }
 }

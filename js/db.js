@@ -196,6 +196,21 @@ const DB = {
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
       console.log('Task created:', docRef.id);
+      
+      // Log task addition activity
+      await ActivityLogger.logTaskAddition(
+        docRef.id,
+        {
+          department: data.department,
+          semester: data.semester || null,
+          section: data.section || null,
+          type: data.type || 'assignment'
+        },
+        userId,
+        userEmail,
+        addedByRole
+      );
+      
       return { success: true, id: docRef.id };
     } catch (error) {
       console.error('Error creating task:', error);
@@ -222,7 +237,7 @@ const DB = {
   },
 
   // Toggle task completion for a user
-  async toggleTaskCompletion(userId, taskId, isCompleted) {
+  async toggleTaskCompletion(userId, taskId, isCompleted, userEmail = null, userRole = null) {
     try {
       const completionRef = db.collection('users').doc(userId)
         .collection('completedTasks').doc(taskId);
@@ -231,6 +246,11 @@ const DB = {
         await completionRef.set({
           completedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
+        
+        // Log task completion activity
+        if (userEmail && userRole) {
+          await ActivityLogger.logTaskCompletion(taskId, userId, userEmail, userRole);
+        }
       } else {
         await completionRef.delete();
       }

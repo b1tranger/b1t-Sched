@@ -746,6 +746,16 @@ const App = {
 
     const result = await DB.deleteEvent(eventId);
     if (result.success) {
+      // Log event deletion activity
+      const userId = Auth.getUserId();
+      const userEmail = Auth.getUserEmail();
+      let userRole = 'Student'; // Default role
+      if (this.isAdmin) userRole = 'Admin';
+      else if (this.isFaculty) userRole = 'Faculty';
+      else if (this.isCR) userRole = 'CR';
+      
+      await ActivityLogger.logEventDeletion(eventId, userId, userEmail, userRole);
+
       // Refresh events
       await this.loadDashboardData();
     } else {
@@ -768,7 +778,14 @@ const App = {
     const userId = Auth.getUserId();
     if (!userId) return;
 
-    const result = await DB.toggleTaskCompletion(userId, taskId, isCompleted);
+    // Get user email and role for activity logging
+    const userEmail = Auth.getUserEmail();
+    let userRole = 'Student'; // Default role
+    if (this.isAdmin) userRole = 'Admin';
+    else if (this.isFaculty) userRole = 'Faculty';
+    else if (this.isCR) userRole = 'CR';
+
+    const result = await DB.toggleTaskCompletion(userId, taskId, isCompleted, userEmail, userRole);
 
     if (result.success) {
       // Update local state
@@ -1594,6 +1611,15 @@ const App = {
     const result = await DB.deleteTask(taskId);
 
     if (result.success) {
+      // Log task deletion activity
+      const userEmail = Auth.getUserEmail();
+      let userRole = 'Student'; // Default role
+      if (this.isAdmin) userRole = 'Admin';
+      else if (this.isFaculty) userRole = 'Faculty';
+      else if (this.isCR) userRole = 'CR';
+      
+      await ActivityLogger.logTaskDeletion(taskId, userId, userEmail, userRole);
+
       // Remove from local state and re-render
       this.currentTasks = this.currentTasks.filter(t => t.id !== taskId);
       UI.renderTasks(this.currentTasks, this.userCompletions, this.isAdmin, this.isCR, Auth.getUserId());
@@ -1660,6 +1686,24 @@ const App = {
     });
 
     if (result.success) {
+      // Log event addition activity
+      const userEmail = Auth.getUserEmail();
+      let userRole = 'Student'; // Default role
+      if (this.isAdmin) userRole = 'Admin';
+      else if (this.isFaculty) userRole = 'Faculty';
+      else if (this.isCR) userRole = 'CR';
+
+      await ActivityLogger.logEventAddition(
+        result.id,
+        {
+          department,
+          semester: this.userProfile.semester
+        },
+        userId,
+        userEmail,
+        userRole
+      );
+
       UI.hideModal('add-event-modal');
       // Refresh events
       await this.loadDashboardData();
