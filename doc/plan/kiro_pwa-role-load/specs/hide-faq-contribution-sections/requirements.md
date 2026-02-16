@@ -1,0 +1,62 @@
+# Requirements Document
+
+## Introduction
+
+This feature addresses the redundancy of FAQ and Contribution sections appearing on all views in the b1t-Sched single-page application. Currently, these sections are visible across all authenticated views (dashboard, profile settings, user management), which creates visual clutter and reduces the focus on view-specific content. This feature will restrict these sections to only appear on the home/landing page view (dashboard) and implement a more compact nested structure for the FAQ section.
+
+## Glossary
+
+- **FAQ_Section**: The Frequently Asked Questions section containing collapsible question-answer pairs
+- **Contribution_Section**: The section containing a button that opens a modal showing user contribution statistics
+- **Dashboard_View**: The main home/landing page view shown after login, displaying tasks and events
+- **Non_Dashboard_View**: Any authenticated view other than the dashboard (profile settings, user management)
+- **Router**: The hash-based SPA routing module that manages view navigation
+- **Nested_FAQ_Structure**: A hierarchical dropdown structure where the three existing FAQ items are grouped inside a parent dropdown menu
+
+## Requirements
+
+### Requirement 1: FAQ Section Visibility Control
+
+**User Story:** As a user, I want the FAQ section to only appear on the dashboard view, so that other views remain focused and uncluttered.
+
+#### Acceptance Criteria
+
+1. WHEN the user navigates to the dashboard view, THE System SHALL display the FAQ_Section
+2. WHEN the user navigates to any Non_Dashboard_View, THE System SHALL hide the FAQ_Section
+3. WHEN the Router changes the current view, THE System SHALL evaluate whether to show or hide the FAQ_Section based on the active view
+4. THE System SHALL maintain the FAQ_Section's visibility state correctly during page refreshes on the dashboard view
+
+### Requirement 2: Contribution Section Visibility Control
+
+**User Story:** As a user, I want the Contribution section to only appear on the dashboard view, so that I can access contribution statistics from the main page without seeing it on every view.
+
+#### Acceptance Criteria
+
+1. WHEN the user navigates to the dashboard view, THE System SHALL display the Contribution_Section
+2. WHEN the user navigates to any Non_Dashboard_View, THE System SHALL hide the Contribution_Section
+3. WHEN the Router changes the current view, THE System SHALL evaluate whether to show or hide the Contribution_Section based on the active view
+4. THE System SHALL maintain the Contribution_Section's visibility state correctly during page refreshes on the dashboard view
+
+### Requirement 3: Nested FAQ Structure
+
+**User Story:** As a user, I want the FAQ section to be more compact with a nested dropdown structure, so that it takes up less vertical space on the dashboard.
+
+#### Acceptance Criteria
+
+1. THE System SHALL create a parent dropdown menu titled "Frequently Asked Questions"
+2. WHEN the parent dropdown is collapsed, THE System SHALL hide all three existing FAQ items
+3. WHEN the parent dropdown is expanded, THE System SHALL display all three existing FAQ items as nested dropdowns
+4. THE System SHALL preserve the existing functionality of each individual FAQ item (expand/collapse behavior)
+5. THE System SHALL maintain the existing content and styling of all FAQ items
+6. THE System SHALL use the same visual design pattern (details/summary elements) for the parent dropdown as the existing FAQ items
+
+### Requirement 4: View Transition Behavior
+
+**User Story:** As a developer, I want the visibility logic to integrate seamlessly with the existing routing system, so that the feature works reliably across all navigation scenarios.
+
+#### Acceptance Criteria
+
+1. WHEN the Router's showView function is called, THE System SHALL update FAQ_Section and Contribution_Section visibility
+2. WHEN the user uses browser back/forward navigation, THE System SHALL correctly show or hide sections based on the resulting view
+3. WHEN the user directly accesses a URL with a hash route, THE System SHALL correctly show or hide sections based on that route
+4. THE System SHALL not interfere with the existing navbar, footer, or other UI element visibility logic
