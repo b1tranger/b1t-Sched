@@ -189,7 +189,7 @@ const NoteManager = {
     const file = event.target.files[0];
     if (!file) return;
 
-    // Validate file size (max 100MB as per tmpfiles.org limit)
+    // Validate file size (max 100MB as per file.io limit)
     const maxSize = 100 * 1024 * 1024; // 100MB
     if (file.size > maxSize) {
       this.showMessage('File is too large. Maximum size is 100MB.', 'error');
@@ -205,12 +205,12 @@ const NoteManager = {
     }
 
     try {
-      const url = await this.uploadToTmpFiles(file);
+      const url = await this.uploadToFileIO(file);
       
       // Insert markdown link into textarea at cursor position
       this.insertLinkIntoNote(file.name, url);
       
-      this.showMessage('File uploaded successfully!', 'success');
+      this.showMessage('File uploaded successfully! (Available for 14 days)', 'success');
     } catch (error) {
       console.error('Upload error:', error);
       this.showMessage('Failed to upload file: ' + error.message, 'error');
@@ -226,13 +226,13 @@ const NoteManager = {
     }
   },
 
-  // Upload file to tmpfiles.org
-  async uploadToTmpFiles(file) {
+  // Upload file to file.io
+  async uploadToFileIO(file) {
     const formData = new FormData();
     formData.append('file', file);
 
     try {
-      const response = await fetch('https://tmpfiles.org/api/v1/upload', {
+      const response = await fetch('https://file.io/', {
         method: 'POST',
         body: formData
       });
@@ -244,16 +244,13 @@ const NoteManager = {
       const data = await response.json();
       
       // Check if upload was successful
-      if (data.status !== 'success' || !data.data || !data.data.url) {
-        throw new Error('Invalid response from upload service');
+      if (!data.success || !data.link) {
+        throw new Error(data.message || 'Invalid response from upload service');
       }
 
-      // tmpfiles.org returns a URL like: https://tmpfiles.org/12345/filename.jpg
-      // We need to convert it to the direct download URL: https://tmpfiles.org/dl/12345/filename.jpg
-      let url = data.data.url;
-      url = url.replace('tmpfiles.org/', 'tmpfiles.org/dl/');
-
-      return url;
+      // file.io returns a direct download URL
+      // The link is valid for 14 days and can be downloaded once by default
+      return data.link;
     } catch (error) {
       throw new Error(error.message || 'Network error during upload');
     }

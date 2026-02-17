@@ -195,9 +195,9 @@ const Utils = {
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
       
-      // Check if it's a tmpfiles.org download link
-      const isTmpFilesLink = link.url.includes('tmpfiles.org/dl/');
-      const downloadAttr = isTmpFilesLink ? ' download' : '';
+      // Check if it's a file.io download link (always add download attribute)
+      const isFileIOLink = link.url.includes('file.io/');
+      const downloadAttr = isFileIOLink ? ' download' : '';
       
       result = result.replace(
         `__MD_LINK_${index}__`,

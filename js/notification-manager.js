@@ -65,7 +65,23 @@ const NotificationManager = {
       // Format notification content
       const notificationData = NotificationContentFormatter.formatTaskNotification(task);
       
-      // Create notification
+      // Try to use Service Worker notification (required for mobile)
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        const registration = await navigator.serviceWorker.ready;
+        await registration.showNotification(notificationData.title, {
+          body: notificationData.body,
+          icon: notificationData.icon,
+          tag: notificationData.tag,
+          requireInteraction: notificationData.requireInteraction,
+          data: notificationData.data,
+          badge: '/Social-Preview.webp',
+          vibrate: [200, 100, 200]
+        });
+        console.log('Task notification displayed via Service Worker:', task.id);
+        return null; // Service Worker notifications don't return a Notification object
+      }
+      
+      // Fallback to regular Notification API (desktop browsers)
       const notification = new Notification(notificationData.title, {
         body: notificationData.body,
         icon: notificationData.icon,
@@ -106,7 +122,23 @@ const NotificationManager = {
       // Format notification content
       const notificationData = NotificationContentFormatter.formatEventNotification(event);
       
-      // Create notification
+      // Try to use Service Worker notification (required for mobile)
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        const registration = await navigator.serviceWorker.ready;
+        await registration.showNotification(notificationData.title, {
+          body: notificationData.body,
+          icon: notificationData.icon,
+          tag: notificationData.tag,
+          requireInteraction: notificationData.requireInteraction,
+          data: notificationData.data,
+          badge: '/Social-Preview.webp',
+          vibrate: [200, 100, 200]
+        });
+        console.log('Event notification displayed via Service Worker:', event.id);
+        return null; // Service Worker notifications don't return a Notification object
+      }
+      
+      // Fallback to regular Notification API (desktop browsers)
       const notification = new Notification(notificationData.title, {
         body: notificationData.body,
         icon: notificationData.icon,

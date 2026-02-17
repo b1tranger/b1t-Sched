@@ -51,7 +51,7 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **Profile Change Cooldown** - Users can only change profile once per 30 days (anti-spam)
 - **Two-Column Layout** - Events sidebar on desktop, slide-out panel (40vw) on mobile
 - **Notice Viewer** - View UCAM university notices with PDF preview (desktop modal with split-pane layout; mobile slide-out sidebar), powered by Vercel serverless backend with local caching
-- **Note Taking** - Personal note-taking feature with markdown support, auto-save, and automatic file upload via tmpfiles.org API with direct download support (no new tab required)
+- **Note Taking** - Personal note-taking feature with markdown support, auto-save, and automatic file upload via file.io API with direct download support (no new tab required)
 - **Task Filtering** - Filter pending tasks by type (Assignment, Homework, Exam, Project, Presentation, Other)
 - **Global Contributions** - View a leaderboard of top contributors (group-specific or global across all departments)
 - **User Counter** - Live count of total registered users displayed on the dashboard
@@ -619,7 +619,7 @@ NoteManager.currentUserId = null           // Current authenticated user
 | `closeModal()` | - | Close note modal |
 | `triggerFileUpload()` | - | Trigger hidden file input click |
 | `handleFileSelect(event)` | Event | Handle file selection and upload |
-| `uploadToTmpFiles(file)` | File | Upload file to tmpfiles.org API, returns direct download URL |
+| `uploadToFileIO(file)` | File | Upload file to file.io API, returns direct download URL |
 | `insertLinkIntoNote(filename, url)` | string, string | Insert markdown link at cursor position in textarea |
 | `updatePreview(content)` | string | Update preview pane with formatted markdown |
 | `setupAutoSave(content)` | string | Setup auto-save with 500ms debounce |
@@ -633,22 +633,22 @@ NoteManager.currentUserId = null           // Current authenticated user
 
 **Features:**
 - **Auto-save:** Saves note content automatically with 500ms debounce
-- **File Upload:** Automatic upload to tmpfiles.org API (max 100MB per file)
-- **Direct Download URLs:** Converts tmpfiles.org URLs to direct download format (`/dl/` path)
+- **File Upload:** Automatic upload to file.io API (max 100MB per file)
+- **Direct Download URLs:** file.io provides direct download links (available for 14 days)
 - **Markdown Links:** Inserts `[filename](url)` at cursor position after upload
 - **Preview Pane:** Live preview with markdown rendering (bold, italic, code, links)
 - **Persistent Storage:** Notes stored in Firestore user document (max 1MB)
 - **Upload Progress:** Shows spinner during file upload
 - **Error Handling:** Validates file size and handles upload failures
 
-**Upload Flow:** Click "Upload Files" → Select file → Auto-upload to tmpfiles.org → Insert markdown link at cursor → Auto-save note
+**Upload Flow:** Click "Upload Files" → Select file → Auto-upload to file.io → Insert markdown link at cursor → Auto-save note
 
-**tmpfiles.org API:**
-- Endpoint: `https://tmpfiles.org/api/v1/upload`
+**file.io API:**
+- Endpoint: `https://file.io/`
 - Method: POST with FormData
 - Max file size: 100MB
-- Response: `{status: "success", data: {url: "https://tmpfiles.org/12345/file.jpg"}}`
-- URL conversion: `tmpfiles.org/` → `tmpfiles.org/dl/` for direct downloads
+- Response: `{success: true, link: "https://file.io/abc123"}`
+- Files available for 14 days with direct download support
 
 ---
 
@@ -1459,9 +1459,10 @@ Router.onRouteChange((routeName) => {
 | 2.22.0 | Feb 2026 | Firebase CR Permissions Fix: Updated Firestore security rules for CR event creation/editing. Changed from department-based to semester-based validation. CRs can now create events for their semester, edit/delete only their own events. Added field immutability checks (createdBy, semester). New helper functions: `getUserSemester()`, `hasRequiredEventFields()`. |
 | 2.23.0 | Feb 2026 | User Management UI Updates: Admin features for password reset and user deletion via Firebase Cloud Functions. Features: filter popup with badge showing active filter count, action button optimizations, delete confirmation dialog, admin logs collection. New files: `functions/index.js`, `functions/admin/sendPasswordReset.js`, `functions/admin/deleteUser.js`, `functions/DEPLOYMENT_GUIDE.md`, `js/admin-api.js`. Updated `index.html`, `css/components.css`, `css/dashboard.css`, `js/app.js`, `firestore.rules`. |
 | 2.24.0 | Feb 2026 | Faculty Role Implementation: Faculty users can view department-wide tasks (no semester/section filtering), create events for their department, edit/delete their own events. Faculty toggle available in user management. Updated Firestore security rules with `isFaculty()` helper. New method: `DB.getFacultyTasks()`. Updated `js/db.js`, `js/app.js`, `js/ui.js`, `firestore.rules`. |
-| 2.25.0 | Feb 2026 | Note Taking Feature: Personal note-taking with markdown support, auto-save (500ms debounce), automatic file upload via tmpfiles.org API (max 100MB), live preview pane. Files uploaded automatically insert markdown links at cursor position. Notes stored in Firestore (max 1MB). New files: `js/notes.js`, `css/note.css`. Updated `index.html` with note modal and hidden file input. |
+| 2.25.0 | Feb 2026 | Note Taking Feature: Personal note-taking with markdown support, auto-save (500ms debounce), automatic file upload via file.io API (max 100MB, 14-day retention), live preview pane. Files uploaded automatically insert markdown links at cursor position. Notes stored in Firestore (max 1MB). New files: `js/notes.js`, `css/note.css`. Updated `index.html` with note modal and hidden file input. |
 | 2.25.1 | Feb 2026 | Bug Fixes: Added Faculty toggle button active state CSS (blue background). Improved notice API error handling with cache fallback - when server returns 503, app loads cached notices with warning banner. Fixed notification prompt inline color styles. Updated `css/dashboard.css`, `js/notice.js`. |
-| 2.26.0 | Feb 2026 | UX & Security Improvements: (1) Deadline options reordered - "Set Deadline" now appears first and is default in Add/Edit Task modals. (2) File downloads in notes now work directly without opening new tab (added `download` attribute to tmpfiles.org links). (3) Automatic session timeout - users are logged out after 1 hour of inactivity for security, with activity-based timer reset. (4) Role badges - CR and Faculty contributors now have colored badges in task cards and contribution list. (5) Mobile notifications fixed - now use Service Worker API for iOS Safari and Chrome on Android compatibility, with vibration and badge support. Updated `index.html`, `js/utils.js`, `js/auth.js`, `js/app.js`, `js/ui.js`, `js/notification-manager.js`, `sw.js`, `css/components.css`. |
+| 2.26.0 | Feb 2026 | UX & Security Improvements: (1) Deadline options reordered - "Set Deadline" now appears first and is default in Add/Edit Task modals. (2) File downloads in notes now work directly without opening new tab (added `download` attribute to file.io links). (3) Automatic session timeout - users are logged out after 1 hour of inactivity for security, with activity-based timer reset. (4) Role badges - CR and Faculty contributors now have colored badges in task cards and contribution list. (5) Mobile notifications fixed - now use Service Worker API for iOS Safari and Chrome on Android compatibility, with vibration and badge support. Updated `index.html`, `js/utils.js`, `js/auth.js`, `js/app.js`, `js/ui.js`, `js/notification-manager.js`, `sw.js`, `css/components.css`. |
+| 2.27.0 | Feb 2026 | File Upload Service Migration: Migrated from tmpfiles.org to file.io API for note file uploads. Benefits: 14-day file retention (vs 1 hour), direct download links, more reliable service. Updated `js/notes.js` (renamed `uploadToTmpFiles` to `uploadToFileIO`), `js/utils.js` (updated download link detection), `index.html` (updated upload instructions), `doc/DOCUMENTATION.md`. |
 
 ---
 
@@ -1476,5 +1477,5 @@ Router.onRouteChange((routeName) => {
 
 ---
 
-*Documentation last updated: February 17, 2026*
-*Version: 2.26.0*
+*Documentation last updated: February 18, 2026*
+*Version: 2.27.0*
