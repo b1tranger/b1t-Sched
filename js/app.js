@@ -191,9 +191,6 @@ const App = {
     this.setupAdminEventListeners();
     this.setupUserManagementListeners();
 
-    // Initialize Profile module
-    await Profile.init();
-
     // Initialize Google Classroom
     Classroom.init();
 
@@ -209,6 +206,13 @@ const App = {
       console.log('CalendarView initialized successfully');
     } else {
       console.error('CalendarView is undefined!');
+    }
+
+    // Initialize Profile module (with error handling to prevent blocking)
+    try {
+      await Profile.init();
+    } catch (error) {
+      console.error('Profile initialization failed:', error);
     }
 
     // Handle route-specific data loading

@@ -1,0 +1,133 @@
+# Requirements Document
+
+## Introduction
+
+This document specifies the requirements for a Calendar View feature that displays pending tasks in a monthly calendar layout. The feature provides users with a visual, date-based view of their tasks, similar to ClickUp's calendar interface. Tasks are displayed on their deadline dates, allowing users to see their workload distribution across the month at a glance.
+
+## Glossary
+
+- **Calendar_View**: A modal interface displaying tasks organized by date in a monthly calendar grid
+- **Task**: An academic assignment, homework, exam, project, or other work item with properties including title, course, deadline, type, and description
+- **Deadline**: The due date and time for a task, stored as a Firestore Timestamp or JavaScript Date
+- **Task_Card**: A visual representation of a task showing its key information
+- **Calendar_Grid**: A 7-column layout representing days of the week, with rows for each week of the month
+- **Overdue_Task**: A task whose deadline has passed and is not marked as completed
+- **Modal**: An overlay dialog that appears on top of the main interface
+- **App.currentTasks**: The application's array of task objects currently loaded for the user
+
+## Requirements
+
+### Requirement 1: Calendar View Access
+
+**User Story:** As a user, I want to access a calendar view from the Pending Tasks section, so that I can visualize my tasks by date.
+
+#### Acceptance Criteria
+
+1. WHEN the dashboard loads, THE System SHALL display a calendar icon button next to the "Pending Tasks" section header
+2. WHEN a user clicks the calendar icon button, THE System SHALL open a modal containing the Calendar_View
+3. WHEN the Calendar_View modal is open, THE System SHALL prevent interaction with the underlying page content
+4. WHEN a user clicks outside the modal or presses the Escape key, THE System SHALL close the Calendar_View modal
+
+### Requirement 2: Calendar Grid Display
+
+**User Story:** As a user, I want to see a monthly calendar grid, so that I can understand the date layout and navigate through months.
+
+#### Acceptance Criteria
+
+1. WHEN the Calendar_View opens, THE System SHALL display the current month and year as a header
+2. WHEN displaying the calendar, THE System SHALL render a Calendar_Grid with 7 columns representing Sunday through Saturday
+3. WHEN rendering the Calendar_Grid, THE System SHALL display day numbers for each date in the month
+4. WHEN rendering the Calendar_Grid, THE System SHALL highlight today's date with a distinct visual indicator
+5. WHEN the calendar includes dates from adjacent months, THE System SHALL display them in a muted style to distinguish them from the current month
+
+### Requirement 3: Month Navigation
+
+**User Story:** As a user, I want to navigate between months, so that I can view tasks scheduled in different time periods.
+
+#### Acceptance Criteria
+
+1. WHEN the Calendar_View is displayed, THE System SHALL provide previous month and next month navigation buttons
+2. WHEN a user clicks the previous month button, THE System SHALL update the calendar to display the previous month
+3. WHEN a user clicks the next month button, THE System SHALL update the calendar to display the next month
+4. WHEN the month changes, THE System SHALL update the month and year header to reflect the new month
+5. WHEN the month changes, THE System SHALL reload and display tasks with deadlines in the new month
+
+### Requirement 4: Task Filtering and Display
+
+**User Story:** As a user, I want to see only tasks with valid deadlines on the calendar, so that the view remains clean and relevant.
+
+#### Acceptance Criteria
+
+1. WHEN loading tasks for the Calendar_View, THE System SHALL filter App.currentTasks to include only tasks with non-null deadline values
+2. WHEN a task has a deadline value of null or "No official Time limit", THE System SHALL exclude it from the Calendar_View
+3. WHEN grouping tasks for display, THE System SHALL group tasks by their deadline date (ignoring time component)
+4. WHEN multiple tasks share the same deadline date, THE System SHALL display all tasks for that date in the corresponding calendar cell
+
+### Requirement 5: Task Display in Calendar Cells
+
+**User Story:** As a user, I want to see task information within calendar date cells, so that I can quickly identify what is due on each day.
+
+#### Acceptance Criteria
+
+1. WHEN a date has one or more tasks, THE System SHALL display a task count indicator in the calendar cell
+2. WHEN a date has tasks, THE System SHALL display task titles within the calendar cell
+3. WHEN a task title exceeds the available space in a calendar cell, THE System SHALL truncate the title with an ellipsis
+4. WHEN a date has more than 3 tasks, THE System SHALL display the first 3 tasks and show a "+N more" indicator for remaining tasks
+5. WHEN displaying tasks in a calendar cell, THE System SHALL show the task type badge (assignment, exam, project, etc.)
+
+### Requirement 6: Overdue Task Indication
+
+**User Story:** As a user, I want to see overdue tasks highlighted in red, so that I can immediately identify tasks that need urgent attention.
+
+#### Acceptance Criteria
+
+1. WHEN a task's deadline is before the current date and time, THE System SHALL classify it as an Overdue_Task
+2. WHEN displaying an Overdue_Task in the Calendar_View, THE System SHALL render it with red styling
+3. WHEN a task is marked as completed, THE System SHALL NOT display it as overdue regardless of its deadline
+4. WHEN a calendar cell contains both overdue and non-overdue tasks, THE System SHALL display overdue tasks with red styling and non-overdue tasks with normal styling
+
+### Requirement 7: Task Interaction
+
+**User Story:** As a user, I want to click on tasks in the calendar to see their full details, so that I can access complete task information.
+
+#### Acceptance Criteria
+
+1. WHEN a user clicks on a task within a calendar cell, THE System SHALL display the full task details
+2. WHEN displaying task details, THE System SHALL show the task title, course, description, deadline, and type
+3. WHEN a task detail view is open, THE System SHALL provide a way to close it and return to the calendar view
+4. WHEN displaying task details, THE System SHALL reuse existing task card styling for consistency
+
+### Requirement 8: Responsive Design
+
+**User Story:** As a mobile user, I want the calendar view to work well on my device, so that I can access the feature on any screen size.
+
+#### Acceptance Criteria
+
+1. WHEN the Calendar_View is displayed on a mobile device (screen width < 768px), THE System SHALL adjust the calendar layout to fit the screen
+2. WHEN on mobile, THE System SHALL reduce font sizes and padding to maximize visible content
+3. WHEN on mobile, THE System SHALL ensure the modal takes up the full viewport or an appropriate portion
+4. WHEN on mobile, THE System SHALL maintain touch-friendly button sizes (minimum 44x44px)
+5. WHEN on tablet or desktop (screen width >= 768px), THE System SHALL display the calendar in a centered modal with appropriate sizing
+
+### Requirement 9: Calendar Data Loading
+
+**User Story:** As a user, I want the calendar to load quickly with current task data, so that I have an efficient experience.
+
+#### Acceptance Criteria
+
+1. WHEN the Calendar_View opens, THE System SHALL use the existing App.currentTasks data without making additional database queries
+2. WHEN App.currentTasks is updated (tasks added, edited, or deleted), THE System SHALL reflect those changes in the Calendar_View if it is open
+3. WHEN the Calendar_View is loading, THE System SHALL display a loading indicator
+4. WHEN no tasks exist for the displayed month, THE System SHALL show an appropriate empty state message
+
+### Requirement 10: Accessibility
+
+**User Story:** As a user relying on assistive technology, I want the calendar view to be accessible, so that I can use the feature effectively.
+
+#### Acceptance Criteria
+
+1. WHEN the Calendar_View modal opens, THE System SHALL set focus to the modal container
+2. WHEN navigating with keyboard, THE System SHALL allow users to tab through interactive elements in logical order
+3. WHEN a user presses Escape key, THE System SHALL close the Calendar_View modal
+4. WHEN displaying the calendar, THE System SHALL provide appropriate ARIA labels for navigation buttons and calendar cells
+5. WHEN a calendar cell contains tasks, THE System SHALL provide screen reader accessible text indicating the date and number of tasks

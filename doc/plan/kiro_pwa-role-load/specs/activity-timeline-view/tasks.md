@@ -1,0 +1,361 @@
+# Implementation Plan: Activity Timeline View
+
+## Overview
+
+This implementation plan breaks down the Activity Timeline View feature into discrete coding tasks. The feature will be built incrementally, starting with the activity logging system, then the UI components, data aggregation, and finally the visualization layer. Each task builds on previous work to ensure continuous integration and early validation.
+
+## Tasks
+
+- [x] 1. Set up activity logging infrastructure
+  - Create `js/activity-logger.js` file with ActivityLogger class
+  - Implement core `logActivity()` method that writes to Firestore `activity_logs` collection
+  - Add error handling to ensure logging failures don't interrupt primary actions
+  - Create Firestore collection structure with proper field types
+  - _Requirements: 1.7, 1.9_
+
+- [ ] 2. Implement activity logging for task operations
+  - [x] 2.1 Add task addition logging
+    - Integrate `logTaskAddition()` call in `js/app.js` after successful task creation
+    - Extract metadata (department, semester, section, taskType) from task data
+    - Include userId, userRole, and timestamp in activity log
+    - _Requirements: 1.1, 1.8_
+  
+  - [x] 2.2 Add task completion logging
+    - Integrate `logTaskCompletion()` call when user marks task as complete
+    - Include taskId and userId in activity log
+    - _Requirements: 1.2_
+  
+  - [x] 2.3 Add task deletion logging
+    - Integrate `logTaskDeletion()` call in task deletion handler
+    - Include taskId and userId in activity log
+    - _Requirements: 1.5_
+
+- [ ] 3. Implement activity logging for event operations
+  - [x] 3.1 Add event addition logging
+    - Integrate `logEventAddition()` call in `js/app.js` after successful event creation
+    - Extract metadata from event data
+    - _Requirements: 1.3_
+  
+  - [x] 3.2 Add event deletion logging
+    - Integrate `logEventDeletion()` call in event deletion handler
+    - _Requirements: 1.6_
+
+- [ ] 4. Implement user registration logging
+  - Integrate `logUserRegistration()` call in `js/profile.js` after user sets details
+  - Include department, semester, section from user profile
+  - _Requirements: 1.4_
+
+- [ ] 5. Create timeline button UI
+  - Add timeline button HTML in `index.html` beside contributions button in contributions-section div
+  - Use class "btn btn-secondary timeline-btn" for styling
+  - Add Font Awesome icon "fa-chart-line" and text "Activity Timeline"
+  - Add click event listener to open timeline modal
+  - Ensure button visibility matches contributions button (hidden for unauthenticated users)
+  - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.6, 2.7_
+
+- [ ] 6. Create timeline modal structure
+  - Add timeline modal HTML in `index.html` with class "modal-content-lg"
+  - Include modal header with title "Activity Timeline" and close button
+  - Add filter controls section (department, semester, section dropdowns)
+  - Add view toggle button (heatmap/bar chart) in header
+  - Add canvas element for Chart.js rendering
+  - Add detail panel overlay structure
+  - Add loading indicator element
+  - _Requirements: 9.1, 9.2, 9.3, 9.4_
+
+- [ ] 7. Implement timeline UI controller
+  - Create `js/timeline-ui.js` file with TimelineUI class
+  - Implement `init()` method to set up event listeners
+  - Implement `openModal()` method to show modal and load data
+  - Implement `closeModal()` method with cleanup
+  - Add escape key and overlay click handlers for modal close
+  - Prevent body scrolling when modal is open
+  - _Requirements: 9.5, 9.8_
+
+- [ ] 8. Implement filter controls
+  - [ ] 8.1 Render filter dropdowns
+    - Implement `renderFilters()` method in TimelineUI
+    - Populate department dropdown from Firestore departments collection
+    - Populate semester dropdown from Firestore semesters collection
+    - Populate section dropdown dynamically based on department/semester selection
+    - _Requirements: 5.1, 5.2, 5.3, 5.4_
+  
+  - [ ] 8.2 Handle filter changes
+    - Implement `onFilterChange()` method to update filter state
+    - Reload timeline data when filters change
+    - Update chart visualization with filtered data
+    - _Requirements: 5.5, 5.6_
+  
+  - [ ] 8.3 Implement clear filters functionality
+    - Add "Clear Filters" button that appears when filters are active
+    - Implement `clearFilters()` method to reset all filters
+    - Reload timeline with unfiltered data
+    - _Requirements: 5.7, 5.8_
+  
+  - [ ] 8.4 Implement filter state persistence
+    - Save filter state to sessionStorage on change
+    - Restore filter state when modal reopens
+    - _Requirements: 5.9_
+
+- [ ] 9. Implement data aggregation service
+  - Create `js/timeline-data.js` file with TimelineDataService class
+  - Implement `getActivityData()` method with Firestore query
+  - Add date range filtering (past 365 days by default)
+  - Implement `applyRoleFilters()` for role-based data access
+  - Add query filters for department, semester, section when specified
+  - Implement pagination for large datasets (>10,000 records)
+  - Add loading indicator during data fetch
+  - Implement session-based caching for aggregated data
+  - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 8.1, 8.2, 8.3, 8.4, 8.7_
+
+- [ ] 10. Implement data aggregation functions
+  - [ ] 10.1 Implement date aggregation
+    - Create `aggregateByDate()` method that groups activities by day
+    - Return Map of date string to activity count
+    - _Requirements: 7.2_
+  
+  - [ ] 10.2 Implement type aggregation
+    - Create `aggregateByType()` method that groups activities by activityType
+    - Return Map of activity type to count
+    - _Requirements: 7.2_
+  
+  - [ ] 10.3 Implement date-specific activity retrieval
+    - Create `getActivitiesForDate()` method for detail panel
+    - Query activities for specific date with current filters applied
+    - Sort activities by timestamp (newest first)
+    - Group activities by type
+    - _Requirements: 4.1, 4.2, 4.3, 4.4_
+
+- [ ] 11. Implement heatmap visualization
+  - Create `js/timeline-viz.js` file with TimelineVisualizer class
+  - Add Chart.js library to project (via CDN or npm)
+  - Implement `renderHeatmap()` method using Chart.js Matrix controller
+  - Configure chart for past 365 days with daily granularity
+  - Implement `getHeatmapColor()` to calculate color intensity based on activity count
+  - Use color gradient (light to dark) to represent activity volume
+  - Add day labels on x-axis
+  - Add activity count legend
+  - Make chart responsive for mobile and desktop
+  - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.7, 3.8_
+
+- [ ] 12. Implement heatmap interactivity
+  - [ ] 12.1 Add hover tooltips
+    - Implement `formatTooltip()` method for Chart.js tooltip callbacks
+    - Display date and activity count on hover
+    - _Requirements: 3.6_
+  
+  - [ ] 12.2 Add click handlers for detail panel
+    - Add click event listener to heatmap cells
+    - Implement `showDetailPanel()` method in TimelineUI
+    - Fetch activities for clicked date using `getActivitiesForDate()`
+    - Display activity details (type, timestamp, userName, department, semester, section)
+    - Highlight selected cell
+    - Implement pagination/scrolling for >50 activities
+    - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.7_
+  
+  - [ ] 12.3 Add detail panel close functionality
+    - Implement `hideDetailPanel()` method
+    - Add click outside and escape key handlers
+    - Remove cell highlight when panel closes
+    - _Requirements: 4.6_
+
+- [ ] 13. Implement bar chart visualization
+  - [ ] 13.1 Create bar chart renderer
+    - Implement `renderBarChart()` method in TimelineVisualizer
+    - Use Chart.js Bar controller
+    - Group data by activity type
+    - Use different colors for each activity type
+    - Add activity type labels on x-axis and count on y-axis
+    - Make chart responsive
+    - _Requirements: 6.2, 6.3, 6.6, 6.7_
+  
+  - [ ] 13.2 Add bar chart interactivity
+    - Add hover tooltips showing activity type and count
+    - _Requirements: 6.5_
+  
+  - [ ] 13.3 Implement view toggle
+    - Add toggle button in modal header
+    - Implement `toggleView()` method in TimelineUI
+    - Destroy current chart and render new chart type
+    - Maintain filter state when switching views
+    - Save view preference to sessionStorage
+    - _Requirements: 6.1, 6.4_
+
+- [ ] 14. Implement privacy and permission controls
+  - Add role-based filtering in `applyRoleFilters()` method
+  - For Students: filter by their department, semester, section
+  - For CRs: filter by their department, semester, section
+  - For Faculty: filter by their department (all sections)
+  - For Admin: no filtering (all activities)
+  - Ensure userName (not email) is displayed in all UI components
+  - Remove userId and email from detail panel display
+  - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7_
+
+- [ ] 15. Add responsive design and mobile support
+  - Add CSS for timeline button in `css/components.css`
+  - Add CSS for timeline modal in `css/components.css`
+  - Add CSS for filter controls with mobile-friendly layout
+  - Add CSS for detail panel overlay
+  - Ensure modal is full-screen on mobile with appropriate padding
+  - Test and adjust chart sizing for mobile viewports
+  - _Requirements: 2.5, 9.7_
+
+- [ ] 16. Implement error handling
+  - Add try-catch blocks in all ActivityLogger methods with console.error logging
+  - Add error message display in modal for data retrieval failures
+  - Add fallback message for chart rendering failures
+  - Add filter reset and warning for filter query errors
+  - Add console warnings for missing metadata in activity logs
+  - _Requirements: 1.9_
+
+- [ ] 17. Create Firestore indexes
+  - Create composite index: timestamp (DESC), department (ASC), semester (ASC), section (ASC)
+  - Create composite index: timestamp (DESC), userRole (ASC)
+  - Create composite index: timestamp (DESC), activityType (ASC)
+  - Create composite index: department (ASC), semester (ASC), section (ASC), timestamp (DESC)
+  - Add indexes to `firestore.indexes.json` or create via Firebase Console
+  - _Requirements: 7.1, 7.3_
+
+- [ ] 18. Create data migration script
+  - Create `scripts/migrate-activity-logs.js` file
+  - Query existing tasks collection and create activity_logs for each task
+  - Query existing events collection and create activity_logs for each event
+  - Preserve original createdAt timestamps
+  - Extract metadata (department, semester, section) from documents
+  - Use default values for missing metadata
+  - Process in batches of 500 using Firestore batch writes
+  - Make script idempotent (safe to run multiple times)
+  - Log migration progress and errors
+  - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7_
+
+- [ ] 19. Checkpoint - Test core functionality
+  - Verify activity logging works for all action types
+  - Verify timeline modal opens and displays data
+  - Verify filters work correctly
+  - Verify heatmap and bar chart render properly
+  - Verify detail panel shows correct data
+  - Verify role-based permissions work
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ]* 20. Write property-based tests
+  - [ ]* 20.1 Property test: Activity logging failure isolation
+    - **Property 1: Activity logging preserves action success**
+    - **Validates: Requirements 1.9**
+    - Generate random user actions
+    - Simulate Firestore write failures
+    - Verify primary action completes successfully
+  
+  - [ ]* 20.2 Property test: Role-based filtering correctness
+    - **Property 2: Role-based filtering correctness**
+    - **Validates: Requirements 8.1, 8.2, 8.3, 8.4**
+    - Generate random activities with various metadata
+    - Generate random user profiles with different roles
+    - Verify returned activities match role permissions
+  
+  - [ ]* 20.3 Property test: Filter combination correctness
+    - **Property 3: Filter combination correctness**
+    - **Validates: Requirements 5.5, 5.6**
+    - Generate random activities
+    - Apply random filter combinations
+    - Verify all returned activities match all filter criteria
+  
+  - [ ]* 20.4 Property test: Date aggregation accuracy
+    - **Property 4: Date aggregation accuracy**
+    - **Validates: Requirements 7.2**
+    - Generate random activities across date range
+    - Aggregate by date
+    - Verify sum of daily counts equals total activities
+  
+  - [ ]* 20.5 Property test: Type aggregation accuracy
+    - **Property 5: Activity type aggregation accuracy**
+    - **Validates: Requirements 6.2, 7.2**
+    - Generate random activities with various types
+    - Aggregate by type
+    - Verify sum of type counts equals total activities
+  
+  - [ ]* 20.6 Property test: Metadata completeness
+    - **Property 8: Metadata completeness**
+    - **Validates: Requirements 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.8**
+    - Generate random activities
+    - Verify all required fields are present and non-null
+  
+  - [ ]* 20.7 Property test: Privacy enforcement
+    - **Property 9: Privacy enforcement**
+    - **Validates: Requirements 8.5, 8.6**
+    - Generate random activities with user emails
+    - Verify displayed data contains userName only, not full email
+
+- [ ]* 21. Write unit tests
+  - [ ]* 21.1 Unit tests for ActivityLogger
+    - Test each logging method (logTaskAddition, logTaskCompletion, etc.)
+    - Test error handling when Firestore write fails
+    - Test metadata extraction
+  
+  - [ ]* 21.2 Unit tests for TimelineDataService
+    - Test date range filtering
+    - Test role-based filtering for each role type
+    - Test filter combinations
+    - Test aggregation functions
+  
+  - [ ]* 21.3 Unit tests for TimelineVisualizer
+    - Test heatmap color calculation
+    - Test tooltip formatting
+    - Test chart destruction
+  
+  - [ ]* 21.4 Unit tests for TimelineUI
+    - Test modal open/close
+    - Test filter state management
+    - Test view toggle
+    - Test detail panel show/hide
+
+- [ ]* 22. Write integration tests
+  - [ ]* 22.1 End-to-end activity logging test
+    - Create task → verify activity log created
+    - Complete task → verify activity log created
+    - Delete task → verify activity log created
+  
+  - [ ]* 22.2 Timeline display test
+    - Open timeline modal → verify data loads
+    - Apply filters → verify chart updates
+    - Click heatmap cell → verify detail panel shows correct data
+  
+  - [ ]* 22.3 Migration script test
+    - Run migration script on sample data
+    - Verify activity logs created with correct timestamps and metadata
+
+- [ ] 23. Add accessibility features
+  - Add ARIA labels to timeline button, modal, and interactive elements
+  - Ensure keyboard navigation works for modal and filters
+  - Add focus management when modal opens/closes
+  - Provide text alternatives for chart data (data table fallback)
+  - Verify color contrast for heatmap colors meets WCAG standards
+  - Test with screen reader
+  - _Requirements: 9.1, 9.4, 9.5_
+
+- [ ] 24. Performance optimization
+  - Test timeline load time with 10,000 activity records
+  - Test timeline load time with 50,000 activity records
+  - Optimize query performance if needed (adjust indexes, pagination)
+  - Optimize chart rendering if needed (reduce data points, use sampling)
+  - Add performance monitoring logs
+  - _Requirements: 7.7_
+
+- [ ] 25. Final checkpoint - Complete testing and validation
+  - Run all unit tests and property tests
+  - Test on mobile devices (iOS and Android)
+  - Test on desktop browsers (Chrome, Firefox, Safari, Edge)
+  - Verify all requirements are met
+  - Verify no console errors
+  - Ensure all tests pass, ask the user if questions arise.
+
+## Notes
+
+- Tasks marked with `*` are optional and can be skipped for faster MVP
+- Each task references specific requirements for traceability
+- Checkpoints ensure incremental validation
+- Property tests validate universal correctness properties with minimum 100 iterations
+- Unit tests validate specific examples and edge cases
+- Integration tests validate end-to-end flows
+- Chart.js v3.x or later should be used for visualizations
+- Firestore composite indexes must be created before deploying to production
+- Migration script should be run once after initial deployment
