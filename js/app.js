@@ -2320,6 +2320,10 @@ const App = {
 };
 
 // Initialize app when DOM is ready
+console.log('DOMContentLoaded event listener registered');
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('DOMContentLoaded fired!');
+  console.log('About to call App.init()');
   App.init();
+  console.log('App.init() completed');
 });
