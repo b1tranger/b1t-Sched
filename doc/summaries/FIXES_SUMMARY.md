@@ -189,3 +189,116 @@ All fixes are compatible with:
 - Notification fixes require Service Worker to be registered and active
 - Role badges use existing CSS variable system for consistency
 - All changes maintain backward compatibility with existing functionality
+
+### 6. File Upload Success Messages in Note-Taking Feature ✅
+
+**Issue:** File upload success messages weren't showing in the note-taking feature, making users think uploads failed even when they succeeded.
+
+**Fix:**
+- Added a message container `<div id="note-message">` to the note modal
+- Fixed the `showMessage()` method in `js/notes.js` to call `UI.showMessage('note-message', message, type)` with the correct parameters
+
+**Files Changed:**
+- `index.html` (added message container at line ~1095)
+- `js/notes.js` (fixed showMessage method at line ~295)
+
+---
+
+### 7. File Upload CORS Error - Migration to Firebase Storage ✅
+
+**Issue:** File uploads were failing with CORS error when using file.io service:
+```
+Access to fetch at 'https://file.io/' from origin 'https://b1tsched.netlify.app' has been blocked by CORS policy
+```
+
+**Fix:**
+- Migrated from file.io to Firebase Storage
+- Added Firebase Storage SDK to the project
+- Implemented new upload function using Firebase Storage API
+- Files are now stored permanently in Firebase Storage at path: `note-attachments/{userId}/{timestamp}_{filename}`
+
+**Implementation Details:**
+- File size limit changed from 100MB to 10MB (Firebase free tier)
+- Added filename sanitization to prevent special characters
+- Added timestamp prefix to prevent filename collisions
+- Files are organized by user ID for better management
+- Removed "Available for 14 days" message (Firebase files are permanent)
+
+**Benefits:**
+- ✅ No CORS issues
+- ✅ Permanent file storage
+- ✅ Better integration with existing Firebase infrastructure
+- ✅ User-specific file organization
+- ✅ More reliable and secure
+
+**Files Changed:**
+- `index.html` (added firebase-storage-compat.js script at line ~1354)
+- `js/firebase-config.js` (initialized Firebase Storage at line ~20)
+- `js/notes.js` (replaced uploadToFileIO with uploadToFirebaseStorage at lines 188-257)
+
+**Documentation:**
+- See `doc/summaries/FIREBASE_STORAGE_MIGRATION.md` for detailed migration guide
+
+---
+
+### 8. Calendar View Button Not Working ✅
+
+**Issue:** Clicking the calendar view button did nothing. Console showed:
+```
+Uncaught SyntaxError: Unexpected token 'export' (at calendar-view.js:1242:1)
+```
+
+**Root Cause:** ES6 `export` statement at the end of calendar-view.js was causing a syntax error in the browser because the file wasn't being loaded as a module.
+
+**Fix:**
+- Removed the ES6 export block from calendar-view.js
+- Kept the browser-compatible code that exposes CalendarView to `window.CalendarView`
+- Moved CalendarView initialization before Profile.init() in app.js to prevent blocking
+
+**Files Changed:**
+- `js/calendar-view.js` (removed export statement at lines 1242-1248)
+- `js/app.js` (moved CalendarView init before Profile.init at lines 201-211)
+
+---
+
+### 9. Notes Button Visibility Fix ✅
+
+**Issue:** The Notes button (both mobile and desktop versions) was visible on all pages including Profile Settings and User Management, when it should only appear on the dashboard/home screen.
+
+**Fix:**
+- Modified `js/routing.js` in the `showView()` method
+- Added logic to show Notes button only when `viewName === 'dashboard'`
+- Hides Notes button on all other views (profile-settings, user-management, etc.)
+- Checks if buttons are already hidden by authentication state before showing them
+
+**Implementation Details:**
+- Mobile button: `#note-toggle` - shown/hidden based on route
+- Desktop button: `#note-button-desktop` - shown/hidden based on route
+- Respects existing display state (doesn't show if user is not authenticated)
+
+**Files Changed:**
+- `js/routing.js` (showView method - added Notes button visibility logic)
+
+---
+
+### 10. Calendar View Not Showing Tasks ✅
+
+**Issue:** Calendar view modal opened but showed "No tasks scheduled for this month" even though there were pending tasks visible in the task list.
+
+**Root Cause:** The `App` object was defined as `const App` in `app.js`, making it local to the module scope. The `CalendarView` class couldn't access `App.currentTasks` because `App` was not exposed to the global `window` object.
+
+**Fix:**
+- Added `window.App = App;` in `js/app.js` to expose the App object globally
+- This allows `CalendarView.getTasksForMonth()` to access `App.currentTasks`
+- Added detailed console logging in `calendar-view.js` for debugging
+
+**Implementation Details:**
+- `CalendarView` checks for `window.App` or `global.App` (for testing)
+- Now that `App` is exposed globally, calendar can access current tasks
+- Tasks are filtered by deadline month/year and displayed in calendar grid
+
+**Files Changed:**
+- `js/app.js` (added `window.App = App;` before DOMContentLoaded listener)
+- `js/calendar-view.js` (added debug logging in getTasksForMonth method)
+
+---

@@ -394,16 +394,32 @@ class CalendarView {
   getTasksForMonth() {
     // Check if App.currentTasks exists (support both window and global for testing)
     const App = (typeof window !== 'undefined' ? window.App : global.App);
+    
+    console.log('[CalendarView] getTasksForMonth called');
+    console.log('[CalendarView] App exists:', !!App);
+    console.log('[CalendarView] App.currentTasks exists:', !!App?.currentTasks);
+    console.log('[CalendarView] App.currentTasks length:', App?.currentTasks?.length);
+    console.log('[CalendarView] Displayed month:', this.displayedMonth, 'year:', this.displayedYear);
+    
     if (!App || !Array.isArray(App.currentTasks)) {
+      console.warn('[CalendarView] App.currentTasks not available');
       return [];
     }
 
-    return App.currentTasks.filter(task => {
+    const filteredTasks = App.currentTasks.filter(task => {
+      console.log('[CalendarView] Checking task:', task.id, 'deadline:', task.deadline);
+      
       // Filter out tasks with null or undefined deadlines
-      if (!task.deadline) return false;
+      if (!task.deadline) {
+        console.log('[CalendarView] Task has no deadline:', task.id);
+        return false;
+      }
 
       // Filter out tasks with "No official Time limit" deadline
-      if (task.deadline === "No official Time limit") return false;
+      if (task.deadline === "No official Time limit") {
+        console.log('[CalendarView] Task has no time limit:', task.id);
+        return false;
+      }
 
       // Handle both Firestore Timestamp and JavaScript Date formats
       let deadline;
@@ -412,18 +428,27 @@ class CalendarView {
         
         // Validate that the deadline is a valid date
         if (isNaN(deadline.getTime())) {
-          console.warn('Invalid deadline format for task:', task.id, 'deadline:', task.deadline);
+          console.warn('[CalendarView] Invalid deadline format for task:', task.id, 'deadline:', task.deadline);
           return false;
         }
+        
+        console.log('[CalendarView] Task deadline parsed:', task.id, 'date:', deadline, 'month:', deadline.getMonth(), 'year:', deadline.getFullYear());
       } catch (error) {
-        console.warn('Error parsing deadline for task:', task.id, 'error:', error.message);
+        console.warn('[CalendarView] Error parsing deadline for task:', task.id, 'error:', error.message);
         return false;
       }
 
       // Check if deadline is in the displayed month and year
-      return deadline.getMonth() === this.displayedMonth && 
+      const matches = deadline.getMonth() === this.displayedMonth && 
              deadline.getFullYear() === this.displayedYear;
+      
+      console.log('[CalendarView] Task matches month/year:', task.id, matches);
+      
+      return matches;
     });
+    
+    console.log('[CalendarView] Filtered tasks count:', filteredTasks.length);
+    return filteredTasks;
   }
 
   /**
@@ -536,14 +561,31 @@ class CalendarView {
         };
         badge.textContent = badgeText[taskType] || 'O';
 
-        // Add task title
-        const title = document.createElement('span');
-        title.className = 'calendar-task-title';
-        title.textContent = taskTitle;
-        title.setAttribute('title', taskTitle); // Full text on hover
+        // Add task content container (course + title)
+        const contentContainer = document.createElement('div');
+        contentContainer.className = 'calendar-task-content';
+
+        // Add course name
+        const course = document.createElement('span');
+        course.className = 'calendar-task-course';
+        course.textContent = taskCourse;
+        course.setAttribute('title', taskCourse); // Full text on hover
+
+        // Add task title (if exists)
+        if (taskTitle && taskTitle !== 'Untitled Task') {
+          const title = document.createElement('span');
+          title.className = 'calendar-task-title';
+          title.textContent = taskTitle;
+          title.setAttribute('title', taskTitle); // Full text on hover
+          contentContainer.appendChild(course);
+          contentContainer.appendChild(title);
+        } else {
+          // Only show course if no title
+          contentContainer.appendChild(course);
+        }
 
         taskElement.appendChild(badge);
-        taskElement.appendChild(title);
+        taskElement.appendChild(contentContainer);
 
         // Add click event listener to show task details
         // Requirements: 7.1
@@ -589,11 +631,24 @@ class CalendarView {
   }
 
   /**
+   * Check if current view is mobile
+   * @returns {boolean} True if viewport width is less than 768px
+   */
+  isMobileView() {
+    return window.innerWidth < 768;
+  }
+
+  /**
    * Render the calendar grid
    * Generates and displays the calendar cells for the current month
    * Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 4.4, 9.4
    */
   renderCalendar() {
+    // Check if mobile view and render weekly view instead
+    if (this.isMobileView()) {
+      this.renderWeeklyView();
+      return;
+    }
     // Get the calendar grid structure
     const gridData = this.generateCalendarGrid();
 
@@ -669,6 +724,290 @@ class CalendarView {
         gridContainerElement.style.display = 'block';
       }
     }
+  }
+  /**
+   * Check if current view is mobile
+   * @returns {boolean} True if viewport width is less than 768px
+   */
+  isMobileView() {
+    return window.innerWidth < 768;
+  }
+
+  /**
+   * Render weekly view for mobile
+   * Displays weeks horizontally with scroll-snap
+   */
+  renderWeeklyView() {
+    const gridContainer = document.querySelector('.calendar-grid-container');
+    if (!gridContainer) {
+      console.error('Calendar grid container not found');
+      return;
+    }
+
+    // Clear existing content
+    gridContainer.innerHTML = '';
+
+    // Create weekly container
+    const weeklyContainer = document.createElement('div');
+    weeklyContainer.className = 'calendar-weekly-container';
+
+    // Create scrollable weeks
+    const scrollContainer = document.createElement('div');
+    scrollContainer.className = 'weeks-scroll-container';
+
+    const weeksWrapper = document.createElement('div');
+    weeksWrapper.className = 'weeks-wrapper';
+
+    // Generate all weeks in the month
+    const weeks = this.getWeeksInMonth();
+    weeks.forEach((week, index) => {
+      const weekView = this.createWeekView(week, index);
+      weeksWrapper.appendChild(weekView);
+    });
+
+    scrollContainer.appendChild(weeksWrapper);
+    weeklyContainer.appendChild(scrollContainer);
+
+    // Replace grid with weekly view
+    gridContainer.appendChild(weeklyContainer);
+
+    // Setup scroll snap
+    this.setupWeekScrolling(scrollContainer);
+
+    // Update header
+    this.updateHeader();
+
+    // Handle empty state
+    const tasks = this.getTasksForMonth();
+    const emptyState = document.getElementById('calendar-empty-state');
+    
+    if (emptyState) {
+      if (tasks.length === 0) {
+        emptyState.style.display = 'flex';
+        weeklyContainer.style.display = 'none';
+      } else {
+        emptyState.style.display = 'none';
+        weeklyContainer.style.display = 'block';
+      }
+    }
+  }
+
+  /**
+   * Get all weeks in the displayed month
+   * @returns {Array} Array of weeks, each week is an array of 7 dates
+   */
+  getWeeksInMonth() {
+    const weeks = [];
+    const firstDay = new Date(this.displayedYear, this.displayedMonth, 1);
+    const lastDay = new Date(this.displayedYear, this.displayedMonth + 1, 0);
+    
+    let currentWeekStart = new Date(firstDay);
+    currentWeekStart.setDate(firstDay.getDate() - firstDay.getDay()); // Start on Sunday
+    
+    while (currentWeekStart <= lastDay) {
+      const week = [];
+      for (let i = 0; i < 7; i++) {
+        const day = new Date(currentWeekStart);
+        day.setDate(currentWeekStart.getDate() + i);
+        week.push(day);
+      }
+      weeks.push(week);
+      currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+    }
+    
+    return weeks;
+  }
+
+  /**
+   * Create a week view element
+   * @param {Array} week - Array of 7 dates
+   * @param {number} weekIndex - Index of the week
+   * @returns {HTMLElement} Week view element
+   */
+  createWeekView(week, weekIndex) {
+    const weekView = document.createElement('div');
+    weekView.className = 'week-view';
+    weekView.dataset.week = weekIndex;
+    
+    // Day headers
+    const header = document.createElement('div');
+    header.className = 'week-days-header';
+    
+    week.forEach(date => {
+      const dayHeader = document.createElement('div');
+      dayHeader.className = 'day-header';
+      if (isToday(date)) {
+        dayHeader.classList.add('today');
+      }
+      
+      const dayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()];
+      dayHeader.innerHTML = `${dayName}<br>${date.getDate()}`;
+      header.appendChild(dayHeader);
+    });
+    
+    weekView.appendChild(header);
+    
+    // Day columns with tasks
+    const content = document.createElement('div');
+    content.className = 'week-days-content';
+    
+    week.forEach(date => {
+      const column = this.createDayColumn(date);
+      content.appendChild(column);
+    });
+    
+    weekView.appendChild(content);
+    
+    return weekView;
+  }
+
+  /**
+   * Create a day column with tasks
+   * @param {Date} date - The date for this column
+   * @returns {HTMLElement} Day column element
+   */
+  createDayColumn(date) {
+    const column = document.createElement('div');
+    column.className = 'day-column';
+    
+    // Get tasks for this date
+    const tasks = this.getTasksForDate(date);
+    
+    tasks.forEach(task => {
+      const taskEl = document.createElement('div');
+      taskEl.className = 'day-task';
+      taskEl.setAttribute('data-task-id', task.id);
+      taskEl.setAttribute('tabindex', '0');
+      taskEl.setAttribute('role', 'button');
+      
+      if (this.isTaskOverdue(task)) {
+        taskEl.classList.add('overdue');
+      }
+      
+      const taskCourse = task.course || 'Unknown course';
+      const taskTitle = task.title || '';
+      const taskType = task.type || 'other';
+      
+      taskEl.setAttribute('aria-label', `${taskCourse}, ${taskType}`);
+      
+      // Add task type badge
+      const badge = document.createElement('span');
+      badge.className = `task-type-badge ${taskType}`;
+      const badgeText = {
+        'assignment': 'A',
+        'homework': 'H',
+        'exam': 'E',
+        'project': 'P',
+        'presentation': 'Pr',
+        'other': 'O'
+      };
+      badge.textContent = badgeText[taskType] || 'O';
+      
+      // Add course name
+      const course = document.createElement('div');
+      course.className = 'day-task-course';
+      course.textContent = taskCourse;
+      
+      taskEl.appendChild(badge);
+      taskEl.appendChild(course);
+      
+      // Add click event listener
+      taskEl.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.showTaskDetails(task.id);
+      });
+      
+      // Add keyboard event listener
+      taskEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          e.stopPropagation();
+          this.showTaskDetails(task.id);
+        }
+      });
+      
+      column.appendChild(taskEl);
+    });
+    
+    return column;
+  }
+
+  /**
+   * Get tasks for a specific date
+   * @param {Date} date - The date to get tasks for
+   * @returns {Array} Array of tasks for the date
+   */
+  getTasksForDate(date) {
+    const dateKey = this.formatDateKey(date);
+    const allTasks = this.getTasksForMonth();
+    
+    return allTasks.filter(task => {
+      if (!task.deadline) return false;
+      try {
+        const taskDate = task.deadline.toDate ? task.deadline.toDate() : new Date(task.deadline);
+        if (isNaN(taskDate.getTime())) return false;
+        const taskDateKey = this.formatDateKey(taskDate);
+        return taskDateKey === dateKey;
+      } catch (error) {
+        return false;
+      }
+    });
+  }
+
+  /**
+   * Format date as YYYY-MM-DD
+   * @param {Date} date - The date to format
+   * @returns {string} Formatted date string
+   */
+  formatDateKey(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  /**
+   * Setup scroll snap behavior for weekly view
+   * @param {HTMLElement} scrollContainer - The scroll container element
+   */
+  setupWeekScrolling(scrollContainer) {
+    let startX = 0;
+    let scrollLeft = 0;
+    
+    scrollContainer.addEventListener('touchstart', (e) => {
+      startX = e.touches[0].pageX;
+      scrollLeft = scrollContainer.scrollLeft;
+    });
+    
+    scrollContainer.addEventListener('touchmove', (e) => {
+      const x = e.touches[0].pageX;
+      const walk = (startX - x) * 2;
+      scrollContainer.scrollLeft = scrollLeft + walk;
+    });
+    
+    // Snap to nearest week on scroll end
+    let scrollTimeout;
+    scrollContainer.addEventListener('scroll', () => {
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        this.snapToNearestWeek(scrollContainer);
+      }, 150);
+    });
+  }
+
+  /**
+   * Snap to the nearest week
+   * @param {HTMLElement} scrollContainer - The scroll container element
+   */
+  snapToNearestWeek(scrollContainer) {
+    const weekWidth = window.innerWidth;
+    const currentScroll = scrollContainer.scrollLeft;
+    const nearestWeek = Math.round(currentScroll / weekWidth);
+    
+    scrollContainer.scrollTo({
+      left: nearestWeek * weekWidth,
+      behavior: 'smooth'
+    });
   }
 
   /**

@@ -189,10 +189,10 @@ const NoteManager = {
     const file = event.target.files[0];
     if (!file) return;
 
-    // Validate file size (max 100MB as per file.io limit)
-    const maxSize = 100 * 1024 * 1024; // 100MB
+    // Validate file size (max 200MB for Catbox, 10MB for Firebase)
+    const maxSize = 200 * 1024 * 1024; // 200MB
     if (file.size > maxSize) {
-      this.showMessage('File is too large. Maximum size is 100MB.', 'error');
+      this.showMessage('File is too large. Maximum size is 200MB.', 'error');
       return;
     }
 
@@ -205,12 +205,18 @@ const NoteManager = {
     }
 
     try {
-      const url = await this.uploadToFileIO(file);
+      // Try multi-provider upload with fallback
+      const result = await this.uploadWithFallback(file);
       
       // Insert markdown link into textarea at cursor position
-      this.insertLinkIntoNote(file.name, url);
+      this.insertLinkIntoNote(file.name, result.url);
       
-      this.showMessage('File uploaded successfully! (Available for 14 days)', 'success');
+      // Show success message with provider info
+      let message = `File uploaded successfully via ${result.provider}!`;
+      if (result.expiresIn) {
+        message += ` (Expires in ${result.expiresIn})`;
+      }
+      this.showMessage(message, 'success');
     } catch (error) {
       console.error('Upload error:', error);
       this.showMessage('Failed to upload file: ' + error.message, 'error');
@@ -226,13 +232,118 @@ const NoteManager = {
     }
   },
 
-  // Upload file to file.io
-  async uploadToFileIO(file) {
+  // Upload with fallback to multiple providers
+  async uploadWithFallback(file) {
+    const providers = [
+      { name: 'Firebase Storage', method: () => this.uploadToFirebaseStorage(file), maxSize: 10 * 1024 * 1024 },
+      { name: 'Catbox', method: () => this.uploadToCatbox(file), maxSize: 200 * 1024 * 1024 },
+      { name: 'Tmpfiles', method: () => this.uploadToTmpfiles(file), maxSize: 100 * 1024 * 1024 }
+    ];
+
+    let lastError = null;
+
+    for (const provider of providers) {
+      // Skip if file is too large for this provider
+      if (file.size > provider.maxSize) {
+        console.log(`Skipping ${provider.name}: file too large (${file.size} > ${provider.maxSize})`);
+        continue;
+      }
+
+      try {
+        console.log(`Attempting upload to ${provider.name}...`);
+        const url = await provider.method();
+        
+        // Determine expiration info
+        let expiresIn = null;
+        if (provider.name === 'Tmpfiles') {
+          expiresIn = '1 year';
+        }
+        
+        return {
+          url: url,
+          provider: provider.name,
+          expiresIn: expiresIn
+        };
+      } catch (error) {
+        console.warn(`${provider.name} upload failed:`, error.message);
+        lastError = error;
+        // Continue to next provider
+      }
+    }
+
+    // All providers failed
+    throw new Error(lastError?.message || 'All upload providers failed');
+  },
+
+  // Upload file to Firebase Storage
+  async uploadToFirebaseStorage(file) {
+    if (!this.currentUserId) {
+      throw new Error('User not authenticated');
+    }
+
+    // Check if storage is available
+    if (typeof storage === 'undefined') {
+      throw new Error('Firebase Storage not initialized');
+    }
+
+    // Create a unique filename with timestamp to avoid collisions
+    const timestamp = Date.now();
+    const sanitizedFilename = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const filename = `${timestamp}_${sanitizedFilename}`;
+    
+    // Create storage reference: note-attachments/{userId}/{filename}
+    const storageRef = storage.ref(`note-attachments/${this.currentUserId}/${filename}`);
+    
+    try {
+      // Upload file
+      const snapshot = await storageRef.put(file);
+      
+      // Get download URL
+      const downloadURL = await snapshot.ref.getDownloadURL();
+      
+      return downloadURL;
+    } catch (error) {
+      console.error('Firebase Storage upload error:', error);
+      throw new Error(error.message || 'Failed to upload to Firebase Storage');
+    }
+  },
+
+  // Upload file to Catbox.moe (permanent, CORS-friendly)
+  async uploadToCatbox(file) {
+    const formData = new FormData();
+    formData.append('reqtype', 'fileupload');
+    formData.append('fileToUpload', file);
+
+    try {
+      const response = await fetch('https://catbox.moe/user/api.php', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error(`Upload failed with status: ${response.status}`);
+      }
+
+      const url = await response.text();
+      
+      // Catbox returns the direct URL as plain text
+      if (!url || !url.startsWith('https://files.catbox.moe/')) {
+        throw new Error('Invalid response from Catbox');
+      }
+
+      return url.trim();
+    } catch (error) {
+      throw new Error(error.message || 'Network error during Catbox upload');
+    }
+  },
+
+  // Upload file to Tmpfiles.org (temporary, CORS-friendly)
+  async uploadToTmpfiles(file) {
     const formData = new FormData();
     formData.append('file', file);
 
     try {
-      const response = await fetch('https://file.io/', {
+      const response = await fetch('https://tmpfiles.org/api/v1/upload', {
         method: 'POST',
         body: formData
       });
@@ -244,15 +355,17 @@ const NoteManager = {
       const data = await response.json();
       
       // Check if upload was successful
-      if (!data.success || !data.link) {
-        throw new Error(data.message || 'Invalid response from upload service');
+      if (data.status !== 'success' || !data.data || !data.data.url) {
+        throw new Error(data.message || 'Invalid response from Tmpfiles');
       }
 
-      // file.io returns a direct download URL
-      // The link is valid for 14 days and can be downloaded once by default
-      return data.link;
+      // Tmpfiles returns a URL like https://tmpfiles.org/12345
+      // Convert to direct download URL: https://tmpfiles.org/dl/12345
+      const url = data.data.url.replace('tmpfiles.org/', 'tmpfiles.org/dl/');
+      
+      return url;
     } catch (error) {
-      throw new Error(error.message || 'Network error during upload');
+      throw new Error(error.message || 'Network error during Tmpfiles upload');
     }
   },
 

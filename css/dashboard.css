@@ -1630,3 +1630,56 @@ input:checked+.slider:before {
         width: 100%;
     }
 }
+
+/* ============================================
+   CALENDAR VIEW BUTTON (INLINE WITH HEADING)
+   ============================================ */
+
+/* Calendar button inside h2 heading */
+.section-header h2 #calendar-view-btn {
+    margin-left: var(--spacing-md);
+    font-size: var(--font-sm);
+    color: var(--primary-maroon);
+    background-color: transparent;
+    border: 1px solid var(--primary-maroon);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-md);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    transition: all var(--transition-fast);
+    vertical-align: middle;
+    font-weight: normal;
+}
+
+.section-header h2 #calendar-view-btn:hover {
+    background-color: var(--primary-maroon);
+    color: var(--text-white);
+}
+
+.section-header h2 #calendar-view-btn:focus {
+    outline: 2px solid var(--primary-maroon);
+    outline-offset: 2px;
+}
+
+.section-header h2 #calendar-view-btn i {
+    font-size: var(--font-sm);
+}
+
+.section-header h2 #calendar-view-btn span {
+    font-size: var(--font-sm);
+}
+
+/* Responsive: Hide text on smaller screens */
+@media (max-width: 768px) {
+    .section-header h2 #calendar-view-btn span {
+        display: none;
+    }
+    
+    .section-header h2 #calendar-view-btn {
+        padding: var(--spacing-xs);
+        min-width: 36px;
+        min-height: 36px;
+        justify-content: center;
+    }
+}

@@ -469,26 +469,47 @@ const App = {
       return;
     }
 
+    // Clear form first
+    document.getElementById('add-task-form').reset();
+
     // Set minimum date to now
     const deadlineInput = document.getElementById('task-deadline');
     const deadlineNone = document.getElementById('deadline-none');
     const deadlineDate = document.getElementById('deadline-date');
+    
     if (deadlineInput) {
       const now = new Date();
       now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
       deadlineInput.min = now.toISOString().slice(0, 16);
       deadlineInput.value = '';
-      deadlineInput.disabled = true;
     }
-    if (deadlineNone) deadlineNone.checked = true;
-    if (deadlineDate) deadlineDate.checked = false;
-    // Add event listeners for radio buttons
+    
+    // Set up radio button handlers
     if (deadlineNone && deadlineDate && deadlineInput) {
-      deadlineNone.onclick = () => { deadlineInput.disabled = true; deadlineInput.value = ''; };
-      deadlineDate.onclick = () => { deadlineInput.disabled = false; };
+      // Remove old listeners if any
+      deadlineNone.onclick = null;
+      deadlineDate.onclick = null;
+      
+      // Add new listeners
+      deadlineNone.addEventListener('change', () => {
+        deadlineInput.disabled = true;
+        deadlineInput.value = '';
+      });
+      
+      deadlineDate.addEventListener('change', () => {
+        deadlineInput.disabled = false;
+        deadlineInput.focus(); // Auto-focus the input when enabled
+      });
+      
+      // Set initial state based on checked radio
+      if (deadlineNone.checked) {
+        deadlineInput.disabled = true;
+        deadlineInput.value = '';
+      } else if (deadlineDate.checked) {
+        deadlineInput.disabled = false;
+      }
     }
-    // Clear form
-    document.getElementById('add-task-form').reset();
+    
     UI.showModal('add-task-modal');
   },
 
@@ -2322,6 +2343,9 @@ const App = {
     }
   }
 };
+
+// Expose App to global scope for CalendarView and other modules
+window.App = App;
 
 // Initialize app when DOM is ready
 console.log('DOMContentLoaded event listener registered');

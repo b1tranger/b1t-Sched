@@ -301,11 +301,14 @@
                         <section class="tasks-section">
 
                             <div class="section-header">
-                                <h2><i class="fas fa-tasks"></i> Pending Tasks</h2>
-                                <button id="calendar-view-btn" class="btn btn-icon" title="Calendar view"
-                                    aria-label="Open calendar view">
-                                    <i class="fas fa-calendar-alt"></i>
-                                </button>
+                                <h2>
+                                    <i class="fas fa-tasks"></i> Pending Tasks
+                                    <button id="calendar-view-btn" class="btn btn-text-icon" title="Calendar view"
+                                        aria-label="Open calendar view">
+                                        <i class="fas fa-calendar-alt"></i>
+                                        <span>Calendar View</span>
+                                    </button>
+                                </h2>
                                 <button id="refresh-tasks-btn" class="btn btn-icon" title="Refresh tasks">
                                     <i class="fas fa-sync-alt"></i>
                                 </button>
@@ -1351,6 +1354,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 
     <!-- App JavaScript Modules -->
     <script src="js/firebase-config.js"></script>
@@ -1365,7 +1369,6 @@
     <script src="js/classroom.js"></script>
     <script src="js/facultyClassroom.js"></script>
     <script src="js/notes.js"></script>
-    <script src="js/calendar-view.js"></script>
     <script src="js/admin-api.js"></script>
     <!-- Notification System Modules -->
     <script src="js/permission-manager.js"></script>
@@ -1382,6 +1385,7 @@
     <script src="js/sw-update-manager.js"></script>
     <script src="js/pwa-init.js"></script>
     <script src="js/app.js"></script>
+    <script src="js/calendar-view.js"></script>
 
     <!-- PWA Install Prompt -->
     <div id="install-prompt" class="install-prompt" style="display: none;">

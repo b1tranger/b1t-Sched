@@ -16,6 +16,8 @@
 8. [User Flows](#user-flows)
 9. [Views & Components](#views--components)
 10. [API Reference](#api-reference)
+11. [Design References & Inspirations](#design-references--inspirations)
+12. [Additional Resources](#additional-resources)
 
 ---
 
@@ -1479,3 +1481,459 @@ Router.onRouteChange((routeName) => {
 
 *Documentation last updated: February 18, 2026*
 *Version: 2.27.0*
+
+
+---
+
+## Recent Updates (February 2026)
+
+### Calendar View Feature
+
+**Version 2.20.0** - Calendar View for Tasks
+
+Added a monthly calendar view to visualize pending tasks by their deadlines.
+
+**Features:**
+- Monthly calendar grid showing all days
+- Tasks displayed on their deadline dates
+- Color-coded task type badges (Assignment, Homework, Exam, etc.)
+- Task count indicators on dates with multiple tasks
+- Overdue task highlighting
+- Click tasks to view full details
+- Navigate between months
+- Empty state when no tasks scheduled
+- Keyboard accessible (Tab navigation, Enter/Space to activate)
+- Focus trap within modal
+
+**Files:**
+- `js/calendar-view.js` - Calendar view implementation
+- `css/calendar.css` - Calendar styling
+- `index.html` - Calendar button and modal structure
+
+**Usage:**
+- Click calendar icon button next to "Pending Tasks" header
+- Navigate months using arrow buttons
+- Click any task to view details
+- Close with X button or Escape key
+
+**Bug Fix (2.20.1):**
+- Removed ES6 export statement causing syntax error in browser
+- Calendar button now properly opens modal
+- Fixed initialization order in app.js
+
+---
+
+### File Upload System Upgrade
+
+**Version 2.21.0** - Multi-Provider File Upload with Automatic Fallback
+
+Completely redesigned the file upload system for the note-taking feature with multiple providers and automatic fallback.
+
+**Previous Issue:**
+File.io API was blocking uploads due to CORS policy (missing `Access-Control-Allow-Origin` header).
+
+**New Implementation:**
+Multi-provider upload system that tries providers in order until one succeeds:
+
+1. **Firebase Storage** (Primary)
+   - Permanent storage
+   - Max file size: 10 MB
+   - Free tier: 5 GB total storage, 1 GB downloads/day
+   - Integrated with Firebase auth
+   - User-specific organization: `note-attachments/{userId}/{timestamp}_{filename}`
+
+2. **Catbox.moe** (Fallback 1)
+   - Permanent storage
+   - Max file size: 200 MB
+   - Free tier: Unlimited uploads
+   - No authentication required
+   - CORS-friendly
+
+3. **Tmpfiles.org** (Fallback 2)
+   - Temporary storage (1 year expiration)
+   - Max file size: 100 MB
+   - Free tier: Unlimited uploads
+   - No authentication required
+   - CORS-friendly
+
+**Features:**
+- Automatic provider selection based on file size and availability
+- Success message shows which provider was used
+- Expiration warning for temporary storage
+- Graceful fallback if primary provider fails
+- Maximum file size: 200 MB (Catbox limit)
+
+**Files Changed:**
+- `index.html` - Added Firebase Storage SDK script
+- `js/firebase-config.js` - Initialized Firebase Storage
+- `js/notes.js` - Implemented multi-provider upload system with three methods:
+  - `uploadWithFallback()` - Orchestrates provider selection
+  - `uploadToFirebaseStorage()` - Firebase Storage upload
+  - `uploadToCatbox()` - Catbox.moe upload
+  - `uploadToTmpfiles()` - Tmpfiles.org upload
+
+**Documentation:**
+- `doc/FILE_UPLOAD_OPTIONS_ANALYSIS.md` - Detailed analysis of all options
+- `doc/FILE_UPLOAD_QUICK_REFERENCE.md` - Quick reference guide
+- `doc/summaries/FIREBASE_STORAGE_MIGRATION.md` - Migration summary
+
+**Benefits:**
+- No CORS issues (all providers support cross-origin requests)
+- Redundancy (if one service is down, others work)
+- Flexible file sizes (up to 200MB)
+- Mix of permanent and temporary storage
+- Cost control (all free tiers)
+- Better reliability
+
+**Firebase Storage Limits:**
+- Total storage: 5 GB (free tier)
+- Downloads: 1 GB per day
+- Upload operations: 20,000 per day
+- Download operations: 50,000 per day
+
+**Monitoring Recommendations:**
+- Check Firebase Console → Storage for usage
+- Implement file cleanup for old files if needed
+- Set up billing alerts before hitting limits
+- Consider user quotas (e.g., 50 MB per user)
+
+---
+
+## Technology Stack Updates
+
+### Firebase SDK (Updated)
+
+| Package | Version | Purpose | Delivery |
+|---------|---------|---------|----------|
+| **firebase-app-compat** | 10.7.1 | Firebase core initialization | CDN (`gstatic.com`) |
+| **firebase-auth-compat** | 10.7.1 | Email/password authentication | CDN (`gstatic.com`) |
+| **firebase-firestore-compat** | 10.7.1 | NoSQL cloud database | CDN (`gstatic.com`) |
+| **firebase-storage-compat** | 10.7.1 | Cloud file storage | CDN (`gstatic.com`) |
+
+### File Upload Services
+
+| Service | Storage Type | Max Size | Free Tier | CORS | Auth Required |
+|---------|-------------|----------|-----------|------|---------------|
+| **Firebase Storage** | Permanent | 10 MB | 5 GB total | ✅ | Yes |
+| **Catbox.moe** | Permanent | 200 MB | Unlimited | ✅ | No |
+| **Tmpfiles.org** | Temporary (1 year) | 100 MB | Unlimited | ✅ | No |
+
+---
+
+## Module Updates
+
+### 8. NoteManager (notes.js) - Updated
+
+**Purpose:** Personal note-taking with markdown support and multi-provider file upload
+
+#### Configuration
+
+```javascript
+NoteManager.autoSaveTimer = null           // Auto-save debounce timer
+NoteManager.currentUserId = null           // Current authenticated user
+```
+
+#### Methods (Updated)
+
+| Method | Parameters | Description |
+|--------|------------|-------------|
+| `init()` | - | Initialize note module with auth listener |
+| `setupEventListeners()` | - | Attach event listeners for modal, buttons, file input |
+| `enableNoteFeature()` | - | Show note toggle buttons for authenticated users |
+| `disableNoteFeature()` | - | Hide note toggle buttons for unauthenticated users |
+| `openModal()` | - | Open note modal and load user's note |
+| `closeModal()` | - | Close note modal |
+| `triggerFileUpload()` | - | Trigger hidden file input click |
+| `handleFileSelect(event)` | Event | Handle file selection and upload with multi-provider fallback |
+| `uploadWithFallback(file)` | File | Try multiple upload providers in order until one succeeds |
+| `uploadToFirebaseStorage(file)` | File | Upload file to Firebase Storage (10MB limit) |
+| `uploadToCatbox(file)` | File | Upload file to Catbox.moe (200MB limit, permanent) |
+| `uploadToTmpfiles(file)` | File | Upload file to Tmpfiles.org (100MB limit, 1 year expiration) |
+| `insertLinkIntoNote(filename, url)` | string, string | Insert markdown link at cursor position in textarea |
+| `updatePreview(content)` | string | Update preview pane with formatted markdown |
+| `setupAutoSave(content)` | string | Setup auto-save with 500ms debounce |
+| `loadNote(userId)` | string | Load note from Firestore |
+| `saveNote(userId, content)` | string, string | Save note to Firestore (max 1MB) |
+| `handleSave()` | - | Handle manual save button click |
+| `handleClear()` | - | Handle clear button click with confirmation |
+| `clearNote(userId)` | string | Clear note from Firestore |
+| `validateNoteContent(content)` | string | Validate note size (max 1MB) |
+| `showMessage(message, type)` | string, string | Display message to user |
+
+**Features:**
+- **Auto-save:** Saves note content automatically with 500ms debounce
+- **Multi-Provider Upload:** Automatic fallback between Firebase Storage, Catbox, and Tmpfiles
+- **File Size Support:** Up to 200MB files (Catbox limit)
+- **Permanent & Temporary Storage:** Mix of storage options
+- **Markdown Links:** Inserts `[filename](url)` at cursor position after upload
+- **Preview Pane:** Live preview with markdown rendering (bold, italic, code, links)
+- **Persistent Storage:** Notes stored in Firestore user document (max 1MB)
+- **Upload Progress:** Shows spinner and provider name during upload
+- **Error Handling:** Validates file size and handles upload failures gracefully
+
+**Upload Flow:** 
+1. Click "Upload Files" → Select file
+2. System tries Firebase Storage (if ≤10MB & authenticated)
+3. If fails, tries Catbox.moe (if ≤200MB)
+4. If fails, tries Tmpfiles.org (if ≤100MB)
+5. Success message shows provider used
+6. Markdown link inserted at cursor
+7. Auto-save triggered
+
+**Success Messages:**
+- `✅ File uploaded successfully via Firebase Storage!`
+- `✅ File uploaded successfully via Catbox!`
+- `✅ File uploaded successfully via Tmpfiles! (Expires in 1 year)`
+
+---
+
+### 14. CalendarView (calendar-view.js) - New Module
+
+**Purpose:** Monthly calendar view for visualizing task deadlines
+
+#### Configuration
+
+```javascript
+CalendarView.currentDate = new Date()      // Current date reference
+CalendarView.displayedMonth = number       // Currently displayed month (0-11)
+CalendarView.displayedYear = number        // Currently displayed year
+CalendarView.isOpen = boolean              // Modal open state
+CalendarView.minYear = currentYear - 100   // Navigation limit (past)
+CalendarView.maxYear = currentYear + 100   // Navigation limit (future)
+```
+
+#### Methods
+
+| Method | Parameters | Description |
+|--------|------------|-------------|
+| `init()` | - | Initialize calendar view (button, modal, event listeners) |
+| `createButton()` | - | Create calendar icon button next to "Pending Tasks" header |
+| `createModal()` | - | Create calendar modal structure with grid and controls |
+| `open()` | - | Open calendar modal, render calendar, set focus, prevent background scroll |
+| `close()` | - | Close calendar modal, restore focus, enable background scroll |
+| `trapFocus(event)` | Event | Trap focus within modal for accessibility |
+| `generateCalendarGrid()` | - | Generate calendar grid data structure with dates |
+| `getTasksForMonth()` | - | Filter tasks with deadlines in displayed month |
+| `isTaskOverdue(task)` | Object | Check if task is overdue (past deadline and not completed) |
+| `populateTasksInGrid()` | - | Render tasks in calendar cells with overflow handling |
+| `renderCalendar()` | - | Render complete calendar grid with tasks |
+| `previousMonth()` | - | Navigate to previous month |
+| `nextMonth()` | - | Navigate to next month |
+| `updateHeader()` | - | Update month/year header text |
+| `showTaskDetails(taskId)` | string | Display task details modal |
+| `showSimpleTaskDetails(task)` | Object | Fallback task details view |
+| `showLoading()` | - | Show loading indicator |
+| `hideLoading()` | - | Hide loading indicator |
+| `showError()` | - | Show error state |
+| `attachEventListeners()` | - | Attach all event listeners |
+
+**Features:**
+- **Monthly Grid View:** 7-column grid (Sun-Sat) with all days of month
+- **Task Display:** Shows up to 3 tasks per date with overflow indicator
+- **Task Type Badges:** Color-coded badges (A=Assignment, H=Homework, E=Exam, etc.)
+- **Overdue Highlighting:** Red styling for overdue tasks
+- **Task Count:** Shows total task count on dates with tasks
+- **Month Navigation:** Previous/Next buttons with year rollover
+- **Empty State:** Shows message when no tasks scheduled
+- **Loading State:** Shows spinner during rendering
+- **Error Handling:** Graceful error display with retry option
+- **Keyboard Accessible:** Tab navigation, Enter/Space activation, Escape to close
+- **Focus Management:** Traps focus within modal, restores on close
+- **Adjacent Month Dates:** Muted styling for previous/next month dates
+- **Today Highlight:** Special styling for current date
+
+**Calendar Grid Structure:**
+```
+┌─────────────────────────────────────────┐
+│  ← January 2026 →                    ✕  │
+├─────────────────────────────────────────┤
+│ Sun Mon Tue Wed Thu Fri Sat             │
+├─────────────────────────────────────────┤
+│ 29  30  31   1   2   3   4              │
+│  5   6   7   8   9  10  11              │
+│ 12  13  14  15  16  17  18              │
+│ 19  20  21  22  23  24  25              │
+│ 26  27  28  29  30  31   1              │
+└─────────────────────────────────────────┘
+```
+
+**Task Display:**
+- Each date cell shows up to 3 tasks
+- Tasks show type badge + truncated title
+- Overflow indicator: "+2 more" if >3 tasks
+- Click task to view full details
+- Task count badge in corner of cell
+
+**Accessibility:**
+- ARIA labels on all interactive elements
+- Role="dialog" and aria-modal="true" on modal
+- Role="grid" and role="gridcell" on calendar
+- Keyboard navigation support
+- Focus trap prevents tabbing outside modal
+- Screen reader friendly date announcements
+
+---
+
+## Version History (Updated)
+
+| Version | Date | Changes |
+|---------|------|---------|
+| 2.20.0 | Feb 2026 | Calendar View: Monthly calendar visualization of task deadlines with navigation, task details, and accessibility features |
+| 2.20.1 | Feb 2026 | Calendar View Bug Fix: Removed ES6 export statement causing browser syntax error; fixed initialization order |
+| 2.21.0 | Feb 2026 | File Upload System Upgrade: Multi-provider upload with Firebase Storage (primary), Catbox.moe (fallback 1), and Tmpfiles.org (fallback 2); automatic fallback on failure; supports up to 200MB files; permanent and temporary storage options |
+
+---
+
+## Troubleshooting
+
+### Calendar View Issues
+
+**Calendar button doesn't work:**
+- Check browser console for JavaScript errors
+- Verify `calendar-view.js` is loaded (check Network tab)
+- Ensure no ES6 export statements in calendar-view.js
+- Check that CalendarView is defined: `console.log(typeof CalendarView)`
+
+**Calendar shows "undefined" or blank:**
+- Verify App.currentTasks is populated
+- Check that tasks have valid deadline formats
+- Ensure Firestore data is loading correctly
+
+**Tasks not appearing in calendar:**
+- Verify task deadlines are in the displayed month
+- Check that deadline is not "No official Time limit" (null)
+- Ensure task status is "active"
+
+### File Upload Issues
+
+**Upload fails on all providers:**
+- Check browser console for errors
+- Verify internet connection
+- Check if services are down (status pages)
+- Verify file size is within limits (≤200MB)
+
+**Firebase Storage quota exceeded:**
+- Check Firebase Console → Storage for usage
+- Implement file cleanup for old files
+- Switch to Catbox/Tmpfiles temporarily
+- Consider upgrading to Firebase Blaze plan
+
+**Files not accessible after upload:**
+- Check if URL is correct in note
+- Verify Firebase Security Rules allow read access
+- Check if temporary file expired (Tmpfiles: 1 year)
+- Test URL in incognito mode
+
+**Upload succeeds but link doesn't work:**
+- Verify markdown link format: `[filename](url)`
+- Check that URL is complete and valid
+- Test URL directly in browser
+- Check for special characters in filename
+
+---
+
+## Best Practices
+
+### Calendar View
+
+- Use calendar view for deadline planning and visualization
+- Navigate months to see upcoming and past tasks
+- Click tasks for full details instead of opening task list
+- Use keyboard navigation (Tab, Enter, Escape) for efficiency
+
+### File Uploads
+
+- Keep files under 10MB for Firebase Storage (faster, permanent)
+- Use Catbox for larger files (10-200MB, permanent)
+- Be aware of Tmpfiles expiration (1 year)
+- Monitor Firebase Storage usage if uploading frequently
+- Clean up old files periodically to stay within free tier
+- Test file links after upload to ensure accessibility
+
+### Storage Management
+
+- Implement file cleanup for files older than X days
+- Set user quotas (e.g., 50 MB per user) if needed
+- Monitor Firebase Console for storage usage
+- Set up billing alerts before hitting 5 GB limit
+- Consider upgrading to Blaze plan if exceeding free tier
+
+---
+
+## Design References & Inspirations
+
+### Calendar View
+
+**Desktop:** The calendar view design was inspired by **ClickUp's calendar interface**, featuring:
+- Monthly grid layout with task visualization
+- Compact cell design with date indicators
+- Task type badges and overflow indicators
+- Inline navigation controls
+
+**Reference:** [ClickUp Calendar View](https://clickup.com/)
+
+**Mobile:** The mobile calendar view is inspired by **Google Calendar's weekly view**, featuring:
+- Horizontal scrolling through weeks of the month
+- Week-by-week navigation with swipe gestures
+- Compact day columns with vertical task lists
+- Month navigation controls to switch between months
+- Touch-optimized interface
+
+**Reference:** [Google Calendar](https://calendar.google.com/)
+
+### File Upload System
+The note-taking feature uses multiple file upload providers for reliability:
+
+#### Primary: Firebase Storage
+- **Service:** Google Firebase Cloud Storage
+- **Limits:** 10 MB per file, 5 GB total (free tier)
+- **Retention:** Permanent
+- **Documentation:** [Firebase Storage](https://firebase.google.com/docs/storage)
+
+#### Fallback 1: Catbox.moe
+- **Service:** Catbox.moe File Hosting API
+- **Limits:** 200 MB per file
+- **Retention:** Permanent
+- **API Endpoint:** `https://catbox.moe/user/api.php`
+- **Documentation:** [Catbox API](https://catbox.moe/api.php)
+
+#### Fallback 2: Tmpfiles.org
+- **Service:** Tmpfiles.org Temporary File Hosting
+- **Limits:** 100 MB per file
+- **Retention:** 1 year expiration
+- **API Endpoint:** `https://tmpfiles.org/api/v1/upload`
+- **Documentation:** [Tmpfiles API](https://tmpfiles.org/)
+
+#### Deprecated: File.io
+- **Status:** Removed due to CORS issues
+- **Issue:** Missing `Access-Control-Allow-Origin` header blocked browser uploads
+- **Replacement:** Multi-provider fallback system (Firebase → Catbox → Tmpfiles)
+
+**Implementation Details:**
+- Automatic fallback on provider failure
+- Progress indication during upload
+- Direct download support (no new tab required)
+- Markdown link generation: `[filename](url)`
+- Error handling with user-friendly messages
+
+---
+
+## Additional Resources
+
+### File Upload Documentation
+- `doc/FILE_UPLOAD_OPTIONS_ANALYSIS.md` - Comprehensive analysis of upload options
+- `doc/FILE_UPLOAD_QUICK_REFERENCE.md` - Quick reference for developers
+- `doc/summaries/FIREBASE_STORAGE_MIGRATION.md` - Migration details
+
+### Calendar View Documentation
+- `doc/summaries/CALENDAR_FIX_SUMMARY.md` - Calendar bug fix details
+- `.kiro/specs/task-calendar-view/` - Complete spec with requirements, design, and tasks
+
+### Firebase Documentation
+- [Firebase Storage Documentation](https://firebase.google.com/docs/storage)
+- [Firebase Pricing](https://firebase.google.com/pricing)
+- [Firestore Security Rules](https://firebase.google.com/docs/firestore/security/get-started)
+
+---
+
+*Last Updated: February 18, 2026*

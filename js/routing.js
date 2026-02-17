@@ -65,6 +65,28 @@ const Router = {
         userDetailsCard.style.display = 'flex';
       }
 
+      // Show/hide Notes button based on view (only show on dashboard)
+      const noteToggleMobile = document.getElementById('note-toggle');
+      const noteButtonDesktop = document.getElementById('note-button-desktop');
+      
+      if (viewName === 'dashboard') {
+        // Show Notes button only on dashboard
+        if (noteToggleMobile && noteToggleMobile.style.display !== 'none') {
+          noteToggleMobile.style.display = 'flex';
+        }
+        if (noteButtonDesktop && noteButtonDesktop.style.display !== 'none') {
+          noteButtonDesktop.style.display = 'flex';
+        }
+      } else {
+        // Hide Notes button on all other views
+        if (noteToggleMobile) {
+          noteToggleMobile.style.display = 'none';
+        }
+        if (noteButtonDesktop) {
+          noteButtonDesktop.style.display = 'none';
+        }
+      }
+
       // Update active nav link
       document.querySelectorAll('.nav-link').forEach(link => {
         link.classList.remove('active');
