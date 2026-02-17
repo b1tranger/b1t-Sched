@@ -149,6 +149,7 @@ const App = {
   isAdmin: false,
   filterPopup: null,
   deleteUserDialog: null,
+  calendarView: null,
   isCR: false,
   isFaculty: false,
   isBlocked: false,
@@ -198,6 +199,17 @@ const App = {
 
     // Initialize Note Manager
     NoteManager.init();
+
+    // Initialize Calendar View
+    console.log('Checking CalendarView:', typeof CalendarView);
+    if (typeof CalendarView !== 'undefined') {
+      console.log('CalendarView is defined, initializing...');
+      this.calendarView = new CalendarView();
+      this.calendarView.init();
+      console.log('CalendarView initialized successfully');
+    } else {
+      console.error('CalendarView is undefined!');
+    }
 
     // Handle route-specific data loading
     Router.onRouteChange(async (route) => {
@@ -1143,6 +1155,11 @@ const App = {
     if (tasksResult.success) {
       this.currentTasks = tasksResult.data;
       UI.renderTasks(this.currentTasks, this.userCompletions, this.isAdmin, this.isCR, userId);
+      
+      // Notify calendar view of task updates
+      if (this.calendarView) {
+        this.calendarView.onTasksUpdated();
+      }
     } else {
       console.error('Failed to load tasks:', tasksResult.error);
       // Check if it's an index error
@@ -1638,6 +1655,11 @@ const App = {
       // Remove from local state and re-render
       this.currentTasks = this.currentTasks.filter(t => t.id !== taskId);
       UI.renderTasks(this.currentTasks, this.userCompletions, this.isAdmin, this.isCR, Auth.getUserId());
+      
+      // Notify calendar view of task updates
+      if (this.calendarView) {
+        this.calendarView.onTasksUpdated();
+      }
     } else {
       alert('Failed to delete task: ' + result.error);
     }
@@ -2298,6 +2320,10 @@ const App = {
 };
 
 // Initialize app when DOM is ready
+console.log('DOMContentLoaded event listener registered');
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('DOMContentLoaded fired!');
+  console.log('About to call App.init()');
   App.init();
+  console.log('App.init() completed');
 });

@@ -457,7 +457,7 @@ const NoteManager = {
   showMessage(message, type = 'info') {
     // Use existing UI message system if available
     if (typeof UI !== 'undefined' && UI.showMessage) {
-      UI.showMessage(message, type);
+      UI.showMessage('note-message', message, type);
     } else {
       // Fallback to alert
       alert(message);

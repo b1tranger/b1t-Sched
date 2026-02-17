@@ -98,6 +98,33 @@
 
 ---
 
+### 6. File Upload Success Messages and Link Insertion ✅
+
+**Issue:** 
+- File upload success messages were not displayed to users
+- Users couldn't see confirmation that files were uploaded successfully
+
+**Root Cause:**
+- The `NoteManager.showMessage()` method was calling `UI.showMessage(message, type)` with only 2 parameters
+- `UI.showMessage()` requires 3 parameters: `elementId`, `message`, and `type`
+- No message container element existed in the note modal
+
+**Fix:**
+- Added message container `<div id="note-message">` to the note modal in `index.html`
+- Updated `showMessage()` method in `js/notes.js` to pass correct parameters: `UI.showMessage('note-message', message, type)`
+- Success message now displays: "File uploaded successfully! (Available for 14 days)"
+- Error messages also display properly with specific error details
+
+**Files Changed:**
+- `index.html` (added message container to note modal body)
+- `js/notes.js` (fixed showMessage method parameters)
+
+**Related:**
+- See `doc/summaries/FILE_UPLOAD_FIX_SUMMARY.md` for detailed information
+- See `doc/summaries/FILE_IO_MIGRATION_SUMMARY.md` for file.io API migration details
+
+---
+
 ## Testing Recommendations
 
 ### 1. Deadline Options
@@ -133,6 +160,16 @@
 - [ ] Verify notification appears on mobile device
 - [ ] Click notification and verify app opens/focuses
 - [ ] Test vibration (if device supports it)
+
+### 6. File Upload Messages
+- [ ] Open Notes modal
+- [ ] Click "Upload Files" button
+- [ ] Select a file (under 100MB)
+- [ ] Verify green success message appears: "File uploaded successfully! (Available for 14 days)"
+- [ ] Verify markdown link is inserted in textarea at cursor position
+- [ ] Verify preview pane shows the uploaded file link
+- [ ] Test with file over 100MB - verify error message appears
+- [ ] Test with network error - verify error message appears
 
 ---
 
