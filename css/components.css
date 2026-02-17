@@ -69,6 +69,11 @@
   background-color: transparent;
   color: var(--primary-maroon);
   border-radius: var(--radius-full);
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-icon:hover:not(:disabled) {
@@ -859,4 +864,37 @@ body:has(.offline-indicator[style*="display: flex"]) .main-content {
     padding: 6px 10px;
     font-size: 12px;
   }
+}
+
+
+/* Role Badges */
+.role-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.role-badge-cr {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  border: 1px solid #90caf9;
+}
+
+.role-badge-faculty {
+  background-color: #f3e5f5;
+  color: #7b1fa2;
+  border: 1px solid #ce93d8;
+}
+
+/* Role badge in contributions table */
+.contributions-table .role-badge {
+  margin-left: 8px;
+  font-size: 10px;
+  padding: 2px 6px;
 }

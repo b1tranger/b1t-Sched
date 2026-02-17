@@ -5,25 +5,88 @@
 
 class CalendarView {
   constructor() {
-    this.currentDate = new Date();
-    this.displayedMonth = this.currentDate.getMonth();
-    this.displayedYear = this.currentDate.getFullYear();
-    this.modal = null;
-    this.isOpen = false;
-  }
+      // Current date for reference
+      this.currentDate = new Date();
+
+      // Displayed month and year (can be different from current)
+      this.displayedMonth = this.currentDate.getMonth();
+      this.displayedYear = this.currentDate.getFullYear();
+
+      // Modal reference
+      this.modal = null;
+
+      // Open state flag
+      this.isOpen = false;
+
+      // Store the element that had focus before modal opened
+      this.previouslyFocusedElement = null;
+
+      // Store bound event handler for focus trap
+      this.handleFocusTrap = this.trapFocus.bind(this);
+
+      // Date navigation limits (prevent navigation beyond reasonable ranges)
+      // Allow navigation 100 years in the past and future
+      this.minYear = this.currentDate.getFullYear() - 100;
+      this.maxYear = this.currentDate.getFullYear() + 100;
+    }
+
 
   /**
    * Initialize the calendar view
+   * Calls createButton(), createModal(), and attachEventListeners()
+   * Should be called after DOM is ready
+   * Requirements: 1.1
    */
   init() {
-    // To be implemented in later tasks
+    // Call createButton() to insert the calendar button (if not already present)
+    this.createButton();
+    
+    // Call createModal() to build modal structure
+    this.createModal();
+    
+    // Call attachEventListeners() to wire up interactions
+    this.attachEventListeners();
   }
 
   /**
    * Create the calendar icon button
+   * Inserts button next to "Pending Tasks" header if not already present
+   * Requirements: 1.1
    */
   createButton() {
-    // To be implemented in later tasks
+    // Check if button already exists
+    const existingBtn = document.getElementById('calendar-view-btn');
+    if (existingBtn) {
+      // Button already exists (e.g., in HTML), no need to create
+      return;
+    }
+
+    // Find the Pending Tasks section header
+    const sectionHeaders = document.querySelectorAll('.section-header h2');
+    let pendingTasksHeader = null;
+    
+    for (const header of sectionHeaders) {
+      if (header.textContent.includes('Pending Tasks')) {
+        pendingTasksHeader = header.parentElement;
+        break;
+      }
+    }
+
+    if (!pendingTasksHeader) {
+      console.warn('Pending Tasks section header not found, cannot insert calendar button');
+      return;
+    }
+
+    // Create calendar button
+    const button = document.createElement('button');
+    button.id = 'calendar-view-btn';
+    button.className = 'btn btn-icon';
+    button.setAttribute('title', 'Calendar view');
+    button.setAttribute('aria-label', 'Open calendar view');
+    button.innerHTML = '<i class="fas fa-calendar-alt"></i>';
+
+    // Insert button into the section header
+    pendingTasksHeader.appendChild(button);
   }
 
   /**
@@ -53,6 +116,7 @@ class CalendarView {
     prevBtn.className = 'calendar-nav-btn';
     prevBtn.id = 'calendar-prev-month';
     prevBtn.setAttribute('aria-label', 'Previous month');
+    prevBtn.setAttribute('tabindex', '0');
     prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
 
     // Month/year display
@@ -66,12 +130,14 @@ class CalendarView {
     nextBtn.className = 'calendar-nav-btn';
     nextBtn.id = 'calendar-next-month';
     nextBtn.setAttribute('aria-label', 'Next month');
+    nextBtn.setAttribute('tabindex', '0');
     nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
 
     // Close button
     const closeBtn = document.createElement('button');
     closeBtn.className = 'btn btn-icon calendar-close-btn';
     closeBtn.setAttribute('aria-label', 'Close calendar');
+    closeBtn.setAttribute('tabindex', '0');
     closeBtn.innerHTML = '<i class="fas fa-times"></i>';
 
     // Assemble header
@@ -99,6 +165,8 @@ class CalendarView {
     const grid = document.createElement('div');
     grid.className = 'calendar-grid';
     grid.id = 'calendar-grid';
+    grid.setAttribute('role', 'grid');
+    grid.setAttribute('aria-label', 'Calendar grid');
 
     gridContainer.appendChild(dayHeaders);
     gridContainer.appendChild(grid);
@@ -137,25 +205,51 @@ class CalendarView {
    * Requirements: 1.2, 10.1
    */
   open() {
-    // Set isOpen flag to true
-    this.isOpen = true;
+      console.log('Calendar open() called');
+      console.log('Modal exists:', !!this.modal);
+      
+      // Store the currently focused element to restore later
+      this.previouslyFocusedElement = document.activeElement;
 
-    // Show modal (display: flex)
-    if (this.modal) {
-      this.modal.style.display = 'flex';
+      // Set isOpen flag to true
+      this.isOpen = true;
+
+      // Show modal (display: flex)
+      if (this.modal) {
+        console.log('Setting modal display to flex');
+        this.modal.style.display = 'flex';
+      } else {
+        console.error('Modal element not found!');
+        return;
+      }
+
+      // Show loading indicator before rendering
+      this.showLoading();
+
+      // Call renderCalendar() to populate content
+      try {
+        this.renderCalendar();
+        // Hide loading indicator when rendering is complete
+        this.hideLoading();
+      } catch (error) {
+        // Handle errors gracefully - log warning and show error state
+        console.warn('Error rendering calendar:', error);
+        this.hideLoading();
+        this.showError();
+      }
+
+      // Set focus to modal container for accessibility
+      if (this.modal) {
+        this.modal.focus();
+      }
+
+      // Add focus trap event listener
+      document.addEventListener('keydown', this.handleFocusTrap);
+
+      // Prevent background scrolling (body overflow: hidden)
+      document.body.style.overflow = 'hidden';
     }
 
-    // Call renderCalendar() to populate content
-    this.renderCalendar();
-
-    // Set focus to modal container for accessibility
-    if (this.modal) {
-      this.modal.focus();
-    }
-
-    // Prevent background scrolling (body overflow: hidden)
-    document.body.style.overflow = 'hidden';
-  }
 
   /**
    * Close the calendar modal
@@ -171,8 +265,51 @@ class CalendarView {
       this.modal.style.display = 'none';
     }
     
+    // Remove focus trap event listener
+    document.removeEventListener('keydown', this.handleFocusTrap);
+    
+    // Restore focus to the calendar button
+    if (this.previouslyFocusedElement) {
+      this.previouslyFocusedElement.focus();
+      this.previouslyFocusedElement = null;
+    }
+    
     // Restore background scrolling (body overflow: '')
     document.body.style.overflow = '';
+  }
+
+  /**
+   * Trap focus within the modal
+   * Prevents tabbing outside the modal while it's open
+   * Requirements: 10.1
+   */
+  trapFocus(e) {
+    // Only trap focus when modal is open
+    if (!this.isOpen || !this.modal) return;
+    
+    // Only handle Tab key
+    if (e.key !== 'Tab') return;
+    
+    // Get all focusable elements within the modal
+    const focusableElements = this.modal.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    
+    if (focusableElements.length === 0) return;
+    
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+    
+    // If Shift+Tab on first element, move to last element
+    if (e.shiftKey && document.activeElement === firstElement) {
+      e.preventDefault();
+      lastElement.focus();
+    }
+    // If Tab on last element, move to first element
+    else if (!e.shiftKey && document.activeElement === lastElement) {
+      e.preventDefault();
+      firstElement.focus();
+    }
   }
 
   /**
@@ -250,6 +387,7 @@ class CalendarView {
   /**
    * Get tasks with deadlines in the displayed month
    * Filters App.currentTasks to include only tasks with valid deadlines in the current month
+   * Handles invalid date formats gracefully and logs warnings for data integrity issues
    * Requirements: 4.1, 4.2, 3.5
    * @returns {Array} Filtered array of tasks with deadlines in the displayed month
    */
@@ -271,8 +409,14 @@ class CalendarView {
       let deadline;
       try {
         deadline = task.deadline.toDate ? task.deadline.toDate() : new Date(task.deadline);
+        
+        // Validate that the deadline is a valid date
+        if (isNaN(deadline.getTime())) {
+          console.warn('Invalid deadline format for task:', task.id, 'deadline:', task.deadline);
+          return false;
+        }
       } catch (error) {
-        console.warn('Invalid deadline format for task:', task.id, error);
+        console.warn('Error parsing deadline for task:', task.id, 'error:', error.message);
         return false;
       }
 
@@ -285,6 +429,7 @@ class CalendarView {
   /**
    * Check if a task is overdue
    * A task is overdue if its deadline is in the past and it's not marked as completed
+   * Handles invalid date formats gracefully
    * Requirements: 6.1, 6.3
    * @param {Object} task - The task object to check
    * @returns {boolean} True if the task is overdue
@@ -296,7 +441,14 @@ class CalendarView {
     let deadline;
     try {
       deadline = task.deadline.toDate ? task.deadline.toDate() : new Date(task.deadline);
+      
+      // Validate that the deadline is a valid date
+      if (isNaN(deadline.getTime())) {
+        console.warn('Invalid deadline format for overdue check, task:', task.id);
+        return false;
+      }
     } catch (error) {
+      console.warn('Error parsing deadline for overdue check, task:', task.id, 'error:', error.message);
       return false;
     }
 
@@ -345,6 +497,23 @@ class CalendarView {
         const taskElement = document.createElement('div');
         taskElement.className = 'calendar-task';
         taskElement.setAttribute('data-task-id', task.id);
+        taskElement.setAttribute('tabindex', '0');
+        taskElement.setAttribute('role', 'button');
+        
+        // Handle missing task data with placeholders
+        const taskTitle = task.title || 'Untitled Task';
+        const taskType = task.type || 'other';
+        const taskCourse = task.course || 'Unknown course';
+        
+        // Log warning for missing critical data
+        if (!task.title) {
+          console.warn('Task missing title, task ID:', task.id);
+        }
+        if (!task.course) {
+          console.warn('Task missing course, task ID:', task.id);
+        }
+        
+        taskElement.setAttribute('aria-label', `${taskTitle}, ${taskType} for ${taskCourse}`);
 
         // Apply overdue styling if task is overdue
         if (this.isTaskOverdue(task)) {
@@ -353,7 +522,8 @@ class CalendarView {
 
         // Add task type badge
         const badge = document.createElement('span');
-        badge.className = `task-type-badge ${task.type || 'other'}`;
+        badge.className = `task-type-badge ${taskType}`;
+        badge.setAttribute('aria-hidden', 'true');
         
         // Badge text based on task type
         const badgeText = {
@@ -364,13 +534,13 @@ class CalendarView {
           'presentation': 'Pr',
           'other': 'O'
         };
-        badge.textContent = badgeText[task.type] || 'O';
+        badge.textContent = badgeText[taskType] || 'O';
 
         // Add task title
         const title = document.createElement('span');
         title.className = 'calendar-task-title';
-        title.textContent = task.title || 'Untitled Task';
-        title.setAttribute('title', task.title || 'Untitled Task'); // Full text on hover
+        title.textContent = taskTitle;
+        title.setAttribute('title', taskTitle); // Full text on hover
 
         taskElement.appendChild(badge);
         taskElement.appendChild(title);
@@ -380,6 +550,16 @@ class CalendarView {
         taskElement.addEventListener('click', (e) => {
           e.stopPropagation(); // Prevent cell selection
           this.showTaskDetails(task.id);
+        });
+
+        // Add keyboard event listener for Enter and Space keys
+        // Requirements: 10.2 - Keyboard accessibility
+        taskElement.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            e.stopPropagation();
+            this.showTaskDetails(task.id);
+          }
         });
 
         tasksContainer.appendChild(taskElement);
@@ -494,29 +674,69 @@ class CalendarView {
   /**
    * Navigate to previous month
    * Decrements displayedMonth and handles year rollback
+   * Prevents navigation beyond reasonable date ranges
    * Requirements: 3.2
    */
   previousMonth() {
+    // Check if we're at the minimum date limit
+    if (this.displayedYear <= this.minYear && this.displayedMonth === 0) {
+      console.warn('Cannot navigate before minimum date range');
+      return;
+    }
+
     this.displayedMonth--;
     if (this.displayedMonth < 0) {
       this.displayedMonth = 11;
       this.displayedYear--;
     }
-    this.renderCalendar();
+    
+    // Show loading indicator before rendering
+    this.showLoading();
+    
+    try {
+      this.renderCalendar();
+      // Hide loading indicator when rendering is complete
+      this.hideLoading();
+    } catch (error) {
+      // Handle errors gracefully - log warning and show error state
+      console.warn('Error rendering calendar:', error);
+      this.hideLoading();
+      this.showError();
+    }
   }
 
   /**
    * Navigate to next month
    * Increments displayedMonth and handles year rollover
+   * Prevents navigation beyond reasonable date ranges
    * Requirements: 3.3
    */
   nextMonth() {
+    // Check if we're at the maximum date limit
+    if (this.displayedYear >= this.maxYear && this.displayedMonth === 11) {
+      console.warn('Cannot navigate beyond maximum date range');
+      return;
+    }
+
     this.displayedMonth++;
     if (this.displayedMonth > 11) {
       this.displayedMonth = 0;
       this.displayedYear++;
     }
-    this.renderCalendar();
+    
+    // Show loading indicator before rendering
+    this.showLoading();
+    
+    try {
+      this.renderCalendar();
+      // Hide loading indicator when rendering is complete
+      this.hideLoading();
+    } catch (error) {
+      // Handle errors gracefully - log warning and show error state
+      console.warn('Error rendering calendar:', error);
+      this.hideLoading();
+      this.showError();
+    }
   }
 
   /**
@@ -576,6 +796,7 @@ class CalendarView {
   /**
    * Show simple task details (fallback)
    * Creates a basic detail view if UI.showTaskDetails is not available
+   * Handles missing task data with placeholders
    * Requirements: 7.2, 7.3
    * @param {Object} task - The task object to display
    */
@@ -595,20 +816,49 @@ class CalendarView {
       document.body.appendChild(detailModal);
     }
 
+    // Handle missing task data with placeholders
+    const taskTitle = task.title || 'Untitled Task';
+    const taskCourse = task.course || 'No course specified';
+    const taskType = task.type || 'other';
+    const taskDescription = task.description || '';
+    const taskDetails = task.details || '';
+    const taskAddedByName = task.addedByName || '';
+    const taskAddedByRole = task.addedByRole || '';
+
+    // Log warnings for missing critical data
+    if (!task.title) {
+      console.warn('Task detail view: Task missing title, task ID:', task.id);
+    }
+    if (!task.course) {
+      console.warn('Task detail view: Task missing course, task ID:', task.id);
+    }
+
     // Format deadline
     let deadlineStr = 'No deadline';
     let isOverdue = false;
     if (task.deadline) {
-      const deadline = task.deadline.toDate ? task.deadline.toDate() : new Date(task.deadline);
-      deadlineStr = deadline.toLocaleString('en-US', {
-        weekday: 'short',
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-      isOverdue = this.isTaskOverdue(task);
+      try {
+        const deadline = task.deadline.toDate ? task.deadline.toDate() : new Date(task.deadline);
+        
+        // Validate that the deadline is a valid date
+        if (isNaN(deadline.getTime())) {
+          console.warn('Task detail view: Invalid deadline format, task ID:', task.id);
+          deadlineStr = 'Invalid deadline';
+        } else {
+          deadlineStr = deadline.toLocaleString('en-US', {
+            weekday: 'short',
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+          isOverdue = this.isTaskOverdue(task);
+        }
+      } catch (error) {
+        console.warn('Task detail view: Error formatting deadline, task ID:', task.id, 'error:', error.message);
+        deadlineStr = 'Invalid deadline';
+      }
     }
 
     // Task type badge text
@@ -625,7 +875,7 @@ class CalendarView {
     detailModal.innerHTML = `
       <div class="modal-content calendar-task-detail-content">
         <div class="calendar-task-detail-header">
-          <h2 id="task-detail-title" class="task-detail-title">${task.title || 'Untitled Task'}</h2>
+          <h2 id="task-detail-title" class="task-detail-title">${taskTitle}</h2>
           <button class="btn btn-icon calendar-task-detail-close" id="close-task-detail" aria-label="Close task details">
             <i class="fas fa-times"></i>
           </button>
@@ -636,7 +886,7 @@ class CalendarView {
               <i class="fas fa-book"></i>
               <strong>Course</strong>
             </div>
-            <div class="task-detail-value">${task.course || 'No course specified'}</div>
+            <div class="task-detail-value">${taskCourse}</div>
           </div>
           <div class="task-detail-field">
             <div class="task-detail-label">
@@ -644,7 +894,7 @@ class CalendarView {
               <strong>Type</strong>
             </div>
             <div class="task-detail-value">
-              <span class="task-type-badge ${task.type || 'other'}">${badgeText[task.type] || 'Other'}</span>
+              <span class="task-type-badge ${taskType}">${badgeText[taskType] || 'Other'}</span>
             </div>
           </div>
           <div class="task-detail-field">
@@ -654,32 +904,32 @@ class CalendarView {
             </div>
             <div class="task-detail-value ${isOverdue ? 'task-detail-overdue' : ''}">${deadlineStr}${isOverdue ? ' <span class="overdue-label">(Overdue!)</span>' : ''}</div>
           </div>
-          ${task.description ? `
+          ${taskDescription ? `
           <div class="task-detail-field task-detail-description">
             <div class="task-detail-label">
               <i class="fas fa-align-left"></i>
               <strong>Description</strong>
             </div>
-            <div class="task-detail-value">${task.description}</div>
+            <div class="task-detail-value">${taskDescription}</div>
           </div>
           ` : ''}
-          ${task.details ? `
+          ${taskDetails ? `
           <div class="task-detail-field task-detail-description">
             <div class="task-detail-label">
               <i class="fas fa-info-circle"></i>
               <strong>Details</strong>
             </div>
-            <div class="task-detail-value">${task.details}</div>
+            <div class="task-detail-value">${taskDetails}</div>
           </div>
           ` : ''}
-          ${task.addedByName ? `
+          ${taskAddedByName ? `
           <div class="task-detail-field task-detail-meta">
             <div class="task-detail-label">
               <i class="fas fa-user"></i>
               <strong>Added by</strong>
             </div>
             <div class="task-detail-value">
-              ${task.addedByName}${task.addedByRole ? ` <span class="role-badge role-badge-${task.addedByRole.toLowerCase()}">${task.addedByRole}</span>` : ''}
+              ${taskAddedByName}${taskAddedByRole ? ` <span class="role-badge role-badge-${taskAddedByRole.toLowerCase()}">${taskAddedByRole}</span>` : ''}
             </div>
           </div>
           ` : ''}
@@ -719,15 +969,115 @@ class CalendarView {
   }
 
   /**
+   * Handle task updates
+   * Refreshes the calendar display when App.currentTasks is updated
+   * Requirements: 9.2
+   */
+  onTasksUpdated() {
+    // Check if calendar is currently open
+    if (this.isOpen) {
+      // Show loading indicator before rendering
+      this.showLoading();
+      
+      try {
+        // If open, call renderCalendar() to refresh display
+        // This handles task additions, edits, and deletions
+        this.renderCalendar();
+        // Hide loading indicator when rendering is complete
+        this.hideLoading();
+      } catch (error) {
+        // Handle errors gracefully - log warning and show error state
+        console.warn('Error rendering calendar:', error);
+        this.hideLoading();
+        this.showError();
+      }
+    }
+  }
+
+  /**
+   * Show loading indicator
+   * Displays the loading state while calendar is rendering
+   * Requirements: 9.3
+   */
+  showLoading() {
+    // Guard for test environments where document may not be defined
+    if (typeof document === 'undefined') return;
+    
+    const loadingState = document.getElementById('calendar-loading');
+    const gridContainer = document.querySelector('.calendar-grid-container');
+    const emptyState = document.getElementById('calendar-empty-state');
+    
+    if (loadingState) {
+      loadingState.style.display = 'flex';
+    }
+    if (gridContainer) {
+      gridContainer.style.display = 'none';
+    }
+    if (emptyState) {
+      emptyState.style.display = 'none';
+    }
+  }
+
+  /**
+   * Hide loading indicator
+   * Hides the loading state when rendering is complete
+   * Requirements: 9.3
+   */
+  hideLoading() {
+    // Guard for test environments where document may not be defined
+    if (typeof document === 'undefined') return;
+    
+    const loadingState = document.getElementById('calendar-loading');
+    
+    if (loadingState) {
+      loadingState.style.display = 'none';
+    }
+  }
+
+  /**
+   * Show error state
+   * Displays an error message when calendar rendering fails
+   * Requirements: 9.3
+   */
+  showError() {
+    // Guard for test environments where document may not be defined
+    if (typeof document === 'undefined') return;
+    
+    const gridContainer = document.querySelector('.calendar-grid-container');
+    const emptyState = document.getElementById('calendar-empty-state');
+    const loadingState = document.getElementById('calendar-loading');
+    
+    // Hide other states
+    if (gridContainer) {
+      gridContainer.style.display = 'none';
+    }
+    if (loadingState) {
+      loadingState.style.display = 'none';
+    }
+    
+    // Show error in empty state container
+    if (emptyState) {
+      emptyState.innerHTML = '<i class="fas fa-exclamation-triangle"></i><p>Error loading calendar. Please try again.</p>';
+      emptyState.style.display = 'flex';
+    }
+  }
+
+  /**
    * Attach event listeners for modal interactions
    * Sets up listeners for calendar button, close button, overlay, escape key, and navigation
-   * Requirements: 1.2, 1.4, 10.3
+   * Requirements: 1.2, 1.4, 10.3, 10.2
    */
   attachEventListeners() {
     // Calendar button click → open()
     const calendarBtn = document.getElementById('calendar-view-btn');
     if (calendarBtn) {
-      calendarBtn.addEventListener('click', () => this.open());
+      console.log('Calendar button found, attaching click listener');
+      calendarBtn.addEventListener('click', () => {
+        console.log('Calendar button clicked!');
+        this.open();
+      });
+    } else {
+      console.warn('Calendar button not found in DOM');
     }
 
     // Close button click → close()
@@ -746,10 +1096,30 @@ class CalendarView {
       });
     }
 
-    // Escape key press → close()
+    // Keyboard event handler for modal
+    // Requirements: 10.2 - Keyboard navigation support
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && this.isOpen) {
+      if (!this.isOpen) return;
+
+      // Escape key press → close()
+      if (e.key === 'Escape') {
         this.close();
+        return;
+      }
+
+      // Arrow key navigation for month navigation (optional but helpful)
+      // Left arrow → previous month
+      if (e.key === 'ArrowLeft' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        this.previousMonth();
+        return;
+      }
+
+      // Right arrow → next month
+      if (e.key === 'ArrowRight' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        this.nextMonth();
+        return;
       }
     });
 
@@ -757,12 +1127,28 @@ class CalendarView {
     const prevBtn = document.getElementById('calendar-prev-month');
     if (prevBtn) {
       prevBtn.addEventListener('click', () => this.previousMonth());
+      
+      // Add keyboard support for Enter and Space keys
+      prevBtn.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          this.previousMonth();
+        }
+      });
     }
 
     // Next month button click → nextMonth()
     const nextBtn = document.getElementById('calendar-next-month');
     if (nextBtn) {
       nextBtn.addEventListener('click', () => this.nextMonth());
+      
+      // Add keyboard support for Enter and Space keys
+      nextBtn.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          this.nextMonth();
+        }
+      });
     }
   }
 
@@ -814,6 +1200,7 @@ function isToday(date) {
 
 /**
  * Group tasks by their deadline date (ignoring time component)
+ * Handles invalid date formats gracefully
  * @param {Array} tasks - Array of task objects with deadline property
  * @returns {Object} Object with date keys in format "YYYY-MM-DD" and task arrays as values
  */
@@ -823,19 +1210,29 @@ function groupTasksByDate(tasks) {
   tasks.forEach(task => {
     if (!task.deadline) return;
     
-    // Handle both Firestore Timestamp and JavaScript Date
-    const deadline = task.deadline.toDate ? task.deadline.toDate() : new Date(task.deadline);
-    
-    // Format date as YYYY-MM-DD
-    const year = deadline.getFullYear();
-    const month = String(deadline.getMonth() + 1).padStart(2, '0');
-    const day = String(deadline.getDate()).padStart(2, '0');
-    const dateKey = `${year}-${month}-${day}`;
-    
-    if (!grouped[dateKey]) {
-      grouped[dateKey] = [];
+    try {
+      // Handle both Firestore Timestamp and JavaScript Date
+      const deadline = task.deadline.toDate ? task.deadline.toDate() : new Date(task.deadline);
+      
+      // Validate that the deadline is a valid date
+      if (isNaN(deadline.getTime())) {
+        console.warn('Invalid deadline format in groupTasksByDate, task ID:', task.id);
+        return;
+      }
+      
+      // Format date as YYYY-MM-DD
+      const year = deadline.getFullYear();
+      const month = String(deadline.getMonth() + 1).padStart(2, '0');
+      const day = String(deadline.getDate()).padStart(2, '0');
+      const dateKey = `${year}-${month}-${day}`;
+      
+      if (!grouped[dateKey]) {
+        grouped[dateKey] = [];
+      }
+      grouped[dateKey].push(task);
+    } catch (error) {
+      console.warn('Error grouping task by date, task ID:', task.id, 'error:', error.message);
     }
-    grouped[dateKey].push(task);
   });
   
   return grouped;
