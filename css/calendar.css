@@ -47,6 +47,7 @@
     transform: translateY(50px);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
@@ -156,7 +157,7 @@
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 2px;
-  min-height: 300px;
+  min-height: 500px;
 }
 
 /* Calendar Cell - Compact and Consistent */
@@ -225,7 +226,8 @@
   flex-direction: column;
   gap: 2px;
   overflow: hidden;
-  padding-bottom: 16px; /* Space for date number at bottom */
+  padding-bottom: 16px;
+  /* Space for date number at bottom */
 }
 
 /* Individual Task in Calendar Cell - Compact */
@@ -308,8 +310,10 @@
 /* Task Count Indicator - Smaller */
 .calendar-task-count {
   position: absolute;
-  top: 2px;
-  left: 2px;
+  bottom: 2px !important;
+  left: 2px !important;
+  top: auto !important;
+  right: auto !important;
   background-color: var(--primary-maroon);
   color: var(--text-white);
   border-radius: var(--radius-sm);
@@ -392,84 +396,85 @@
 
 /* Desktop (>=768px) */
 @media (min-width: 768px) {
+
   /* Center modal with appropriate sizing */
   .calendar-modal-content {
     width: 90%;
     max-width: 1200px;
     border-radius: var(--radius-lg);
   }
-  
+
   /* Slightly larger spacing for desktop */
   .calendar-header {
     padding: var(--spacing-md) var(--spacing-lg);
   }
-  
+
   .calendar-month-year {
     font-size: var(--font-xl);
   }
-  
+
   .calendar-grid-container {
     padding: var(--spacing-md);
   }
-  
+
   .calendar-grid {
     gap: 4px;
   }
-  
+
   .calendar-day-header {
     font-size: var(--font-xs);
     padding: var(--spacing-xs);
   }
-  
+
   /* Slightly larger cells for desktop but still compact */
   .calendar-cell {
-    min-height: 85px;
-    height: 85px;
+    min-height: 150px;
+    height: 150px;
     padding: var(--spacing-xs);
   }
-  
+
   /* Slightly larger fonts for desktop */
   .calendar-date-number {
     font-size: 11px;
   }
-  
+
   .calendar-task {
     font-size: 10px;
     padding: 3px 4px;
     min-height: 20px;
   }
-  
+
   .calendar-task-title {
     font-size: 10px;
   }
-  
+
   .calendar-task-course {
     font-size: 10px;
   }
-  
+
   .calendar-task-content .calendar-task-title {
     font-size: 9px;
   }
-  
+
   .calendar-task .task-type-badge {
     padding: 2px 4px;
     font-size: 9px;
   }
-  
+
   .calendar-task-more {
     font-size: var(--font-sm);
     padding: var(--spacing-sm);
   }
-  
+
   /* Larger empty state for desktop */
   .calendar-empty-state {
     padding: var(--spacing-xxxl);
   }
-  
+
   .calendar-empty-state i {
     font-size: 5rem;
   }
-  
+
   .calendar-empty-state p {
     font-size: var(--font-xl);
   }
@@ -483,40 +488,40 @@
     height: 100vh;
     border-radius: 0;
   }
-  
+
   .calendar-header {
     padding: var(--spacing-sm) var(--spacing-md);
   }
-  
+
   .calendar-month-year {
     font-size: var(--font-md);
   }
-  
+
   .calendar-nav-btn,
   .calendar-close-btn {
     min-width: 40px;
     min-height: 40px;
     font-size: var(--font-md);
   }
-  
+
   .calendar-grid-container {
     padding: 0;
     overflow: hidden;
   }
-  
+
   /* Hide monthly grid elements on mobile (not the container) */
   .calendar-grid,
   .calendar-day-headers {
     display: none !important;
   }
-  
+
   /* Weekly View Styles */
   .calendar-weekly-container {
     display: block;
     height: 100%;
     overflow: hidden;
   }
-  
+
   .weeks-scroll-container {
     overflow-x: auto;
     overflow-y: hidden;
@@ -524,20 +529,23 @@
     -webkit-overflow-scrolling: touch;
     display: flex;
     height: 100%;
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE/Edge */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE/Edge */
   }
-  
+
   .weeks-scroll-container::-webkit-scrollbar {
-    display: none; /* Chrome/Safari */
+    display: none;
+    /* Chrome/Safari */
   }
-  
+
   .weeks-wrapper {
     display: flex;
     flex-direction: row;
     height: 100%;
   }
-  
+
   .week-view {
     min-width: 100vw;
     width: 100vw;
@@ -546,7 +554,7 @@
     flex-direction: column;
     height: 100%;
   }
-  
+
   .week-days-header {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
@@ -558,7 +566,7 @@
     z-index: 10;
     flex-shrink: 0;
   }
-  
+
   .day-header {
     text-align: center;
     font-size: 10px;
@@ -567,13 +575,13 @@
     color: var(--text-medium);
     line-height: 1.2;
   }
-  
+
   .day-header.today {
     background: var(--primary-maroon);
     color: white;
     border-radius: 4px;
   }
-  
+
   .week-days-content {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
@@ -583,14 +591,14 @@
     overflow-y: auto;
     align-items: start;
   }
-  
+
   .day-column {
     display: flex;
     flex-direction: column;
     gap: 4px;
     min-height: 100%;
   }
-  
+
   .day-task {
     background: var(--bg-lighter);
     padding: 4px 3px;
@@ -604,7 +612,7 @@
     gap: 2px;
     line-height: 1.2;
   }
-  
+
   .day-task:hover,
   .day-task:focus {
     background: var(--bg-light);
@@ -612,12 +620,12 @@
     box-shadow: var(--shadow-sm);
     outline: none;
   }
-  
+
   .day-task.overdue {
     background-color: #f8d7da;
     border-left-color: var(--danger);
   }
-  
+
   .day-task .task-type-badge {
     padding: 1px 3px;
     font-size: 8px;
@@ -628,7 +636,7 @@
     text-align: center;
     line-height: 1.2;
   }
-  
+
   .day-task-course {
     font-weight: var(--font-semibold);
     color: var(--text-dark);
@@ -636,61 +644,61 @@
     line-height: 1.2;
     word-wrap: break-word;
   }
-  
+
   /* Old monthly grid styles (hidden on mobile) */
   .calendar-day-header {
     font-size: 9px;
     padding: 2px;
   }
-  
+
   .calendar-cell {
     min-height: 65px;
     height: 65px;
     padding: var(--spacing-xs);
   }
-  
+
   .calendar-date-number {
     font-size: 10px;
   }
-  
+
   .calendar-task {
     padding: 2px 3px;
     font-size: 9px;
     min-height: 18px;
   }
-  
+
   .calendar-task-course {
     font-size: 9px;
   }
-  
+
   .calendar-task-content .calendar-task-title {
     font-size: 8px;
   }
-  
+
   .calendar-task .task-type-badge {
     padding: 1px 3px;
     font-size: 8px;
   }
-  
+
   .calendar-task-more {
     font-size: 8px;
     padding: 2px;
     min-height: 16px;
   }
-  
+
   .calendar-task-count {
     font-size: 8px;
     padding: 1px 3px;
   }
-  
+
   .calendar-empty-state {
     display: flex !important;
   }
-  
+
   .calendar-empty-state i {
     font-size: 2.5rem;
   }
-  
+
   .calendar-empty-state p {
     font-size: var(--font-sm);
   }
@@ -701,63 +709,63 @@
   .calendar-header {
     padding: var(--spacing-xs) var(--spacing-sm);
   }
-  
+
   .calendar-month-year {
     font-size: var(--font-sm);
   }
-  
+
   .calendar-nav-btn,
   .calendar-close-btn {
     min-width: 36px;
     min-height: 36px;
   }
-  
+
   .calendar-grid-container {
     padding: 4px;
   }
-  
+
   .calendar-day-header {
     font-size: 8px;
     padding: 1px;
   }
-  
+
   .calendar-grid {
     gap: 1px;
   }
-  
+
   .calendar-cell {
     min-height: 60px;
     height: 60px;
     padding: 2px;
   }
-  
+
   .calendar-date-number {
     font-size: 9px;
   }
-  
+
   .calendar-task {
     padding: 1px 2px;
     font-size: 8px;
     min-height: 16px;
   }
-  
+
   .calendar-task-course {
     font-size: 8px;
   }
-  
+
   .calendar-task-content .calendar-task-title {
     font-size: 7px;
   }
-  
+
   .calendar-task .task-type-badge {
     font-size: 7px;
     padding: 1px 2px;
   }
-  
+
   .calendar-task-more {
     font-size: 7px;
   }
-  
+
   .calendar-task-count {
     font-size: 7px;
     padding: 1px 2px;
@@ -779,7 +787,8 @@
   display: none;
   justify-content: center;
   align-items: center;
-  z-index: 10001; /* Higher than calendar modal */
+  z-index: 10001;
+  /* Higher than calendar modal */
   animation: fadeIn 0.3s ease-in-out;
 }
 
@@ -941,27 +950,27 @@
     width: 95%;
     max-height: 90vh;
   }
-  
+
   .calendar-task-detail-header {
     padding: var(--spacing-md);
   }
-  
+
   .task-detail-title {
     font-size: var(--font-lg);
   }
-  
+
   .calendar-task-detail-body {
     padding: var(--spacing-md);
   }
-  
+
   .task-detail-field {
     margin-bottom: var(--spacing-md);
   }
-  
+
   .task-detail-label {
     font-size: var(--font-xs);
   }
-  
+
   .task-detail-value {
     font-size: var(--font-sm);
   }
@@ -974,15 +983,15 @@
     max-height: 100vh;
     border-radius: 0;
   }
-  
+
   .calendar-task-detail-header {
     padding: var(--spacing-sm);
   }
-  
+
   .task-detail-title {
     font-size: var(--font-md);
   }
-  
+
   .calendar-task-detail-body {
     padding: var(--spacing-sm);
   }

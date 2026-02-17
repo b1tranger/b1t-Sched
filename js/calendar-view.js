@@ -5,30 +5,30 @@
 
 class CalendarView {
   constructor() {
-      // Current date for reference
-      this.currentDate = new Date();
+    // Current date for reference
+    this.currentDate = new Date();
 
-      // Displayed month and year (can be different from current)
-      this.displayedMonth = this.currentDate.getMonth();
-      this.displayedYear = this.currentDate.getFullYear();
+    // Displayed month and year (can be different from current)
+    this.displayedMonth = this.currentDate.getMonth();
+    this.displayedYear = this.currentDate.getFullYear();
 
-      // Modal reference
-      this.modal = null;
+    // Modal reference
+    this.modal = null;
 
-      // Open state flag
-      this.isOpen = false;
+    // Open state flag
+    this.isOpen = false;
 
-      // Store the element that had focus before modal opened
-      this.previouslyFocusedElement = null;
+    // Store the element that had focus before modal opened
+    this.previouslyFocusedElement = null;
 
-      // Store bound event handler for focus trap
-      this.handleFocusTrap = this.trapFocus.bind(this);
+    // Store bound event handler for focus trap
+    this.handleFocusTrap = this.trapFocus.bind(this);
 
-      // Date navigation limits (prevent navigation beyond reasonable ranges)
-      // Allow navigation 100 years in the past and future
-      this.minYear = this.currentDate.getFullYear() - 100;
-      this.maxYear = this.currentDate.getFullYear() + 100;
-    }
+    // Date navigation limits (prevent navigation beyond reasonable ranges)
+    // Allow navigation 100 years in the past and future
+    this.minYear = this.currentDate.getFullYear() - 100;
+    this.maxYear = this.currentDate.getFullYear() + 100;
+  }
 
 
   /**
@@ -40,10 +40,10 @@ class CalendarView {
   init() {
     // Call createButton() to insert the calendar button (if not already present)
     this.createButton();
-    
+
     // Call createModal() to build modal structure
     this.createModal();
-    
+
     // Call attachEventListeners() to wire up interactions
     this.attachEventListeners();
   }
@@ -64,7 +64,7 @@ class CalendarView {
     // Find the Pending Tasks section header
     const sectionHeaders = document.querySelectorAll('.section-header h2');
     let pendingTasksHeader = null;
-    
+
     for (const header of sectionHeaders) {
       if (header.textContent.includes('Pending Tasks')) {
         pendingTasksHeader = header.parentElement;
@@ -205,56 +205,62 @@ class CalendarView {
    * Requirements: 1.2, 10.1
    */
   open() {
-      console.log('Calendar open() called');
-      console.log('Modal exists:', !!this.modal);
-      
-      // Ensure modal is created
-      if (!this.modal) {
-        console.warn('Modal not found, creating it now');
-        this.createModal();
-      }
-      
-      // Store the currently focused element to restore later
-      this.previouslyFocusedElement = document.activeElement;
+    console.log('Calendar open() called');
+    console.log('Modal exists:', !!this.modal);
 
-      // Set isOpen flag to true
-      this.isOpen = true;
-
-      // Show modal (display: flex)
-      if (this.modal) {
-        console.log('Setting modal display to flex');
-        this.modal.style.display = 'flex';
-      } else {
-        console.error('Modal element not found even after createModal()!');
-        return;
-      }
-
-      // Show loading indicator before rendering
-      this.showLoading();
-
-      // Call renderCalendar() to populate content
-      try {
-        this.renderCalendar();
-        // Hide loading indicator when rendering is complete
-        this.hideLoading();
-      } catch (error) {
-        // Handle errors gracefully - log warning and show error state
-        console.warn('Error rendering calendar:', error);
-        this.hideLoading();
-        this.showError();
-      }
-
-      // Set focus to modal container for accessibility
-      if (this.modal) {
-        this.modal.focus();
-      }
-
-      // Add focus trap event listener
-      document.addEventListener('keydown', this.handleFocusTrap);
-
-      // Prevent background scrolling (body overflow: hidden)
-      document.body.style.overflow = 'hidden';
+    // Ensure modal is created
+    if (!this.modal) {
+      console.warn('Modal not found, creating it now');
+      this.createModal();
     }
+
+    // Reset to current month when opening
+    const now = new Date();
+    this.displayedMonth = now.getMonth();
+    this.displayedYear = now.getFullYear();
+    console.log('[CalendarView] Reset to current month:', this.displayedMonth, 'year:', this.displayedYear);
+
+    // Store the currently focused element to restore later
+    this.previouslyFocusedElement = document.activeElement;
+
+    // Set isOpen flag to true
+    this.isOpen = true;
+
+    // Show modal (display: flex)
+    if (this.modal) {
+      console.log('Setting modal display to flex');
+      this.modal.style.display = 'flex';
+    } else {
+      console.error('Modal element not found even after createModal()!');
+      return;
+    }
+
+    // Show loading indicator before rendering
+    this.showLoading();
+
+    // Call renderCalendar() to populate content
+    try {
+      this.renderCalendar();
+      // Hide loading indicator when rendering is complete
+      this.hideLoading();
+    } catch (error) {
+      // Handle errors gracefully - log warning and show error state
+      console.warn('Error rendering calendar:', error);
+      this.hideLoading();
+      this.showError();
+    }
+
+    // Set focus to modal container for accessibility
+    if (this.modal) {
+      this.modal.focus();
+    }
+
+    // Add focus trap event listener
+    document.addEventListener('keydown', this.handleFocusTrap);
+
+    // Prevent background scrolling (body overflow: hidden)
+    document.body.style.overflow = 'hidden';
+  }
 
 
   /**
@@ -265,21 +271,21 @@ class CalendarView {
   close() {
     // Set isOpen flag to false
     this.isOpen = false;
-    
+
     // Hide modal (display: none)
     if (this.modal) {
       this.modal.style.display = 'none';
     }
-    
+
     // Remove focus trap event listener
     document.removeEventListener('keydown', this.handleFocusTrap);
-    
+
     // Restore focus to the calendar button
     if (this.previouslyFocusedElement) {
       this.previouslyFocusedElement.focus();
       this.previouslyFocusedElement = null;
     }
-    
+
     // Restore background scrolling (body overflow: '')
     document.body.style.overflow = '';
   }
@@ -292,20 +298,20 @@ class CalendarView {
   trapFocus(e) {
     // Only trap focus when modal is open
     if (!this.isOpen || !this.modal) return;
-    
+
     // Only handle Tab key
     if (e.key !== 'Tab') return;
-    
+
     // Get all focusable elements within the modal
     const focusableElements = this.modal.querySelectorAll(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
     );
-    
+
     if (focusableElements.length === 0) return;
-    
+
     const firstElement = focusableElements[0];
     const lastElement = focusableElements[focusableElements.length - 1];
-    
+
     // If Shift+Tab on first element, move to last element
     if (e.shiftKey && document.activeElement === firstElement) {
       e.preventDefault();
@@ -400,13 +406,13 @@ class CalendarView {
   getTasksForMonth() {
     // Check if App.currentTasks exists (support both window and global for testing)
     const App = (typeof window !== 'undefined' ? window.App : global.App);
-    
+
     console.log('[CalendarView] getTasksForMonth called');
     console.log('[CalendarView] App exists:', !!App);
     console.log('[CalendarView] App.currentTasks exists:', !!App?.currentTasks);
     console.log('[CalendarView] App.currentTasks length:', App?.currentTasks?.length);
     console.log('[CalendarView] Displayed month:', this.displayedMonth, 'year:', this.displayedYear);
-    
+
     if (!App || !Array.isArray(App.currentTasks)) {
       console.warn('[CalendarView] App.currentTasks not available');
       return [];
@@ -414,7 +420,7 @@ class CalendarView {
 
     const filteredTasks = App.currentTasks.filter(task => {
       console.log('[CalendarView] Checking task:', task.id, 'deadline:', task.deadline);
-      
+
       // Filter out tasks with null or undefined deadlines
       if (!task.deadline) {
         console.log('[CalendarView] Task has no deadline:', task.id);
@@ -431,13 +437,13 @@ class CalendarView {
       let deadline;
       try {
         deadline = task.deadline.toDate ? task.deadline.toDate() : new Date(task.deadline);
-        
+
         // Validate that the deadline is a valid date
         if (isNaN(deadline.getTime())) {
           console.warn('[CalendarView] Invalid deadline format for task:', task.id, 'deadline:', task.deadline);
           return false;
         }
-        
+
         console.log('[CalendarView] Task deadline parsed:', task.id, 'date:', deadline, 'month:', deadline.getMonth(), 'year:', deadline.getFullYear());
       } catch (error) {
         console.warn('[CalendarView] Error parsing deadline for task:', task.id, 'error:', error.message);
@@ -445,14 +451,14 @@ class CalendarView {
       }
 
       // Check if deadline is in the displayed month and year
-      const matches = deadline.getMonth() === this.displayedMonth && 
-             deadline.getFullYear() === this.displayedYear;
-      
+      const matches = deadline.getMonth() === this.displayedMonth &&
+        deadline.getFullYear() === this.displayedYear;
+
       console.log('[CalendarView] Task matches month/year:', task.id, matches);
-      
+
       return matches;
     });
-    
+
     console.log('[CalendarView] Filtered tasks count:', filteredTasks.length);
     return filteredTasks;
   }
@@ -472,7 +478,7 @@ class CalendarView {
     let deadline;
     try {
       deadline = task.deadline.toDate ? task.deadline.toDate() : new Date(task.deadline);
-      
+
       // Validate that the deadline is a valid date
       if (isNaN(deadline.getTime())) {
         console.warn('Invalid deadline format for overdue check, task:', task.id);
@@ -530,12 +536,12 @@ class CalendarView {
         taskElement.setAttribute('data-task-id', task.id);
         taskElement.setAttribute('tabindex', '0');
         taskElement.setAttribute('role', 'button');
-        
+
         // Handle missing task data with placeholders
         const taskTitle = task.title || 'Untitled Task';
         const taskType = task.type || 'other';
         const taskCourse = task.course || 'Unknown course';
-        
+
         // Log warning for missing critical data
         if (!task.title) {
           console.warn('Task missing title, task ID:', task.id);
@@ -543,7 +549,7 @@ class CalendarView {
         if (!task.course) {
           console.warn('Task missing course, task ID:', task.id);
         }
-        
+
         taskElement.setAttribute('aria-label', `${taskTitle}, ${taskType} for ${taskCourse}`);
 
         // Apply overdue styling if task is overdue
@@ -555,7 +561,7 @@ class CalendarView {
         const badge = document.createElement('span');
         badge.className = `task-type-badge ${taskType}`;
         badge.setAttribute('aria-hidden', 'true');
-        
+
         // Badge text based on task type
         const badgeText = {
           'assignment': 'A',
@@ -655,24 +661,24 @@ class CalendarView {
       this.renderWeeklyView();
       return;
     }
-    
+
     // Ensure modal exists
     if (!this.modal) {
       console.error('Modal not initialized');
       return;
     }
-    
+
     // Get the calendar grid structure
     const gridData = this.generateCalendarGrid();
 
     // Get the calendar grid container - try multiple methods
     let gridContainer = document.getElementById('calendar-grid');
-    
+
     // If not found by ID, try querySelector within modal
     if (!gridContainer && this.modal) {
       gridContainer = this.modal.querySelector('#calendar-grid');
     }
-    
+
     if (!gridContainer) {
       console.error('Calendar grid container not found');
       console.log('Modal exists:', !!this.modal);
@@ -735,7 +741,7 @@ class CalendarView {
     const tasks = this.getTasksForMonth();
     const emptyState = document.getElementById('calendar-empty-state');
     const gridContainerElement = document.querySelector('.calendar-grid-container');
-    
+
     if (emptyState && gridContainerElement) {
       if (tasks.length === 0) {
         emptyState.style.display = 'flex';
@@ -764,15 +770,15 @@ class CalendarView {
       console.error('Modal not initialized');
       return;
     }
-    
+
     // Try to find grid container - use querySelector within modal
     let gridContainer = this.modal.querySelector('.calendar-grid-container');
-    
+
     // Fallback to document-level query
     if (!gridContainer) {
       gridContainer = document.querySelector('.calendar-grid-container');
     }
-    
+
     if (!gridContainer) {
       console.error('Calendar grid container not found');
       console.log('Modal exists:', !!this.modal);
@@ -813,18 +819,21 @@ class CalendarView {
     // Update header
     this.updateHeader();
 
-    // Handle empty state
+    // Handle empty state - check if there are any tasks in the weekly view
     const tasks = this.getTasksForMonth();
     const emptyState = document.getElementById('calendar-empty-state');
-    
+
+    console.log('[CalendarView] renderWeeklyView - tasks found:', tasks.length);
+    console.log('[CalendarView] renderWeeklyView - emptyState element:', !!emptyState);
+    console.log('[CalendarView] renderWeeklyView - weeklyContainer:', !!weeklyContainer);
+
+
     if (emptyState) {
-      if (tasks.length === 0) {
-        emptyState.style.display = 'flex';
-        weeklyContainer.style.display = 'none';
-      } else {
-        emptyState.style.display = 'none';
-        weeklyContainer.style.display = 'block';
-      }
+      // Always show the weekly container on mobile, even if current month has no tasks
+      // This allows scrolling to adjacent weeks/months where tasks might exist
+      console.log('[CalendarView] Ensuring weekly container is visible');
+      emptyState.style.display = 'none';
+      weeklyContainer.style.display = 'block';
     }
   }
 
@@ -836,10 +845,10 @@ class CalendarView {
     const weeks = [];
     const firstDay = new Date(this.displayedYear, this.displayedMonth, 1);
     const lastDay = new Date(this.displayedYear, this.displayedMonth + 1, 0);
-    
+
     let currentWeekStart = new Date(firstDay);
     currentWeekStart.setDate(firstDay.getDate() - firstDay.getDay()); // Start on Sunday
-    
+
     while (currentWeekStart <= lastDay) {
       const week = [];
       for (let i = 0; i < 7; i++) {
@@ -850,7 +859,7 @@ class CalendarView {
       weeks.push(week);
       currentWeekStart.setDate(currentWeekStart.getDate() + 7);
     }
-    
+
     return weeks;
   }
 
@@ -864,36 +873,36 @@ class CalendarView {
     const weekView = document.createElement('div');
     weekView.className = 'week-view';
     weekView.dataset.week = weekIndex;
-    
+
     // Day headers
     const header = document.createElement('div');
     header.className = 'week-days-header';
-    
+
     week.forEach(date => {
       const dayHeader = document.createElement('div');
       dayHeader.className = 'day-header';
       if (isToday(date)) {
         dayHeader.classList.add('today');
       }
-      
+
       const dayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()];
       dayHeader.innerHTML = `${dayName}<br>${date.getDate()}`;
       header.appendChild(dayHeader);
     });
-    
+
     weekView.appendChild(header);
-    
+
     // Day columns with tasks
     const content = document.createElement('div');
     content.className = 'week-days-content';
-    
+
     week.forEach(date => {
       const column = this.createDayColumn(date);
       content.appendChild(column);
     });
-    
+
     weekView.appendChild(content);
-    
+
     return weekView;
   }
 
@@ -905,27 +914,27 @@ class CalendarView {
   createDayColumn(date) {
     const column = document.createElement('div');
     column.className = 'day-column';
-    
+
     // Get tasks for this date
     const tasks = this.getTasksForDate(date);
-    
+
     tasks.forEach(task => {
       const taskEl = document.createElement('div');
       taskEl.className = 'day-task';
       taskEl.setAttribute('data-task-id', task.id);
       taskEl.setAttribute('tabindex', '0');
       taskEl.setAttribute('role', 'button');
-      
+
       if (this.isTaskOverdue(task)) {
         taskEl.classList.add('overdue');
       }
-      
+
       const taskCourse = task.course || 'Unknown course';
       const taskTitle = task.title || '';
       const taskType = task.type || 'other';
-      
+
       taskEl.setAttribute('aria-label', `${taskCourse}, ${taskType}`);
-      
+
       // Add task type badge
       const badge = document.createElement('span');
       badge.className = `task-type-badge ${taskType}`;
@@ -938,21 +947,21 @@ class CalendarView {
         'other': 'O'
       };
       badge.textContent = badgeText[taskType] || 'O';
-      
+
       // Add course name
       const course = document.createElement('div');
       course.className = 'day-task-course';
       course.textContent = taskCourse;
-      
+
       taskEl.appendChild(badge);
       taskEl.appendChild(course);
-      
+
       // Add click event listener
       taskEl.addEventListener('click', (e) => {
         e.stopPropagation();
         this.showTaskDetails(task.id);
       });
-      
+
       // Add keyboard event listener
       taskEl.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -961,10 +970,10 @@ class CalendarView {
           this.showTaskDetails(task.id);
         }
       });
-      
+
       column.appendChild(taskEl);
     });
-    
+
     return column;
   }
 
@@ -975,10 +984,15 @@ class CalendarView {
    */
   getTasksForDate(date) {
     const dateKey = this.formatDateKey(date);
-    const allTasks = this.getTasksForMonth();
-    
-    return allTasks.filter(task => {
+    // Use App.currentTasks directly to ensure we find tasks for adjacent months too
+    const App = (typeof window !== 'undefined' ? window.App : global.App);
+    if (!App || !Array.isArray(App.currentTasks)) return [];
+
+    return App.currentTasks.filter(task => {
       if (!task.deadline) return false;
+      // Skip tasks with "No official Time limit"
+      if (task.deadline === "No official Time limit") return false;
+
       try {
         const taskDate = task.deadline.toDate ? task.deadline.toDate() : new Date(task.deadline);
         if (isNaN(taskDate.getTime())) return false;
@@ -1009,18 +1023,18 @@ class CalendarView {
   setupWeekScrolling(scrollContainer) {
     let startX = 0;
     let scrollLeft = 0;
-    
+
     scrollContainer.addEventListener('touchstart', (e) => {
       startX = e.touches[0].pageX;
       scrollLeft = scrollContainer.scrollLeft;
     });
-    
+
     scrollContainer.addEventListener('touchmove', (e) => {
       const x = e.touches[0].pageX;
       const walk = (startX - x) * 2;
       scrollContainer.scrollLeft = scrollLeft + walk;
     });
-    
+
     // Snap to nearest week on scroll end
     let scrollTimeout;
     scrollContainer.addEventListener('scroll', () => {
@@ -1039,7 +1053,7 @@ class CalendarView {
     const weekWidth = window.innerWidth;
     const currentScroll = scrollContainer.scrollLeft;
     const nearestWeek = Math.round(currentScroll / weekWidth);
-    
+
     scrollContainer.scrollTo({
       left: nearestWeek * weekWidth,
       behavior: 'smooth'
@@ -1064,10 +1078,10 @@ class CalendarView {
       this.displayedMonth = 11;
       this.displayedYear--;
     }
-    
+
     // Show loading indicator before rendering
     this.showLoading();
-    
+
     try {
       this.renderCalendar();
       // Hide loading indicator when rendering is complete
@@ -1098,10 +1112,10 @@ class CalendarView {
       this.displayedMonth = 0;
       this.displayedYear++;
     }
-    
+
     // Show loading indicator before rendering
     this.showLoading();
-    
+
     try {
       this.renderCalendar();
       // Hide loading indicator when rendering is complete
@@ -1178,7 +1192,7 @@ class CalendarView {
   showSimpleTaskDetails(task) {
     // Create or get detail modal
     let detailModal = document.getElementById('calendar-task-detail-modal');
-    
+
     if (!detailModal) {
       detailModal = document.createElement('div');
       detailModal.id = 'calendar-task-detail-modal';
@@ -1214,7 +1228,7 @@ class CalendarView {
     if (task.deadline) {
       try {
         const deadline = task.deadline.toDate ? task.deadline.toDate() : new Date(task.deadline);
-        
+
         // Validate that the deadline is a valid date
         if (isNaN(deadline.getTime())) {
           console.warn('Task detail view: Invalid deadline format, task ID:', task.id);
@@ -1353,7 +1367,7 @@ class CalendarView {
     if (this.isOpen) {
       // Show loading indicator before rendering
       this.showLoading();
-      
+
       try {
         // If open, call renderCalendar() to refresh display
         // This handles task additions, edits, and deletions
@@ -1377,11 +1391,11 @@ class CalendarView {
   showLoading() {
     // Guard for test environments where document may not be defined
     if (typeof document === 'undefined') return;
-    
+
     const loadingState = document.getElementById('calendar-loading');
     const gridContainer = document.querySelector('.calendar-grid-container');
     const emptyState = document.getElementById('calendar-empty-state');
-    
+
     if (loadingState) {
       loadingState.style.display = 'flex';
     }
@@ -1401,9 +1415,9 @@ class CalendarView {
   hideLoading() {
     // Guard for test environments where document may not be defined
     if (typeof document === 'undefined') return;
-    
+
     const loadingState = document.getElementById('calendar-loading');
-    
+
     if (loadingState) {
       loadingState.style.display = 'none';
     }
@@ -1417,11 +1431,11 @@ class CalendarView {
   showError() {
     // Guard for test environments where document may not be defined
     if (typeof document === 'undefined') return;
-    
+
     const gridContainer = document.querySelector('.calendar-grid-container');
     const emptyState = document.getElementById('calendar-empty-state');
     const loadingState = document.getElementById('calendar-loading');
-    
+
     // Hide other states
     if (gridContainer) {
       gridContainer.style.display = 'none';
@@ -1429,7 +1443,7 @@ class CalendarView {
     if (loadingState) {
       loadingState.style.display = 'none';
     }
-    
+
     // Show error in empty state container
     if (emptyState) {
       emptyState.innerHTML = '<i class="fas fa-exclamation-triangle"></i><p>Error loading calendar. Please try again.</p>';
@@ -1502,7 +1516,7 @@ class CalendarView {
     const prevBtn = document.getElementById('calendar-prev-month');
     if (prevBtn) {
       prevBtn.addEventListener('click', () => this.previousMonth());
-      
+
       // Add keyboard support for Enter and Space keys
       prevBtn.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -1516,7 +1530,7 @@ class CalendarView {
     const nextBtn = document.getElementById('calendar-next-month');
     if (nextBtn) {
       nextBtn.addEventListener('click', () => this.nextMonth());
-      
+
       // Add keyboard support for Enter and Space keys
       nextBtn.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -1569,8 +1583,8 @@ function getDaysInMonth(year, month) {
 function isToday(date) {
   const today = new Date();
   return date.getDate() === today.getDate() &&
-         date.getMonth() === today.getMonth() &&
-         date.getFullYear() === today.getFullYear();
+    date.getMonth() === today.getMonth() &&
+    date.getFullYear() === today.getFullYear();
 }
 
 /**
@@ -1581,26 +1595,26 @@ function isToday(date) {
  */
 function groupTasksByDate(tasks) {
   const grouped = {};
-  
+
   tasks.forEach(task => {
     if (!task.deadline) return;
-    
+
     try {
       // Handle both Firestore Timestamp and JavaScript Date
       const deadline = task.deadline.toDate ? task.deadline.toDate() : new Date(task.deadline);
-      
+
       // Validate that the deadline is a valid date
       if (isNaN(deadline.getTime())) {
         console.warn('Invalid deadline format in groupTasksByDate, task ID:', task.id);
         return;
       }
-      
+
       // Format date as YYYY-MM-DD
       const year = deadline.getFullYear();
       const month = String(deadline.getMonth() + 1).padStart(2, '0');
       const day = String(deadline.getDate()).padStart(2, '0');
       const dateKey = `${year}-${month}-${day}`;
-      
+
       if (!grouped[dateKey]) {
         grouped[dateKey] = [];
       }
@@ -1609,7 +1623,7 @@ function groupTasksByDate(tasks) {
       console.warn('Error grouping task by date, task ID:', task.id, 'error:', error.message);
     }
   });
-  
+
   return grouped;
 }
 
