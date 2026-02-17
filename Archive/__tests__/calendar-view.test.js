@@ -19,7 +19,7 @@ const {
   getDaysInMonth,
   isToday,
   groupTasksByDate
-} = await import('../js/calendar-view.js');
+} = await import('../../js/calendar-view.js');
 
 describe('Calendar View - Date Utilities', () => {
   describe('getFirstDayOfMonth', () => {

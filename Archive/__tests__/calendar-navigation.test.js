@@ -12,7 +12,7 @@ global.App = {
 };
 
 // Import the calendar view module
-const { CalendarView } = await import('../js/calendar-view.js');
+const { CalendarView } = await import('../../js/calendar-view.js');
 
 describe('Calendar View - Month Navigation', () => {
   describe('previousMonth', () => {

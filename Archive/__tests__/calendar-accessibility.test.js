@@ -5,7 +5,7 @@
  */
 
 // Import the calendar view module
-const { CalendarView } = await import('../js/calendar-view.js');
+const { CalendarView } = await import('../../js/calendar-view.js');
 
 describe('Calendar View - Accessibility (Task 11.1)', () => {
   let calendar;
