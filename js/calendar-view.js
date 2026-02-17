@@ -1238,17 +1238,7 @@ function groupTasksByDate(tasks) {
   return grouped;
 }
 
-// Export for ES modules (testing environment)
-export {
-  CalendarView,
-  getFirstDayOfMonth,
-  getLastDayOfMonth,
-  getDaysInMonth,
-  isToday,
-  groupTasksByDate
-};
-
-// Also expose to global scope for browser environment
+// Expose to global scope for browser environment
 if (typeof window !== 'undefined') {
   window.CalendarView = CalendarView;
   window.getFirstDayOfMonth = getFirstDayOfMonth;
