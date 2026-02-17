@@ -248,3 +248,47 @@ async function staleWhileRevalidate(request, cacheName) {
 }
 
 console.log('[Service Worker] Loaded');
+
+
+/**
+ * Notification click event - handle notification clicks
+ */
+self.addEventListener('notificationclick', (event) => {
+  console.log('[Service Worker] Notification clicked:', event.notification.tag);
+  
+  event.notification.close();
+  
+  // Get notification data
+  const data = event.notification.data || {};
+  const type = data.type || 'task'; // 'task' or 'event'
+  const id = data.id || '';
+  
+  // Open or focus the app window
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then(clientList => {
+        // Check if there's already a window open
+        for (const client of clientList) {
+          if (client.url.includes(self.registration.scope) && 'focus' in client) {
+            return client.focus().then(client => {
+              // Navigate to dashboard
+              client.postMessage({
+                type: 'NOTIFICATION_CLICK',
+                notificationType: type,
+                id: id
+              });
+              return client;
+            });
+          }
+        }
+        
+        // No window open, open a new one
+        if (clients.openWindow) {
+          return clients.openWindow('/#/dashboard');
+        }
+      })
+      .catch(error => {
+        console.error('[Service Worker] Error handling notification click:', error);
+      })
+  );
+});

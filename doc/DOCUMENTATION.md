@@ -29,7 +29,7 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **Firebase Authentication** - Secure email/password login system with email verification and password reset
 - **User Profiles** - Student ID, department, semester, and section
 - **Personalized Dashboard** - Content filtered by user's academic details
-- **Task Management** - View pending assignments and exams with deadlines (or "No official Time limit"), with basic markdown (`**bold**`, `*italic*`, `` `code` ``, `[link](url)`), and clickable links, collapsible descriptions (2-line truncation)
+- **Task Management** - View pending assignments and exams with deadlines (or "No official Time limit"), with basic markdown (`**bold**`, `*italic*`, `` `code` ``, `[link](url)`), and clickable links, collapsible descriptions (2-line truncation). "Set Deadline" is now the default option when adding tasks.
 - **Task Completion** - Checkboxes to mark tasks complete, persistent per-user
 - **Task Editing** - Users can edit their own tasks; admins can edit all tasks; Course is required field
 - **Event Calendar** - Track upcoming academic events with basic markdown, clickable links, collapsible descriptions (2-line truncation), and department scope badge (ALL/CSE/etc.)
@@ -37,7 +37,9 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **Resource Links** - Quick access to department-specific resources with built-in PDF viewer (desktop: Google Docs Viewer in modal; mobile: opens in new tab)
 - **Google Classroom Integration** - View all assignments and announcements from enrolled courses in a unified interface with OAuth authentication
 - **Progressive Web App (PWA)** - Installable app with offline support, service worker caching, and automatic updates
-- **Push Notifications** - Real-time browser notifications for new tasks and events
+- **Push Notifications** - Real-time browser notifications for new tasks and events (mobile-compatible via Service Worker API with vibration support)
+- **Session Security** - Automatic logout after 1 hour of inactivity, with activity-based timer reset for enhanced security
+- **Role Badges** - Visual indicators for CR and Faculty contributors in task cards and contribution lists
 - **Responsive Design** - Works on desktop, tablet, and mobile
 - **Maroon Theme** - Professional dark maroon and off-white color scheme
 - **Admin Features** - Task reset, task/event delete, event creation, user management with password reset and deletion
@@ -49,7 +51,7 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **Profile Change Cooldown** - Users can only change profile once per 30 days (anti-spam)
 - **Two-Column Layout** - Events sidebar on desktop, slide-out panel (40vw) on mobile
 - **Notice Viewer** - View UCAM university notices with PDF preview (desktop modal with split-pane layout; mobile slide-out sidebar), powered by Vercel serverless backend with local caching
-- **Note Taking** - Personal note-taking feature with markdown support, auto-save, and automatic file upload via tmpfiles.org API
+- **Note Taking** - Personal note-taking feature with markdown support, auto-save, and automatic file upload via tmpfiles.org API with direct download support (no new tab required)
 - **Task Filtering** - Filter pending tasks by type (Assignment, Homework, Exam, Project, Presentation, Other)
 - **Global Contributions** - View a leaderboard of top contributors (group-specific or global across all departments)
 - **User Counter** - Live count of total registered users displayed on the dashboard
@@ -319,20 +321,37 @@ const db = firebase.firestore();   // Firestore instance
 
 ### 2. Auth (auth.js)
 
-**Purpose:** Handle user authentication
+**Purpose:** Handle user authentication and session management
+
+**Session Management:**
+- Automatic logout after 1 hour of inactivity for enhanced security
+- Activity-based timer reset on user interactions (mouse, keyboard, touch, scroll)
+- Session timer starts on login and clears on logout
+
+**Properties:**
+- `SESSION_TIMEOUT`: 3600000 ms (1 hour)
+- `sessionTimer`: Timer reference for session timeout
+- `currentUser`: Current authenticated user object
+- `cacheManager`: Cache manager instance
 
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
 | `signup(email, password)` | string, string | `{success, user/error}` | Create new user account |
-| `login(email, password)` | string, string | `{success, user/error}` | Sign in existing user |
-| `logout()` | - | `{success, error?}` | Sign out current user |
-| `onAuthStateChanged(callback)` | function | unsubscribe function | Listen for auth state changes |
+| `login(email, password)` | string, string | `{success, user/error}` | Sign in existing user and start session timer |
+| `logout()` | - | `{success, error?}` | Sign out current user and clear session timer |
+| `onAuthStateChanged(callback)` | function | unsubscribe function | Listen for auth state changes; manages session timer |
 | `getCurrentUser()` | - | User object or null | Get current Firebase user |
 | `getUserId()` | - | string or null | Get current user's UID |
 | `getUserEmail()` | - | string or null | Get current user's email |
 | `getErrorMessage(errorCode)` | string | string | Convert Firebase error codes to user-friendly messages |
 | `resendVerificationEmail()` | - | `{success, message/error}` | Resend email verification link |
 | `sendPasswordResetEmail(email)` | string | `{success, message/error}` | Send password reset link to email |
+| `startSessionTimer()` | - | void | Start 1-hour session timeout timer |
+| `clearSessionTimer()` | - | void | Clear active session timeout timer |
+| `resetSessionTimer()` | - | void | Reset session timer on user activity |
+
+**Activity Listeners:**
+The module automatically listens for user activity events (`mousedown`, `keydown`, `scroll`, `touchstart`, `click`) to reset the session timer, ensuring active users remain logged in while inactive sessions expire after 1 hour.
 
 **Error Messages Handled:**
 - `auth/email-already-in-use`
@@ -1324,7 +1343,7 @@ service cloud.firestore {
   - How b1t-Sched works (shared tasks, individual checkboxes)
   - User roles (Admin, CR, Faculty, Blocked) and their permissions
   - Profile settings and 30-day change cooldown disclaimer
-- **Note Taking** - Personal note modal with markdown support, auto-save, file upload via tmpfiles.org API, and live preview
+- **Note Taking** - Personal note modal with markdown support, auto-save, file upload via tmpfiles.org API with direct download support, and live preview
 - **Modals:**
   - Add Task Modal - Task creation form with Course as required field and two deadline options: "No official Time limit" or a specific date/time
   - Old Tasks Modal - List of tasks past 12h grace period (with completion status)
@@ -1442,6 +1461,7 @@ Router.onRouteChange((routeName) => {
 | 2.24.0 | Feb 2026 | Faculty Role Implementation: Faculty users can view department-wide tasks (no semester/section filtering), create events for their department, edit/delete their own events. Faculty toggle available in user management. Updated Firestore security rules with `isFaculty()` helper. New method: `DB.getFacultyTasks()`. Updated `js/db.js`, `js/app.js`, `js/ui.js`, `firestore.rules`. |
 | 2.25.0 | Feb 2026 | Note Taking Feature: Personal note-taking with markdown support, auto-save (500ms debounce), automatic file upload via tmpfiles.org API (max 100MB), live preview pane. Files uploaded automatically insert markdown links at cursor position. Notes stored in Firestore (max 1MB). New files: `js/notes.js`, `css/note.css`. Updated `index.html` with note modal and hidden file input. |
 | 2.25.1 | Feb 2026 | Bug Fixes: Added Faculty toggle button active state CSS (blue background). Improved notice API error handling with cache fallback - when server returns 503, app loads cached notices with warning banner. Fixed notification prompt inline color styles. Updated `css/dashboard.css`, `js/notice.js`. |
+| 2.26.0 | Feb 2026 | UX & Security Improvements: (1) Deadline options reordered - "Set Deadline" now appears first and is default in Add/Edit Task modals. (2) File downloads in notes now work directly without opening new tab (added `download` attribute to tmpfiles.org links). (3) Automatic session timeout - users are logged out after 1 hour of inactivity for security, with activity-based timer reset. (4) Role badges - CR and Faculty contributors now have colored badges in task cards and contribution list. (5) Mobile notifications fixed - now use Service Worker API for iOS Safari and Chrome on Android compatibility, with vibration and badge support. Updated `index.html`, `js/utils.js`, `js/auth.js`, `js/app.js`, `js/ui.js`, `js/notification-manager.js`, `sw.js`, `css/components.css`. |
 
 ---
 
@@ -1457,4 +1477,4 @@ Router.onRouteChange((routeName) => {
 ---
 
 *Documentation last updated: February 17, 2026*
-*Version: 2.25.1*
+*Version: 2.26.0*

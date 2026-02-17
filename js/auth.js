@@ -5,12 +5,54 @@
 const Auth = {
   currentUser: null,
   cacheManager: null,
+  sessionTimer: null,
+  SESSION_TIMEOUT: 60 * 60 * 1000, // 1 hour in milliseconds
 
   // Initialize cache manager
   initCacheManager() {
     if (!this.cacheManager && typeof CacheManager !== 'undefined') {
       this.cacheManager = new CacheManager();
       console.log('[Auth] Cache manager initialized');
+    }
+  },
+
+  // Start session timeout timer
+  startSessionTimer() {
+    // Clear any existing timer
+    this.clearSessionTimer();
+    
+    // Set new timer for 1 hour
+    this.sessionTimer = setTimeout(async () => {
+      console.log('[Auth] Session expired after 1 hour of inactivity');
+      await this.logout();
+      
+      // Show message to user
+      if (typeof UI !== 'undefined' && UI.showMessage) {
+        UI.showMessage('Your session has expired for security. Please log in again.', 'info');
+      }
+      
+      // Redirect to login
+      if (typeof App !== 'undefined' && App.showView) {
+        App.showView('login');
+      }
+    }, this.SESSION_TIMEOUT);
+    
+    console.log('[Auth] Session timer started (1 hour)');
+  },
+
+  // Clear session timeout timer
+  clearSessionTimer() {
+    if (this.sessionTimer) {
+      clearTimeout(this.sessionTimer);
+      this.sessionTimer = null;
+      console.log('[Auth] Session timer cleared');
+    }
+  },
+
+  // Reset session timer on user activity
+  resetSessionTimer() {
+    if (this.currentUser) {
+      this.startSessionTimer();
     }
   },
 
@@ -38,6 +80,9 @@ const Auth = {
       this.currentUser = userCredential.user;
       console.log('User logged in:', this.currentUser.uid);
       
+      // Start session timeout timer
+      this.startSessionTimer();
+      
       // Cache authentication state
       this.initCacheManager();
       if (this.cacheManager) {
@@ -58,6 +103,9 @@ const Auth = {
   // Logout user
   async logout() {
     try {
+      // Clear session timer
+      this.clearSessionTimer();
+      
       // Clean up notification system
       if (window.FirestoreListenerManager) {
         FirestoreListenerManager.unsubscribeAll();
@@ -108,8 +156,11 @@ const Auth = {
     return auth.onAuthStateChanged((user) => {
       this.currentUser = user;
       
-      // Cache auth state when user is authenticated
+      // Start or clear session timer based on auth state
       if (user) {
+        this.startSessionTimer();
+        
+        // Cache auth state when user is authenticated
         this.initCacheManager();
         if (this.cacheManager) {
           this.cacheManager.cacheAuthState({
@@ -118,6 +169,8 @@ const Auth = {
             emailVerified: user.emailVerified
           });
         }
+      } else {
+        this.clearSessionTimer();
       }
       
       callback(user);
@@ -186,3 +239,19 @@ const Auth = {
     }
   }
 };
+
+
+// Setup activity listeners to reset session timer
+if (typeof document !== 'undefined') {
+  const activityEvents = ['mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
+  
+  activityEvents.forEach(event => {
+    document.addEventListener(event, () => {
+      if (Auth.currentUser) {
+        Auth.resetSessionTimer();
+      }
+    }, { passive: true });
+  });
+  
+  console.log('[Auth] Activity listeners initialized for session management');
+}

@@ -302,7 +302,8 @@
 
                             <div class="section-header">
                                 <h2><i class="fas fa-tasks"></i> Pending Tasks</h2>
-                                <button id="calendar-view-btn" class="btn btn-icon" title="Calendar view" aria-label="Open calendar view">
+                                <button id="calendar-view-btn" class="btn btn-icon" title="Calendar view"
+                                    aria-label="Open calendar view">
                                     <i class="fas fa-calendar-alt"></i>
                                 </button>
                                 <button id="refresh-tasks-btn" class="btn btn-icon" title="Refresh tasks">
@@ -402,7 +403,8 @@
 
                             <!-- Events Action Buttons -->
                             <div class="events-actions">
-                                <button id="add-event-btn" class="btn btn-secondary cr-faculty-or-admin" style="display: none;">
+                                <button id="add-event-btn" class="btn btn-secondary cr-faculty-or-admin"
+                                    style="display: none;">
                                     <i class="fas fa-plus"></i> Add Event
                                 </button>
                                 <button id="view-old-events-btn" class="btn btn-secondary">
@@ -433,7 +435,8 @@
                     </div>
                     <!-- Mobile Events Actions -->
                     <div class="events-sidebar-actions">
-                        <button id="add-event-btn-mobile" class="btn btn-secondary cr-faculty-or-admin" style="display: none;">
+                        <button id="add-event-btn-mobile" class="btn btn-secondary cr-faculty-or-admin"
+                            style="display: none;">
                             <i class="fas fa-plus"></i> Add Event
                         </button>
                         <button id="view-old-events-btn-mobile" class="btn btn-secondary">
@@ -561,10 +564,12 @@
                             <button id="upload-files-btn" class="btn btn-secondary" type="button">
                                 <i class="fas fa-upload"></i> Upload Files
                             </button>
-                            <input type="file" id="note-file-input" style="display: none;" accept="image/*,application/pdf,.doc,.docx,.txt,.zip,.rar">
+                            <input type="file" id="note-file-input" style="display: none;"
+                                accept="image/*,application/pdf,.doc,.docx,.txt,.zip,.rar">
                             <p class="upload-instruction">
                                 <i class="fas fa-info-circle"></i>
-                                Upload files to tmpfiles.org. Link will be inserted as markdown. Files are temporary, back up important content.
+                                Upload files to tmpfiles.org. Link will be inserted as markdown. Files are temporary,
+                                back up important content.
                             </p>
                         </div>
                     </div>
@@ -592,7 +597,8 @@
                     <form id="add-task-form" class="modal-body">
                         <div class="form-group">
                             <label for="task-course">Course</label>
-                            <input type="text" id="task-course" class="form-input" placeholder="Course Title or Code" required>
+                            <input type="text" id="task-course" class="form-input" placeholder="Course Title or Code"
+                                required>
                         </div>
                         <div class="form-group">
                             <label for="task-title">Task Title</label>
@@ -617,12 +623,15 @@
                         <div class="form-group">
                             <label for="task-deadline">Deadline</label>
                             <div style="display: flex; gap: 8px; align-items: center;">
-                                <input type="radio" name="deadline-option" id="deadline-none" value="none" checked>
+
+                                <input type="radio" name="deadline-option" id="deadline-none" value="none">
                                 <label for="deadline-none" style="margin-bottom: 0;">No official Time limit</label>
-                                <input type="radio" name="deadline-option" id="deadline-date" value="date">
+                                <input type="radio" name="deadline-option" id="deadline-date" value="date" checked>
                                 <label for="deadline-date" style="margin-bottom: 0;">Set Deadline</label>
+
                                 <input type="datetime-local" id="task-deadline" class="form-input"
-                                    style="flex:1; min-width: 180px;" disabled>
+                                    style="flex:1; min-width: 180px;">
+
                             </div>
                         </div>
                     </form>
@@ -695,13 +704,13 @@
                         <div class="form-group">
                             <label for="edit-task-deadline">Deadline</label>
                             <div style="display: flex; gap: 8px; align-items: center;">
-                                <input type="radio" name="edit-deadline-option" id="edit-deadline-none" value="none"
+                                <input type="radio" name="edit-deadline-option" id="edit-deadline-date" value="date"
                                     checked>
-                                <label for="edit-deadline-none" style="margin-bottom: 0;">No official Time limit</label>
-                                <input type="radio" name="edit-deadline-option" id="edit-deadline-date" value="date">
                                 <label for="edit-deadline-date" style="margin-bottom: 0;">Set Deadline</label>
                                 <input type="datetime-local" id="edit-task-deadline" class="form-input"
-                                    style="flex:1; min-width: 180px;" disabled>
+                                    style="flex:1; min-width: 180px;">
+                                <input type="radio" name="edit-deadline-option" id="edit-deadline-none" value="none">
+                                <label for="edit-deadline-none" style="margin-bottom: 0;">No official Time limit</label>
                             </div>
                         </div>
                     </form>
@@ -1239,13 +1248,16 @@
                                         section. Can also create events for their own department and edit/delete events
                                         they
                                         created.</li>
-                                    <li><strong>Faculty</strong> — Can view department-wide tasks (no semester/section filtering). Can create events for their own department and edit/delete events they created. Cannot modify semester or section in profile settings.</li>
+                                    <li><strong>Faculty</strong> — Can view department-wide tasks (no semester/section
+                                        filtering). Can create events for their own department and edit/delete events
+                                        they created. Cannot modify semester or section in profile settings.</li>
                                     <li><strong>Blocked</strong> — Restricted to read-only mode. Cannot add, edit, or
                                         delete
                                         tasks, change their profile, or interact with events. A banner is shown at the
                                         top of
                                         the dashboard.</li>
-                                    <li><strong>Regular users</strong> — Can add tasks, edit/delete their own tasks, and mark tasks as complete.</li>
+                                    <li><strong>Regular users</strong> — Can add tasks, edit/delete their own tasks, and
+                                        mark tasks as complete.</li>
                                 </ul>
                             </div>
                         </details>
@@ -1258,7 +1270,8 @@
                                 <p>You can change your academic details (department, semester, section) from the
                                     <strong>Profile
                                         Settings</strong> page, accessible by clicking your user card in the navigation
-                                    bar.</p>
+                                    bar.
+                                </p>
                                 <p><strong>Important:</strong> Profile changes are limited to <strong>once every 30
                                         days</strong> to prevent misuse. If you need an earlier change, please contact
                                     the

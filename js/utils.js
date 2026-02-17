@@ -194,9 +194,14 @@ const Utils = {
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
+      
+      // Check if it's a tmpfiles.org download link
+      const isTmpFilesLink = link.url.includes('tmpfiles.org/dl/');
+      const downloadAttr = isTmpFilesLink ? ' download' : '';
+      
       result = result.replace(
         `__MD_LINK_${index}__`,
-        `<a href="${link.url}" target="_blank" rel="noopener noreferrer">${escapedText}</a>`
+        `<a href="${link.url}" target="_blank" rel="noopener noreferrer"${downloadAttr}>${escapedText}</a>`
       );
     });
 

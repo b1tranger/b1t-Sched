@@ -289,7 +289,7 @@ const UI = {
               <div class="task-description">
                 <div class="task-description-wrapper">
                   <div class="task-description-text">${Utils.escapeAndLinkify(task.description) || 'No description available.'}</div>
-                  ${task.addedBy ? `<p class="task-added-by task-added-by-hidden">Added by ${task.addedByName || 'User'}${task.section ? ` (${task.section})` : ''}${isFacultyTask && task.department ? ` - ${task.department}` : ''}</p>` : ''}
+                  ${task.addedBy ? `<p class="task-added-by task-added-by-hidden">Added by ${task.addedByName || 'User'}${task.addedByRole && (task.addedByRole === 'CR' || task.addedByRole === 'Faculty') ? ` <span class="role-badge role-badge-${task.addedByRole.toLowerCase()}">${task.addedByRole}</span>` : ''}${task.section ? ` (${task.section})` : ''}${isFacultyTask && task.department ? ` - ${task.department}` : ''}</p>` : ''}
                   <button type="button" class="task-description-toggle" aria-label="Toggle description">
                     <span class="toggle-text">Show more</span>
                     <i class="fas fa-chevron-down"></i>

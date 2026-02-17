@@ -1507,17 +1507,22 @@ const App = {
 
     noDataMsg.style.display = 'none';
 
-    // Aggregate contributions
+    // Aggregate contributions with role information
     const contributions = {};
     tasksToCount.forEach(task => {
       // Use addedByName (name part of email) or 'Unknown'
       const contributor = task.addedByName || 'Unknown';
-      contributions[contributor] = (contributions[contributor] || 0) + 1;
+      const role = task.addedByRole || 'Student';
+      
+      if (!contributions[contributor]) {
+        contributions[contributor] = { count: 0, role: role };
+      }
+      contributions[contributor].count += 1;
     });
 
     // Convert to array and sort
     const sortedContributors = Object.entries(contributions)
-      .map(([name, count]) => ({ name, count }))
+      .map(([name, data]) => ({ name, count: data.count, role: data.role }))
       .sort((a, b) => b.count - a.count);
 
     // Render table
@@ -1533,13 +1538,23 @@ const App = {
         <tbody>
     `;
 
-    html += sortedContributors.map((c, index) => `
-      <tr>
-        <td class="rank-col">${index + 1}</td>
-        <td>${c.name}</td>
-        <td class="count-col">${c.count}</td>
-      </tr>
-    `).join('');
+    html += sortedContributors.map((c, index) => {
+      // Add role badge for CR and Faculty
+      let roleBadge = '';
+      if (c.role === 'CR') {
+        roleBadge = '<span class="role-badge role-badge-cr">CR</span>';
+      } else if (c.role === 'Faculty') {
+        roleBadge = '<span class="role-badge role-badge-faculty">Faculty</span>';
+      }
+      
+      return `
+        <tr>
+          <td class="rank-col">${index + 1}</td>
+          <td>${c.name} ${roleBadge}</td>
+          <td class="count-col">${c.count}</td>
+        </tr>
+      `;
+    }).join('');
 
     html += `</tbody></table>`;
     container.innerHTML = html;
