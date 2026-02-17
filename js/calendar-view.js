@@ -208,6 +208,12 @@ class CalendarView {
       console.log('Calendar open() called');
       console.log('Modal exists:', !!this.modal);
       
+      // Ensure modal is created
+      if (!this.modal) {
+        console.warn('Modal not found, creating it now');
+        this.createModal();
+      }
+      
       // Store the currently focused element to restore later
       this.previouslyFocusedElement = document.activeElement;
 
@@ -219,7 +225,7 @@ class CalendarView {
         console.log('Setting modal display to flex');
         this.modal.style.display = 'flex';
       } else {
-        console.error('Modal element not found!');
+        console.error('Modal element not found even after createModal()!');
         return;
       }
 
@@ -649,13 +655,28 @@ class CalendarView {
       this.renderWeeklyView();
       return;
     }
+    
+    // Ensure modal exists
+    if (!this.modal) {
+      console.error('Modal not initialized');
+      return;
+    }
+    
     // Get the calendar grid structure
     const gridData = this.generateCalendarGrid();
 
-    // Get the calendar grid container
-    const gridContainer = document.getElementById('calendar-grid');
+    // Get the calendar grid container - try multiple methods
+    let gridContainer = document.getElementById('calendar-grid');
+    
+    // If not found by ID, try querySelector within modal
+    if (!gridContainer && this.modal) {
+      gridContainer = this.modal.querySelector('#calendar-grid');
+    }
+    
     if (!gridContainer) {
       console.error('Calendar grid container not found');
+      console.log('Modal exists:', !!this.modal);
+      console.log('Modal in DOM:', document.body.contains(this.modal));
       return;
     }
 
@@ -738,9 +759,24 @@ class CalendarView {
    * Displays weeks horizontally with scroll-snap
    */
   renderWeeklyView() {
-    const gridContainer = document.querySelector('.calendar-grid-container');
+    // Ensure modal exists
+    if (!this.modal) {
+      console.error('Modal not initialized');
+      return;
+    }
+    
+    // Try to find grid container - use querySelector within modal
+    let gridContainer = this.modal.querySelector('.calendar-grid-container');
+    
+    // Fallback to document-level query
+    if (!gridContainer) {
+      gridContainer = document.querySelector('.calendar-grid-container');
+    }
+    
     if (!gridContainer) {
       console.error('Calendar grid container not found');
+      console.log('Modal exists:', !!this.modal);
+      console.log('Modal in DOM:', document.body.contains(this.modal));
       return;
     }
 
