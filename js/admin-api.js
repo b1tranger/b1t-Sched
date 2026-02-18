@@ -30,23 +30,31 @@ class AdminAPI {
   async sendPasswordReset(userId) {
     try {
       const token = await this.getAuthToken();
-      
-      const response = await fetch(`${this.baseURL}/sendPasswordReset`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ userId })
-      });
 
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to send password reset');
+      try {
+        const response = await fetch(`${this.baseURL}/sendPasswordReset`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ userId })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to send password reset');
+        }
+
+        return data;
+      } catch (networkError) {
+        if (networkError.message.includes('Failed to fetch')) {
+          console.error('CORS or Network Error:', networkError);
+          throw new Error('Server connection failed. This may be a CORS issue if running locally, or the backend is down.');
+        }
+        throw networkError;
       }
-
-      return data;
     } catch (error) {
       console.error('API Error:', error);
       throw error;
@@ -62,23 +70,31 @@ class AdminAPI {
   async deleteUser(userId) {
     try {
       const token = await this.getAuthToken();
-      
-      const response = await fetch(`${this.baseURL}/deleteUser`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ userId })
-      });
 
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to delete user');
+      try {
+        const response = await fetch(`${this.baseURL}/deleteUser`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ userId })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to delete user');
+        }
+
+        return data;
+      } catch (networkError) {
+        if (networkError.message.includes('Failed to fetch')) {
+          console.error('CORS or Network Error:', networkError);
+          throw new Error('Server connection failed. This may be a CORS issue if running locally, or the backend is down.');
+        }
+        throw networkError;
       }
-
-      return data;
     } catch (error) {
       console.error('API Error:', error);
       throw error;

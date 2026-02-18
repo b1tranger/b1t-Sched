@@ -1939,7 +1939,7 @@ const App = {
           const btn = e.target.closest('.send-reset-btn');
           const userId = btn.dataset.userId;
           const userEmail = btn.dataset.userEmail;
-          await this.handlePasswordReset(userId, userEmail);
+          await this.handleAdminPasswordReset(userId, userEmail);
         }
         // Delete user button
         if (e.target.closest('.delete-user-btn')) {
@@ -2208,7 +2208,7 @@ const App = {
     this.renderUserList(this.allUsers);
   },
 
-  async handlePasswordReset(userId, userEmail) {
+  async handleAdminPasswordReset(userId, userEmail) {
     if (!this.isAdmin) return;
 
     const confirmed = confirm(`Send password reset link to ${userEmail}?`);
@@ -2217,16 +2217,20 @@ const App = {
     UI.showLoading(true);
 
     try {
-      const result = await adminAPI.sendPasswordReset(userId);
-      UI.showNotification('success', result.message || 'Password reset link sent successfully');
+      // Use Client SDK to send standard password reset email (bypasses CORS/backend issues)
+      const result = await Auth.sendPasswordResetEmail(userEmail);
+
+      if (result.success) {
+        UI.showMessage('user-management-message', result.message || 'Password reset link sent successfully', 'success');
+      } else {
+        throw new Error(result.error || 'Failed to send password reset link');
+      }
     } catch (error) {
       console.error('Password reset error:', error);
       if (error.message.includes('network')) {
-        UI.showNotification('error', 'Network error. Please check your connection.');
-      } else if (error.message.includes('permission')) {
-        UI.showNotification('error', 'You do not have permission to perform this action.');
+        UI.showMessage('user-management-message', 'Network error. Please check your connection.', 'error');
       } else {
-        UI.showNotification('error', error.message || 'Failed to send password reset link');
+        UI.showMessage('user-management-message', error.message || 'Failed to send password reset link', 'error');
       }
     } finally {
       UI.showLoading(false);
