@@ -1623,10 +1623,10 @@ const App = {
   },
 
   async updateUserCount() {
-    const countEl = document.getElementById('total-user-count');
+    const countElModal = document.getElementById('total-user-count-modal');
+    const countElFooter = document.getElementById('total-user-count-footer');
+    // Legacy fallback or checks
     const counterContainer = document.getElementById('total-user-counter');
-
-    if (!countEl || !counterContainer) return;
 
     try {
       // Try to get all users to count them
@@ -1634,15 +1634,20 @@ const App = {
       // If so, we just hide the counter
       const result = await DB.getAllUsers();
       if (result.success) {
-        countEl.textContent = result.data.length;
-        counterContainer.style.display = 'flex';
+        const count = result.data.length;
+        if (countElModal) countElModal.textContent = count;
+        if (countElFooter) countElFooter.textContent = count;
+
+        if (counterContainer) {
+          counterContainer.style.display = 'flex';
+        }
       } else {
         console.warn('Could not fetch user count (likely permission issue):', result.error);
-        counterContainer.style.display = 'none';
+        if (counterContainer) counterContainer.style.display = 'none';
       }
     } catch (e) {
       console.warn('Error fetching user count:', e);
-      counterContainer.style.display = 'none';
+      if (counterContainer) counterContainer.style.display = 'none';
     }
   },
 

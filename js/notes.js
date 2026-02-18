@@ -207,10 +207,10 @@ const NoteManager = {
     try {
       // Try multi-provider upload with fallback
       const result = await this.uploadWithFallback(file);
-      
+
       // Insert markdown link into textarea at cursor position
       this.insertLinkIntoNote(file.name, result.url);
-      
+
       // Show success message with provider info
       let message = `File uploaded successfully via ${result.provider}!`;
       if (result.expiresIn) {
@@ -226,7 +226,7 @@ const NoteManager = {
         uploadBtn.innerHTML = originalText;
         uploadBtn.disabled = false;
       }
-      
+
       // Clear file input
       event.target.value = '';
     }
@@ -235,7 +235,7 @@ const NoteManager = {
   // Upload with fallback to multiple providers
   async uploadWithFallback(file) {
     const providers = [
-      { name: 'Firebase Storage', method: () => this.uploadToFirebaseStorage(file), maxSize: 10 * 1024 * 1024 },
+      // { name: 'Firebase Storage', method: () => this.uploadToFirebaseStorage(file), maxSize: 10 * 1024 * 1024 }, // Disabled
       { name: 'Catbox', method: () => this.uploadToCatbox(file), maxSize: 200 * 1024 * 1024 },
       { name: 'Tmpfiles', method: () => this.uploadToTmpfiles(file), maxSize: 100 * 1024 * 1024 }
     ];
@@ -252,13 +252,13 @@ const NoteManager = {
       try {
         console.log(`Attempting upload to ${provider.name}...`);
         const url = await provider.method();
-        
+
         // Determine expiration info
         let expiresIn = null;
         if (provider.name === 'Tmpfiles') {
           expiresIn = '1 year';
         }
-        
+
         return {
           url: url,
           provider: provider.name,
@@ -273,6 +273,37 @@ const NoteManager = {
 
     // All providers failed
     throw new Error(lastError?.message || 'All upload providers failed');
+  },
+
+  // Upload file to Cloudinary (Unsigned)
+  async uploadToCloudinary(file) {
+    const cloudName = 'djsa2kkyu';
+    const uploadPreset = 'b1t_sched_unsigned';
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', uploadPreset);
+
+    // Optional: Add folder, tags, etc. if needed
+    // formData.append('folder', 'b1t_sched_notes');
+
+    try {
+      const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/upload`, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || `Upload failed with status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.secure_url; // Return the HTTPS URL
+    } catch (error) {
+      console.error('Cloudinary upload error:', error);
+      throw new Error(error.message || 'Failed to upload to Cloudinary');
+    }
   },
 
   // Upload file to Firebase Storage
@@ -290,17 +321,17 @@ const NoteManager = {
     const timestamp = Date.now();
     const sanitizedFilename = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
     const filename = `${timestamp}_${sanitizedFilename}`;
-    
+
     // Create storage reference: note-attachments/{userId}/{filename}
     const storageRef = storage.ref(`note-attachments/${this.currentUserId}/${filename}`);
-    
+
     try {
       // Upload file
       const snapshot = await storageRef.put(file);
-      
+
       // Get download URL
       const downloadURL = await snapshot.ref.getDownloadURL();
-      
+
       return downloadURL;
     } catch (error) {
       console.error('Firebase Storage upload error:', error);
@@ -325,7 +356,7 @@ const NoteManager = {
       }
 
       const url = await response.text();
-      
+
       // Catbox returns the direct URL as plain text
       if (!url || !url.startsWith('https://files.catbox.moe/')) {
         throw new Error('Invalid response from Catbox');
@@ -353,7 +384,7 @@ const NoteManager = {
       }
 
       const data = await response.json();
-      
+
       // Check if upload was successful
       if (data.status !== 'success' || !data.data || !data.data.url) {
         throw new Error(data.message || 'Invalid response from Tmpfiles');
@@ -362,7 +393,7 @@ const NoteManager = {
       // Tmpfiles returns a URL like https://tmpfiles.org/12345
       // Convert to direct download URL: https://tmpfiles.org/dl/12345
       const url = data.data.url.replace('tmpfiles.org/', 'tmpfiles.org/dl/');
-      
+
       return url;
     } catch (error) {
       throw new Error(error.message || 'Network error during Tmpfiles upload');
@@ -375,24 +406,24 @@ const NoteManager = {
     if (!textarea) return;
 
     const markdownLink = `[${filename}](${url})`;
-    
+
     // Get cursor position
     const startPos = textarea.selectionStart;
     const endPos = textarea.selectionEnd;
     const textBefore = textarea.value.substring(0, startPos);
     const textAfter = textarea.value.substring(endPos);
-    
+
     // Insert link at cursor position
     const newValue = textBefore + markdownLink + textAfter;
     textarea.value = newValue;
-    
+
     // Set cursor position after inserted link
     const newCursorPos = startPos + markdownLink.length;
     textarea.setSelectionRange(newCursorPos, newCursorPos);
-    
+
     // Focus textarea
     textarea.focus();
-    
+
     // Update preview and trigger auto-save
     this.updatePreview(newValue);
     this.setupAutoSave(newValue);

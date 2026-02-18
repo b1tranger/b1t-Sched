@@ -1,8 +1,3 @@
-
-
-
-
-
 /* ============================================
    DASHBOARD LAYOUT & NEW FEATURES
    ============================================ */
@@ -612,6 +607,14 @@
         line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
+    }
+
+    /* Ensure mobile-only link is clickable and visible */
+    .resource-link-card.mobile-only {
+        display: flex !important;
+        cursor: pointer;
+        z-index: 10;
+        position: relative;
     }
 }
 
@@ -1297,11 +1300,12 @@ body.user-blocked .task-edit-btn {
    ============================================ */
 
 .total-user-counter {
-    position: fixed;
-    /* width: fit-content; */
+    position: relative;
+    width: fit-content;
     bottom: 20px;
     /* left: 20px; */
-    right: 20px;
+    /* right: 20px; */
+    left: 10px;
     color: rgb(255, 255, 255);
     background-color: rgba(0, 0, 0, 0.192);
     /* background-color: var(--primary-maroon); */
@@ -1331,9 +1335,15 @@ body.user-blocked .task-edit-btn {
 @media (max-width: 480px) {
     .total-user-counter {
         bottom: 10px;
-        right: 10px;
+        /* right: 10px; */
+        left: 10px;
         padding: 6px 12px;
         font-size: var(--font-xs);
+    }
+
+    .contributions-btn {
+        /* gap:150px; */
+        margin-bottom: 20px;
     }
 }
 
@@ -1349,8 +1359,10 @@ body.user-blocked .task-edit-btn {
 }
 
 .contributions-btn {
-    border-radius: 30px;
-    padding: var(--spacing-sm) var(--spacing-xl);
+    /* border-radius: 30px; */
+    border-radius: 5px;
+    width: fit-content;
+    /* padding: var(--spacing-sm) var(--spacing-xl); */
 }
 
 .contributions-btn i {
@@ -1499,7 +1511,7 @@ input:checked+.slider:before {
     flex-wrap: wrap;
 }
 
-.notification-prompt-content > i {
+.notification-prompt-content>i {
     font-size: 2rem;
     opacity: 0.9;
     /* color removed - use inline style */
@@ -1565,7 +1577,7 @@ input:checked+.slider:before {
         flex-direction: column;
         align-items: flex-start;
     }
-    
+
     .notification-prompt-content .btn {
         margin-left: 0;
         width: 100%;
@@ -1598,7 +1610,7 @@ input:checked+.slider:before {
     flex: 1;
 }
 
-.notification-status-info > i {
+.notification-status-info>i {
     font-size: 1.5rem;
     color: var(--primary-color);
 }
@@ -1625,7 +1637,7 @@ input:checked+.slider:before {
         flex-direction: column;
         align-items: flex-start;
     }
-    
+
     .notification-status button {
         width: 100%;
     }
@@ -1675,7 +1687,7 @@ input:checked+.slider:before {
     .section-header h2 #calendar-view-btn span {
         display: none;
     }
-    
+
     .section-header h2 #calendar-view-btn {
         padding: var(--spacing-xs);
         min-width: 36px;

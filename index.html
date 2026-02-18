@@ -248,10 +248,10 @@
             <!-- Dashboard View -->
             <div id="dashboard-view" class="view" style="display: none;">
                 <!-- Total User Counter (bottom-right) -->
-                <div id="total-user-counter" class="total-user-counter" style="display: none;">
+                <!-- <div id="total-user-counter" class="total-user-counter" style="display: none;">
                     <i class="fas fa-users"></i>
                     <span id="total-user-count">0</span>
-                </div>
+                </div> -->
                 <!-- Blocked User Banner -->
                 <div id="blocked-user-banner" class="blocked-user-banner" style="display: none;">
                     <i class="fas fa-exclamation-triangle"></i>
@@ -292,8 +292,11 @@
                             <!-- Mobile-only external resources link -->
                             <a href="https://b1tacad.netlify.app/departments" target="_blank" rel="noopener noreferrer"
                                 class="resource-link-card external-resources-link mobile-only">
-                                <div class="resource-icon"><i class="fas fa-external-link-alt"></i></div>
-                                <h3>All Resources</h3>
+                                <div class="resource-icon"
+                                    style="display: flex;flex-direction: row;gap: 10px;margin: auto;"><i
+                                        class="fas fa-external-link-alt"></i>
+                                    <p style="font-size: 14px;">All Resources</p>
+                                </div>
                                 <!-- <p>Browse all academic resources department-wise</p> -->
                             </a>
                         </section>
@@ -500,7 +503,7 @@
                         </div>
                     </div>
                 </div>
-                <div id="classroom-overlay" class="classroom-overlay mobile-only"></div>
+                <div id="classroom-overlay" class="classroom-overlay"></div>
 
             </div>
 
@@ -574,8 +577,9 @@
                                 accept="image/*,application/pdf,.doc,.docx,.txt,.zip,.rar">
                             <p class="upload-instruction">
                                 <i class="fas fa-info-circle"></i>
-                                Files are uploaded securely (Firebase/Catbox) and linked here. Large files may use
-                                external providers. Back up important content.
+                                <span>Uploads use <strong>Catbox.moe</strong> or <strong>Tmpfiles.org</strong>
+                                    (Temporary).
+                                    Back up important content.</span>
                             </p>
                         </div>
                     </div>
@@ -1170,19 +1174,10 @@
                             </div>
                         </div>
                         <div class="stat-card">
-                            <h3 id="total-user-count">0</h3>
+                            <h3 id="total-user-count-modal">0</h3>
                             <p>Users Registered</p>
                         </div>
-                        <div
-                            style="margin-top: 15px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-                            <button id="contributions-btn" class="btn btn-outline">
-                                <i class="fas fa-trophy"></i> Top Contributors
-                            </button>
-                            <button id="open-timeline-btn" class="btn btn-outline"
-                                style="border-color: var(--success-color); color: var(--success-color);">
-                                <i class="fas fa-chart-line"></i> Activity Timeline
-                            </button>
-                        </div>
+
                     </div>
                     <div class="modal-footer">
                         <button id="clear-filters-btn" class="btn btn-secondary">
@@ -1226,12 +1221,24 @@
                 </div>
             </div>
 
+            <!-- Contributions & Timeline Buttons -->
+            <div id="contributions-section" class="contributions-section"
+                style="display: none; justify-content: center;">
+                <button id="contributions-btn" class="btn btn-secondary contributions-btn" style="gap: 0;">
+                    <i class="fas fa-hands-helping"></i> Contributions
+                </button>
+                <button id="open-timeline-btn-dashboard" class="btn btn-secondary contributions-btn" style="gap: 0">
+                    <i class="fas fa-chart-line"></i> Timeline
+                </button>
+
+            </div>
 
             <!-- FAQ Section (visible when logged in) -->
             <section id="faq-section" class="faq-section" style="display: none;">
                 <details class="faq-parent">
                     <summary class="faq-parent-heading">
-                        <i class="fas fa-question-circle"></i> Frequently Asked Questions (FAQ)
+                        <!-- <i class="fas fa-question-circle"></i> -->
+                        FAQ
                     </summary>
                     <div class="faq-nested-container">
                         <details class="faq-item">
@@ -1307,12 +1314,7 @@
                 </details>
             </section>
 
-            <!-- Contributions Button -->
-            <div id="contributions-section" class="contributions-section" style="display: none;">
-                <button id="contributions-btn" class="btn btn-secondary contributions-btn">
-                    <i class="fas fa-hands-helping"></i> Contributions
-                </button>
-            </div>
+
 
             <!-- Contributions Modal -->
             <div id="contributions-modal" class="modal" style="display: none;">
@@ -1345,6 +1347,12 @@
                         <p class="contributions-subtitle">Note: clearing Old Tasks will reset this list</p>
                     </div>
                 </div>
+            </div>
+
+            <!-- Total User Counter (bottom-right) -->
+            <div id="total-user-counter" class="total-user-counter" style="display: none;margin-top: -50px;">
+                <i class="fas fa-users"></i>
+                <span id="total-user-count-footer">0</span>
             </div>
 
         </main>

@@ -556,23 +556,23 @@ body {
 /* FAQ Section */
 
 
-.faq-parent-heading{
-    background-color: #ffffff;
-    padding: 15px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.068);
-    border-radius: 8px;
-   
-    cursor: pointer;
-    transition: 0.2s ease-in-out;
-    margin:auto;
-    width: fit-content;
+.faq-parent-heading {
+  background-color: #ffffff;
+  padding: 2px 15px 2px 15px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.068);
+  border-radius: 8px;
+
+  cursor: pointer;
+  transition: 0.2s ease-in-out;
+  margin: auto;
+  width: fit-content;
 }
 
-.faq-parent-heading:hover{
-    transform: translateY(-3px);
+.faq-parent-heading:hover {
+  transform: translateY(-3px);
 }
 
-.faq-nested-container{
+.faq-nested-container {
   margin-top: 15px;
 }
 

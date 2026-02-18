@@ -25,6 +25,23 @@
     writing-mode: vertical-rl;
     text-orientation: mixed;
 } */
+.note-toggle {
+    position: fixed;
+    bottom: 70px;
+    /* left: 20px; */
+    right: 20px;
+    background-color: var(--accent-maroon);
+    color: var(--text-white);
+    padding: 20px;
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    z-index: 900;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    box-shadow: var(--shadow-maroon);
+    transition: all var(--transition-fast);
+}
 
 .note-toggle:hover {
     background-color: var(--maroon-hover);
@@ -197,7 +214,7 @@
     flex-shrink: 0;
 }
 
-    padding-left: calc(var(--spacing-md) + 4px);
+padding-left: calc(var(--spacing-md) + 4px);
 }
 
 /* ─── Responsive Behavior ─────────────────────────── */
@@ -239,4 +256,27 @@
 
 .note-textarea:focus {
     box-shadow: 0 0 0 3px rgba(128, 0, 0, 0.1);
+}
+
+/* ─── Visibility Utilities ────────────────────────── */
+@media (max-width: 768px) {
+    .desktop-only {
+        display: none !important;
+    }
+
+    .mobile-only {
+        display: flex !important;
+        /* Assuming flex for buttons */
+    }
+}
+
+@media (min-width: 769px) {
+    .mobile-only {
+        display: none !important;
+    }
+
+    .desktop-only {
+        display: flex !important;
+        /* Assuming flex for buttons */
+    }
 }

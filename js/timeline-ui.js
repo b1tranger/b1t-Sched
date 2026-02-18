@@ -35,7 +35,7 @@ const TimelineUI = {
         if (document.getElementById('timeline-modal')) return;
 
         const modalHtml = `
-        <div id="timeline-modal" class="modal">
+        <div id="timeline-modal" class="modal" style="display: none;">
             <div class="modal-content" style="max-width: 900px; width: 95%;">
                 <div class="modal-header">
                     <h2>Activity Timeline</h2>
@@ -100,7 +100,7 @@ const TimelineUI = {
 
     setupEventListeners() {
         // Open Modal Button (to be added in index.html)
-        const openBtn = document.getElementById('open-timeline-btn');
+        const openBtn = document.getElementById('open-timeline-btn-dashboard');
         if (openBtn) {
             openBtn.addEventListener('click', () => this.open());
         }

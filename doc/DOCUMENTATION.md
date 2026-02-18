@@ -56,9 +56,10 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **Note Taking** - Personal note-taking feature with markdown support, auto-save, and automatic file upload via file.io API with direct download support (no new tab required)
 - **Task Filtering** - Filter pending tasks by type (Assignment, Homework, Exam, Project, Presentation, Other)
 - **Global Contributions** - View a leaderboard of top contributors (group-specific or global across all departments)
-- **User Counter** - Live count of total registered users displayed on the dashboard
+- **User Counter** - Live count of total registered users displayed on the dashboard and footer
+- **Activity Timeline** - Visual heatmap and bar chart tracking user activity (logins, tasks, events, profile updates) to visualize productivity patterns
 - **FAQ Section** - Collapsible accordion explaining how the site works, user roles, and profile settings
-- **Footer with Credits** - Source code link and dynamic copyright year
+- **Footer with Credits** - Source code link, total user count, and dynamic copyright year
 
 ### Technology Stack (Summary)
 | Category | Technology |
@@ -238,6 +239,7 @@ b1t-Sched/
 │   ├── drop-down.css            # Dropdown menu styles
 │   ├── menu-bar.css             # Menu bar styles
 │   ├── selector.css             # Dropdown/select styles
+│   ├── timeline.css             # Activity timeline styles (heatmap, charts)
 │   └── styles.css               # Additional styles
 │
 ├── js/                           # JavaScript modules
@@ -265,6 +267,9 @@ b1t-Sched/
 │   ├── notification-content-formatter.js # Notification content formatting
 │   ├── notification-manager.js  # Core notification logic
 │   ├── firestore-listener-manager.js # Firestore real-time listeners
+│   ├── activity-logger.js       # User activity tracking
+│   ├── timeline-data.js         # Timeline data fetching & processing
+│   ├── timeline-ui.js           # Timeline visualization rendering
 │   └── app.js                   # Main application logic
 │
 ├── doc/                          # Documentation
@@ -1465,6 +1470,7 @@ Router.onRouteChange((routeName) => {
 | 2.25.1 | Feb 2026 | Bug Fixes: Added Faculty toggle button active state CSS (blue background). Improved notice API error handling with cache fallback - when server returns 503, app loads cached notices with warning banner. Fixed notification prompt inline color styles. Updated `css/dashboard.css`, `js/notice.js`. |
 | 2.26.0 | Feb 2026 | UX & Security Improvements: (1) Deadline options reordered - "Set Deadline" now appears first and is default in Add/Edit Task modals. (2) File downloads in notes now work directly without opening new tab (added `download` attribute to file.io links). (3) Automatic session timeout - users are logged out after 1 hour of inactivity for security, with activity-based timer reset. (4) Role badges - CR and Faculty contributors now have colored badges in task cards and contribution list. (5) Mobile notifications fixed - now use Service Worker API for iOS Safari and Chrome on Android compatibility, with vibration and badge support. Updated `index.html`, `js/utils.js`, `js/auth.js`, `js/app.js`, `js/ui.js`, `js/notification-manager.js`, `sw.js`, `css/components.css`. |
 | 2.27.0 | Feb 2026 | File Upload Service Migration: Migrated from tmpfiles.org to file.io API for note file uploads. Benefits: 14-day file retention (vs 1 hour), direct download links, more reliable service. Updated `js/notes.js` (renamed `uploadToTmpFiles` to `uploadToFileIO`), `js/utils.js` (updated download link detection), `index.html` (updated upload instructions), `doc/DOCUMENTATION.md`. |
+| 2.28.0 | Feb 2026 | Activity Timeline & User Counter: Added interactive activity heatmap and bar chart to visualize user productivity (logins, tasks, events). Added live user counter to dashboard and footer. Mobile UI fixes: resolved clickability issues by removing overlay conflicts, improved Note button visibility logic. |
 
 ---
 
@@ -1781,6 +1787,35 @@ CalendarView.maxYear = currentYear + 100   // Navigation limit (future)
 | 2.20.0 | Feb 2026 | Calendar View: Monthly calendar visualization of task deadlines with navigation, task details, and accessibility features |
 | 2.20.1 | Feb 2026 | Calendar View Bug Fix: Removed ES6 export statement causing browser syntax error; fixed initialization order |
 | 2.21.0 | Feb 2026 | File Upload System Upgrade: Multi-provider upload with Firebase Storage (primary), Catbox.moe (fallback 1), and Tmpfiles.org (fallback 2); automatic fallback on failure; supports up to 200MB files; permanent and temporary storage options |
+
+---
+
+### 15. Activity Logging & Timeline
+
+**Purpose:** Track and visualize user engagement and productivity.
+
+#### Activity Logger (`js/activity-logger.js`)
+- Tracks user actions: Login, Task Completion, Event Creation, Profile Update
+- Stores logs in `users/{userId}/activity_logs` subcollection
+- Fields: `type`, `description`, `timestamp`, `metadata`
+
+#### Timeline Data (`js/timeline-data.js`)
+- Fetches activity logs from Firestore
+- Aggregates data by date and type
+- Prepares datasets for visualization (heatmap, bar chart)
+
+#### Timeline UI (`js/timeline-ui.js`)
+- Renders Activity Timeline modal
+- Displays interactive Heatmap (GitHub-style)
+- Displays Weekly Activity Bar Chart
+- Displays recent activity list
+- Uses `Chart.js` for bar charts (loaded via CDN)
+
+**Key Features:**
+- **Heatmap:** Visual intensity of activity over the last year
+- **Stats:** Current streak, max streak, total contributions
+- **Filtering:** View by specific activity type
+
 
 ---
 

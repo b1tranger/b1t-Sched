@@ -226,43 +226,43 @@ const UI = {
 
   // Helper function to render a single task card
   renderTaskCard(task, userCompletions, isAdmin, isCR, currentUserId, now, isFacultyTask) {
-      let deadline = null;
-      let daysUntil = null;
-      let isUrgent = false;
-      let isPastDeadline = false;
-      if (task.deadline) {
-        deadline = task.deadline.toDate ? task.deadline.toDate() : new Date(task.deadline);
-        daysUntil = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
-        isUrgent = daysUntil <= 3 && daysUntil > 0;
-        isPastDeadline = deadline < now;
-      }
-      const isCompleted = userCompletions[task.id] || false;
-      // Determine task status class
-      let statusClass = '';
-      if (isCompleted) {
-        statusClass = 'completed';
-      } else if (isPastDeadline) {
-        statusClass = 'incomplete';
-      }
-      // Edit: Admin can edit any task, Faculty can edit their own tasks, users can only edit their own tasks
-      const canEdit = isAdmin || (currentUserId && task.addedBy === currentUserId);
-      const editButton = canEdit ? `
+    let deadline = null;
+    let daysUntil = null;
+    let isUrgent = false;
+    let isPastDeadline = false;
+    if (task.deadline) {
+      deadline = task.deadline.toDate ? task.deadline.toDate() : new Date(task.deadline);
+      daysUntil = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
+      isUrgent = daysUntil <= 3 && daysUntil > 0;
+      isPastDeadline = deadline < now;
+    }
+    const isCompleted = userCompletions[task.id] || false;
+    // Determine task status class
+    let statusClass = '';
+    if (isCompleted) {
+      statusClass = 'completed';
+    } else if (isPastDeadline) {
+      statusClass = 'incomplete';
+    }
+    // Edit: Admin can edit any task, Faculty can edit their own tasks, users can only edit their own tasks
+    const canEdit = isAdmin || (currentUserId && task.addedBy === currentUserId);
+    const editButton = canEdit ? `
         <button class="task-edit-btn" data-task-id="${task.id}" title="Edit task">
           <i class="fas fa-edit"></i>
         </button>
       ` : '';
-      // Delete: Admin/CR can delete any task, users can only delete their own tasks
-      const canDelete = isAdmin || isCR || (currentUserId && task.addedBy === currentUserId);
-      const deleteButton = canDelete ? `
+    // Delete: Admin/CR can delete any task, users can only delete their own tasks
+    const canDelete = isAdmin || isCR || (currentUserId && task.addedBy === currentUserId);
+    const deleteButton = canDelete ? `
         <button class="task-delete-btn" data-task-id="${task.id}" title="Delete task">
           <i class="fas fa-trash"></i>
         </button>
       ` : '';
-      
-      // Add Faculty badge if this is a Faculty task
-      const facultyBadge = isFacultyTask ? `<span class="task-faculty-badge"><i class="fas fa-chalkboard-teacher"></i> Faculty</span>` : '';
-      
-      return `
+
+    // Add Faculty badge if this is a Faculty task
+    const facultyBadge = isFacultyTask ? `<span class="task-faculty-badge"><i class="fas fa-chalkboard-teacher"></i> Faculty</span>` : '';
+
+    return `
         <div class="task-card ${statusClass} ${isFacultyTask ? 'faculty-task' : ''}" data-task-id="${task.id}" data-type="${task.type || 'other'}">
           <div class="task-card-inner">
             <div class="task-checkbox-wrapper">
@@ -621,10 +621,11 @@ const UI = {
     }
   },
 
-  // Update FAQ and Contribution section visibility based on route
+  // Update FAQ, Contribution, and User Counter section visibility based on route
   updateSectionVisibility(routeName) {
     const faqSection = document.getElementById('faq-section');
     const contribSection = document.getElementById('contributions-section');
+    const userCounter = document.getElementById('total-user-counter');
 
     if (!faqSection) {
       console.warn('FAQ section not found in DOM');
@@ -636,10 +637,13 @@ const UI = {
     // Show sections only on dashboard, hide on all other routes
     if (routeName === 'dashboard') {
       if (faqSection) faqSection.style.display = 'block';
-      if (contribSection) contribSection.style.display = 'block';
+      if (contribSection) contribSection.style.display = 'block'; // Or flex/grid if needed
+      // User counter logic: show if element exists
+      if (userCounter) userCounter.style.display = 'block';
     } else {
       if (faqSection) faqSection.style.display = 'none';
       if (contribSection) contribSection.style.display = 'none';
+      if (userCounter) userCounter.style.display = 'none';
     }
   }
 };

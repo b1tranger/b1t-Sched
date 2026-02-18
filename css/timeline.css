@@ -1,3 +1,14 @@
+#close-timeline-modal:hover {
+    cursor: pointer;
+    background-color: rgba(0, 0, 0, 0.171);
+    padding: 0 5px 2px 5px;
+    border-radius: 50px;
+    /* position: sticky; */
+    margin-right: -5px
+}
+
+
+
 /* Activity Timeline Styles */
 
 .timeline-viz-container {
