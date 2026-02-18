@@ -160,33 +160,64 @@ const TimelineUI = {
     async loadData() {
         if (!App.userProfile) return;
 
-        // Fetch data using the service
-        // For now, fetch ALL recent activity for the user's context
-        // In future, we can add more filters to the UI
-        const filters = {
-            department: App.userProfile.department,
-            semester: null, // Fetch broad context? Or specific? Let's start broad (Dept)
-            section: null
-        };
-        // If regular student, maybe show only their section? 
-        // Rule: "Users can see... if matching context".
-        // Let's rely on Firestore Rules and fetch broader if possible, but service defaults to specific.
-        // Actually, just passing Dept is enough for Faculty/Admin. 
-        // For Student, they might only see their section data if we filter. 
-        // Let's pass Dept for now, Service handles the rest.
+        const heatmapContainer = document.getElementById('timeline-heatmap-container');
+        const chartContainer = document.getElementById('timeline-chart-container');
 
-        const result = await TimelineDataService.getActivityData(filters);
+        // Show loading state
+        if (heatmapContainer) heatmapContainer.style.opacity = '0.5';
+        if (chartContainer) chartContainer.style.opacity = '0.5';
 
-        if (result.success) {
-            this.cachedActivities = result.data;
-            this.updateStats(result.data);
-            if (this.currentView === 'heatmap') {
-                this.renderHeatmap(result.data);
+        try {
+            // Fetch data using the service
+            // For now, fetch ALL recent activity for the user's context
+            const filters = {
+                department: App.userProfile.department,
+                semester: null, // Fetch broad context? Or specific? Let's start broad (Dept)
+                section: null
+            };
+
+            // console.log('[TimelineUI] Fetching data with filters:', filters);
+            const result = await TimelineDataService.getActivityData(filters);
+
+            if (result.success) {
+                this.cachedActivities = result.data;
+                this.updateStats(result.data);
+
+                if (result.data.length === 0) {
+                    // Handle empty state
+                    this.renderEmptyState();
+                } else {
+                    if (this.currentView === 'heatmap') {
+                        this.renderHeatmap(result.data);
+                    } else {
+                        this.renderBarChart(result.data);
+                    }
+                }
             } else {
-                this.renderBarChart(result.data);
+                console.error('[TimelineUI] Failed to load timeline data:', result.error);
+                this.showError('Failed to load activity data. Please try again later.');
             }
-        } else {
-            console.error('Failed to load timeline data');
+        } catch (err) {
+            console.error('[TimelineUI] Unexpected error loading data:', err);
+            this.showError('An unexpected error occurred.');
+        } finally {
+            // Remove loading state
+            if (heatmapContainer) heatmapContainer.style.opacity = '1';
+            if (chartContainer) chartContainer.style.opacity = '1';
+        }
+    },
+
+    showError(message) {
+        const grid = document.getElementById('heatmap-grid');
+        if (grid) {
+            grid.innerHTML = `<div class="error-message" style="grid-column: 1 / -1; color: #d73a49; padding: 20px; text-align: center;">${message}</div>`;
+        }
+    },
+
+    renderEmptyState() {
+        const grid = document.getElementById('heatmap-grid');
+        if (grid) {
+            grid.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1; color: #586069; padding: 20px; text-align: center;">No activity recorded for this period.</div>`;
         }
     },
 

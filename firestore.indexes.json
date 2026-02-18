@@ -59,10 +59,6 @@
         {
           "fieldPath": "timestamp",
           "order": "DESCENDING"
-        },
-        {
-          "fieldPath": "__name__",
-          "order": "DESCENDING"
         }
       ]
     },

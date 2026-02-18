@@ -58,6 +58,8 @@ const TimelineDataService = {
             // For a heatmap of a year, 1000 docs might be enough, or maybe 2000.
             query = query.limit(2000);
 
+            // console.log('[TimelineDataService] Querying with filters:', { filters, startDate, endDate });
+
             const snapshot = await query.get();
             const activities = [];
 
