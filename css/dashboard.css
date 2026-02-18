@@ -608,14 +608,6 @@
         -webkit-box-orient: vertical;
         overflow: hidden;
     }
-
-    /* Ensure mobile-only link is clickable and visible */
-    .resource-link-card.mobile-only {
-        display: flex !important;
-        cursor: pointer;
-        z-index: 10;
-        position: relative;
-    }
 }
 
 @media (max-width: 480px) {
