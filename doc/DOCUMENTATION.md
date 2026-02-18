@@ -47,7 +47,8 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **Responsive Design** - Works on desktop, tablet, and mobile
 - **Maroon Theme** - Professional dark maroon and off-white color scheme
 - **Admin Features** - Task reset, task/event delete, event creation, user management with password reset and deletion
-- **Admin User Management** - View all users, manage roles (CR/Faculty/Blocked), edit user profiles, send password resets, delete users
+- **Admin User Management** - View all users, manage roles (CR/Faculty/Blocked), edit user profiles, send password resets (via Client SDK), delete users
+- **Password Reset Enhancements** - "Forgot Password" link on login failure, "Reset Password" button in Profile Settings, and robust Admin reset functionality bypassing CORS issues
 - **CR Role** - Class Representatives can reset and delete tasks for their section, create events for their semester, and edit/delete their own events
 - **Faculty Role** - Faculty members can view department-wide tasks (no semester/section filtering), create events for their department, and edit/delete their own events
 - **Blocked Users** - Restricted accounts in read-only mode (cannot add/edit/delete tasks or change profile)
@@ -739,7 +740,8 @@ NoteManager.currentUserId = null           // Current authenticated user
 | `openEditUserModal(userId)` | string | Open edit user modal |
 | `updateEditUserSections(selectedValue)` | string? | Update sections in edit user modal |
 | `handleEditUser()` | - | Process edit user form (admin) |
-| `handlePasswordReset(userId)` | string | Send password reset email (admin) |
+| `handleEditUser()` | - | Process edit user form (admin) |
+| `handleAdminPasswordReset(userId, userEmail)` | string, string | Send password reset email (admin) using Client SDK to bypass CORS |
 | `openDeleteUserDialog(userId, email)` | string, string | Open delete user confirmation dialog |
 | `handleDeleteUser(userId)` | string | Delete user account (admin) |
 
@@ -1512,6 +1514,7 @@ Router.onRouteChange((routeName) => {
 | 2.27.0 | Feb 2026 | File Upload Service Migration: Migrated from tmpfiles.org to file.io API for note file uploads. Benefits: 14-day file retention (vs 1 hour), direct download links, more reliable service. Updated `js/notes.js` (renamed `uploadToTmpFiles` to `uploadToFileIO`), `js/utils.js` (updated download link detection), `index.html` (updated upload instructions), `doc/DOCUMENTATION.md`. |
 | 2.28.0 | Feb 2026 | Activity Timeline & User Counter: Added interactive activity heatmap and bar chart to visualize user productivity (logins, tasks, events). Added live user counter to dashboard and footer. Mobile UI fixes: resolved clickability issues by removing overlay conflicts, improved Note button visibility logic. |
 | 2.29.0 | Feb 2026 | Session Management & UI Improvements: Added "Stay logged in" checkbox to persist session on trusted devices. Implemented Google Classroom session persistence with auto-refresh tokens. UI refinement: "Refresh Tasks" button moved to header group on mobile for better accessibility. |
+| 2.30.0 | Feb 2026 | Password Reset System Overhaul: (1) **Admin Fix**: Refactored Admin Password Reset to use Client SDK (`Auth.sendPasswordResetEmail`) instead of backend Cloud Function, effectively bootstrapping a workaround for CORS issues on the `sendPasswordReset` endpoint. (2) **Conflict Resolution**: Renamed `handlePasswordReset` to `handleAdminPasswordReset` in `app.js` to fix naming collision that broke the "Forgot Password" modal. (3) **UI Enhancements**: Added "Forgot Password" link on login failure and a new "Reset Password" button in Profile Settings. (4) **UX**: Improved visual prominence of reset links. |
 
 ---
 
@@ -1527,7 +1530,7 @@ Router.onRouteChange((routeName) => {
 ---
 
 *Documentation last updated: February 19, 2026*
-*Version: 2.29.0*
+*Version: 2.30.0*
 
 
 ---
