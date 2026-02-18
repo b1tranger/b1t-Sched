@@ -270,9 +270,10 @@ const TimelineUI = {
         if (chartContainer) chartContainer.style.opacity = '0.5';
 
         try {
-            // Fetch ALL activity (global view)
+            // Fetch ALL activity (global view) for ALL users
+            // user requested global view for everyone
             const filters = {
-                department: 'All', // Request global data
+                department: 'All',
                 semester: 'All',
                 section: 'All'
             };

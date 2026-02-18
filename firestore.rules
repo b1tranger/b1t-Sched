@@ -192,17 +192,7 @@ service cloud.firestore {
     
     match /activity_timeline/{activityId} {
       // Read: Role-based access
-      allow read: if isSignedIn() && (
-        isAdmin() ||
-        (isFaculty() && resource.data.department == getUserDepartment()) ||
-        (isCR() && 
-         resource.data.department == getUserDepartment() &&
-         resource.data.semester == getUserSemester() &&
-         resource.data.section == getUserSection()) ||
-        (resource.data.department == getUserDepartment() &&
-         resource.data.semester == getUserSemester() &&
-         resource.data.section == getUserSection())
-      );
+      allow read: if isSignedIn();
       
       // Create: All authenticated users can create activity records
       allow create: if isSignedIn() && 
