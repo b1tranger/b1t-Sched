@@ -621,29 +621,52 @@ const UI = {
     }
   },
 
-  // Update FAQ, Contribution, and User Counter section visibility based on route
+  // Update FAQ, Contribution, User Counter, and Note Button section visibility based on route
   updateSectionVisibility(routeName) {
     const faqSection = document.getElementById('faq-section');
     const contribSection = document.getElementById('contributions-section');
     const userCounter = document.getElementById('total-user-counter');
+    const noteToggleMobile = document.getElementById('note-toggle');
+    const noteButtonDesktop = document.getElementById('note-button-desktop');
 
-    if (!faqSection) {
-      console.warn('FAQ section not found in DOM');
-    }
-    if (!contribSection) {
-      console.warn('Contributions section not found in DOM');
-    }
+    // Helper to safely toggle display
+    // IMPORTANT: Note buttons use .mobile-only/.desktop-only classes which have !important
+    // To hide them, we must use inline style with !important to override the CSS.
+    // To show them, we remove the inline style so the CSS classes take over.
+    const setNoteVisibility = (el, show) => {
+      if (!el) return;
+      if (show) {
+        el.style.removeProperty('display');
+      } else {
+        el.style.setProperty('display', 'none', 'important');
+      }
+    };
 
-    // Show sections only on dashboard, hide on all other routes
     if (routeName === 'dashboard') {
       if (faqSection) faqSection.style.display = 'block';
-      if (contribSection) contribSection.style.display = 'block'; // Or flex/grid if needed
-      // User counter logic: show if element exists
+      if (contribSection) contribSection.style.display = 'block';
       if (userCounter) userCounter.style.display = 'block';
+
+      // Check auth state for Notes
+      // We use window.auth or firebase.auth().currentUser if available
+      const isAuthenticated = (window.auth && window.auth.currentUser) ||
+        (window.firebase && firebase.auth().currentUser);
+
+      if (isAuthenticated) {
+        setNoteVisibility(noteToggleMobile, true);
+        setNoteVisibility(noteButtonDesktop, true);
+      } else {
+        setNoteVisibility(noteToggleMobile, false);
+        setNoteVisibility(noteButtonDesktop, false);
+      }
+
     } else {
       if (faqSection) faqSection.style.display = 'none';
       if (contribSection) contribSection.style.display = 'none';
       if (userCounter) userCounter.style.display = 'none';
+
+      setNoteVisibility(noteToggleMobile, false);
+      setNoteVisibility(noteButtonDesktop, false);
     }
   }
 };

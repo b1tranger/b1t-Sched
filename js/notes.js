@@ -100,33 +100,21 @@ const NoteManager = {
     }
   },
 
-  // Enable note feature for authenticated users
+  // Enable note feature (delegates visibility to UI controller)
   enableNoteFeature() {
-    const noteToggle = document.getElementById('note-toggle');
-    const noteButtonDesktop = document.getElementById('note-button-desktop');
-
-    if (noteToggle) {
-      noteToggle.style.display = 'flex';
-      noteToggle.setAttribute('aria-expanded', 'false');
-    }
-
-    if (noteButtonDesktop) {
-      noteButtonDesktop.style.display = 'flex';
-      noteButtonDesktop.setAttribute('aria-expanded', 'false');
+    console.log('Note feature enabled');
+    // Re-evaluate visibility based on current route and now-active auth
+    if (window.UI && window.Router) {
+      UI.updateSectionVisibility(Router.getCurrentRoute());
     }
   },
 
-  // Disable note feature for unauthenticated users
+  // Disable note feature
   disableNoteFeature() {
-    const noteToggle = document.getElementById('note-toggle');
-    const noteButtonDesktop = document.getElementById('note-button-desktop');
-
-    if (noteToggle) {
-      noteToggle.style.display = 'none';
-    }
-
-    if (noteButtonDesktop) {
-      noteButtonDesktop.style.display = 'none';
+    console.log('Note feature disabled');
+    // Re-evaluate visibility (will hide buttons since no auth)
+    if (window.UI && window.Router) {
+      UI.updateSectionVisibility(Router.getCurrentRoute());
     }
 
     // Close modal if open

@@ -880,21 +880,19 @@ class CalendarView {
     console.log('[CalendarView] renderWeeklyView - emptyState element:', !!emptyState);
     console.log('[CalendarView] renderWeeklyView - weeklyContainer:', !!weeklyContainer);
 
+    // Always show the weekly container, even if no tasks
+    // This allows users to see the dates and navigate
     if (emptyState) {
-      if (tasks.length === 0) {
-        console.log('[CalendarView] No tasks in visible grid, showing empty state');
-        emptyState.style.display = 'flex';
-        // Ensure regular grid is hidden if it exists
-        const gridElement = document.querySelector('.calendar-grid');
-        if (gridElement) gridElement.style.display = 'none';
-        // Hide weekly container too if truly empty
-        if (weeklyContainer) weeklyContainer.style.display = 'none';
-      } else {
-        console.log('[CalendarView] Tasks found, ensuring weekly container is visible');
-        emptyState.style.display = 'none';
-        weeklyContainer.style.display = 'block';
-      }
+      emptyState.style.display = 'none';
     }
+
+    if (weeklyContainer) {
+      weeklyContainer.style.display = 'block';
+    }
+
+    // Ensure regular grid is hidden
+    const gridElement = document.querySelector('.calendar-grid');
+    if (gridElement) gridElement.style.display = 'none';
   }
 
   /**
