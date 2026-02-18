@@ -245,12 +245,15 @@ const Auth = {
 
   // Send password reset email
   async sendPasswordResetEmail(email) {
+    console.log('[Auth] Attempting to send password reset email to:', email);
     try {
       await auth.sendPasswordResetEmail(email);
-      console.log('Password reset email sent to:', email);
+      console.log('[Auth] Password reset email sent successfully to:', email);
       return { success: true, message: 'Password reset email sent! Please check your inbox.' };
     } catch (error) {
-      console.error('Password reset error:', error);
+      console.error('[Auth] Password reset error:', error);
+      console.error('[Auth] Error code:', error.code);
+      console.error('[Auth] Error message:', error.message);
       return { success: false, error: this.getErrorMessage(error.code) };
     }
   }

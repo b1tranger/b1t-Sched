@@ -905,6 +905,7 @@ const App = {
 
   async handlePasswordReset() {
     const email = document.getElementById('reset-email').value.trim();
+    console.log('[App] Handling password reset for:', email);
 
     if (!email) {
       UI.showMessage('password-reset-message', 'Please enter your email address', 'error');
@@ -916,7 +917,9 @@ const App = {
       return;
     }
 
+    console.log('[App] Calling Auth.sendPasswordResetEmail...');
     const result = await Auth.sendPasswordResetEmail(email);
+    console.log('[App] Reset result:', result);
 
     if (result.success) {
       UI.showMessage('password-reset-message', result.message, 'success');
@@ -927,6 +930,7 @@ const App = {
         UI.hideMessage('password-reset-message');
       }, 3000);
     } else {
+      console.error('[App] Reset failed:', result.error);
       UI.showMessage('password-reset-message', result.error, 'error');
     }
   },
