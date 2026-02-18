@@ -153,7 +153,7 @@
   font-size: 3rem;
   text-shadow: 0 0 10px rgba(0, 0, 0, 0.315);
   /* margin-bottom: var(--spacing-md); */
-  
+
 }
 
 .resource-link-card h3 {
@@ -516,6 +516,7 @@
 
 /* Mobile: Full screen modal for add/edit task forms */
 @media (max-width: 768px) {
+
   #add-task-modal .modal-content,
   #edit-task-modal .modal-content {
     width: 100%;
@@ -528,14 +529,14 @@
     flex-direction: column;
     overflow: hidden;
   }
-  
+
   #add-task-modal .modal-body,
   #edit-task-modal .modal-body {
     flex: 1;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
-  
+
   #add-task-modal .modal-footer,
   #edit-task-modal .modal-footer {
     flex-shrink: 0;
@@ -545,7 +546,7 @@
     border-top: 2px solid var(--border-light);
     padding: var(--spacing-md);
   }
-  
+
   /* Prevent body scroll when modal is open */
   body:has(#add-task-modal[style*="display: flex"]),
   body:has(#edit-task-modal[style*="display: flex"]) {
@@ -582,92 +583,93 @@
    ============================================ */
 
 .install-prompt {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    padding: 16px;
-    max-width: 400px;
-    width: calc(100% - 40px);
-    z-index: 10000;
-    animation: slideUp 0.3s ease-out;
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  padding: 16px;
+  max-width: 400px;
+  width: calc(100% - 40px);
+  z-index: 10000;
+  animation: slideUp 0.3s ease-out;
 }
 
 @keyframes slideUp {
-    from {
-        transform: translateX(-50%) translateY(100px);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(-50%) translateY(0);
-        opacity: 1;
-    }
+  from {
+    transform: translateX(-50%) translateY(100px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
 }
 
 .install-prompt-content {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .install-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 8px;
-    object-fit: cover;
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  object-fit: cover;
 }
 
 .install-text {
-    flex: 1;
+  flex: 1;
 }
 
 .install-text h3 {
-    margin: 0 0 4px 0;
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--text-primary);
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 .install-text p {
-    margin: 0;
-    font-size: 14px;
-    color: var(--text-secondary);
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-secondary);
 }
 
 .install-actions {
-    display: flex;
-    gap: 8px;
+  display: flex;
+  gap: 8px;
 }
 
 .install-actions .btn {
-    padding: 8px 16px;
-    font-size: 14px;
-    white-space: nowrap;
+  padding: 8px 16px;
+  font-size: 14px;
+  white-space: nowrap;
 }
 
 /* Mobile adjustments */
 @media (max-width: 768px) {
-    .install-prompt {
-        bottom: 10px;
-        width: calc(100% - 20px);
-    }
-    
-    .install-prompt-content {
-        flex-direction: column;
-        text-align: center;
-    }
-    
-    .install-actions {
-        width: 100%;
-        flex-direction: column;
-    }
-    
-    .install-actions .btn {
-        width: 100%;
-    }
+  .install-prompt {
+    bottom: 10px;
+    width: calc(100% - 20px);
+  }
+
+  .install-prompt-content {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .install-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .install-actions .btn {
+    width: 100%;
+  }
 }
 
 
@@ -676,44 +678,45 @@
    ============================================ */
 
 .offline-indicator {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    background: #ff9800;
-    color: white;
-    padding: 12px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    font-size: 14px;
-    font-weight: 500;
-    z-index: 10001;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    animation: slideDown 0.3s ease-out;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: #ff9800;
+  color: white;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 10001;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  animation: slideDown 0.3s ease-out;
 }
 
 @keyframes slideDown {
-    from {
-        transform: translateY(-100%);
-    }
-    to {
-        transform: translateY(0);
-    }
+  from {
+    transform: translateY(-100%);
+  }
+
+  to {
+    transform: translateY(0);
+  }
 }
 
 .offline-indicator i {
-    font-size: 16px;
+  font-size: 16px;
 }
 
 /* Adjust main content when offline indicator is shown */
 body:has(.offline-indicator[style*="display: flex"]) .navbar {
-    top: 44px;
+  top: 44px;
 }
 
 body:has(.offline-indicator[style*="display: flex"]) .main-content {
-    margin-top: 44px;
+  margin-top: 44px;
 }
 
 
@@ -722,64 +725,65 @@ body:has(.offline-indicator[style*="display: flex"]) .main-content {
    ============================================ */
 
 .sw-update-notification {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    padding: 16px;
-    z-index: 10002;
-    animation: slideInRight 0.3s ease-out;
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  padding: 16px;
+  z-index: 10002;
+  animation: slideInRight 0.3s ease-out;
 }
 
 @keyframes slideInRight {
-    from {
-        transform: translateX(400px);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 .sw-update-content {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .sw-update-content i {
-    font-size: 20px;
-    color: var(--primary);
+  font-size: 20px;
+  color: var(--primary);
 }
 
 .sw-update-content span {
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
 }
 
 .sw-update-content .btn {
-    padding: 6px 12px;
-    font-size: 13px;
+  padding: 6px 12px;
+  font-size: 13px;
 }
 
 @media (max-width: 768px) {
-    .sw-update-notification {
-        top: 10px;
-        right: 10px;
-        left: 10px;
-    }
-    
-    .sw-update-content {
-        flex-wrap: wrap;
-    }
-    
-    .sw-update-content .btn {
-        flex: 1;
-    }
+  .sw-update-notification {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+  }
+
+  .sw-update-content {
+    flex-wrap: wrap;
+  }
+
+  .sw-update-content .btn {
+    flex: 1;
+  }
 }
 
 
@@ -826,6 +830,7 @@ body:has(.offline-indicator[style*="display: flex"]) .main-content {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }

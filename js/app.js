@@ -873,7 +873,8 @@ const App = {
 
     UI.showLoading(true);
 
-    const result = await Auth.login(email, password);
+    const rememberMe = document.getElementById('trust-device').checked;
+    const result = await Auth.login(email, password, rememberMe);
 
     if (result.success) {
       // Check email verification immediately

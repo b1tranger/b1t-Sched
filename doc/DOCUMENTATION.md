@@ -38,10 +38,11 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **Event Calendar** - Track upcoming academic events with basic markdown, clickable links, collapsible descriptions (2-line truncation), and department scope badge (ALL/CSE/etc.)
 - **Event Editing** - Admins can edit all events; CRs can edit/delete their own events
 - **Resource Links** - Quick access to department-specific resources with built-in PDF viewer (desktop: Google Docs Viewer in modal; mobile: opens in new tab)
-- **Google Classroom Integration** - View all assignments and announcements from enrolled courses in a unified interface with OAuth authentication
+- **Google Classroom Integration** - View all assignments and announcements from enrolled courses in a unified interface with OAuth authentication and session persistence (auto-refresh tokens)
 - **Progressive Web App (PWA)** - Installable app with offline support, service worker caching, and automatic updates
 - **Push Notifications** - Real-time browser notifications for new tasks and events (mobile-compatible via Service Worker API with vibration support)
-- **Session Security** - Automatic logout after 1 hour of inactivity, with activity-based timer reset for enhanced security
+- **Session Security** - Automatic logout after 1 hour of inactivity (unless "Stay logged in" is checked), with activity-based timer reset for enhanced security
+- **Stay Logged In** - Optional "Trust this device" checkbox on login to persist session indefinitely on safe devices
 - **Role Badges** - Visual indicators for CR and Faculty contributors in task cards and contribution lists
 - **Responsive Design** - Works on desktop, tablet, and mobile
 - **Maroon Theme** - Professional dark maroon and off-white color scheme
@@ -336,9 +337,10 @@ const db = firebase.firestore();   // Firestore instance
 **Purpose:** Handle user authentication and session management
 
 **Session Management:**
-- Automatic logout after 1 hour of inactivity for enhanced security
+- Automatic logout after 1 hour of inactivity for enhanced security (unless device is trusted)
 - Activity-based timer reset on user interactions (mouse, keyboard, touch, scroll)
-- Session timer starts on login and clears on logout
+- Session timer starts on login (if not trusted) and clears on logout
+- "Trust this device" feature uses `localStorage` to bypass session timeout
 
 **Properties:**
 - `SESSION_TIMEOUT`: 3600000 ms (1 hour)
@@ -349,7 +351,7 @@ const db = firebase.firestore();   // Firestore instance
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
 | `signup(email, password)` | string, string | `{success, user/error}` | Create new user account |
-| `login(email, password)` | string, string | `{success, user/error}` | Sign in existing user and start session timer |
+| `login(email, password, rememberMe)` | string, string, boolean | `{success, user/error}` | Sign in existing user; optional `rememberMe` to skip session timeout |
 | `logout()` | - | `{success, error?}` | Sign out current user and clear session timer |
 | `onAuthStateChanged(callback)` | function | unsubscribe function | Listen for auth state changes; manages session timer |
 | `getCurrentUser()` | - | User object or null | Get current Firebase user |
@@ -923,6 +925,9 @@ Classroom.DATE_FILTER_MONTHS = 6  // Only show items from last 6 months
 - **Toggle View:** Switch between To-Do (assignments) and Notices (announcements)
 - **Responsive:** Mobile sidebar and desktop modal
 - **OAuth Authentication:** Separate from Firebase auth, uses Google Identity Services
+- **OAuth Authentication:** Separate from Firebase auth, uses Google Identity Services
+- **Session Persistence:** Automatically restores session on page reload using `localStorage` and silent token refresh
+- **Auto-Refresh:** Proactively refreshes access tokens 5 minutes before expiry to prevent session timeouts
 - **Retry Logic:** Automatically retries initialization if Google Identity Services isn't loaded yet
 
 **Date Filter Configuration:**
@@ -1506,6 +1511,7 @@ Router.onRouteChange((routeName) => {
 | 2.26.0 | Feb 2026 | UX & Security Improvements: (1) Deadline options reordered - "Set Deadline" now appears first and is default in Add/Edit Task modals. (2) File downloads in notes now work directly without opening new tab (added `download` attribute to file.io links). (3) Automatic session timeout - users are logged out after 1 hour of inactivity for security, with activity-based timer reset. (4) Role badges - CR and Faculty contributors now have colored badges in task cards and contribution list. (5) Mobile notifications fixed - now use Service Worker API for iOS Safari and Chrome on Android compatibility, with vibration and badge support. Updated `index.html`, `js/utils.js`, `js/auth.js`, `js/app.js`, `js/ui.js`, `js/notification-manager.js`, `sw.js`, `css/components.css`. |
 | 2.27.0 | Feb 2026 | File Upload Service Migration: Migrated from tmpfiles.org to file.io API for note file uploads. Benefits: 14-day file retention (vs 1 hour), direct download links, more reliable service. Updated `js/notes.js` (renamed `uploadToTmpFiles` to `uploadToFileIO`), `js/utils.js` (updated download link detection), `index.html` (updated upload instructions), `doc/DOCUMENTATION.md`. |
 | 2.28.0 | Feb 2026 | Activity Timeline & User Counter: Added interactive activity heatmap and bar chart to visualize user productivity (logins, tasks, events). Added live user counter to dashboard and footer. Mobile UI fixes: resolved clickability issues by removing overlay conflicts, improved Note button visibility logic. |
+| 2.29.0 | Feb 2026 | Session Management & UI Improvements: Added "Stay logged in" checkbox to persist session on trusted devices. Implemented Google Classroom session persistence with auto-refresh tokens. UI refinement: "Refresh Tasks" button moved to header group on mobile for better accessibility. |
 
 ---
 
@@ -1520,8 +1526,8 @@ Router.onRouteChange((routeName) => {
 
 ---
 
-*Documentation last updated: February 18, 2026*
-*Version: 2.27.0*
+*Documentation last updated: February 19, 2026*
+*Version: 2.29.0*
 
 
 ---

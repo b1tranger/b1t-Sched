@@ -17,6 +17,7 @@ const Classroom = {
     courses: [],
     currentCourseId: null,
     currentView: 'todo', // 'todo' or 'notifications'
+    refreshTimer: null,
 
     // Cache
     cache: {},
@@ -66,7 +67,7 @@ const Classroom = {
                 }
                 this.accessToken = tokenResponse.access_token;
                 console.log('Access token received');
-                this.handleAuthSuccess();
+                this.handleAuthSuccess(tokenResponse);
             },
         });
 
@@ -84,7 +85,13 @@ const Classroom = {
             setTimeout(() => {
                 if (this.tokenClient) {
                     // silent prompt to restore session if possible
-                    this.tokenClient.requestAccessToken({ prompt: '' });
+                    console.log('Attempting silent token refresh...');
+                    try {
+                        this.tokenClient.requestAccessToken({ prompt: '' });
+                    } catch (e) {
+                        console.error('Silent refresh failed:', e);
+                        localStorage.removeItem('classroom_connected');
+                    }
                 }
             }, 1000);
         }
@@ -208,9 +215,28 @@ const Classroom = {
         this.tokenClient.requestAccessToken({ prompt: '' });
     },
 
-    handleAuthSuccess() {
+    handleAuthSuccess(tokenResponse) {
         // Auth successful, save state
         localStorage.setItem('classroom_connected', 'true');
+
+        // Setup token refresh if we have expiration info (expires_in is in seconds)
+        if (tokenResponse && tokenResponse.expires_in) {
+            const expiresInMs = tokenResponse.expires_in * 1000;
+            // Refresh 5 minutes before expiry
+            const refreshTime = Math.max(expiresInMs - (5 * 60 * 1000), 0);
+
+            if (this.refreshTimer) clearTimeout(this.refreshTimer);
+
+            this.refreshTimer = setTimeout(() => {
+                console.log('Refreshing Classroom token...');
+                if (this.tokenClient) {
+                    this.tokenClient.requestAccessToken({ prompt: '' });
+                }
+            }, refreshTime);
+
+            console.log(`Token refresh scheduled in ${Math.round(refreshTime / 60000)} minutes`);
+        }
+
         // Fetch courses
         this.fetchCourses();
     },
@@ -232,6 +258,10 @@ const Classroom = {
 
                 this.renderLoginState();
                 localStorage.removeItem('classroom_connected');
+                if (this.refreshTimer) {
+                    clearTimeout(this.refreshTimer);
+                    this.refreshTimer = null;
+                }
             });
         }
     },
