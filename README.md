@@ -272,6 +272,16 @@ Firebase Console → Firestore → `events` → Add document:
   "createdAt": [current timestamp]
 }
 ```
+---
+
+## Update Timeline Manually
+
+refer to: [activity-timeline--migration](https://github.com/b1tranger/b1t-Sched/blob/main/doc/DOCUMENTATION.md#11-activity-timeline--migration) and [firebase_timeline.md](https://github.com/b1tranger/b1t-Sched/blob/main/doc/notes/firebase_timeline.md)
+
+run in browser console:
+```
+migrateActivityLogs()
+```
 
 ---
 
