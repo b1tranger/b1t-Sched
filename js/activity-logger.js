@@ -6,13 +6,8 @@
  */
 
 class ActivityLogger {
-  static COLLECTION_NAME = 'activity_lines'; // Using 'activity_lines' as per user request/convention, or 'activity_logs'? 
-  // Spec says 'activity_logs' or 'activity_timeline'. 
-  // FIREBASE_DATABASE_SETUP_INSTRUCTIONS.md says 'activity_timeline'.
-  // Requirements.md says 'activity_logs'.
-  // I will use 'activity_timeline' to match the setup instructions I just followed for indexes.
-
-  static COLLECTION = 'activity_timeline';
+  static COLLECTION_NAME = 'activity_logs'; // Using 'activity_logs' as per user request
+  static COLLECTION = 'activity_logs';
 
   /**
    * Log a generic activity
@@ -198,5 +193,92 @@ class ActivityLogger {
     if (profile.isFaculty) return 'Faculty';
     if (profile.isCR) return 'CR';
     return 'Student';
+  }
+
+  /**
+   * Backpopulate activity logs from existing tasks
+   * RUN THIS ONCE from console: await ActivityLogger.backpopulateTasks()
+   */
+  static async backpopulateTasks() {
+    console.log('[ActivityLogger] Starting backpopulation...');
+    const db = firebase.firestore();
+
+    try {
+      const snapshot = await db.collection('tasks').get();
+      console.log(`[ActivityLogger] Found ${snapshot.size} tasks to process.`);
+
+      let count = 0;
+      const batchSize = 50;
+      let batch = db.batch();
+
+      for (const doc of snapshot.docs) {
+        const task = doc.data();
+
+        // Use createdAt or fallback to deadline - 1 day, or now
+        let timestamp;
+        if (task.createdAt) {
+          timestamp = task.createdAt;
+        } else if (task.deadline) {
+          // Attempt to parse deadline
+          try {
+            // If deadline is a string "YYYY-MM-DD", convert to date and subtract 1 day
+            const d = new Date(task.deadline);
+            if (!isNaN(d.getTime())) {
+              d.setDate(d.getDate() - 1);
+              timestamp = firebase.firestore.Timestamp.fromDate(d);
+            } else {
+              timestamp = firebase.firestore.FieldValue.serverTimestamp();
+            }
+          } catch (e) {
+            timestamp = firebase.firestore.FieldValue.serverTimestamp();
+          }
+        } else {
+          timestamp = firebase.firestore.FieldValue.serverTimestamp();
+        }
+
+        const logRef = db.collection(this.COLLECTION).doc(); // Auto-ID
+        const activityData = {
+          activityType: 'task_added',
+          timestamp: timestamp,
+          userId: task.addedBy || 'system',
+          userName: task.addedByName || 'System',
+          userRole: 'Student', // Default/Unknown
+          department: task.department || null,
+          semester: task.semester || null,
+          section: task.section || null,
+          taskId: doc.id,
+          taskTitle: task.title || 'Untitled Task',
+          taskType: task.type || 'Other',
+          taskCourse: task.course || 'General',
+          taskStatus: 'added',
+          metadata: {
+            migrated: true,
+            deadline: task.deadline
+          }
+        };
+
+        batch.set(logRef, activityData);
+        count++;
+
+        // Commit batches of 50
+        if (count % batchSize === 0) {
+          await batch.commit();
+          console.log(`[ActivityLogger] Processed ${count} tasks...`);
+          batch = db.batch();
+        }
+      }
+
+      // Commit remaining
+      if (count % batchSize !== 0) {
+        await batch.commit();
+      }
+
+      console.log(`[ActivityLogger] Backpopulation complete. Processed ${count} tasks.`);
+      alert(`Backpopulation complete! Processed ${count} tasks.`);
+
+    } catch (error) {
+      console.error('[ActivityLogger] Backpopulation failed:', error);
+      alert('Backpopulation failed. Check console for details.');
+    }
   }
 }

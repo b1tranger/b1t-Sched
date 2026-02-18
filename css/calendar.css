@@ -481,12 +481,15 @@
 }
 
 /* Mobile (<768px) */
+/* Mobile (<768px) */
 @media (max-width: 767px) {
   .calendar-modal-content {
-    width: 100%;
-    max-height: 100vh;
-    height: 100vh;
-    border-radius: 0;
+    width: 95%;
+    max-width: 95%;
+    max-height: 85vh;
+    height: 85vh;
+    border-radius: var(--radius-lg);
+    margin: auto;
   }
 
   .calendar-header {
@@ -558,13 +561,14 @@
   .week-days-header {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 2px;
+    gap: 0;
     padding: 4px;
     background: var(--bg-lighter);
     position: sticky;
     top: 0;
     z-index: 10;
     flex-shrink: 0;
+    border-bottom: 1px solid var(--border-light);
   }
 
   .day-header {
@@ -574,6 +578,11 @@
     padding: 4px 2px;
     color: var(--text-medium);
     line-height: 1.2;
+    border-right: 1px solid var(--border-light);
+  }
+
+  .day-header:last-child {
+    border-right: none;
   }
 
   .day-header.today {
@@ -585,7 +594,7 @@
   .week-days-content {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 2px;
+    gap: 0;
     padding: 4px;
     flex: 1;
     overflow-y: auto;
@@ -597,6 +606,12 @@
     flex-direction: column;
     gap: 4px;
     min-height: 100%;
+    padding: 0 2px;
+    border-right: 1px solid var(--border-light);
+  }
+
+  .day-column:last-child {
+    border-right: none;
   }
 
   .day-task {

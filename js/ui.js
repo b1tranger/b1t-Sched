@@ -622,7 +622,7 @@ const UI = {
   },
 
   // Update FAQ, Contribution, User Counter, and Note Button section visibility based on route
-  updateSectionVisibility(routeName) {
+  updateSectionVisibility(routeName, forceAuthStatus = null) {
     const faqSection = document.getElementById('faq-section');
     const contribSection = document.getElementById('contributions-section');
     const userCounter = document.getElementById('total-user-counter');
@@ -648,9 +648,22 @@ const UI = {
       if (userCounter) userCounter.style.display = 'block';
 
       // Check auth state for Notes
-      // We use window.auth or firebase.auth().currentUser if available
-      const isAuthenticated = (window.auth && window.auth.currentUser) ||
-        (window.firebase && firebase.auth().currentUser);
+      // 1. Use forceAuthStatus if provided (boolean)
+      // 2. Check Auth module (js/auth.js)
+      // 3. Check generic window/firebase auth
+      let isAuthenticated = false;
+
+      if (forceAuthStatus !== null) {
+        isAuthenticated = forceAuthStatus;
+        console.log('[UI] Using forced auth status:', isAuthenticated);
+      } else {
+        // Try to get current user from Auth module or global objects
+        const currentUser = (typeof Auth !== 'undefined' ? Auth.getCurrentUser() : null) ||
+          (window.auth && window.auth.currentUser) ||
+          (window.firebase && firebase.auth().currentUser);
+        isAuthenticated = !!currentUser;
+        console.log('[UI] Detected auth status:', isAuthenticated);
+      }
 
       if (isAuthenticated) {
         setNoteVisibility(noteToggleMobile, true);

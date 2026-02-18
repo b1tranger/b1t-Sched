@@ -105,7 +105,7 @@ const NoteManager = {
     console.log('Note feature enabled');
     // Re-evaluate visibility based on current route and now-active auth
     if (window.UI && window.Router) {
-      UI.updateSectionVisibility(Router.getCurrentRoute());
+      UI.updateSectionVisibility(Router.getCurrentRoute(), true);
     }
   },
 
@@ -114,7 +114,7 @@ const NoteManager = {
     console.log('Note feature disabled');
     // Re-evaluate visibility (will hide buttons since no auth)
     if (window.UI && window.Router) {
-      UI.updateSectionVisibility(Router.getCurrentRoute());
+      UI.updateSectionVisibility(Router.getCurrentRoute(), false);
     }
 
     // Close modal if open

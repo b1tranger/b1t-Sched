@@ -6,7 +6,7 @@
 
 const TimelineDataService = {
     // Collection name must match ActivityLogger
-    COLLECTION: 'activity_timeline',
+    COLLECTION: 'activity_logs',
 
     /**
      * Fetch activity logs with filters

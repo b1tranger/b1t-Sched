@@ -57,7 +57,9 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **Task Filtering** - Filter pending tasks by type (Assignment, Homework, Exam, Project, Presentation, Other)
 - **Global Contributions** - View a leaderboard of top contributors (group-specific or global across all departments)
 - **User Counter** - Live count of total registered users displayed on the dashboard and footer
-- **Activity Timeline** - Visual heatmap and bar chart tracking user activity (logins, tasks, events, profile updates) to visualize productivity patterns
+- **Activity Timeline** - Visual heatmap and bar chart tracking user activity (logins, tasks, events, profile updates) to visualize productivity patterns. Includes a backpopulation utility for existing tasks.
+- **User Counter** - Live count of total registered users displayed on the dashboard and footer.
+- **Mobile Calendar** - Improved weekly view for mobile devices with vertical scrolling, better touch targets, and visual separators.
 - **FAQ Section** - Collapsible accordion explaining how the site works, user roles, and profile settings
 - **Footer with Credits** - Source code link, total user count, and dynamic copyright year
 
@@ -267,7 +269,8 @@ b1t-Sched/
 │   ├── notification-content-formatter.js # Notification content formatting
 │   ├── notification-manager.js  # Core notification logic
 │   ├── firestore-listener-manager.js # Firestore real-time listeners
-│   ├── activity-logger.js       # User activity tracking
+│   ├── firestore-listener-manager.js # Firestore real-time listeners
+│   ├── activity-logger.js       # User activity tracking & backpopulation
 │   ├── timeline-data.js         # Timeline data fetching & processing
 │   ├── timeline-ui.js           # Timeline visualization rendering
 │   └── app.js                   # Main application logic
@@ -1916,6 +1919,13 @@ CalendarView.maxYear = currentYear + 100   // Navigation limit (future)
 
 **Reference:** [Google Calendar](https://calendar.google.com/)
 
+### Activity Timeline
+Visualizes user productivity and engagement:
+- **Heatmap**: GitHub-style contribution graph showing daily activity intensity.
+- **Weekly Stats**: Bar chart showing activity distribution by day of the week.
+- **Activity Log**: Chronological list of recent actions (Task Added, Completed, Event Created).
+- **Backpopulation**: Utility (`ActivityLogger.backpopulateTasks()`) to import past tasks into history.
+
 ### File Upload System
 The note-taking feature uses multiple file upload providers for reliability:
 
@@ -1972,3 +1982,16 @@ The note-taking feature uses multiple file upload providers for reliability:
 ---
 
 *Last Updated: February 18, 2026*
+
+## Version History
+
+### v2.29.0 (Current)
+- **New Feature**: Activity Timeline with heatmap and weekly stats.
+- **New Feature**: Live User Counter on dashboard and footer.
+- **Enhancement**: Mobile Calendar UI overhaul (centered, scrollable, borders).
+- **Enhancement**: Note Button visibility logic improved (route-based & auth-aware).
+- **Fix**: Collection name mismatch (`activity_timeline` -> `activity_logs`).
+- **Fix**: Mobile clickability issues (z-index overlay).
+- **Utility**: Added `backpopulateTasks` for timeline history migration.
+
+### v2.28.0

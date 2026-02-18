@@ -839,6 +839,10 @@ class CalendarView {
       return;
     }
 
+    // CRITICAL: Ensure container is visible on mobile
+    // It might have been hidden by desktop logic or previous state
+    gridContainer.style.display = 'block';
+
     // Clear existing content
     gridContainer.innerHTML = '';
 
