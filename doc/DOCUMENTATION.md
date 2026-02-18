@@ -16,8 +16,9 @@
 8. [User Flows](#user-flows)
 9. [Views & Components](#views--components)
 10. [API Reference](#api-reference)
-11. [Design References & Inspirations](#design-references--inspirations)
-12. [Additional Resources](#additional-resources)
+11. [Activity Timeline & Migration](#activity-timeline--migration)
+12. [Design References & Inspirations](#design-references--inspirations)
+13. [Additional Resources](#additional-resources)
 
 ---
 
@@ -1929,88 +1930,107 @@ CalendarView.maxYear = currentYear + 100   // Navigation limit (future)
 
 ---
 
-## Design References & Inspirations
-
-### Calendar View
-
-**Desktop:** The calendar view design was inspired by **ClickUp's calendar interface**, featuring:
-- Monthly grid layout with task visualization
-- Compact cell design with date indicators
-- Task type badges and overflow indicators
-- Inline navigation controls
-
-**Reference:** [ClickUp Calendar View](https://clickup.com/)
-
-**Mobile:** The mobile calendar view is inspired by **Google Calendar's weekly view**, featuring:
-- Horizontal scrolling through weeks of the month
-- Week-by-week navigation with swipe gestures
-- Compact day columns with vertical task lists
-- Month navigation controls to switch between months
-- Touch-optimized interface
-
-**Reference:** [Google Calendar](https://calendar.google.com/)
-
-### Activity Timeline
-Visualizes user productivity and engagement:
-- **Heatmap**: GitHub-style contribution graph showing daily activity intensity.
-- **Weekly Stats**: Bar chart showing activity distribution by day of the week.
-- **Activity Log**: Chronological list of recent actions (Task Added, Completed, Event Created).
-- **Backpopulation**: Utility (`ActivityLogger.backpopulateTasks()`) to import past tasks into history.
-
-### File Upload System
-The note-taking feature uses multiple file upload providers for reliability:
-
-#### Primary: Firebase Storage
-- **Service:** Google Firebase Cloud Storage
-- **Limits:** 10 MB per file, 5 GB total (free tier)
-- **Retention:** Permanent
-- **Documentation:** [Firebase Storage](https://firebase.google.com/docs/storage)
-
-#### Fallback 1: Catbox.moe
-- **Service:** Catbox.moe File Hosting API
-- **Limits:** 200 MB per file
-- **Retention:** Permanent
-- **API Endpoint:** `https://catbox.moe/user/api.php`
-- **Documentation:** [Catbox API](https://catbox.moe/api.php)
-
-#### Fallback 2: Tmpfiles.org
-- **Service:** Tmpfiles.org Temporary File Hosting
-- **Limits:** 100 MB per file
-- **Retention:** 1 year expiration
-- **API Endpoint:** `https://tmpfiles.org/api/v1/upload`
-- **Documentation:** [Tmpfiles API](https://tmpfiles.org/)
-
-#### Deprecated: File.io
-- **Status:** Removed due to CORS issues
-- **Issue:** Missing `Access-Control-Allow-Origin` header blocked browser uploads
-- **Replacement:** Multi-provider fallback system (Firebase → Catbox → Tmpfiles)
-
-**Implementation Details:**
-- Automatic fallback on provider failure
-- Progress indication during upload
-- Direct download support (no new tab required)
-- Markdown link generation: `[filename](url)`
-- Error handling with user-friendly messages
-
----
-
-## Additional Resources
-
-### File Upload Documentation
-- `doc/FILE_UPLOAD_OPTIONS_ANALYSIS.md` - Comprehensive analysis of upload options
-- `doc/FILE_UPLOAD_QUICK_REFERENCE.md` - Quick reference for developers
-- `doc/summaries/FIREBASE_STORAGE_MIGRATION.md` - Migration details
-
-### Calendar View Documentation
-- `doc/summaries/CALENDAR_FIX_SUMMARY.md` - Calendar bug fix details
-- `.kiro/specs/task-calendar-view/` - Complete spec with requirements, design, and tasks
-
-### Firebase Documentation
-- [Firebase Storage Documentation](https://firebase.google.com/docs/storage)
-- [Firebase Pricing](https://firebase.google.com/pricing)
-- [Firestore Security Rules](https://firebase.google.com/docs/firestore/security/get-started)
-
----
+## 11. Activity Timeline & Migration
+2032: 
+2033: ### Overview
+2034: The **Activity Timeline** visualizes user engagement over time, displaying a GitHub-style heatmap and bar chart of activities such as task creation, completion, and event management.
+2035: 
+2036: ### Data Migration
+2037: To backfill the timeline with existing tasks and events, a one-time migration script is provided.
+2038: 
+2039: #### How to Run Migration
+2040: 1.  Open the application in your browser.
+2041: 2.  Open the Browser Console (F12 or Right-click -> Inspect -> Console).
+2042: 3.  Run the following command:
+2043:     ```javascript
+2044:     await migrateActivityLogs()
+2045:     ```
+2046: 4.  Wait for the alert "Migration Complete".
+2047: 
+2048: ---
+2049: 
+2050: ## 12. Design References & Inspirations
+2051: 
+2052: ### Calendar View
+2053: 
+2054: **Desktop:** The calendar view design was inspired by **ClickUp's calendar interface**, featuring:
+2055: - Monthly grid layout with task visualization
+2056: - Compact cell design with date indicators
+2057: - Task type badges and overflow indicators
+2058: - Inline navigation controls
+2059: 
+2060: **Reference:** [ClickUp Calendar View](https://clickup.com/)
+2061: 
+2062: **Mobile:** The mobile calendar view is inspired by **Google Calendar's weekly view**, featuring:
+2063: - Horizontal scrolling through weeks of the month
+2064: - Week-by-week navigation with swipe gestures
+2065: - Compact day columns with vertical task lists
+2066: - Month navigation controls to switch between months
+2067: - Touch-optimized interface
+2068: 
+2069: **Reference:** [Google Calendar](https://calendar.google.com/)
+2070: 
+2071: ### Activity Timeline
+2072: Visualizes user productivity and engagement:
+2073: - **Heatmap**: GitHub-style contribution graph showing daily activity intensity.
+2074: - **Weekly Stats**: Bar chart showing activity distribution by day of the week.
+2075: - **Activity Log**: Chronological list of recent actions (Task Added, Completed, Event Created).
+2076: - **Backpopulation**: Utility (`migrateActivityLogs()`) to import past tasks into history.
+2077: 
+2078: ### File Upload System
+2079: The note-taking feature uses multiple file upload providers for reliability:
+2080: 
+2081: #### Primary: Firebase Storage
+2082: - **Service:** Google Firebase Cloud Storage
+2083: - **Limits:** 10 MB per file, 5 GB total (free tier)
+2084: - **Retention:** Permanent
+2085: - **Documentation:** [Firebase Storage](https://firebase.google.com/docs/storage)
+2086: 
+2087: #### Fallback 1: Catbox.moe
+2088: - **Service:** Catbox.moe File Hosting API
+2089: - **Limits:** 200 MB per file
+2090: - **Retention:** Permanent
+2091: - **API Endpoint:** `https://catbox.moe/user/api.php`
+2092: - **Documentation:** [Catbox API](https://catbox.moe/api.php)
+2093: 
+2094: #### Fallback 2: Tmpfiles.org
+2095: - **Service:** Tmpfiles.org Temporary File Hosting
+2096: - **Limits:** 100 MB per file
+2097: - **Retention:** 1 year expiration
+2098: - **API Endpoint:** `https://tmpfiles.org/api/v1/upload`
+2099: - **Documentation:** [Tmpfiles API](https://tmpfiles.org/)
+2100: 
+2101: #### Deprecated: File.io
+2102: - **Status:** Removed due to CORS issues
+2103: - **Issue:** Missing `Access-Control-Allow-Origin` header blocked browser uploads
+2104: - **Replacement:** Multi-provider fallback system (Firebase → Catbox → Tmpfiles)
+2105: 
+2106: **Implementation Details:**
+2107: - Automatic fallback on provider failure
+2108: - Progress indication during upload
+2109: - Direct download support (no new tab required)
+2110: - Markdown link generation: `[filename](url)`
+2111: - Error handling with user-friendly messages
+2112: 
+2113: ---
+2114: 
+2115: ## 13. Additional Resources
+2116: 
+2117: ### File Upload Documentation
+2118: - `doc/FILE_UPLOAD_OPTIONS_ANALYSIS.md` - Comprehensive analysis of upload options
+2119: - `doc/FILE_UPLOAD_QUICK_REFERENCE.md` - Quick reference for developers
+2120: - `doc/summaries/FIREBASE_STORAGE_MIGRATION.md` - Migration details
+2121: 
+2122: ### Calendar View Documentation
+2123: - `doc/summaries/CALENDAR_FIX_SUMMARY.md` - Calendar bug fix details
+2124: - `.kiro/specs/task-calendar-view/` - Complete spec with requirements, design, and tasks
+2125: 
+2126: ### Firebase Documentation
+2127: - [Firebase Storage Documentation](https://firebase.google.com/docs/storage)
+2128: - [Firebase Pricing](https://firebase.google.com/pricing)
+2129: - [Firestore Security Rules](https://firebase.google.com/docs/firestore/security/get-started)
+2130: 
+2131: ---
 
 *Last Updated: February 18, 2026*
 
