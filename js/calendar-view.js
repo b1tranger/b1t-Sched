@@ -119,11 +119,70 @@ class CalendarView {
     prevBtn.setAttribute('tabindex', '0');
     prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
 
-    // Month/year display
-    const title = document.createElement('h2');
-    title.id = 'calendar-title';
-    title.className = 'calendar-month-year';
-    title.textContent = 'January 2024';
+    // Month/Year Dropdown container
+    const titleContainer = document.createElement('div');
+    titleContainer.className = 'calendar-title-container';
+
+    // Month Select
+    const monthSelect = document.createElement('select');
+    monthSelect.id = 'calendar-month-select';
+    monthSelect.className = 'calendar-select month-select';
+    monthSelect.setAttribute('aria-label', 'Select month');
+
+    const monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+
+    monthNames.forEach((name, index) => {
+      const option = document.createElement('option');
+      option.value = index;
+      option.textContent = name;
+      monthSelect.appendChild(option);
+    });
+
+    // Year Select
+    const yearSelect = document.createElement('select');
+    yearSelect.id = 'calendar-year-select';
+    yearSelect.className = 'calendar-select year-select';
+    yearSelect.setAttribute('aria-label', 'Select year');
+
+    // Add change listeners immediately
+    monthSelect.addEventListener('change', (e) => {
+      this.displayedMonth = parseInt(e.target.value);
+      this.showLoading();
+      // Use requestAnimationFrame for smoother UI update
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          this.renderCalendar();
+          this.hideLoading();
+        }, 10);
+      });
+    });
+
+    // Populate year select (current year - 5 to + 5)
+    const currentYear = new Date().getFullYear();
+    for (let i = currentYear - 5; i <= currentYear + 5; i++) {
+      const option = document.createElement('option');
+      option.value = i;
+      option.textContent = i;
+      yearSelect.appendChild(option);
+    }
+
+    // Add change listener for year
+    yearSelect.addEventListener('change', (e) => {
+      this.displayedYear = parseInt(e.target.value);
+      this.showLoading();
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          this.renderCalendar();
+          this.hideLoading();
+        }, 10);
+      });
+    });
+
+    titleContainer.appendChild(monthSelect);
+    titleContainer.appendChild(yearSelect);
 
     // Next month button
     const nextBtn = document.createElement('button');
@@ -142,7 +201,7 @@ class CalendarView {
 
     // Assemble header
     header.appendChild(prevBtn);
-    header.appendChild(title);
+    header.appendChild(titleContainer);
     header.appendChild(nextBtn);
     header.appendChild(closeBtn);
 
@@ -818,6 +877,9 @@ class CalendarView {
    * Displays weeks horizontally with scroll-snap
    */
   renderWeeklyView() {
+    // CRITICAL: Update header FIRST before any potential early returns
+    this.updateHeader();
+
     // Ensure modal exists
     if (!this.modal) {
       console.error('Modal not initialized');
@@ -843,6 +905,19 @@ class CalendarView {
     // It might have been hidden by desktop logic or previous state
     gridContainer.style.display = 'block';
 
+    // Handle empty state (Issue 4)
+    // Check if there are any tasks for this month
+    const tasks = this.getTasksForMonth();
+    const emptyState = document.getElementById('calendar-empty-state');
+
+    if (tasks.length === 0 && emptyState) {
+      emptyState.style.display = 'flex';
+      gridContainer.style.display = 'none';
+      return; // Stop rendering
+    } else if (emptyState) {
+      emptyState.style.display = 'none';
+    }
+
     // Clear existing content
     gridContainer.innerHTML = '';
 
@@ -865,28 +940,68 @@ class CalendarView {
     });
 
     scrollContainer.appendChild(weeksWrapper);
-    weeklyContainer.appendChild(scrollContainer);
+
+    // Original appends removed as they are handled later with navWrapper
+
+
+    // Setup scroll snap (disabled as per user request, but keeping smooth scroll available)
+    // this.setupWeekScrolling(scrollContainer);
+
+    // Create wrapper for navigation buttons and scroll container
+    const navWrapper = document.createElement('div');
+    navWrapper.className = 'mobile-nav-container';
+
+    // Create navigation buttons
+    const prevWeekBtn = document.createElement('button');
+    prevWeekBtn.className = 'mobile-nav-btn prev-week';
+    prevWeekBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+    prevWeekBtn.setAttribute('aria-label', 'Previous week');
+
+    const nextWeekBtn = document.createElement('button');
+    nextWeekBtn.className = 'mobile-nav-btn next-week';
+    nextWeekBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+    nextWeekBtn.setAttribute('aria-label', 'Next week');
+
+    // Add buttons and scroll container to wrapper
+    navWrapper.appendChild(prevWeekBtn);
+    navWrapper.appendChild(scrollContainer);
+    navWrapper.appendChild(nextWeekBtn);
+
+    weeklyContainer.appendChild(navWrapper);
+
+    // Add event listeners for navigation
+    prevWeekBtn.addEventListener('click', () => {
+      const weekWidth = scrollContainer.clientWidth; // Use clientWidth for accurate visible width
+      scrollContainer.scrollBy({
+        left: -weekWidth,
+        behavior: 'smooth'
+      });
+    });
+
+    nextWeekBtn.addEventListener('click', () => {
+      const weekWidth = scrollContainer.clientWidth;
+      scrollContainer.scrollBy({
+        left: weekWidth,
+        behavior: 'smooth'
+      });
+    });
 
     // Replace grid with weekly view
     gridContainer.appendChild(weeklyContainer);
 
-    // Setup scroll snap
-    this.setupWeekScrolling(scrollContainer);
-
-    // Update header
-    this.updateHeader();
 
     // Handle empty state - check if there are any tasks in the visible grid
-    const tasks = this.getTasksForVisibleGrid();
-    const emptyState = document.getElementById('calendar-empty-state');
+    const visibleTasks = this.getTasksForVisibleGrid();
+    // emptyState already declared above
 
-    console.log('[CalendarView] renderWeeklyView - tasks found in visible grid:', tasks.length);
+    console.log('[CalendarView] renderWeeklyView - tasks found in visible grid:', visibleTasks.length);
     console.log('[CalendarView] renderWeeklyView - emptyState element:', !!emptyState);
     console.log('[CalendarView] renderWeeklyView - weeklyContainer:', !!weeklyContainer);
 
-    // Always show the weekly container, even if no tasks
-    // This allows users to see the dates and navigate
+    // Logic for empty state visibility on mobile
     if (emptyState) {
+      // If we made it here, it means the month is NOT empty (checked at top of function).
+      // So ensuring the empty state is hidden is correct.
       emptyState.style.display = 'none';
     }
 
@@ -1196,21 +1311,29 @@ class CalendarView {
    * Also updates ARIA label for accessibility
    */
   updateHeader() {
-    const monthNames = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
-    ];
+    // Update Dropdown Values
+    const monthSelect = document.getElementById('calendar-month-select');
+    const yearSelect = document.getElementById('calendar-year-select');
 
-    // Format header text as "Month Year"
-    const headerText = `${monthNames[this.displayedMonth]} ${this.displayedYear}`;
+    if (monthSelect) {
+      monthSelect.value = this.displayedMonth;
+    }
 
-    // Update header element
-    const headerElement = document.getElementById('calendar-title');
-    if (headerElement) {
-      headerElement.textContent = headerText;
-
-      // Update ARIA label for accessibility
-      headerElement.setAttribute('aria-label', `Calendar showing ${headerText}`);
+    if (yearSelect) {
+      // dynamic check: if year is missing, add it
+      let yearOption = yearSelect.querySelector(`option[value="${this.displayedYear}"]`);
+      if (!yearOption) {
+        yearOption = document.createElement('option');
+        yearOption.value = this.displayedYear;
+        yearOption.textContent = this.displayedYear;
+        yearSelect.appendChild(yearOption);
+        // sort options
+        const options = Array.from(yearSelect.options);
+        options.sort((a, b) => a.value - b.value);
+        yearSelect.innerHTML = '';
+        options.forEach(opt => yearSelect.appendChild(opt));
+      }
+      yearSelect.value = this.displayedYear;
     }
   }
 

@@ -6,7 +6,7 @@ const Classroom = {
     // Configuration
     CLIENT_ID: '142195418679-0ripc2dn76otvkvfnk6kdk2aitdd29rm.apps.googleusercontent.com',
     SCOPES: 'https://www.googleapis.com/auth/classroom.courses.readonly https://www.googleapis.com/auth/classroom.coursework.me.readonly https://www.googleapis.com/auth/classroom.announcements.readonly',
-    
+
     // Date filter configuration (in months)
     DATE_FILTER_MONTHS: 6, // Only show items from the last 6 months
 
@@ -36,11 +36,11 @@ const Classroom = {
         // Wait for Google Identity Services script to load
         if (typeof google === 'undefined' || !google.accounts || !google.accounts.oauth2) {
             console.warn('Google Identity Services not loaded yet. Retrying in 500ms...');
-            
+
             // Retry up to 10 times
             if (!this.initRetryCount) this.initRetryCount = 0;
             this.initRetryCount++;
-            
+
             if (this.initRetryCount <= 10) {
                 console.log(`Retry attempt ${this.initRetryCount}/10`);
                 setTimeout(() => this.init(), 500);
@@ -75,12 +75,26 @@ const Classroom = {
         this.setupEventListeners();
         this.isInitialized = true;
         this.renderInitialState();
+
+        // Check for persisted connection
+        const isConnected = localStorage.getItem('classroom_connected') === 'true';
+        if (isConnected) {
+            console.log('Restoring Classroom session...');
+            // Wait a moment for token client to be ready
+            setTimeout(() => {
+                if (this.tokenClient) {
+                    // silent prompt to restore session if possible
+                    this.tokenClient.requestAccessToken({ prompt: '' });
+                }
+            }, 1000);
+        }
+
         console.log('Google Classroom module initialized successfully');
     },
 
     setupEventListeners() {
         console.log('Setting up Classroom event listeners...');
-        
+
         // Mobile Toggle Button
         const toggleBtn = document.getElementById('classroom-toggle');
         if (toggleBtn) {
@@ -117,21 +131,21 @@ const Classroom = {
         } else {
             console.warn('close-classroom-sidebar not found in DOM');
         }
-        
+
         if (closeDesktop) {
             closeDesktop.addEventListener('click', () => this.toggleModal(false));
             console.log('Attached listener to close-classroom-modal');
         } else {
             console.warn('close-classroom-modal not found in DOM');
         }
-        
+
         if (overlay) {
             overlay.addEventListener('click', () => this.toggleSidebar(false));
             console.log('Attached listener to classroom-overlay');
         } else {
             console.warn('classroom-overlay not found in DOM');
         }
-        
+
         console.log('Event listeners setup complete');
     },
 
@@ -195,7 +209,9 @@ const Classroom = {
     },
 
     handleAuthSuccess() {
-        // Auth successful, fetch courses
+        // Auth successful, save state
+        localStorage.setItem('classroom_connected', 'true');
+        // Fetch courses
         this.fetchCourses();
     },
 
@@ -207,14 +223,15 @@ const Classroom = {
                 this.accessToken = null;
                 this.courses = [];
                 this.currentCourseId = null;
-                
+
                 // Clear cached classroom data
                 this.initCacheManager();
                 if (this.cacheManager) {
                     this.cacheManager.clearUserCaches();
                 }
-                
+
                 this.renderLoginState();
+                localStorage.removeItem('classroom_connected');
             });
         }
     },
@@ -274,10 +291,10 @@ const Classroom = {
 
     async loadAllAssignments() {
         this.currentView = 'todo';
-        
+
         // Initialize cache manager
         this.initCacheManager();
-        
+
         // Check for cached data first
         if (this.cacheManager) {
             const cachedData = await this.cacheManager.getCachedClassroomData('assignments');
@@ -287,12 +304,12 @@ const Classroom = {
                 return;
             }
         }
-        
+
         this.renderLoading('Loading assignments from all courses...');
 
         try {
             const allAssignments = [];
-            
+
             // Set cutoff date based on configuration
             const cutoffDate = new Date();
             cutoffDate.setMonth(cutoffDate.getMonth() - this.DATE_FILTER_MONTHS);
@@ -316,7 +333,7 @@ const Classroom = {
                     if (response.ok) {
                         const data = await response.json();
                         const courseWork = data.courseWork || [];
-                        
+
                         // Filter by date and add course info to each assignment
                         courseWork.forEach(work => {
                             // Check if assignment has a due date
@@ -333,7 +350,7 @@ const Classroom = {
                                     return;
                                 }
                             }
-                            
+
                             work.courseName = course.name;
                             work.courseId = course.id;
                             work.courseState = course.courseState;
@@ -355,12 +372,12 @@ const Classroom = {
             });
 
             console.log(`Loaded ${allAssignments.length} assignments from ${this.courses.filter(c => c.courseState === 'ACTIVE').length} active courses`);
-            
+
             // Cache the data
             if (this.cacheManager) {
                 await this.cacheManager.cacheClassroomData('assignments', allAssignments);
             }
-            
+
             this.renderAllItems(allAssignments, 'todo');
 
         } catch (error) {
@@ -371,10 +388,10 @@ const Classroom = {
 
     async loadAllAnnouncements() {
         this.currentView = 'notifications';
-        
+
         // Initialize cache manager
         this.initCacheManager();
-        
+
         // Check for cached data first
         if (this.cacheManager) {
             const cachedData = await this.cacheManager.getCachedClassroomData('announcements');
@@ -384,12 +401,12 @@ const Classroom = {
                 return;
             }
         }
-        
+
         this.renderLoading('Loading announcements from all courses...');
 
         try {
             const allAnnouncements = [];
-            
+
             // Set cutoff date based on configuration
             const cutoffDate = new Date();
             cutoffDate.setMonth(cutoffDate.getMonth() - this.DATE_FILTER_MONTHS);
@@ -413,7 +430,7 @@ const Classroom = {
                     if (response.ok) {
                         const data = await response.json();
                         const announcements = data.announcements || [];
-                        
+
                         // Filter by date and add course info to each announcement
                         announcements.forEach(announcement => {
                             // Check update time
@@ -430,7 +447,7 @@ const Classroom = {
                                     return;
                                 }
                             }
-                            
+
                             announcement.courseName = course.name;
                             announcement.courseId = course.id;
                             announcement.courseState = course.courseState;
@@ -448,12 +465,12 @@ const Classroom = {
             });
 
             console.log(`Loaded ${allAnnouncements.length} announcements from ${this.courses.filter(c => c.courseState === 'ACTIVE').length} active courses`);
-            
+
             // Cache the data
             if (this.cacheManager) {
                 await this.cacheManager.cacheClassroomData('announcements', allAnnouncements);
             }
-            
+
             this.renderAllItems(allAnnouncements, 'notifications');
 
         } catch (error) {

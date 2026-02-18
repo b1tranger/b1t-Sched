@@ -154,7 +154,10 @@ const App = {
   isFaculty: false,
   isBlocked: false,
   allUsers: [],
+  isBlocked: false,
+  allUsers: [],
   isSigningUp: false, // Flag to prevent auth state handling during signup
+  currentFilter: 'all', // State to track active task filter
 
   async init() {
     console.log('Initializing b1t-Sched...');
@@ -998,10 +1001,24 @@ const App = {
 
       // Check if user is admin, CR, Faculty, or blocked
       const rolesResult = await DB.getUserRoles(user.uid);
-      this.isAdmin = rolesResult.isAdmin || false;
-      this.isCR = rolesResult.isCR || false;
-      this.isFaculty = rolesResult.isFaculty || false;
-      this.isBlocked = rolesResult.isBlocked || false;
+
+      this.isAdmin = rolesResult.isAdmin;
+      this.isCR = rolesResult.isCR;
+      this.isFaculty = rolesResult.isFaculty;
+      this.isBlocked = rolesResult.isBlocked;
+
+      // Update UI based on roles
+      UI.toggleAdminControls(this.isAdmin, this.isCR, this.isFaculty);
+      UI.toggleBlockedUserMode(this.isBlocked);
+
+      // Force UI update for section visibility (Unit Note button)
+      // This ensures buttons appear immediately after login/profile load
+      UI.updateSectionVisibility(Router.getCurrentRoute(), true);
+
+      // Initialize Note Manager with user ID
+      if (typeof NoteManager !== 'undefined') {
+        NoteManager.loadNote(user.uid);
+      }
 
       // Save to localStorage
       Utils.storage.set('userProfile', this.userProfile);
@@ -1223,6 +1240,17 @@ const App = {
     // Setup new features listeners (safe to call multiple times as they replace old ones or we can check init)
     this.setupTaskFilterListeners();
 
+    // Re-apply current filter if set
+    if (this.currentFilter && this.currentFilter !== 'all') {
+      const radio = document.querySelector(`input[name="task-filter"][value="${this.currentFilter}"]`);
+      if (radio) radio.checked = true;
+      this.filterTasksByType(this.currentFilter);
+
+      // Show clear button
+      const clearBtn = document.getElementById('clear-task-filter-btn');
+      if (clearBtn) clearBtn.style.display = 'inline-flex';
+    }
+
     // Update total user count
     this.updateUserCount();
 
@@ -1427,6 +1455,7 @@ const App = {
   },
 
   filterTasksByType(type) {
+    this.currentFilter = type;
     const tasks = document.querySelectorAll('.task-card');
     let visibleCount = 0;
 

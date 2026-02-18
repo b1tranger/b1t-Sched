@@ -17,6 +17,46 @@
   animation: fadeIn 0.3s ease-in-out;
 }
 
+/* Mobile Navigation Buttons */
+.mobile-nav-btn {
+  background: var(--bg-white);
+  border: 1px solid var(--border-light);
+  color: var(--primary-maroon);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  z-index: 20;
+  transition: all var(--transition-fast);
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.mobile-nav-btn:hover {
+  background: var(--bg-light);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.mobile-nav-btn.prev-week {
+  left: 10px;
+}
+
+.mobile-nav-btn.next-week {
+  right: 10px;
+}
+
+.mobile-nav-container {
+  position: relative;
+  height: 100%;
+  flex: 1;
+  overflow: hidden;
+}
+
 /* Modal Content Container */
 .calendar-modal-content {
   background: var(--bg-white);
@@ -65,13 +105,58 @@
   flex-shrink: 0;
 }
 
-.calendar-month-year {
+/* Calendar Title Container (Month + Year Dropdowns) */
+.calendar-title-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  flex: 1;
+}
+
+.calendar-select {
+  background-color: transparent;
+  border: none;
   color: var(--primary-maroon);
   font-size: var(--font-lg);
   font-weight: var(--font-semibold);
-  margin: 0;
-  flex: 1;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  appearance: none;
+  /* Hide default arrow in some browsers */
+  -webkit-appearance: none;
+  -moz-appearance: none;
   text-align: center;
+}
+
+.calendar-select:hover {
+  background-color: var(--bg-light);
+}
+
+.calendar-select:focus {
+  outline: 2px solid var(--primary-maroon);
+  background-color: var(--bg-light);
+}
+
+/* Modern Dropdown Arrow Hack (optional, or just rely on hover/focus state) */
+.calendar-select {
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23800000%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.7em top 50%;
+  background-size: 0.65em auto;
+  padding-right: 1.5em;
+  /* Space for arrow */
+}
+
+/* Specific widths if needed */
+.month-select {
+  min-width: 100px;
+}
+
+.year-select {
+  min-width: 80px;
 }
 
 .calendar-nav-btn {
@@ -103,9 +188,9 @@
   position: absolute;
   top: var(--spacing-lg);
   right: var(--spacing-lg);
-  background-color: transparent;
+  background-color: rgba(255, 255, 255, 0.493);
   border: none;
-  color: var(--text-medium);
+  color: var(--text-dark);
   font-size: var(--font-lg);
   cursor: pointer;
   padding: var(--spacing-sm);
@@ -528,7 +613,7 @@
   .weeks-scroll-container {
     overflow-x: auto;
     overflow-y: hidden;
-    scroll-snap-type: x mandatory;
+    scroll-snap-type: none;
     -webkit-overflow-scrolling: touch;
     display: flex;
     height: 100%;
@@ -599,6 +684,7 @@
     flex: 1;
     overflow-y: auto;
     align-items: start;
+    border-left: 1px solid var(--border-light);
   }
 
   .day-column {
@@ -707,7 +793,7 @@
   }
 
   .calendar-empty-state {
-    display: flex !important;
+    display: flex;
   }
 
   .calendar-empty-state i {

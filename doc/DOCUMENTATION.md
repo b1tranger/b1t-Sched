@@ -59,7 +59,7 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **User Counter** - Live count of total registered users displayed on the dashboard and footer
 - **Activity Timeline** - Visual heatmap and bar chart tracking user activity (logins, tasks, events, profile updates) to visualize productivity patterns. Includes a backpopulation utility for existing tasks.
 - **User Counter** - Live count of total registered users displayed on the dashboard and footer.
-- **Mobile Calendar** - Improved weekly view for mobile devices with vertical scrolling, better touch targets, and visual separators.
+- **Mobile Calendar** - Improved weekly view for mobile devices with vertical scrolling. Includes Month/Year dropdowns for quick navigation to any date.
 - **FAQ Section** - Collapsible accordion explaining how the site works, user roles, and profile settings
 - **Footer with Credits** - Source code link, total user count, and dynamic copyright year
 
@@ -273,6 +273,7 @@ b1t-Sched/
 │   ├── activity-logger.js       # User activity tracking & backpopulation
 │   ├── timeline-data.js         # Timeline data fetching & processing
 │   ├── timeline-ui.js           # Timeline visualization rendering
+│   ├── calendar-view.js         # Interactive calendar modal management
 │   └── app.js                   # Main application logic
 │
 ├── doc/                          # Documentation
@@ -708,7 +709,7 @@ NoteManager.currentUserId = null           // Current authenticated user
 | `loadSetDetailsForm()` | - | Load set details form dropdowns |
 | `updateSetDetailsSections()` | - | Update sections on dept/sem change |
 | `handleSetDetails()` | - | Process set details form (with studentId) |
-| `loadDashboardData()` | - | Load tasks, events, resources |
+| `loadDashboardData()` | - | Load tasks, events, resources; reapplies active task filter after loading |
 | `setupTaskEventListeners()` | - | Setup task-related event handlers |
 | `setupEventsSidebarListeners()` | - | Setup mobile sidebar handlers |
 | `setupAdminEventListeners()` | - | Setup admin-related event handlers |
@@ -769,7 +770,37 @@ During signup, Firebase triggers `onAuthStateChanged` immediately when the user 
 
 ---
 
-### 11. PWA Modules
+### 11. CalendarView (calendar-view.js)
+
+**Purpose:** Manages the interactive calendar modal, displaying tasks and events in a monthly or weekly view (mobile).
+
+**Key Features:**
+- **Responsive Views:** Full monthly grid on desktop; vertically scrolling weekly view on mobile.
+- **Task Visualization:** Displays tasks on their due dates with type-specific badges.
+- **Event Visualization:** Displays events on their scheduled dates.
+- **Interactive Navigation:** 
+  - **Month/Year Dropdowns:** Direct navigation to specific months and years.
+  - **Arrow Navigation:** Move to previous/next month.
+  - **Keyboard Support:** Arrow keys (Ctrl+Left/Right) for navigation, Escape to close.
+- **Task Details:** Click on a task to view full details (description, course, type).
+- **Empty State Handling:** Displays "No tasks scheduled for this month" when appropriate.
+- **Loading States:** Visual feedback during data fetching/rendering.
+
+| Method | Description |
+|--------|-------------|
+| `init()` | Initialize the calendar module (attach global listeners). |
+| `open()` | Open the calendar modal and render the current view. |
+| `close()` | Close the calendar modal. |
+| `renderCalendar()` | Main rander function; delegates to `generateCalendarGrid` (desktop) or `renderWeeklyView` (mobile). |
+| `updateHeader()` | Updates the Month/Year dropdowns and navigation state. |
+| `previousMonth()` | Navigate to the previous month. |
+| `nextMonth()` | Navigate to the next month. |
+| `populateTasksInGrid()` | Places task elements into the correct day cells. |
+| `isTaskOverdue(task)` | Checks if a task is overdue. |
+
+---
+
+### 12. PWA Modules
 
 **Purpose:** Progressive Web App functionality for offline support, caching, and installability
 
