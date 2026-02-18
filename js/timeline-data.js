@@ -39,11 +39,14 @@ const TimelineDataService = {
             // The rules allow reading if matching user's context.
             // But for the timeline, we might want to see *relevant* activity.
 
+            // Apply Composite Filters
+            // User requested "No student information... data from all departments"
+            // So if 'All' is passed, we skip the filter.
+
             if (filters.department && filters.department !== 'All') {
                 query = query.where('department', '==', filters.department);
             }
-            // Semester/Section filtering might be too restrictive for a "Timeline" identifying broader activity
-            // But let's support it if passed.
+
             if (filters.semester && filters.semester !== 'All') {
                 query = query.where('semester', '==', filters.semester);
             }
@@ -54,9 +57,9 @@ const TimelineDataService = {
             // Order by timestamp desc
             query = query.orderBy('timestamp', 'desc');
 
-            // Limit to avoid pulling too much data? 
-            // For a heatmap of a year, 1000 docs might be enough, or maybe 2000.
-            query = query.limit(2000);
+            // Limit increased for yearly heatmap data
+            // 365 days * avg 10 events/day = 3650. Let's safe limit to 4000
+            query = query.limit(4000);
 
             // console.log('[TimelineDataService] Querying with filters:', { filters, startDate, endDate });
 

@@ -1931,23 +1931,55 @@ CalendarView.maxYear = currentYear + 100   // Navigation limit (future)
 ---
 
 ## 11. Activity Timeline & Migration
-2032: 
-2033: ### Overview
-2034: The **Activity Timeline** visualizes user engagement over time, displaying a GitHub-style heatmap and bar chart of activities such as task creation, completion, and event management.
-2035: 
-2036: ### Data Migration
-2037: To backfill the timeline with existing tasks and events, a one-time migration script is provided.
-2038: 
-2039: #### How to Run Migration
-2040: 1.  Open the application in your browser.
-2041: 2.  Open the Browser Console (F12 or Right-click -> Inspect -> Console).
-2042: 3.  Run the following command:
-2043:     ```javascript
-2044:     await migrateActivityLogs()
-2045:     ```
-2046: 4.  Wait for the alert "Migration Complete".
-2047: 
-2048: ---
+
+### Overview
+The **Activity Timeline** provides a comprehensive visual history of university-wide activities. It aggregates data from all departments, semesters, and sections to show productivity trends without exposing private student information.
+
+### Features
+
+#### 1. Global Data Aggregation
+- **Scope:** Fetches `activity_logs` from the entire database.
+- **Privacy:** Displays "Department/Course/Time" but hides Student Names in the public view.
+
+#### 2. Yearly Heatmap (GitHub-Style)
+- **Visual:** A colored grid showing daily activity intensity for the entire year.
+- **Interaction:**
+  - **Hover:** See the exact count of activities for a specific date.
+  - **Click:** Open a "Details Popup" showing a list of activities for that day, grouped by Course.
+  - **Scroll:** Horizontally scrollable to view the full year.
+- **Navigation:** Dropdown to switch between the current and previous years.
+
+#### 3. Monthly Activity Breakdown
+- **Visual:** A bar chart displaying daily activity counts for a selected month.
+- **Navigation:** **Month** and **Year** dropdown selectors for quick navigation to any date.
+- **Interaction:** Click on any bar to open the Details Popup.
+
+#### 4. Details Popup
+- Grouped view of activities (by Course or Department).
+- Shows: Task Title, Type, Time, and Context (Dept/Sem/Sec).
+- Hides: Student PII.
+
+### Data Migration Script
+
+Since `activity_logs` is a new collection, existing `tasks` and `events` need to backpopulated.
+
+#### Script: `js/migrate-activity-logs.js`
+
+**Purpose:**
+- Iterates through all documents in `tasks` and `events`.
+- Checks if a corresponding `activity_log` already exists (deduplication).
+- Creates a new `activity_log` document with the original `createdAt` timestamp.
+
+**Usage:**
+1. Open the browser console (F12).
+2. Run the global function: `migrateActivityLogs()`.
+3. Monitor progress in the console.
+
+**Technical Details:**
+- Uses Firestore `batch` writes (commits every 400 operations) for efficiency and rate-limit compliance.
+- Preserves original timestamps to ensure historical accuracy in the timeline.
+
+---
 2049: 
 2050: ## 12. Design References & Inspirations
 2051: 
