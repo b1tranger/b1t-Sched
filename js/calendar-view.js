@@ -329,6 +329,8 @@ class CalendarView {
    * @returns {Object} Grid data structure with dates and metadata
    */
   generateCalendarGrid() {
+    // ... (existing code, no changes needed here as it generates the dates correctly)
+
     // Calculate first and last day of displayed month
     const firstDay = new Date(this.displayedYear, this.displayedMonth, 1);
     const lastDay = new Date(this.displayedYear, this.displayedMonth + 1, 0);
@@ -394,6 +396,55 @@ class CalendarView {
       lastDay: lastDay,
       dates: dates
     };
+  }
+
+  /**
+   * Get the start and end dates of the visible calendar grid
+   * Includes adjacent month days that are visible
+   * @returns {Object} { start: Date, end: Date }
+   */
+  getVisibleDateRange() {
+    const gridData = this.generateCalendarGrid();
+    if (!gridData.dates || gridData.dates.length === 0) {
+      return { start: new Date(), end: new Date() };
+    }
+
+    // Start is the first date in the grid
+    const start = gridData.dates[0].date;
+    // End is the last date in the grid
+    const end = gridData.dates[gridData.dates.length - 1].date;
+
+    // Set times to ensure full coverage
+    start.setHours(0, 0, 0, 0);
+    end.setHours(23, 59, 59, 999);
+
+    return { start, end };
+  }
+
+  /**
+   * Get tasks with deadlines in the visible grid range
+   * Filters App.currentTasks to include tasks within the start and end dates of the grid
+   * @returns {Array} Filtered array of tasks
+   */
+  getTasksForVisibleGrid() {
+    const App = (typeof window !== 'undefined' ? window.App : global.App);
+    if (!App || !Array.isArray(App.currentTasks)) return [];
+
+    const { start, end } = this.getVisibleDateRange();
+
+    return App.currentTasks.filter(task => {
+      if (!task.deadline) return false;
+      if (task.deadline === "No official Time limit") return false;
+
+      try {
+        const deadline = task.deadline.toDate ? task.deadline.toDate() : new Date(task.deadline);
+        if (isNaN(deadline.getTime())) return false;
+
+        return deadline >= start && deadline <= end;
+      } catch (error) {
+        return false;
+      }
+    });
   }
 
   /**
@@ -737,12 +788,14 @@ class CalendarView {
     // Populate tasks in the grid after rendering calendar cells
     this.populateTasksInGrid();
 
-    // Handle empty state - show if no tasks exist for the month
-    const tasks = this.getTasksForMonth();
+    // Handle empty state - show if no tasks exist for the VISIBLE GRID (not just month)
+    const tasks = this.getTasksForVisibleGrid();
     const emptyState = document.getElementById('calendar-empty-state');
     const gridContainerElement = document.querySelector('.calendar-grid-container');
 
     if (emptyState && gridContainerElement) {
+      // Logic: If NO tasks in the ENTIRE visible grid, show empty state.
+      // Otherwise, show the grid.
       if (tasks.length === 0) {
         emptyState.style.display = 'flex';
         gridContainerElement.style.display = 'none';
@@ -819,21 +872,28 @@ class CalendarView {
     // Update header
     this.updateHeader();
 
-    // Handle empty state - check if there are any tasks in the weekly view
-    const tasks = this.getTasksForMonth();
+    // Handle empty state - check if there are any tasks in the visible grid
+    const tasks = this.getTasksForVisibleGrid();
     const emptyState = document.getElementById('calendar-empty-state');
 
-    console.log('[CalendarView] renderWeeklyView - tasks found:', tasks.length);
+    console.log('[CalendarView] renderWeeklyView - tasks found in visible grid:', tasks.length);
     console.log('[CalendarView] renderWeeklyView - emptyState element:', !!emptyState);
     console.log('[CalendarView] renderWeeklyView - weeklyContainer:', !!weeklyContainer);
 
-
     if (emptyState) {
-      // Always show the weekly container on mobile, even if current month has no tasks
-      // This allows scrolling to adjacent weeks/months where tasks might exist
-      console.log('[CalendarView] Ensuring weekly container is visible');
-      emptyState.style.display = 'none';
-      weeklyContainer.style.display = 'block';
+      if (tasks.length === 0) {
+        console.log('[CalendarView] No tasks in visible grid, showing empty state');
+        emptyState.style.display = 'flex';
+        // Ensure regular grid is hidden if it exists
+        const gridElement = document.querySelector('.calendar-grid');
+        if (gridElement) gridElement.style.display = 'none';
+        // Hide weekly container too if truly empty
+        if (weeklyContainer) weeklyContainer.style.display = 'none';
+      } else {
+        console.log('[CalendarView] Tasks found, ensuring weekly container is visible');
+        emptyState.style.display = 'none';
+        weeklyContainer.style.display = 'block';
+      }
     }
   }
 
