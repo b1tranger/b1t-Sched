@@ -18,6 +18,7 @@
     <link rel="stylesheet" href="css/colors.css">
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/timeline.css">
     <link rel="stylesheet" href="css/navbar.css">
     <link rel="stylesheet" href="css/user-details-card.css">
     <link rel="stylesheet" href="css/dashboard.css">
@@ -1168,6 +1169,20 @@
                                 </select>
                             </div>
                         </div>
+                        <div class="stat-card">
+                            <h3 id="total-user-count">0</h3>
+                            <p>Users Registered</p>
+                        </div>
+                        <div
+                            style="margin-top: 15px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                            <button id="contributions-btn" class="btn btn-outline">
+                                <i class="fas fa-trophy"></i> Top Contributors
+                            </button>
+                            <button id="open-timeline-btn" class="btn btn-outline"
+                                style="border-color: var(--success-color); color: var(--success-color);">
+                                <i class="fas fa-chart-line"></i> Activity Timeline
+                            </button>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button id="clear-filters-btn" class="btn btn-secondary">
@@ -1384,6 +1399,12 @@
     <script src="js/offline-manager.js"></script>
     <script src="js/sw-update-manager.js"></script>
     <script src="js/pwa-init.js"></script>
+    <!-- Activity Timeline Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/timeline-data.js"></script>
+    <script src="js/timeline-ui.js"></script>
+
+    <script src="js/activity-logger.js"></script>
     <script src="js/app.js"></script>
     <script src="js/calendar-view.js"></script>
 

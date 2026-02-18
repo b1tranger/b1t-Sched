@@ -1,0 +1,140 @@
+/* Activity Timeline Styles */
+
+.timeline-viz-container {
+    margin: 20px 0;
+    padding: 10px;
+    background: #fff;
+    border: 1px solid #e1e4e8;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+/* Heatmap */
+.heatmap-scroll {
+    overflow-x: auto;
+    padding-bottom: 10px;
+}
+
+.heatmap-grid {
+    display: grid;
+    grid-template-rows: repeat(7, 12px);
+    /* 7 days a week */
+    grid-auto-flow: column;
+    /* Fill columns (weeks) first */
+    gap: 3px;
+    width: max-content;
+    /* Ensure it grows horizontally */
+}
+
+.heatmap-cell {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    background-color: #ebedf0;
+    /* Level 0 default */
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.heatmap-cell:hover {
+    transform: scale(1.2);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.heatmap-legend {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: #586069;
+    margin-top: 10px;
+    justify-content: flex-end;
+}
+
+.heatmap-legend .legend-item {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    display: inline-block;
+}
+
+/* Timeline Controls */
+.timeline-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.timeline-controls .filter-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Stats */
+.timeline-stats {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.stat-card {
+    background: #f6f8fa;
+    border: 1px solid #e1e4e8;
+    border-radius: 6px;
+    padding: 15px;
+    text-align: center;
+    min-width: 120px;
+    flex: 1;
+}
+
+.stat-card h4,
+.stat-card h3 {
+    margin: 0;
+    color: #24292e;
+    font-size: 20px;
+}
+
+.stat-card p {
+    margin: 5px 0 0;
+    font-size: 12px;
+    color: #586069;
+}
+
+/* Chart Container */
+#timeline-chart-container {
+    height: 300px;
+    /* Fixed height for Chart.js */
+    position: relative;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .timeline-controls {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .timeline-stats {
+        flex-direction: column;
+    }
+
+    .stat-card {
+        width: 100%;
+    }
+
+    .heatmap-cell {
+        width: 10px;
+        height: 10px;
+    }
+
+    .heatmap-grid {
+        grid-template-rows: repeat(7, 10px);
+        gap: 2px;
+    }
+}

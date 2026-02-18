@@ -42,7 +42,7 @@ class FilterPopup {
   updateBadge() {
     const filters = this.getActiveFilters();
     this.activeFilters = filters.length;
-    
+
     if (this.badge) {
       if (this.activeFilters > 0) {
         this.badge.textContent = this.activeFilters;
@@ -86,7 +86,7 @@ class FilterPopup {
       if (filterSection) filterSection.value = 'All';
     }
     if (filterRole) filterRole.value = 'All';
-    
+
     this.updateBadge();
   }
 }
@@ -196,6 +196,11 @@ const App = {
 
     // Initialize Note Manager
     NoteManager.init();
+
+    // Initialize Activity Timeline
+    if (typeof TimelineUI !== 'undefined') {
+      TimelineUI.init();
+    }
 
     // Initialize Calendar View
     console.log('Checking CalendarView:', typeof CalendarView);
@@ -476,31 +481,31 @@ const App = {
     const deadlineInput = document.getElementById('task-deadline');
     const deadlineNone = document.getElementById('deadline-none');
     const deadlineDate = document.getElementById('deadline-date');
-    
+
     if (deadlineInput) {
       const now = new Date();
       now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
       deadlineInput.min = now.toISOString().slice(0, 16);
       deadlineInput.value = '';
     }
-    
+
     // Set up radio button handlers
     if (deadlineNone && deadlineDate && deadlineInput) {
       // Remove old listeners if any
       deadlineNone.onclick = null;
       deadlineDate.onclick = null;
-      
+
       // Add new listeners
       deadlineNone.addEventListener('change', () => {
         deadlineInput.disabled = true;
         deadlineInput.value = '';
       });
-      
+
       deadlineDate.addEventListener('change', () => {
         deadlineInput.disabled = false;
         deadlineInput.focus(); // Auto-focus the input when enabled
       });
-      
+
       // Set initial state based on checked radio
       if (deadlineNone.checked) {
         deadlineInput.disabled = true;
@@ -509,7 +514,7 @@ const App = {
         deadlineInput.disabled = false;
       }
     }
-    
+
     UI.showModal('add-task-modal');
   },
 
@@ -578,6 +583,9 @@ const App = {
       UI.hideModal('add-task-modal');
       // Refresh tasks
       await this.loadDashboardData();
+
+      // Log activity
+      await ActivityLogger.logTaskAddition(result.id, taskData, this.userProfile);
     } else {
       alert('Failed to add task: ' + result.error);
     }
@@ -784,14 +792,10 @@ const App = {
     const result = await DB.deleteEvent(eventId);
     if (result.success) {
       // Log event deletion activity
-      const userId = Auth.getUserId();
-      const userEmail = Auth.getUserEmail();
-      let userRole = 'Student'; // Default role
-      if (this.isAdmin) userRole = 'Admin';
-      else if (this.isFaculty) userRole = 'Faculty';
-      else if (this.isCR) userRole = 'CR';
-      
-      await ActivityLogger.logEventDeletion(eventId, userId, userEmail, userRole);
+      const event = this.currentEvents.find(e => e.id === eventId);
+      if (event) {
+        await ActivityLogger.logEventDeletion(eventId, event, userId, this.userProfile);
+      }
 
       // Refresh events
       await this.loadDashboardData();
@@ -834,6 +838,12 @@ const App = {
 
       // Re-render tasks with updated completions
       UI.renderTasks(this.currentTasks, this.userCompletions, this.isAdmin, this.isCR, Auth.getUserId());
+
+      // Log activity
+      const task = this.currentTasks.find(t => t.id === taskId);
+      if (task) {
+        await ActivityLogger.logTaskCompletion(taskId, task, userId, this.userProfile);
+      }
     } else {
       // Revert checkbox state on error
       const checkbox = document.querySelector(`.task-checkbox[data-task-id="${taskId}"]`);
@@ -1020,7 +1030,7 @@ const App = {
 
       // Initialize notification system
       await NotificationManager.init();
-      
+
       // Set up Firestore listeners for notifications
       await FirestoreListenerManager.setupListeners(this.userProfile);
 
@@ -1131,6 +1141,16 @@ const App = {
         this.userProfile = profileResult.data;
         Utils.storage.set('userProfile', this.userProfile);
 
+        // Log user registration
+        await ActivityLogger.logActivity('user_registered', {
+          userId: userId,
+          userName: this.userProfile.email.split('@')[0],
+          userRole: ActivityLogger._determineRole(this.userProfile),
+          department: this.userProfile.department,
+          semester: this.userProfile.semester,
+          section: this.userProfile.section
+        });
+
         UI.updateUserDetailsCard(
           this.userProfile.email,
           this.userProfile.department,
@@ -1176,11 +1196,11 @@ const App = {
     } else {
       tasksResult = await DB.getTasks(department, semester, section);
     }
-    
+
     if (tasksResult.success) {
       this.currentTasks = tasksResult.data;
       UI.renderTasks(this.currentTasks, this.userCompletions, this.isAdmin, this.isCR, userId);
-      
+
       // Notify calendar view of task updates
       if (this.calendarView) {
         this.calendarView.onTasksUpdated();
@@ -1555,7 +1575,7 @@ const App = {
       // Use addedByName (name part of email) or 'Unknown'
       const contributor = task.addedByName || 'Unknown';
       const role = task.addedByRole || 'Student';
-      
+
       if (!contributions[contributor]) {
         contributions[contributor] = { count: 0, role: role };
       }
@@ -1588,7 +1608,7 @@ const App = {
       } else if (c.role === 'Faculty') {
         roleBadge = '<span class="role-badge role-badge-faculty">Faculty</span>';
       }
-      
+
       return `
         <tr>
           <td class="rank-col">${index + 1}</td>
@@ -1669,18 +1689,12 @@ const App = {
 
     if (result.success) {
       // Log task deletion activity
-      const userEmail = Auth.getUserEmail();
-      let userRole = 'Student'; // Default role
-      if (this.isAdmin) userRole = 'Admin';
-      else if (this.isFaculty) userRole = 'Faculty';
-      else if (this.isCR) userRole = 'CR';
-      
-      await ActivityLogger.logTaskDeletion(taskId, userId, userEmail, userRole);
+      await ActivityLogger.logTaskDeletion(taskId, task, userId, this.userProfile);
 
       // Remove from local state and re-render
       this.currentTasks = this.currentTasks.filter(t => t.id !== taskId);
       UI.renderTasks(this.currentTasks, this.userCompletions, this.isAdmin, this.isCR, Auth.getUserId());
-      
+
       // Notify calendar view of task updates
       if (this.calendarView) {
         this.calendarView.onTasksUpdated();
@@ -1749,21 +1763,15 @@ const App = {
 
     if (result.success) {
       // Log event addition activity
-      const userEmail = Auth.getUserEmail();
-      let userRole = 'Student'; // Default role
-      if (this.isAdmin) userRole = 'Admin';
-      else if (this.isFaculty) userRole = 'Faculty';
-      else if (this.isCR) userRole = 'CR';
-
       await ActivityLogger.logEventAddition(
         result.id,
         {
+          title,
+          date,
           department,
           semester: this.userProfile.semester
         },
-        userId,
-        userEmail,
-        userRole
+        this.userProfile
       );
 
       UI.hideModal('add-event-modal');
@@ -2103,7 +2111,7 @@ const App = {
     if (department !== 'All') {
       filtered = filtered.filter(u => u.department === department);
     }
-    
+
     // Only apply semester/section filters if they're visible (not Faculty user)
     const semesterGroup = document.querySelector('#filter-semester')?.closest('.form-group');
     if (semesterGroup && semesterGroup.style.display !== 'none') {
@@ -2123,7 +2131,7 @@ const App = {
         });
       }
     }
-    
+
     if (role !== 'All') {
       switch (role) {
         case 'Admin':
@@ -2205,24 +2213,24 @@ const App = {
 
     try {
       const result = await adminAPI.deleteUser(userId);
-      
+
       // Close dialog
       this.deleteUserDialog.close();
-      
+
       // Remove user from local state
       this.allUsers = this.allUsers.filter(u => u.id !== userId);
-      
+
       // Re-render user list
       this.renderUserList(this.allUsers);
-      
+
       // Show success notification
       UI.showNotification('success', result.message || 'User deleted successfully');
     } catch (error) {
       console.error('Delete user error:', error);
-      
+
       // Close dialog
       this.deleteUserDialog.close();
-      
+
       if (error.message.includes('network')) {
         UI.showNotification('error', 'Network error. Please check your connection.');
       } else if (error.message.includes('permission')) {
