@@ -1479,6 +1479,28 @@
                 <div class="modal-body">
                     <form id="add-cr-notice-form">
                         <div class="form-group">
+                            <label for="cr-notice-department">Target Department <small>(Based on your
+                                    profile)</small></label>
+                            <select id="cr-notice-department" class="form-select" disabled>
+                                <option value="" disabled selected>Loading...</option>
+                            </select>
+                        </div>
+                        <div class="form-row" style="display: flex; gap: 10px;">
+                            <div class="form-group" style="flex: 1;">
+                                <label for="cr-notice-semester">Semester</label>
+                                <select id="cr-notice-semester" class="form-select" disabled>
+                                    <option value="" disabled selected>Loading...</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label for="cr-notice-section">Section</label>
+                                <select id="cr-notice-section" class="form-select" disabled>
+                                    <option value="" disabled selected>Loading...</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
                             <label for="cr-notice-title">Title <span class="text-danger">*</span></label>
                             <input type="text" id="cr-notice-title" class="form-control"
                                 placeholder="e.g., Class Cancelled" required>
