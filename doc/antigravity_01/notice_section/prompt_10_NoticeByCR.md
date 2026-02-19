@@ -62,3 +62,16 @@ refer to "firestore.rules" where there is a section called "CR NOTICES COLLECTIO
 
 - if there is any Firebase database changes required, let me know
 
+---
+
+issues regarding the Notices sidebar:
+1. the sidebar appears darkened and unclickable. the Google Classroom sidebar toggle is showing over the sidebar
+2. university notices should load vertically
+
+and for the Notice pop-up:
+1. "CR Notices" section keeps showing "loading"
+2. "University Notices" is not the heading for the other section but rather the heading for the whole window. there is also no "load" button for the university notices
+
+general concern:
+- I don't see any "add notice" button
+- where does the "add notice" button ad the entries to? is it a new Database collection on Firebase?
