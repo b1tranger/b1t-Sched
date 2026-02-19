@@ -120,9 +120,8 @@ const CRNoticeViewer = {
     renderProfileMissing() {
         const msg = `
             <div class="notice-empty-state">
-                <i class="fas fa-user-clock"></i>
-                <p>Complete your profile to see notices</p>
-                <a href="#" onclick="Router.navigate('profile-settings'); UI.hideModal('notice-modal'); return false;" class="btn btn-sm btn-text">Go to Profile</a>
+                <i class="fas fa-bullhorn" style="font-size: 2em; color: #ccc; margin-bottom: 10px;"></i>
+                <p style="color: #666;">No Class Notices yet</p>
             </div>
         `;
 
@@ -141,10 +140,11 @@ const CRNoticeViewer = {
 
         const html = `
             <div class="notice-empty-state">
-                <i class="fas fa-exclamation-triangle text-danger"></i>
-                <p>${msg}</p>
+                <i class="fas fa-exclamation-circle" style="color: var(--danger-color, red);"></i>
+                <p>Error: ${msg}</p>
             </div>
         `;
+
         const desktop = document.getElementById('cr-notice-list-desktop');
         const mobile = document.getElementById('cr-notice-list-mobile');
         if (desktop) desktop.innerHTML = html;
@@ -237,7 +237,7 @@ const CRNoticeViewer = {
                     <small>${date}</small>
                 </div>
             </div>
-        `;
+    `;
     },
 
     addDeleteListeners(container) {
@@ -284,12 +284,12 @@ const CRNoticeViewer = {
         const user = firebase.auth().currentUser;
 
         if (!user || !userDept || !userSem || !userSec) {
-            UI.showToast('Profile error. Please update profile.', 'error');
+            alert('Profile error. Please update profile.');
             return;
         }
 
         if (!title || !description) {
-            UI.showToast('Please fill in all fields', 'error');
+            alert('Please fill in all fields');
             return;
         }
 
@@ -311,14 +311,14 @@ const CRNoticeViewer = {
             });
 
             UI.hideModal('add-cr-notice-modal');
-            UI.showToast('Notice posted successfully', 'success');
+            alert('Notice posted successfully');
 
             btn.disabled = false;
             btn.innerHTML = originalText;
 
         } catch (error) {
             console.error("Error posting notice:", error);
-            UI.showToast('Failed to post notice: ' + error.message, 'error');
+            alert('Failed to post notice: ' + error.message);
             const btn = document.querySelector('#add-cr-notice-form button[type="submit"]');
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-paper-plane"></i> Post Notice';
@@ -328,10 +328,11 @@ const CRNoticeViewer = {
     async deleteNotice(id) {
         try {
             await db.collection('cr_notices').doc(id).delete();
-            UI.showToast('Notice deleted', 'success');
+            alert('Notice deleted');
+            // UI.showToast('Notice deleted', 'success');
         } catch (error) {
             console.error("Error deleting notice:", error);
-            UI.showToast('Failed to delete: ' + error.message, 'error');
+            alert('Failed to delete: ' + error.message);
         }
     }
 };

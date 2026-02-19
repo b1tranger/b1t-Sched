@@ -552,15 +552,41 @@ const TimelineUI = {
                 <h4 style="margin-bottom: 5px; border-bottom: 1px solid #eee; padding-bottom: 3px;">${course} <span class="badge" style="float:right; background:#eee; color:#333;">${items.length}</span></h4>
                 <ul style="list-style: none; padding: 0;">`;
 
+            // Aggregate 'task_completed' activities
+            const aggregatedItems = [];
+            const completionMap = {};
+
             items.forEach(item => {
+                if (item.activityType === 'task_completed') {
+                    const title = item.taskTitle || item.metadata?.title || 'Untitled';
+                    if (!completionMap[title]) {
+                        completionMap[title] = { ...item, _count: 0 };
+                    }
+                    completionMap[title]._count++;
+                } else {
+                    aggregatedItems.push(item);
+                }
+            });
+
+            // Add aggregated completions back to the list
+            Object.values(completionMap).forEach(item => aggregatedItems.push(item));
+
+            // Sort by timestamp desc (so mixed types still look ordered)
+            aggregatedItems.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            aggregatedItems.forEach(item => {
                 const type = item.activityType.replace('_', ' ');
-                const time = new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                // Show count if aggregated, otherwise show time
+                const rightContent = item._count
+                    ? `<span style="font-weight:bold; font-size:1.1em; color:#333;">${item._count}</span>`
+                    : `<span class="text-muted" style="font-size:0.8em;">${new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>`;
+
                 const context = item.department ? `${item.department} ${item.semester || ''} ${item.section || ''}` : 'Global';
 
                 html += `<li style="padding: 5px 0; font-size: 0.9em; border-bottom: 1px dashed #f0f0f0;">
                     <div style="display:flex; justify-content:space-between;">
                         <strong>${item.taskTitle || item.metadata?.title || 'Untitled'}</strong>
-                        <span class="text-muted" style="font-size:0.8em;">${time}</span>
+                        ${rightContent}
                     </div>
                     <div style="font-size: 0.8em; color: #666;">
                         <span style="text-transform: capitalize;">${type}</span> • ${context}
