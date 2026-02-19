@@ -179,7 +179,7 @@ const DB = {
       if (rolesResult.isAdmin) addedByRole = 'Admin';
       else if (rolesResult.isFaculty) addedByRole = 'Faculty';
       else if (rolesResult.isCR) addedByRole = 'CR';
-      
+
       const docRef = await db.collection('tasks').add({
         title: data.title,
         course: data.course || '',
@@ -196,7 +196,7 @@ const DB = {
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
       console.log('Task created:', docRef.id);
-      
+
       // Log task addition activity
       await ActivityLogger.logTaskAddition(
         docRef.id,
@@ -210,7 +210,7 @@ const DB = {
         userEmail,
         addedByRole
       );
-      
+
       return { success: true, id: docRef.id };
     } catch (error) {
       console.error('Error creating task:', error);
@@ -246,7 +246,7 @@ const DB = {
         await completionRef.set({
           completedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        
+
         // Log task completion activity
         if (userEmail && userRole) {
           await ActivityLogger.logTaskCompletion(taskId, userId, userEmail, userRole);
@@ -705,6 +705,39 @@ const DB = {
       return { success: true };
     } catch (error) {
       console.error('Error updating user profile:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  // ============================================
+  // CACHED STATS
+  // ============================================
+
+  // Update the cached user count (Admin only)
+  async updateUserCountCache(count) {
+    try {
+      await db.collection('metadata').doc('stats').set({
+        userCount: count,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+      console.log('User count cache updated:', count);
+      return { success: true };
+    } catch (error) {
+      console.error('Error updating user count cache:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Get cached user count (Any auth user)
+  async getUserCountFromCache() {
+    try {
+      const doc = await db.collection('metadata').doc('stats').get();
+      if (doc.exists && doc.data().userCount) {
+        return { success: true, count: doc.data().userCount };
+      }
+      return { success: false, error: 'No cached count found' };
+    } catch (error) {
+      console.error('Error getting cached user count:', error);
       return { success: false, error: error.message };
     }
   }

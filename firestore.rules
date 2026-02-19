@@ -231,7 +231,7 @@ service cloud.firestore {
     
     // Legacy activity_logs collection (keep for backward compatibility)
     match /activity_logs/{logId} {
-      allow read: if isAdmin();
+      allow read: if isSignedIn();
       allow create: if isSignedIn();
       allow update, delete: if false;
     }

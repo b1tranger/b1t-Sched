@@ -43,3 +43,22 @@ do you recall ".kiro/specs/activity-timeline-view"? prepare an instruction to cr
 
 
 also prepare a new Firestore rules for these changes
+
+
+---
+
+
+alright, next, let's try to implement the CR notice section
+refer to "firestore.rules" where there is a section called "CR NOTICES COLLECTION (NEW)"; we need to implement that
+
+# target: Notice section for CRs alongside University notices, similar to Events
+
+
+# specification:
+
+- for desktop display, make the Notice window 2 columned: one for Notice from CRs and another to load University notices. The university notices will be opened in another window with the same functionality the current PDF viewer has.
+
+- for mobile display, make the Notice window consist of 2 equally divided rows. Top row will hold the CR notices and the bottom row will load the University notices like before
+
+- if there is any Firebase database changes required, let me know
+

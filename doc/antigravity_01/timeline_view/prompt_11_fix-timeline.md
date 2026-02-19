@@ -58,3 +58,23 @@ For both views:
 - clicking on boxes (activity heatmap) or bars (activity breakdown) should popup further details; much like how the Calendar view for tasks work. But the detail will show grouped count with "Course Title", and show details about which department, semester and section the tasks are from. Except showing any student details.
 
 
+---
+
+# target: Fixing Timeline view and Total User Count visibility for all users
+
+# specification:
+- currently, the Timeline View and Total User Count is not shown to any logged in user who is not admin.
+- the timeline view for non-admin users show:
+" Failed to load activity data. Please try again later. "
+
+and the browser console show:
+"
+timeline-data.js:83  [TimelineDataService] Failed to fetch data: FirebaseError: Missing or insufficient permissions.
+getActivityData @ timeline-data.js:83
+await in getActivityData
+loadData @ timeline-ui.js:281
+(anonymous) @ timeline-ui.js:208
+timeline-ui.js:293  [TimelineUI] Failed to load timeline data: Missing or insufficient permissions.
+"
+- the data regarding the timeline "activity_logs" is meant to be viewed by the public. just do not let the users see any personal data (name, ID) of the students. the goal of the timeline view is to assess the performance of the students and the activity inside the website
+- the Total User Count supposedly poses a security threat since it needs to load all user data to count them. Is it possible to implement it like a duplicate feature of the user count shown in User management page?

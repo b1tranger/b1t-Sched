@@ -1663,12 +1663,38 @@ const App = {
     const counterContainer = document.getElementById('total-user-counter');
 
     try {
-      // Try to get all users to count them
-      // Note: This might fail if user doesn't have permissions
-      // If so, we just hide the counter
-      const result = await DB.getAllUsers();
-      if (result.success) {
-        const count = result.data.length;
+      let count = 0;
+      let usedCache = false;
+
+      if (this.isAdmin) {
+        // Admin: Fetch real count and update cache
+        const result = await DB.getAllUsers();
+        if (result.success) {
+          count = result.data.length;
+          // Update cache asynchronously
+          DB.updateUserCountCache(count);
+        } else {
+          // Fallback to cache if list fails
+          const cacheResult = await DB.getUserCountFromCache();
+          if (cacheResult.success) {
+            count = cacheResult.count;
+            usedCache = true;
+          }
+        }
+      } else {
+        // Non-Admin: Read from cache
+        const cacheResult = await DB.getUserCountFromCache();
+        if (cacheResult.success) {
+          count = cacheResult.count;
+          usedCache = true;
+        } else {
+          // If no cache exists yet, just hide
+          if (counterContainer) counterContainer.style.display = 'none';
+          return;
+        }
+      }
+
+      if (count > 0) {
         if (countElModal) countElModal.textContent = count;
         if (countElFooter) countElFooter.textContent = count;
 
@@ -1676,7 +1702,6 @@ const App = {
           counterContainer.style.display = 'flex';
         }
       } else {
-        console.warn('Could not fetch user count (likely permission issue):', result.error);
         if (counterContainer) counterContainer.style.display = 'none';
       }
     } catch (e) {

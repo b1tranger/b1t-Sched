@@ -78,19 +78,53 @@ const Classroom = {
         this.renderInitialState();
 
         // Check for persisted connection
+        this.checkPersistedSession();
+
+        console.log('Google Classroom module initialized successfully');
+    },
+
+    checkPersistedSession() {
+        const token = localStorage.getItem('classroom_token');
+        const expiryStr = localStorage.getItem('classroom_token_expiry');
         const isConnected = localStorage.getItem('classroom_connected') === 'true';
+
+        if (token && expiryStr) {
+            const expiryTime = parseInt(expiryStr);
+            // Check if token is valid (with 5 min buffer)
+            if (Date.now() < expiryTime - (5 * 60 * 1000)) {
+                console.log('Restoring valid Classroom session from storage...');
+                this.accessToken = token;
+
+                // Schedule refresh
+                const timeUntilRefresh = Math.max(expiryTime - Date.now() - (5 * 60 * 1000), 0);
+
+                if (this.refreshTimer) clearTimeout(this.refreshTimer);
+                this.refreshTimer = setTimeout(() => {
+                    console.log('Refreshing Classroom token...');
+                    if (this.tokenClient) {
+                        this.tokenClient.requestAccessToken({ prompt: 'none' });
+                    }
+                }, timeUntilRefresh);
+
+                this.fetchCourses();
+                return;
+            } else {
+                console.log('Stored token expired');
+            }
+        }
+
+        // If no valid token but was connected, try silent refresh
         if (isConnected) {
-            console.log('Restoring Classroom session...');
+            console.log('Attempting to restore session via silent refresh...');
             // Wait a moment for token client to be ready
             setTimeout(() => {
                 if (this.tokenClient) {
-                    // silent prompt to restore session if possible
-                    console.log('Attempting silent token refresh...');
                     try {
-                        this.tokenClient.requestAccessToken({ prompt: '' });
+                        // Use 'none' to avoid popup
+                        this.tokenClient.requestAccessToken({ prompt: 'none' });
                     } catch (e) {
                         console.error('Silent refresh failed:', e);
-                        localStorage.removeItem('classroom_connected');
+                        this.logout(); // Clean up invalid state
                     }
                 }
             }, 1000);
@@ -217,11 +251,18 @@ const Classroom = {
 
     handleAuthSuccess(tokenResponse) {
         // Auth successful, save state
+        this.accessToken = tokenResponse.access_token;
         localStorage.setItem('classroom_connected', 'true');
 
-        // Setup token refresh if we have expiration info (expires_in is in seconds)
-        if (tokenResponse && tokenResponse.expires_in) {
+        // Save token to storage for persistence
+        localStorage.setItem('classroom_token', this.accessToken);
+
+        // Calculate and save expiry
+        if (tokenResponse.expires_in) {
             const expiresInMs = tokenResponse.expires_in * 1000;
+            const expiryTime = Date.now() + expiresInMs;
+            localStorage.setItem('classroom_token_expiry', expiryTime.toString());
+
             // Refresh 5 minutes before expiry
             const refreshTime = Math.max(expiresInMs - (5 * 60 * 1000), 0);
 
@@ -230,11 +271,16 @@ const Classroom = {
             this.refreshTimer = setTimeout(() => {
                 console.log('Refreshing Classroom token...');
                 if (this.tokenClient) {
-                    this.tokenClient.requestAccessToken({ prompt: '' });
+                    // Use 'none' prompt for silent refresh
+                    this.tokenClient.requestAccessToken({ prompt: 'none' });
                 }
             }, refreshTime);
 
             console.log(`Token refresh scheduled in ${Math.round(refreshTime / 60000)} minutes`);
+        } else {
+            // Default to 1 hour if not provided
+            const expiryTime = Date.now() + (3600 * 1000);
+            localStorage.setItem('classroom_token_expiry', expiryTime.toString());
         }
 
         // Fetch courses
@@ -244,25 +290,35 @@ const Classroom = {
     logout() {
         if (this.accessToken) {
             const token = this.accessToken;
+            // Revoke token with Google
             google.accounts.oauth2.revoke(token, () => {
                 console.log('Access token revoked');
-                this.accessToken = null;
-                this.courses = [];
-                this.currentCourseId = null;
-
-                // Clear cached classroom data
-                this.initCacheManager();
-                if (this.cacheManager) {
-                    this.cacheManager.clearUserCaches();
-                }
-
-                this.renderLoginState();
-                localStorage.removeItem('classroom_connected');
-                if (this.refreshTimer) {
-                    clearTimeout(this.refreshTimer);
-                    this.refreshTimer = null;
-                }
+                this.cleanupSession();
             });
+        } else {
+            this.cleanupSession();
+        }
+    },
+
+    cleanupSession() {
+        this.accessToken = null;
+        this.courses = [];
+        this.currentCourseId = null;
+
+        // Clear cached classroom data
+        this.initCacheManager();
+        if (this.cacheManager) {
+            this.cacheManager.clearUserCaches();
+        }
+
+        this.renderLoginState();
+        localStorage.removeItem('classroom_connected');
+        localStorage.removeItem('classroom_token');
+        localStorage.removeItem('classroom_token_expiry');
+
+        if (this.refreshTimer) {
+            clearTimeout(this.refreshTimer);
+            this.refreshTimer = null;
         }
     },
 
