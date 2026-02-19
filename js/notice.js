@@ -70,6 +70,22 @@ const NoticeViewer = {
             loadBtnMobile.addEventListener('click', () => this.loadNotices());
         }
 
+        // Dashboard: Load Notices button
+        const loadBtnDashboard = document.getElementById('load-notices-btn-dashboard');
+        if (loadBtnDashboard) {
+            loadBtnDashboard.addEventListener('click', (e) => {
+                e.preventDefault();
+                // Check if mobile or desktop based on window width or display style
+                if (window.innerWidth <= 992) {
+                    this.toggleNoticeSidebar(true);
+                } else {
+                    this.openNoticeModal();
+                }
+                // Ensure notices are loaded
+                this.loadNotices();
+            });
+        }
+
         // Check for cached notices on init
         this.checkCache();
     },
@@ -152,7 +168,7 @@ const NoticeViewer = {
 
         } catch (error) {
             console.error('Fetch notices error:', error);
-            
+
             // Try to load from cache if server is unavailable
             const cached = this.checkCache();
             if (cached) {
@@ -160,7 +176,7 @@ const NoticeViewer = {
                 this.notices = cached;
                 this.noticesLoaded = true;
                 this.renderAllNotices();
-                
+
                 // Show a warning that data might be stale
                 const containers = [
                     document.getElementById('notice-list-desktop'),
@@ -184,75 +200,61 @@ const NoticeViewer = {
     // RENDERING
     // ──────────────────────────────────────────────
 
+    // ──────────────────────────────────────────────
+    // RENDERING
+    // ──────────────────────────────────────────────
+
     renderAllNotices() {
-        // Hide load prompts, show notice lists
+        // Hide load prompts, show updated containers
         const loadPromptDesktop = document.getElementById('notice-load-prompt-desktop');
         const loadPromptMobile = document.getElementById('notice-load-prompt-mobile');
-        const layoutDesktop = document.getElementById('notice-layout-desktop');
+
+        const listDesktop = document.getElementById('notice-list-desktop');
         const listMobile = document.getElementById('notice-list-mobile');
 
         if (loadPromptDesktop) loadPromptDesktop.style.display = 'none';
         if (loadPromptMobile) loadPromptMobile.style.display = 'none';
-        if (layoutDesktop) layoutDesktop.style.display = 'grid';
+
+        if (listDesktop) listDesktop.style.display = 'block';
         if (listMobile) listMobile.style.display = 'flex';
 
         // Render desktop list
-        this.renderNoticeList('notice-list-desktop', false);
+        this.renderNoticeList('notice-list-desktop');
 
         // Render mobile list
-        this.renderNoticeListMobile('notice-list-mobile');
+        this.renderNoticeList('notice-list-mobile');
     },
 
-    renderNoticeList(containerId, isMobile) {
+    renderNoticeList(containerId) {
         const container = document.getElementById(containerId);
         if (!container) return;
 
-        container.innerHTML = this.notices.map((notice, index) => `
-      <li>
-        <button class="notice-item" data-notice-id="${notice.id}" data-notice-index="${index}">
-          <i class="fas fa-file-pdf"></i>
-          <span>Notice #${notice.id}</span>
-        </button>
-      </li>
-    `).join('');
+        if (this.notices.length === 0) {
+            container.innerHTML = '<div class="notice-empty-state"><p>No notices found.</p></div>';
+            return;
+        }
+
+        container.innerHTML = this.notices.map((notice, index) => {
+            const date = notice.date || '';
+            return `
+            <li class="notice-item-wrapper">
+                <button class="notice-item" data-notice-id="${notice.id}" data-notice-index="${index}">
+                    <i class="fas fa-file-pdf"></i>
+                    <div class="notice-item-content">
+                        <span>Notice #${notice.id}</span>
+                        <small>${date}</small>
+                    </div>
+                </button>
+            </li>
+            `;
+        }).join('');
 
         // Click handlers
         container.querySelectorAll('.notice-item').forEach(item => {
             item.addEventListener('click', (e) => {
                 e.preventDefault();
                 const noticeId = item.dataset.noticeId;
-                if (isMobile) {
-                    // Open PDF in new tab on mobile
-                    this.openNoticePdfInNewTab(noticeId);
-                } else {
-                    // Load PDF in iframe on desktop
-                    this.selectNotice(noticeId, item, container);
-                }
-            });
-        });
-    },
-
-    renderNoticeListMobile(containerId) {
-        const container = document.getElementById(containerId);
-        if (!container) return;
-
-        container.innerHTML = this.notices.map(notice => `
-      <button class="notice-item" data-notice-id="${notice.id}">
-        <i class="fas fa-file-pdf"></i>
-        <span>Notice #${notice.id}</span>
-      </button>
-    `).join('');
-
-        // Click handlers — open in new tab for mobile
-        container.querySelectorAll('.notice-item').forEach(item => {
-            item.addEventListener('click', (e) => {
-                e.preventDefault();
-                const noticeId = item.dataset.noticeId;
-                this.openNoticePdfInNewTab(noticeId);
-
-                // Mark as active
-                container.querySelectorAll('.notice-item').forEach(n => n.classList.remove('active'));
-                item.classList.add('active');
+                this.openPdfViewer(noticeId);
             });
         });
     },
@@ -261,41 +263,37 @@ const NoticeViewer = {
     // PDF VIEWING
     // ──────────────────────────────────────────────
 
-    selectNotice(id, clickedItem, listContainer) {
-        // Update active state
-        listContainer.querySelectorAll('.notice-item').forEach(item => item.classList.remove('active'));
-        clickedItem.classList.add('active');
-
-        // Build PDF URL
+    openPdfViewer(id) {
         const pdfUrl = `${this.API_BASE}/api/pdf?id=${id}`;
 
-        // Update toolbar
-        const titleText = document.getElementById('notice-pdf-title-text');
-        const actions = document.getElementById('notice-pdf-actions');
-        const openBtn = document.getElementById('notice-pdf-open');
-        const downloadBtn = document.getElementById('notice-pdf-download');
-        const placeholder = document.getElementById('notice-pdf-placeholder');
-        const frame = document.getElementById('notice-pdf-frame');
-
-        if (titleText) titleText.textContent = `Notice #${id}`;
-        if (actions) actions.style.display = 'flex';
-        if (openBtn) openBtn.href = pdfUrl;
-        if (downloadBtn) {
-            downloadBtn.href = pdfUrl;
-            downloadBtn.download = `notice-${id}.pdf`;
+        // Mobile optimization: Open in new tab directly
+        if (window.innerWidth <= 768) {
+            window.open(pdfUrl, '_blank');
+            return;
         }
 
-        // Show iframe, hide placeholder
-        if (placeholder) placeholder.style.display = 'none';
-        if (frame) {
-            frame.style.display = 'block';
-            frame.src = pdfUrl;
-        }
-    },
+        // Try to find the generic PDF viewer modal first
+        const modal = document.getElementById('pdf-viewer-modal');
+        if (modal) {
+            const frame = document.getElementById('pdf-viewer-frame');
+            const title = document.getElementById('pdf-viewer-title');
+            const downloadBtn = document.getElementById('pdf-viewer-download');
 
-    openNoticePdfInNewTab(id) {
-        const pdfUrl = `${this.API_BASE}/api/pdf?id=${id}`;
-        window.open(pdfUrl, '_blank');
+            if (title) title.textContent = `Notice #${id}`;
+            if (downloadBtn) {
+                downloadBtn.href = pdfUrl;
+                downloadBtn.download = `notice-${id}.pdf`;
+            }
+
+            if (frame) {
+                frame.src = pdfUrl;
+            }
+
+            UI.showModal('pdf-viewer-modal');
+        } else {
+            // Fallback: Open in new tab
+            window.open(pdfUrl, '_blank');
+        }
     },
 
     // ──────────────────────────────────────────────
@@ -304,11 +302,11 @@ const NoticeViewer = {
 
     showLoadingState() {
         const loadingHTML = `
-      <div class="notice-status">
-        <div class="notice-spinner"></div>
-        <span>Loading notices...</span>
-      </div>
-    `;
+            <div class="notice-status">
+                <div class="notice-spinner"></div>
+                <span>Loading notices...</span>
+            </div>
+        `;
 
         // Desktop
         const loadPromptDesktop = document.getElementById('notice-load-prompt-desktop');
@@ -321,14 +319,14 @@ const NoticeViewer = {
 
     showErrorState(message) {
         const errorHTML = `
-      <div class="notice-status">
-        <i class="fas fa-exclamation-triangle"></i>
-        <span>${message}</span>
-        <button class="notice-retry-btn" onclick="NoticeViewer.loadNotices()">
-          <i class="fas fa-redo"></i> Retry
-        </button>
-      </div>
-    `;
+            <div class="notice-status">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>${message}</span>
+                <button class="notice-retry-btn" onclick="NoticeViewer.loadNotices()">
+                    <i class="fas fa-redo"></i> Retry
+                </button>
+            </div>
+        `;
 
         // Desktop
         const loadPromptDesktop = document.getElementById('notice-load-prompt-desktop');
@@ -342,6 +340,9 @@ const NoticeViewer = {
         if (loadPromptMobile) {
             loadPromptMobile.style.display = 'flex';
             loadPromptMobile.innerHTML = errorHTML;
+            // Also ensure list is hidden so error is visible
+            const listMobile = document.getElementById('notice-list-mobile');
+            if (listMobile) listMobile.style.display = 'none';
         }
     },
 
@@ -352,15 +353,18 @@ const NoticeViewer = {
     toggleNoticeSidebar(open) {
         const sidebar = document.getElementById('notice-sidebar');
         const overlay = document.getElementById('notice-overlay');
+        const toggle = document.getElementById('notice-toggle');
 
         if (sidebar && overlay) {
             if (open) {
                 sidebar.classList.add('open');
                 overlay.classList.add('active');
+                if (toggle) toggle.style.display = 'none'; // Hide toggle when open
                 document.body.style.overflow = 'hidden';
             } else {
                 sidebar.classList.remove('open');
                 overlay.classList.remove('active');
+                if (toggle) toggle.style.display = 'flex'; // Show toggle when closed
                 document.body.style.overflow = '';
             }
         }

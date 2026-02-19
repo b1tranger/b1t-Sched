@@ -43,9 +43,9 @@
     position: fixed;
     top: 0;
     right: 0;
-    width: 40vw;
-    min-width: 320px;
-    max-width: 400px;
+    width: 85vw;
+    /* Wider for better reading */
+    max-width: 450px;
     height: 100vh;
     background-color: var(--bg-white);
     box-shadow: var(--shadow-lg);
@@ -64,7 +64,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: var(--spacing-lg);
+    padding: var(--spacing-md);
     border-bottom: 2px solid var(--border-light);
     background-color: var(--accent-maroon);
     color: var(--text-white);
@@ -75,21 +75,52 @@
     align-items: center;
     gap: var(--spacing-sm);
     font-size: var(--font-lg);
-}
-
-.notice-sidebar-header .btn-icon {
-    color: var(--text-white);
-}
-
-.notice-sidebar-header .btn-icon:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    margin: 0;
 }
 
 .notice-sidebar-content {
     flex: 1;
     overflow-y: auto;
-    padding: var(--spacing-md);
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-body);
 }
+
+/* ─── Mobile Split Layout (2 Rows) ────────────────── */
+.notice-mobile-section {
+    flex: 1;
+    /* Equal height initially, but allow content to push */
+    display: flex;
+    flex-direction: column;
+    min-height: 200px;
+    border-bottom: 2px solid var(--border-medium);
+}
+
+.notice-mobile-section:last-child {
+    border-bottom: none;
+}
+
+.notice-section-header {
+    padding: var(--spacing-sm) var(--spacing-md);
+    background-color: var(--bg-lighter);
+    border-bottom: 1px solid var(--border-light);
+    font-weight: var(--font-bold);
+    color: var(--primary-maroon);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+}
+
+.notice-section-body {
+    padding: var(--spacing-sm);
+    flex: 1;
+    overflow-y: auto;
+}
+
 
 /* Notice Overlay (mobile) */
 .notice-overlay {
@@ -116,34 +147,206 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 3rem 1.5rem;
+    padding: 2rem 1rem;
     text-align: center;
     color: var(--text-medium);
-    gap: 1rem;
+    gap: 0.8rem;
+    height: 100%;
 }
 
 .notice-load-prompt i {
-    font-size: 2.5rem;
+    font-size: 2rem;
     color: var(--accent-maroon);
     opacity: 0.5;
 }
 
 .notice-load-prompt p {
-    font-size: var(--font-md);
-    max-width: 280px;
-    line-height: 1.5;
+    font-size: var(--font-sm);
+    max-width: 250px;
+    line-height: 1.4;
 }
 
 .notice-load-btn {
-    padding: var(--spacing-sm) var(--spacing-lg);
-    font-size: var(--font-md);
+    padding: 0.4rem 1rem;
+    font-size: var(--font-sm);
     font-weight: var(--font-semibold);
     cursor: pointer;
     transition: all var(--transition-fast);
 }
 
-.notice-load-btn:hover {
-    transform: scale(1.05);
+/* ─── CR Notice Cards ─────────────────────────────── */
+.cr-notice-card {
+    background-color: var(--bg-white);
+    border: 1px solid var(--border-light);
+    border-left: 4px solid var(--primary-maroon);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition-fast);
+}
+
+.cr-notice-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.cr-notice-card.priority-urgent {
+    border-left-color: var(--danger);
+    background-color: rgba(220, 53, 69, 0.05);
+}
+
+.cr-notice-card.priority-important {
+    border-left-color: var(--warning);
+    background-color: rgba(255, 193, 7, 0.05);
+}
+
+.cr-notice-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.3rem;
+}
+
+.cr-notice-title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.cr-notice-title {
+    font-weight: var(--font-bold);
+    color: var(--text-dark);
+    font-size: var(--font-md);
+}
+
+.cr-notice-body {
+    font-size: var(--font-sm);
+    color: var(--text-medium);
+    line-height: 1.5;
+    margin-bottom: 0.5rem;
+    white-space: pre-wrap;
+    /* Preserve line breaks */
+}
+
+.cr-notice-footer {
+    display: flex;
+    justify-content: flex-end;
+    font-size: var(--font-xs);
+    color: var(--text-light);
+}
+
+.notice-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    color: var(--text-light);
+    gap: 0.5rem;
+    text-align: center;
+}
+
+.notice-empty-state i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+
+/* ─── Desktop Notice Modal ────────────────────────── */
+.notice-modal-content {
+    max-width: 1000px;
+    max-height: 85vh;
+}
+
+.notice-modal-body {
+    padding: 0;
+    /* Reset padding for grid layout */
+    display: flex;
+    flex-direction: column;
+    min-height: 600px;
+    height: 70vh;
+}
+
+/* ─── Two-Column Layout (Desktop Modal) ───────────── */
+.notice-desktop-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    /* Two equal columns */
+    height: 100%;
+    overflow: hidden;
+}
+
+.notice-column {
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--border-light);
+    background-color: var(--bg-body);
+}
+
+.notice-column:last-child {
+    border-right: none;
+}
+
+.notice-column-header {
+    padding: 1rem;
+    background-color: var(--bg-white);
+    border-bottom: 2px solid var(--primary-maroon);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.notice-column-header h3 {
+    font-size: var(--font-md);
+    color: var(--primary-maroon);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.notice-column-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+/* ─── University Notice List ──────────────────────── */
+.uni-notice-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.uni-notice-item {
+    display: flex;
+    align-items: center;
+    padding: 0.8rem;
+    background-color: var(--bg-white);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.uni-notice-item:hover {
+    background-color: var(--bg-lighter);
+    border-color: var(--primary-maroon);
+    transform: translateX(4px);
+}
+
+.uni-notice-item i {
+    color: var(--accent-maroon);
+    font-size: 1.2rem;
+    margin-right: 0.8rem;
+}
+
+.uni-notice-item span {
+    font-size: var(--font-sm);
+    color: var(--text-dark);
+    font-weight: var(--font-medium);
 }
 
 /* ─── Loading & Error States ──────────────────────── */
@@ -196,238 +399,32 @@
     transform: scale(1.05);
 }
 
-/* ─── Notice List Items ───────────────────────────── */
-.notice-list-container {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xs);
-}
-
-.notice-item {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    padding: 0.7rem 1rem;
-    color: var(--text-dark);
-    text-decoration: none;
-    border-radius: var(--radius-md);
-    font-size: var(--font-sm);
-    transition: all var(--transition-fast);
-    border: 1px solid transparent;
-    cursor: pointer;
-    background: none;
-    width: 100%;
-    text-align: left;
-}
-
-.notice-item:hover {
-    background-color: var(--bg-lighter);
-    color: var(--primary-maroon);
-    border-color: var(--primary-maroon);
-    padding-left: 1.2rem;
-}
-
-.notice-item.active {
-    background-color: rgba(128, 0, 0, 0.1);
-    color: var(--primary-maroon);
-    border-color: var(--primary-maroon);
-    font-weight: var(--font-semibold);
-}
-
-.notice-item i {
-    color: var(--accent-maroon);
-    font-size: var(--font-sm);
-    flex-shrink: 0;
-}
-
-/* ─── Desktop Notice Modal ────────────────────────── */
-.notice-modal-content {
-    max-width: 950px;
-    max-height: 85vh;
-}
-
-.notice-modal-body {
-    padding: var(--spacing-md);
-    display: flex;
-    flex-direction: column;
-    min-height: 500px;
-}
-
-/* ─── Two-Column Layout (Desktop Modal) ───────────── */
-.notice-layout {
-    display: grid;
-    grid-template-columns: 280px 1fr;
-    gap: var(--spacing-md);
-    flex: 1;
-    min-height: 0;
-}
-
-/* Notice List Panel (left column) */
-.notice-list-panel {
-    background-color: var(--bg-lighter);
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-}
-
-.notice-list-panel-title {
-    padding: 0.75rem 1rem;
-    font-weight: var(--font-semibold);
-    font-size: var(--font-sm);
-    border-bottom: 1px solid var(--border-light);
-    color: var(--text-dark);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.notice-list-panel-title i {
-    color: var(--primary-maroon);
-}
-
-.notice-list {
-    list-style: none;
-    margin: 0;
-    padding: var(--spacing-xs);
-    overflow-y: auto;
-    max-height: 55vh;
-    flex: 1;
-}
-
-.notice-list li {
-    padding: 0;
-    margin: 0;
-}
-
-/* ─── PDF Viewer Panel (right column) ─────────────── */
-.notice-pdf-panel {
-    background-color: var(--bg-lighter);
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    min-height: 450px;
-}
-
-.notice-pdf-toolbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid var(--border-light);
-    flex-wrap: wrap;
-    gap: 0.5rem;
-}
-
-.notice-pdf-title {
-    font-weight: var(--font-semibold);
-    font-size: var(--font-sm);
-    color: var(--text-dark);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.notice-pdf-title i {
-    color: var(--danger);
-}
-
-.notice-pdf-actions {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.notice-pdf-actions .btn {
-    font-size: var(--font-xs);
-    padding: 0.35rem 0.75rem;
-}
-
-.notice-pdf-placeholder {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-light);
-    gap: 1rem;
-    padding: 3rem;
-    text-align: center;
-}
-
-.notice-pdf-placeholder i {
-    font-size: 3rem;
-    color: var(--border-medium);
-}
-
-.notice-pdf-placeholder p {
-    font-size: var(--font-md);
-    max-width: 260px;
-}
-
-.notice-pdf-frame {
-    flex: 1;
-    width: 100%;
-    border: none;
-    min-height: 450px;
-    background-color: var(--bg-lighter);
-}
-
 /* ─── Responsive ──────────────────────────────────── */
 @media (max-width: 768px) {
-    .notice-layout {
+    .notice-desktop-grid {
         grid-template-columns: 1fr;
-        min-height: auto;
+        /* Stack on small tablets/mobile if modal is used */
     }
 
-    .notice-list {
-        max-height: 30vh;
+    .notice-column {
+        border-right: none;
+        border-bottom: 1px solid var(--border-light);
+        height: 50%;
+        /* Force 50% split height if stacked */
     }
 }
 
-/* ============================================
-   PDF VIEWER MODAL (Quick Links)
-   ============================================ */
-
-.pdf-viewer-modal-content {
-    max-width: 900px;
-    max-height: 85vh;
-    width: 90vw;
-}
-
-.pdf-viewer-modal-body {
-    padding: 0;
+/* Force vertical stacking for notice list items */
+.notice-column-content {
     display: flex;
     flex-direction: column;
-    flex: 1;
-    min-height: 0;
-}
-
-.pdf-viewer-toolbar {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    padding: 0.6rem 1rem;
-    border-bottom: 1px solid var(--border-light);
-    background-color: var(--bg-lighter);
-}
-
-.pdf-viewer-actions {
-    display: flex;
     gap: 0.5rem;
 }
 
-.pdf-viewer-actions .btn {
-    font-size: var(--font-xs);
-    padding: 0.35rem 0.75rem;
-}
-
-.pdf-viewer-frame {
-    flex: 1;
-    width: 100%;
-    border: none;
-    min-height: 70vh;
-    background-color: var(--bg-lighter);
+/* PDF Modal Specifics */
+#pdf-viewer-modal .modal-content {
+    width: 90vw;
+    height: 90vh;
+    max-width: 1200px;
+    /* Optional cap */
 }

@@ -190,6 +190,7 @@ const App = {
     this.setupTaskEventListeners();
     this.setupEventsSidebarListeners();
     NoticeViewer.init();
+    CRNoticeViewer.init();
     UI.initPdfViewer();
     this.setupAdminEventListeners();
     this.setupUserManagementListeners();
