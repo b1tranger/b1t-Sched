@@ -28,8 +28,42 @@
     <link rel="stylesheet" href="css/calendar.css">
     <link rel="stylesheet" href="css/responsive.css">
 
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <!-- Theme Initialization Script to prevent FOUC -->
+    <script>
+        (function () {
+            try {
+                const storedProfile = localStorage.getItem('userProfile');
+                let theme = 'system';
+                if (storedProfile) {
+                    const profileData = JSON.parse(storedProfile);
+                    if (profileData && profileData.theme) {
+                        theme = profileData.theme;
+                    }
+                }
+
+                if (theme === 'dark') {
+                    document.documentElement.classList.add('dark-mode');
+                    // In this app, many styles target body.dark-mode
+                    window.addEventListener('DOMContentLoaded', () => document.body.classList.add('dark-mode'));
+                } else if (theme === 'system') {
+                    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                        document.documentElement.classList.add('dark-mode');
+                        window.addEventListener('DOMContentLoaded', () => document.body.classList.add('dark-mode'));
+                    }
+                }
+            } catch (e) {
+                console.error("Theme init error", e);
+            }
+        })();
+    </script>
 </head>
 
 <body>
@@ -299,11 +333,10 @@
                             <!-- Mobile-only external resources link -->
                             <a href="https://b1tacad.netlify.app/departments" target="_blank" rel="noopener noreferrer"
                                 class="resource-link-card external-resources-link mobile-only">
-                                <div class="resource-icon"
-                                    style="display: flex;flex-direction: row;gap: 10px;margin: auto;"><i
-                                        class="fas fa-external-link-alt"></i>
-                                    <p style="font-size: 14px;">All Resources</p>
+                                <div class="resource-icon">
+                                    <i class="fas fa-external-link-alt"></i>
                                 </div>
+                                <h3 style="margin-top: 10px;">All Resources</h3>
                                 <!-- <p>Browse all academic resources department-wise</p> -->
                             </a>
                         </section>
@@ -314,9 +347,10 @@
                             <div class="section-header">
                                 <h2>
                                     <i class="fas fa-tasks"></i> Pending Tasks
-                                    <button id="refresh-tasks-btn" class="btn btn-text-icon" title="Refresh tasks">
+                                    <button id="refresh-tasks-btn" class="btn btn-text-icon" title="Refresh tasks"
+                                        style="margin-left:5px">
                                         <i class="fas fa-sync-alt"
-                                            style="border: 1px solid rgba(0, 0, 0, 0.185);padding: 9px;border-radius: 8px;"></i>
+                                            style="box-shadow: 0 0 10px rgba(0, 0, 0, 0.199);padding: 9px;border-radius: 8px;"></i>
                                     </button>
                                     <button id="calendar-view-btn" class="btn btn-text-icon" title="Calendar view"
                                         aria-label="Open calendar view">
@@ -1082,6 +1116,16 @@
                                 <select id="profile-section" class="form-select" required>
                                     <option value="" disabled>Select Section</option>
                                     <!-- Options loaded dynamically -->
+                                </select>
+                            </div>
+
+                            <h3 style="margin-top: 2rem;">Appearance Settings</h3>
+                            <div class="form-group">
+                                <label for="profile-theme">Theme</label>
+                                <select id="profile-theme" class="form-select">
+                                    <option value="system">System Default</option>
+                                    <option value="light">Light Mode</option>
+                                    <option value="dark">Dark Mode</option>
                                 </select>
                             </div>
 

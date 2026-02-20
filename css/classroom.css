@@ -1,13 +1,24 @@
 /* Google Classroom Theme Colors */
 :root {
-    --classroom-green: #007b83;
-    /* Main Google Classroom Green */
-    --classroom-green-hover: #006066;
-    --classroom-bg: #ffffff;
-    --classroom-text: #3c4043;
-    --classroom-text-secondary: #5f6368;
-    --classroom-border: #dadce0;
-    --classroom-bg-secondary: #f8f9fa;
+    --classroom-green: var(--primary-maroon, #800000);
+    /* Main Google Classroom Green mapped to b1t-Sched Maroon */
+    --classroom-green-hover: var(--secondary-maroon, #660000);
+    --classroom-bg: var(--bg-white, #ffffff);
+    --classroom-text: var(--text-dark, #333333);
+    --classroom-text-secondary: var(--text-medium, #666666);
+    --classroom-border: var(--border-light, #e0e0e0);
+    --classroom-bg-secondary: var(--bg-lighter, #f8f8f8);
+}
+
+/* Override Google Classroom Colors for Dark Mode */
+body.dark-mode {
+    --classroom-green: #d4dd93;
+    --classroom-green-hover: #b8c466;
+    --classroom-bg: #1a1c0d;
+    --classroom-text: #f0f1ea;
+    --classroom-text-secondary: #d4dd93;
+    --classroom-border: #7e8b1b;
+    --classroom-bg-secondary: #101206;
 }
 
 /* =========================================
@@ -106,6 +117,11 @@
     transition: transform 0.2s;
 }
 
+body.dark-mode .classroom-close-btn {
+    color: #1a1c0d;
+    /* Contrast for the light green banner */
+}
+
 .classroom-close-btn:hover {
     transform: rotate(90deg);
 }
@@ -161,6 +177,11 @@
     align-items: center;
 }
 
+body.dark-mode .classroom-modal-header {
+    color: #1a1c0d;
+    /* Better contrast */
+}
+
 .classroom-modal-title {
     margin: 0;
     font-size: 1.4rem;
@@ -193,7 +214,8 @@
 
 .classroom-login-btn {
     background-color: white;
-    color: var(--classroom-text);
+    color: #3c4043;
+    /* explicit light mode text */
     border: 1px solid var(--classroom-border);
     padding: 10px 24px;
     border-radius: 4px;
@@ -225,7 +247,7 @@
    ========================================= */
 .classroom-view-header {
     padding: 15px 20px;
-    background-color: white;
+    background-color: var(--classroom-bg);
     border-bottom: 1px solid var(--classroom-border);
     display: flex;
     justify-content: space-between;
@@ -253,7 +275,7 @@
 }
 
 .view-toggle-btn.active {
-    background-color: white;
+    background-color: var(--classroom-bg);
     color: var(--classroom-green);
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
@@ -268,7 +290,7 @@
 }
 
 .course-card {
-    background-color: white;
+    background-color: var(--classroom-bg);
     border: 1px solid var(--classroom-border);
     border-radius: 8px;
     margin-bottom: 16px;
@@ -321,7 +343,7 @@
    ========================================= */
 .classroom-list-container {
     padding: 0;
-    background-color: white;
+    background-color: var(--classroom-bg);
 }
 
 .classroom-item {
@@ -336,7 +358,7 @@
 }
 
 .classroom-item:hover {
-    background-color: #f8f9fa;
+    background-color: var(--classroom-bg-secondary);
 }
 
 .item-icon {

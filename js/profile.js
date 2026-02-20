@@ -89,6 +89,63 @@ const Profile = {
       profileDept.addEventListener('change', () => this.updateSectionDropdown('profile-section', profileDept.value, profileSem.value));
       profileSem.addEventListener('change', () => this.updateSectionDropdown('profile-section', profileDept.value, profileSem.value));
     }
+
+    // Live preview for theme changes
+    const profileTheme = document.getElementById('profile-theme');
+    if (profileTheme) {
+      profileTheme.addEventListener('change', async (e) => {
+        const selectedTheme = e.target.value;
+        if (selectedTheme === 'dark') {
+          document.body.classList.add('dark-mode');
+        } else if (selectedTheme === 'light') {
+          document.body.classList.remove('dark-mode');
+        } else {
+          // system default
+          if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.body.classList.add('dark-mode');
+          } else {
+            document.body.classList.remove('dark-mode');
+          }
+        }
+
+        // Auto-save theme
+        const userId = Auth.getUserId();
+        if (userId && self.currentProfile) {
+          try {
+            self.currentProfile.theme = selectedTheme;
+            if (window.App && App.userProfile) {
+              App.userProfile.theme = selectedTheme;
+            }
+
+            // Update localStorage
+            const storedProfile = localStorage.getItem('userProfile');
+            if (storedProfile) {
+              const profileData = JSON.parse(storedProfile);
+              profileData.theme = selectedTheme;
+              localStorage.setItem('userProfile', JSON.stringify(profileData));
+            }
+
+            // Save to DB
+            const result = await DB.updateUserProfile(userId, {
+              theme: selectedTheme,
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            if (result.success) {
+              UI.showMessage('profile-message', 'Theme saved!', 'success');
+              setTimeout(() => {
+                const msg = document.getElementById('profile-message');
+                if (msg && msg.innerText === 'Theme saved!') msg.style.display = 'none';
+              }, 2000);
+            } else {
+              UI.showMessage('profile-message', 'Failed to save theme online', 'error');
+            }
+          } catch (err) {
+            console.error('Error auto-saving theme:', err);
+          }
+        }
+      });
+    }
   },
 
   async loadProfile() {
@@ -134,6 +191,12 @@ const Profile = {
         // Load sections
         await this.updateSectionDropdown('profile-section', this.currentProfile.department, this.currentProfile.semester, this.currentProfile.section);
       }
+    }
+
+    // Load theme setting
+    const themeSelect = document.getElementById('profile-theme');
+    if (themeSelect) {
+      themeSelect.value = this.currentProfile.theme || 'system';
     }
 
     // Update notification status
@@ -284,9 +347,9 @@ const Profile = {
       // Confirm changes
       let confirmMessage;
       if (isFaculty) {
-        confirmMessage = `Are you sure you want to change your department to:\n\nDepartment: ${department}\n\nThis will update your personalized dashboard.`;
+        confirmMessage = `Are you sure you want to change your details to:\n\nDepartment: ${department}\n\nThis will update your dashboard.`;
       } else {
-        confirmMessage = `Are you sure you want to change your settings to:\n\nDepartment: ${department}\nSemester: ${semester}\nSection: ${section}\n\nThis will update your personalized dashboard.\n\nNote: You won't be able to change again for 30 days.`;
+        confirmMessage = `Are you sure you want to change your settings to:\n\nDepartment: ${department}\nSemester: ${semester}\nSection: ${section}\n\nThis will update your personalized dashboard.\n\nNote: You won't be able to change academic details again for 30 days.`;
       }
 
       const confirmed = confirm(confirmMessage);
@@ -321,7 +384,8 @@ const Profile = {
         // Update localStorage
         const profileData = {
           department,
-          email: this.currentProfile.email
+          email: this.currentProfile.email,
+          theme: this.currentProfile.theme || 'system'
         };
         if (!isFaculty) {
           profileData.semester = semester;

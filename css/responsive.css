@@ -27,7 +27,14 @@
   }
 }
 
-@media (min-width: 769px) and (max-width: 1920px) {
+@media (min-width: 769px) and (max-width: 1366px) {
+  html {
+    zoom: 90%;
+    /* Fixed override for 1366 screens per request */
+  }
+}
+
+@media (min-width: 1367px) and (max-width: 1920px) {
   html {
     zoom: 100%;
   }
@@ -111,11 +118,13 @@
     margin-top: var(--spacing-sm);
     background: var(--primary-maroon);
     border-color: var(--primary-maroon);
+    text-align: center;
   }
 
   .external-resources-link h3,
   .external-resources-link p {
     color: var(--text-white);
+    text-align: center;
   }
 
   .external-resources-link .resource-icon {
@@ -195,6 +204,10 @@
   .resource-link-card .resource-icon {
     /* font-size: 2.5rem; */
     font-size: 20px;
+  }
+
+  .external-resources-link .resource-icon {
+    display: none !important;
   }
 
   .resource-link-card h3 {

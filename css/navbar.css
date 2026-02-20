@@ -100,20 +100,20 @@
   .navbar {
     height: 60px;
   }
-  
+
   .nav-logo {
     width: 35px;
     height: 35px;
   }
-  
+
   .nav-title {
     font-size: var(--font-lg);
   }
-  
+
   .nav-toggle {
     display: block;
   }
-  
+
   .nav-center {
     position: fixed;
     top: 60px;
@@ -126,18 +126,54 @@
     box-shadow: var(--shadow-md);
     display: none;
   }
-  
+
   .nav-center.active {
     display: flex;
   }
-  
+
   .nav-links {
     flex-direction: column;
     gap: 0;
   }
-  
+
   .nav-link {
     padding: var(--spacing-md);
     border-radius: 0;
+  }
+}
+
+/* Dark Mode Overrides */
+body.dark-mode .navbar {
+  background-color: var(--bg-lighter);
+  /* Dark green from colors.css */
+  color: var(--text-dark);
+  /* Mint green */
+  border-bottom: 1px solid var(--border-light);
+}
+
+body.dark-mode .nav-title {
+  color: var(--text-dark);
+}
+
+body.dark-mode .nav-link {
+  color: var(--text-dark);
+}
+
+body.dark-mode .nav-link:hover {
+  background-color: rgba(212, 221, 147, 0.1);
+  /* Mint green tint */
+}
+
+body.dark-mode .nav-link.active {
+  background-color: rgba(212, 221, 147, 0.2);
+}
+
+body.dark-mode .nav-toggle {
+  color: var(--text-dark);
+}
+
+@media (max-width: 768px) {
+  body.dark-mode .nav-center {
+    background-color: var(--bg-lighter);
   }
 }

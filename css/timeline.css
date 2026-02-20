@@ -214,6 +214,56 @@
     border-bottom: none;
 }
 
+/* Dark Mode Overrides */
+body.dark-mode .timeline-viz-container {
+    background: #2a2c1d;
+    border-color: #3a3c2d;
+}
+
+body.dark-mode .timeline-controls {
+    background: #2a2c1d;
+    border-color: #3a3c2d;
+}
+
+body.dark-mode .timeline-controls label {
+    color: #d4dd93;
+}
+
+body.dark-mode .stat-card {
+    background: #2a2c1d;
+    border-color: #3a3c2d;
+}
+
+body.dark-mode .stat-card h4 {
+    color: #d4dd93;
+}
+
+body.dark-mode .stat-card p {
+    color: #a0a87a;
+}
+
+body.dark-mode .detail-group h4 {
+    color: #d4dd93;
+}
+
+body.dark-mode .heatmap-legend {
+    color: #a0a87a;
+}
+
+body.dark-mode .heatmap-months {
+    color: #a0a87a;
+}
+
+body.dark-mode .btn-icon {
+    color: #a0a87a;
+}
+
+body.dark-mode .form-select {
+    background-color: #1a1c0d;
+    color: #d4dd93;
+    border-color: #3a3c2d;
+}
+
 /* Responsive */
 @media (max-width: 600px) {
     .timeline-controls {

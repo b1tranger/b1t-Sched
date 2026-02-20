@@ -34,7 +34,8 @@
 /* User Info */
 .user-info {
   flex: 1;
-  min-width: 0; /* Allow text truncation */
+  min-width: 0;
+  /* Allow text truncation */
 }
 
 .user-email {
@@ -74,19 +75,19 @@
     max-width: 200px;
     padding: var(--spacing-xs) var(--spacing-sm);
   }
-  
+
   .user-avatar {
     font-size: 1.5rem;
   }
-  
+
   .user-email {
     font-size: var(--font-xs);
   }
-  
+
   .user-department {
     font-size: 10px;
   }
-  
+
   .settings-icon {
     font-size: var(--font-md);
   }
@@ -96,8 +97,14 @@
   .user-email {
     display: none;
   }
-  
+
   .user-department {
     font-size: var(--font-xs);
   }
+}
+
+/* Dark Mode Override */
+body.dark-mode .user-email {
+  color: var(--text-dark);
+  /* Evaluates to off-white (#f0f1ea) */
 }

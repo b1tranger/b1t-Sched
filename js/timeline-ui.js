@@ -486,6 +486,7 @@ const TimelineUI = {
                 },
                 plugins: {
                     tooltip: {
+                        position: 'nearest',
                         callbacks: {
                             title: (context) => {
                                 const day = context[0].label;
@@ -549,7 +550,7 @@ const TimelineUI = {
 
         for (const [course, items] of Object.entries(groups)) {
             html += `<div class="detail-group" style="margin-bottom: 15px;">
-                <h4 style="margin-bottom: 5px; border-bottom: 1px solid #eee; padding-bottom: 3px;">${course} <span class="badge" style="float:right; background:#eee; color:#333;">${items.length}</span></h4>
+                <h4 style="margin-bottom: 5px; border-bottom: 1px solid currentColor; padding-bottom: 3px; opacity: 0.8;">${course} <span class="badge" style="float:right; background: rgba(128,128,128,0.2); color: inherit;">${items.length}</span></h4>
                 <ul style="list-style: none; padding: 0;">`;
 
             // Aggregate 'task_completed' activities
@@ -578,7 +579,7 @@ const TimelineUI = {
                 const type = item.activityType.replace('_', ' ');
                 // Show count if aggregated, otherwise show time
                 const rightContent = item._count
-                    ? `<span style="font-weight:bold; font-size:1.1em; color:#333;">${item._count}</span>`
+                    ? `<span style="font-weight:bold; font-size:1.1em; color:inherit;">${item._count}</span>`
                     : `<span class="text-muted" style="font-size:0.8em;">${new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>`;
 
                 const context = item.department ? `${item.department} ${item.semester || ''} ${item.section || ''}` : 'Global';
@@ -588,7 +589,7 @@ const TimelineUI = {
                         <strong>${item.taskTitle || item.metadata?.title || 'Untitled'}</strong>
                         ${rightContent}
                     </div>
-                    <div style="font-size: 0.8em; color: #666;">
+                    <div style="font-size: 0.8em; opacity: 0.7;">
                         <span style="text-transform: capitalize;">${type}</span> • ${context}
                     </div>
                 </li>`;

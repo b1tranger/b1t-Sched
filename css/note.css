@@ -278,3 +278,29 @@
         /* Assuming flex for buttons */
     }
 }
+
+/* Dark Mode Overrides */
+body.dark-mode .note-textarea {
+    background-color: var(--bg-lighter);
+    color: var(--text-dark);
+    border-color: var(--border-medium);
+}
+
+body.dark-mode .note-textarea::placeholder {
+    color: var(--text-light);
+}
+
+body.dark-mode .note-preview h3 {
+    color: var(--text-dark);
+}
+
+body.dark-mode .note-preview-content {
+    background-color: var(--bg-lighter);
+    border-color: var(--border-medium);
+    color: var(--text-dark);
+}
+
+body.dark-mode .upload-instruction {
+    background-color: var(--bg-lighter);
+    color: var(--text-medium);
+}

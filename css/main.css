@@ -13,12 +13,18 @@ html {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   background-color: var(--bg-light);
   color: var(--text-dark);
   font-size: var(--font-md);
   line-height: 1.6;
   overflow-x: hidden;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+body.dark-mode {
+  background: linear-gradient(135deg, var(--bg-dark-gradient-start) 0%, var(--bg-dark-gradient-end) 100%);
+  background-attachment: fixed;
 }
 
 /* Loading Screen */
@@ -371,6 +377,34 @@ body {
   z-index: 1;
 }
 
+/* ============================================
+   DARK MODE COMPONENT OVERRIDES
+   ============================================ */
+
+/* Logout Button */
+body.dark-mode #logout-btn {
+  background-color: #d5eb2c !important;
+  color: #000000 !important;
+  border-color: #d5eb2c !important;
+}
+
+body.dark-mode #logout-btn:hover {
+  background-color: #c4d928 !important;
+  /* Slightly darker */
+}
+
+/* User Management Delete Button */
+body.dark-mode .delete-user-btn {
+  background-color: #d5eb2c !important;
+  color: #ffffff !important;
+  border-color: #d5eb2c !important;
+}
+
+body.dark-mode .delete-user-btn:hover {
+  background-color: #c4d928 !important;
+  /* Slightly darker */
+}
+
 /* Utility Classes */
 .text-center {
   text-align: center;
@@ -583,6 +617,12 @@ body {
   transition: 0.2s ease-in-out;
   margin: auto;
   width: fit-content;
+}
+
+body.dark-mode .faq-parent-heading {
+  background-color: #2a2c1d;
+  color: #d4dd93;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
 }
 
 .faq-parent-heading:hover {

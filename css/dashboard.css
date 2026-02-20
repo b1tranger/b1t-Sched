@@ -1687,3 +1687,95 @@ input:checked+.slider:before {
         justify-content: center;
     }
 }
+
+/* ============================================
+   DARK MODE OVERRIDES (DASHBOARD)
+   ============================================ */
+
+/* Home Screen: Refresh button */
+#refresh-tasks-btn {
+    margin: 0;
+    padding: 0px 4px;
+    /* Reduced overall size by dropping margin, kept inner padding */
+}
+
+body.dark-mode #refresh-tasks-btn {
+    background-color: var(--primary-maroon) !important;
+    color: var(--text-white);
+    border-color: var(--primary-maroon) !important;
+}
+
+body.dark-mode #refresh-tasks-btn:hover {
+    background-color: var(--secondary-maroon);
+}
+
+/* Home Screen: Reset Tasks button */
+body.dark-mode .btn-danger {
+    background-color: var(--accent-maroon);
+    color: var(--text-white);
+    border-color: var(--accent-maroon);
+}
+
+body.dark-mode .btn-danger:hover {
+    background-color: var(--secondary-maroon);
+}
+
+/* Home Screen: Pending Tasks deadlines to white */
+body.dark-mode .task-deadline,
+body.dark-mode .task-deadline.urgent {
+    color: var(--text-dark);
+    /* text-dark evaluates to white/off-white in new palette */
+}
+
+/* Links (Events, Notice, Notes) everywhere to Light Blue */
+body.dark-mode .description-link,
+body.dark-mode .note-preview-content a,
+body.dark-mode .notice-content a,
+body.dark-mode .task-content a,
+body.dark-mode .event-description a {
+    color: #add8e6;
+    /* Light Blue */
+}
+
+body.dark-mode .description-link:hover,
+body.dark-mode .note-preview-content a:hover,
+body.dark-mode .notice-content a:hover,
+body.dark-mode .task-content a:hover,
+body.dark-mode .event-description a:hover {
+    color: #87ceeb;
+}
+
+/* Sidebar Close Buttons (Events & Notice Sidebar) */
+body.dark-mode .events-sidebar-header .btn-icon,
+body.dark-mode .notice-sidebar-header .btn-icon {
+    color: #1a1c0d !important;
+    /* Dark color for better contrast against primary-maroon header */
+}
+
+body.dark-mode .events-sidebar-header .btn-icon:hover,
+body.dark-mode .notice-sidebar-header .btn-icon:hover {
+    background-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Notification Permission Prompt Text */
+body.dark-mode .notification-permission-prompt,
+body.dark-mode .notification-prompt-text,
+body.dark-mode .notification-prompt-text strong,
+body.dark-mode .notification-prompt-text p,
+body.dark-mode .notification-instructions p,
+body.dark-mode .notification-instructions i {
+    color: #f0f1ea !important;
+    /* Close to white */
+}
+
+/* Enable Notifications "Not Now" Button */
+body.dark-mode #dismiss-notifications-btn,
+body.dark-mode #dismiss-install-btn {
+    color: #f0f1ea !important;
+    opacity: 1 !important;
+}
+
+body.dark-mode #dismiss-notifications-btn:hover,
+body.dark-mode #dismiss-install-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+}

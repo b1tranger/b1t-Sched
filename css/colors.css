@@ -9,47 +9,47 @@
   --accent-maroon: #A00000;
   --light-maroon: #B30000;
   --maroon-hover: #990000;
-  
+
   /* Background Colors */
   --bg-light: #F5F3F0;
   --bg-lighter: #F9F7F4;
   --bg-white: #FFFFFF;
   --bg-dark: #E8E6E3;
-  
+
   /* Text Colors */
   --text-dark: #333333;
   --text-medium: #666666;
   --text-light: #999999;
   --text-white: #FFFFFF;
-  
+
   /* Border Colors */
   --border-light: #E8E6E3;
   --border-medium: #D0CECA;
   --border-dark: #B8B5B1;
-  
+
   /* Status Colors */
   --success: #28a745;
   --warning: #ffc107;
   --danger: #dc3545;
   --info: #17a2b8;
-  
+
   /* Shadow */
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.15);
   --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.2);
   --shadow-maroon: 0 4px 8px rgba(128, 0, 0, 0.2);
-  
+
   /* Transitions */
   --transition-fast: 0.2s ease;
   --transition-medium: 0.3s ease;
   --transition-slow: 0.5s ease;
-  
+
   /* Border Radius */
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 12px;
   --radius-full: 50%;
-  
+
   /* Spacing */
   --spacing-xs: 4px;
   --spacing-sm: 8px;
@@ -57,7 +57,7 @@
   --spacing-lg: 24px;
   --spacing-xl: 32px;
   --spacing-xxl: 48px;
-  
+
   /* Font Sizes */
   --font-xs: 12px;
   --font-sm: 14px;
@@ -65,13 +65,13 @@
   --font-lg: 18px;
   --font-xl: 24px;
   --font-xxl: 32px;
-  
+
   /* Font Weights */
   --font-normal: 400;
   --font-medium: 500;
   --font-semibold: 600;
   --font-bold: 700;
-  
+
   /* Z-index layers */
   --z-dropdown: 1000;
   --z-sticky: 1020;
@@ -82,19 +82,38 @@
   --z-tooltip: 1070;
 }
 
-/* Dark mode variables (future implementation) */
+/* Dark mode variables */
 body.dark-mode {
-  --bg-light: #1a1a1a;
-  --bg-lighter: #242424;
-  --bg-white: #2d2d2d;
-  --bg-dark: #0f0f0f;
-  
-  --text-dark: #f0f0f0;
-  --text-medium: #b0b0b0;
-  --text-light: #808080;
-  --text-white: #ffffff;
-  
-  --border-light: #3a3a3a;
-  --border-medium: #505050;
-  --border-dark: #656565;
+  /* Using RealtimeColors palette: #f0f1ea, #1a1c0d, #d4dd93, #7e8b1b, #d5eb2c */
+  /* --bg-dark-gradient-start: #1a1c0d;
+  --bg-dark-gradient-end: #101206; */
+  --bg-dark-gradient-start: #0b0c06;
+  --bg-dark-gradient-end: #101206;
+
+  --primary-maroon: #d4dd93;
+  --secondary-maroon: #7e8b1b;
+  --accent-maroon: #d5eb2c;
+  --light-maroon: #d5eb2c;
+  --maroon-hover: #d5eb2c;
+
+  --bg-light: #2c2f18;
+  /* Fallback for the solid background where gradient isn't applied */
+  --bg-lighter: #202312;
+  /* Slightly darker shade */
+  --bg-white: #1a1c0d;
+  /* Cards and modal backgrounds */
+  --bg-dark: #101206;
+
+  --text-dark: #f0f1ea;
+  --text-medium: #d4dd93;
+  --text-light: #7e8b1b;
+  --text-white: #1a1c0d;
+
+  --border-light: #2c2f18;
+  --border-medium: #06402B;
+  --border-dark: #96D9C0;
+
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
 }

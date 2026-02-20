@@ -46,6 +46,7 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **Role Badges** - Visual indicators for CR and Faculty contributors in task cards and contribution lists
 - **Responsive Design** - Works on desktop, tablet, and mobile
 - **Maroon Theme** - Professional dark maroon and off-white color scheme
+- **Dark Theme Customization** - Dynamic, RealtimeColors-based dark theme (`#1a1c0d`, `#d4dd93`, `#d5eb2c` palette) with seamless toggling via "Appearance Settings" in the Profile menu. Avoids caching FOUC (flash of unstyled content) via inline scripting.
 - **Admin Features** - Task reset, task/event delete, event creation, user management with password reset and deletion
 - **Admin User Management** - View all users, manage roles (CR/Faculty/Blocked), edit user profiles, send password resets (via Client SDK), delete users
 - **Password Reset Enhancements** - "Forgot Password" link on login failure, "Reset Password" button in Profile Settings, and robust Admin reset functionality bypassing CORS issues
@@ -403,6 +404,7 @@ The module automatically listens for user activity events (`mousedown`, `keydown
   isCR: boolean,          // Optional - CR privileges (set via admin panel)
   isFaculty: boolean,     // Optional - Faculty privileges (set via admin panel)
   isBlocked: boolean,     // Optional - blocked/restricted user (set via admin panel)
+  theme: string,          // Optional - User's selected theme ('system', 'light', 'dark')
   lastProfileChange: Timestamp, // Optional - last profile edit timestamp (30-day cooldown)
   lastProfileChangeByAdmin: Timestamp, // Optional - last admin edit timestamp
   createdAt: Timestamp,
@@ -557,10 +559,10 @@ The module automatically listens for user activity events (`mousedown`, `keydown
 |--------|------------|-------------|
 | `init()` | - | Initialize profile module |
 | `setupEventListeners()` | - | Attach event listeners to profile UI |
-| `loadProfile()` | - | Load and display user profile |
+| `loadProfile()` | - | Load and display user profile, including pre-selecting "Appearance Settings" |
 | `updateSectionDropdown(elementId, dept, sem, selectedValue)` | strings | Update section dropdown |
 | `updateCooldownMessage()` | - | Display remaining days until profile can be changed |
-| `handleSaveProfile()` | - | Save profile changes to Firestore (with 30-day cooldown check) |
+| `handleSaveProfile()` | - | Save profile changes to Firestore. Note: Theme updates bypass the standard 30-day cooldown. |
 
 **Event Listeners:**
 - User details card click → Navigate to profile settings
@@ -1581,6 +1583,7 @@ Router.onRouteChange((routeName) => {
 | 2.29.0 | Feb 2026 | Session Management & UI Improvements: Added "Stay logged in" checkbox to persist session on trusted devices. Implemented Google Classroom session persistence with auto-refresh tokens. UI refinement: "Refresh Tasks" button moved to header group on mobile for better accessibility. |
 | 2.30.0 | Feb 2026 | Password Reset System Overhaul: (1) **Admin Fix**: Refactored Admin Password Reset to use Client SDK (`Auth.sendPasswordResetEmail`) instead of backend Cloud Function, effectively bootstrapping a workaround for CORS issues on the `sendPasswordReset` endpoint. (2) **Conflict Resolution**: Renamed `handlePasswordReset` to `handleAdminPasswordReset` in `app.js` to fix naming collision that broke the "Forgot Password" modal. (3) **UI Enhancements**: Added "Forgot Password" link on login failure and a new "Reset Password" button in Profile Settings. (4) **UX**: Improved visual prominence of reset links. |
 | 2.31.0 | Feb 2026 | CR Notice Creation Fix: Fixed CRs and Admins being unable to post class notices. **(Bug)** `cr-notice.js` read user profile from non-existent `localStorage` keys (`userDepartment`, `userSemester`, `userSection`) instead of `Utils.storage.get('userProfile')`. **(Fix)** `subscribeToNotices()` and `submitNotice()` now read profile via `Utils.storage.get('userProfile')`. Removed Department/Semester/Section dropdowns from Add Notice form (auto-filled from profile). Updated Firestore rules to allow Admins to create notices. Files: `js/cr-notice.js`, `index.html`, `firestore.rules`. |
+| 2.32.0 | Feb 2026 | Auto-Save Theme Settings: Separated theme preferences from general profile settings. Theme changes now auto-save immediately upon selection and are exempt from the 30-day profile update cooldown restriction. |
 
 ---
 

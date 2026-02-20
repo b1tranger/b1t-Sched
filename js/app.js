@@ -1041,6 +1041,21 @@ const App = {
         this.userProfile.section
       );
 
+      // Apply Dark Theme setting if it exists
+      const userTheme = this.userProfile.theme || 'system';
+      if (userTheme === 'dark') {
+        document.body.classList.add('dark-mode');
+      } else if (userTheme === 'light') {
+        document.body.classList.remove('dark-mode');
+      } else {
+        // System default map
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          document.body.classList.add('dark-mode');
+        } else {
+          document.body.classList.remove('dark-mode');
+        }
+      }
+
       // Show/hide admin, CR, and Faculty controls
       UI.toggleAdminControls(this.isAdmin, this.isCR, this.isFaculty);
 

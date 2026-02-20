@@ -3,7 +3,7 @@
  * Handles caching strategies, offline functionality, and background sync
  */
 
-const CACHE_VERSION = 'v1.0.2';
+const CACHE_VERSION = 'v2.32.0';
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `dynamic-${CACHE_VERSION}`;
 const API_CACHE = `api-${CACHE_VERSION}`;
@@ -121,7 +121,7 @@ self.addEventListener('fetch', (event) => {
 
   // Handle different request types
   if (isStaticAsset(url)) {
-    event.respondWith(cacheFirst(request, STATIC_CACHE));
+    event.respondWith(networkFirst(request, STATIC_CACHE));
   } else if (isAPIRequest(url)) {
     event.respondWith(networkFirst(request, API_CACHE));
   } else {
