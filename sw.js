@@ -262,7 +262,7 @@ self.addEventListener('notificationclick', (event) => {
 
   // Get notification data
   const data = event.notification.data || {};
-  const type = data.type || 'task'; // 'task' or 'event'
+  const type = data.type || 'task'; // 'task', 'event', or 'notice'
   const id = data.id || '';
 
   // Open or focus the app window

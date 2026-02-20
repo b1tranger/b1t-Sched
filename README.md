@@ -565,7 +565,7 @@ Seniors
 - [Md Kamruzzaman Shishir (1814355002)](https://github.com/MuhammadShishir)
 - [Md. Sakibul Hakim (Sadab) (2114951038)](https://github.com/foxxie911)
 - [Zobayer Hasan (2215151106)](https://github.com/zobayersq)
-- Mohammad Masud Chowdhury Mahir
+- [Mohammad Masud Chowdhury Mahir (2215151105)](https://github.com/mahirmasud)
 - [Md Sakib Hosen (0432220005101058)](https://github.com/chatok-jnr)
 - [Akib Reza (0432220005101061)](https://github.com/AkibReza)
 - [Md. Safrid Bhueyan (0432310005101080)](https://github.com/safridbhueyan)

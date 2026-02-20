@@ -40,7 +40,7 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **Resource Links** - Quick access to department-specific resources with built-in PDF viewer (desktop: Google Docs Viewer in modal; mobile: opens in new tab)
 - **Google Classroom Integration** - View all assignments and announcements from enrolled courses in a unified interface with OAuth authentication and session persistence (auto-refresh tokens)
 - **Progressive Web App (PWA)** - Installable app with offline support, service worker caching, and automatic updates
-- **Push Notifications** - Real-time browser notifications for new tasks and events (mobile-compatible via Service Worker API with vibration support)
+- **Push Notifications** - Real-time browser notifications for new tasks, events, and CR notices (mobile-compatible via Service Worker API with vibration support; urgent notices persist until dismissed)
 - **Session Security** - Automatic logout after 1 hour of inactivity (unless "Stay logged in" is checked), with activity-based timer reset for enhanced security
 - **Stay Logged In** - Optional "Trust this device" checkbox on login to persist session indefinitely on safe devices
 - **Role Badges** - Visual indicators for CR and Faculty contributors in task cards and contribution lists
@@ -879,13 +879,14 @@ During signup, Firebase triggers `onAuthStateChanged` immediately when the user 
 #### Notification Manager (`js/notification-manager.js`)
 - Core notification system controller
 - Checks browser API support
-- Displays task and event notifications
+- Displays task, event, and CR notice notifications
+- Urgent notices use `requireInteraction: true` to persist until dismissed
 - Handles notification click events (navigates to dashboard)
 
 #### Firestore Listener Manager (`js/firestore-listener-manager.js`)
-- Sets up real-time listeners on tasks and events collections
+- Sets up real-time listeners on tasks, events, and CR notices collections
 - Detects new documents (ignores initial load)
-- Filters by user's department, semester, and section
+- Filters by user's department, semester, and section (notices use section group)
 - Triggers notifications when new items are added
 
 ---
@@ -968,7 +969,7 @@ navbar.css          → Navigation Specific
 user-details-card.css → User Card Specific
 notice.css          → Notice Viewer (Modal + Sidebar + PDF panel) + Quick Links PDF Viewer Modal
     ↓
-responsive.css      → Media Queries
+responsive.css      → Media Queries + Zoom Normalization
 ```
 
 ### Theme Colors (CSS Variables)
@@ -1031,6 +1032,18 @@ responsive.css      → Media Queries
 /* Mobile */
 @media (max-width: 480px) { ... }
 ```
+
+### Zoom Normalization
+
+CSS `zoom` is applied per screen width to prevent UI overflow on devices that render at non-standard zoom levels. Supported in Chromium-based browsers (Chrome, Edge, Opera, Samsung Internet).
+
+| Screen Width | Zoom |
+|---|---|
+| ≤ 360px | 85% |
+| 361–480px | 90% |
+| 481–768px | 95% |
+| 769–1920px | 100% |
+| 1921px+ | 110% |
 
 ---
 
@@ -2179,7 +2192,14 @@ You can use basic markdown formatting in task and event descriptions:
 
 ## Version History
 
-### v2.33.0 (Current)
+### v2.34.0 (Current)
+- **New Feature**: Push notifications for CR Notices — users now receive mobile/desktop push notifications when a new CR notice is posted in their section, with priority indicators (🔴 urgent, ⚠️ important) and deadline info.
+- **Enhancement**: Urgent CR notices use `requireInteraction: true` to persist until dismissed.
+- **Enhancement**: Zoom normalization in `responsive.css` — CSS `zoom` rules per screen width breakpoint (85%–110%) to prevent UI overflow on devices rendering at non-standard zoom levels.
+- **Enhancement**: Manifest `theme_color` updated to `#660000` (maroon) for PWA theming.
+- **Refactor**: `handleNotificationClick` simplified — all notification types navigate to dashboard (removed redundant per-type if/else blocks).
+
+### v2.33.0
 - **New Feature**: CR Notice deadline support — optional deadline field ("No official Time limit" or specific datetime) for notices, displayed with clock icon (green for active, red for past).
 - **New Feature**: Mobile Calendar Monthly View — compact date grid with week numbers, maroon dot indicators for dates with tasks, today highlight, and tappable task list panel showing course + title + deadline time.
 - **New Feature**: Monthly/Weekly toggle on both mobile calendar views — users can switch between monthly and weekly views.

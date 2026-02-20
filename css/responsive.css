@@ -2,6 +2,43 @@
    RESPONSIVE STYLES
    ============================================ */
 
+/* ============================================
+   ZOOM NORMALIZATION BY SCREEN RESOLUTION
+   Prevents UI overflow on devices that render
+   at non-standard zoom levels.
+   Note: CSS zoom is supported in Chromium-based
+   browsers (Chrome, Edge, Opera, Samsung Internet).
+   ============================================ */
+@media (max-width: 360px) {
+  html {
+    zoom: 85%;
+  }
+}
+
+@media (min-width: 361px) and (max-width: 480px) {
+  html {
+    zoom: 90%;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+  html {
+    zoom: 95%;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1920px) {
+  html {
+    zoom: 100%;
+  }
+}
+
+@media (min-width: 1921px) {
+  html {
+    zoom: 110%;
+  }
+}
+
 /* Tablets and smaller */
 @media (max-width: 992px) {
 

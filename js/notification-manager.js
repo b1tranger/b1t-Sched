@@ -29,9 +29,9 @@ const NotificationManager = {
     if (!this.isSupported()) {
       console.warn('Web Notifications API not supported in this browser');
       console.warn('Browser:', navigator.userAgent);
-      return { 
-        success: false, 
-        error: 'Notifications not supported in this browser' 
+      return {
+        success: false,
+        error: 'Notifications not supported in this browser'
       };
     }
 
@@ -45,7 +45,7 @@ const NotificationManager = {
 
     this.isInitialized = true;
     console.log('Notification system initialized');
-    
+
     return { success: true };
   },
 
@@ -64,7 +64,7 @@ const NotificationManager = {
     try {
       // Format notification content
       const notificationData = NotificationContentFormatter.formatTaskNotification(task);
-      
+
       // Try to use Service Worker notification (required for mobile)
       if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
         const registration = await navigator.serviceWorker.ready;
@@ -80,7 +80,7 @@ const NotificationManager = {
         console.log('Task notification displayed via Service Worker:', task.id);
         return null; // Service Worker notifications don't return a Notification object
       }
-      
+
       // Fallback to regular Notification API (desktop browsers)
       const notification = new Notification(notificationData.title, {
         body: notificationData.body,
@@ -121,7 +121,7 @@ const NotificationManager = {
     try {
       // Format notification content
       const notificationData = NotificationContentFormatter.formatEventNotification(event);
-      
+
       // Try to use Service Worker notification (required for mobile)
       if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
         const registration = await navigator.serviceWorker.ready;
@@ -137,7 +137,7 @@ const NotificationManager = {
         console.log('Event notification displayed via Service Worker:', event.id);
         return null; // Service Worker notifications don't return a Notification object
       }
-      
+
       // Fallback to regular Notification API (desktop browsers)
       const notification = new Notification(notificationData.title, {
         body: notificationData.body,
@@ -164,8 +164,65 @@ const NotificationManager = {
   },
 
   /**
+   * Shows a notification for a new CR notice
+   * @param {Object} notice - Notice data from Firestore
+   * @returns {Promise<Notification|null>}
+   */
+  async showNoticeNotification(notice) {
+    // Check permission
+    if (!PermissionManager.isGranted()) {
+      console.log('Notification permission not granted, skipping notice notification');
+      return null;
+    }
+
+    try {
+      // Format notification content
+      const notificationData = NotificationContentFormatter.formatNoticeNotification(notice);
+
+      // Try to use Service Worker notification (required for mobile)
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        const registration = await navigator.serviceWorker.ready;
+        await registration.showNotification(notificationData.title, {
+          body: notificationData.body,
+          icon: notificationData.icon,
+          tag: notificationData.tag,
+          requireInteraction: notificationData.requireInteraction,
+          data: notificationData.data,
+          badge: '/Social-Preview.webp',
+          vibrate: [200, 100, 200]
+        });
+        console.log('Notice notification displayed via Service Worker:', notice.id);
+        return null;
+      }
+
+      // Fallback to regular Notification API (desktop browsers)
+      const notification = new Notification(notificationData.title, {
+        body: notificationData.body,
+        icon: notificationData.icon,
+        tag: notificationData.tag,
+        requireInteraction: notificationData.requireInteraction,
+        data: notificationData.data
+      });
+
+      // Handle click event
+      notification.onclick = () => {
+        this.handleNotificationClick('notice', notice.id);
+        notification.close();
+      };
+
+      console.log('Notice notification displayed:', notice.id);
+      return notification;
+    } catch (error) {
+      console.error('Failed to display notice notification:', error);
+      console.error('Notice ID:', notice.id);
+      console.error('Notice title:', notice.title);
+      return null;
+    }
+  },
+
+  /**
    * Handles notification click events
-   * @param {string} type - 'task' or 'event'
+   * @param {string} type - 'task', 'event', or 'notice'
    * @param {string} id - Document ID
    */
   handleNotificationClick(type, id) {
@@ -174,21 +231,11 @@ const NotificationManager = {
       window.focus();
     }
 
-    // Navigate to appropriate view
-    if (type === 'task') {
-      // Navigate to dashboard (where tasks are displayed)
-      if (window.Router) {
-        Router.navigate('dashboard');
-      } else {
-        window.location.hash = '#/dashboard';
-      }
-    } else if (type === 'event') {
-      // Navigate to dashboard (where events are displayed in sidebar)
-      if (window.Router) {
-        Router.navigate('dashboard');
-      } else {
-        window.location.hash = '#/dashboard';
-      }
+    // Navigate to dashboard (tasks, events, and notices are all displayed there)
+    if (window.Router) {
+      Router.navigate('dashboard');
+    } else {
+      window.location.hash = '#/dashboard';
     }
 
     console.log(`Notification clicked: ${type} ${id}`);

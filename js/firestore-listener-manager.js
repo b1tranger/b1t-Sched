@@ -8,6 +8,7 @@
 const FirestoreListenerManager = {
   tasksUnsubscribe: null,
   eventsUnsubscribe: null,
+  noticesUnsubscribe: null,
   isInitialized: false,
   initTimestamp: null,
 
@@ -44,9 +45,20 @@ const FirestoreListenerManager = {
       }
     );
 
+    // Set up notice listener
+    this.noticesUnsubscribe = this.listenForNewNotices(
+      department,
+      semester,
+      section,
+      async (notice) => {
+        console.log('New notice detected:', notice.id);
+        await NotificationManager.showNoticeNotification(notice);
+      }
+    );
+
     this.isInitialized = true;
     console.log('Firestore listeners initialized');
-    
+
     return { success: true };
   },
 
@@ -127,6 +139,46 @@ const FirestoreListenerManager = {
   },
 
   /**
+   * Sets up listener for new CR notices
+   * @param {string} department
+   * @param {string} semester
+   * @param {string} section
+   * @param {function} callback - Called when new notice is detected
+   * @returns {function} Unsubscribe function
+   */
+  listenForNewNotices(department, semester, section, callback) {
+    let isFirstSnapshot = true;
+    const sectionGroup = Utils.getSectionGroup(section);
+
+    return db.collection('cr_notices')
+      .where('department', '==', department)
+      .where('semester', '==', semester)
+      .where('section', '==', sectionGroup)
+      .orderBy('timestamp', 'desc')
+      .onSnapshot((snapshot) => {
+        if (isFirstSnapshot) {
+          // Skip initial load - don't trigger notifications for existing notices
+          isFirstSnapshot = false;
+          console.log('Notice listener initialized, monitoring for new notices');
+          return;
+        }
+
+        // Process only added documents
+        snapshot.docChanges().forEach((change) => {
+          if (change.type === 'added') {
+            const notice = { id: change.doc.id, ...change.doc.data() };
+            callback(notice);
+          }
+        });
+      }, (error) => {
+        console.error('Notice listener error:', error);
+        if (error.code === 'unavailable') {
+          console.log('Firestore temporarily unavailable, will auto-reconnect');
+        }
+      });
+  },
+
+  /**
    * Removes all active listeners
    */
   unsubscribeAll() {
@@ -140,6 +192,12 @@ const FirestoreListenerManager = {
       this.eventsUnsubscribe();
       this.eventsUnsubscribe = null;
       console.log('Event listener unsubscribed');
+    }
+
+    if (this.noticesUnsubscribe) {
+      this.noticesUnsubscribe();
+      this.noticesUnsubscribe = null;
+      console.log('Notice listener unsubscribed');
     }
 
     this.isInitialized = false;

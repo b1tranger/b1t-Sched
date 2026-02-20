@@ -19,7 +19,7 @@ const NotificationContentFormatter = {
    */
   formatTaskNotification(task) {
     const title = this.truncate(task.title || 'New Task', this.MAX_TITLE_LENGTH);
-    
+
     // Build body with course and description
     let body = '';
     if (task.course) {
@@ -32,7 +32,7 @@ const NotificationContentFormatter = {
       const deadlineStr = this.formatDateTime(task.deadline);
       body += body ? ` | Due: ${deadlineStr}` : `Due: ${deadlineStr}`;
     }
-    
+
     body = this.truncate(body || 'A new task has been added', this.MAX_BODY_LENGTH);
 
     return {
@@ -56,7 +56,7 @@ const NotificationContentFormatter = {
    */
   formatEventNotification(event) {
     const title = this.truncate(event.title || 'New Event', this.MAX_TITLE_LENGTH);
-    
+
     // Build body with date/time and description
     let body = '';
     if (event.date) {
@@ -65,7 +65,7 @@ const NotificationContentFormatter = {
     if (event.description) {
       body += body ? ` - ${event.description}` : event.description;
     }
-    
+
     body = this.truncate(body || 'A new event has been added', this.MAX_BODY_LENGTH);
 
     return {
@@ -77,6 +77,45 @@ const NotificationContentFormatter = {
       data: {
         type: 'event',
         id: event.id,
+        timestamp: Date.now()
+      }
+    };
+  },
+
+  /**
+   * Formats notice data for notification
+   * @param {Object} notice - CR Notice document from Firestore
+   * @returns {{title: string, body: string, icon: string, data: object}}
+   */
+  formatNoticeNotification(notice) {
+    const title = this.truncate(notice.title || 'New Notice', this.MAX_TITLE_LENGTH);
+
+    // Build body with priority and description
+    let body = '';
+    if (notice.priority === 'urgent') {
+      body += '🔴 Urgent: ';
+    } else if (notice.priority === 'important') {
+      body += '⚠️ Important: ';
+    }
+    if (notice.description) {
+      body += notice.description;
+    }
+    if (notice.deadline) {
+      const deadlineStr = this.formatDateTime(notice.deadline);
+      body += body ? ` | Deadline: ${deadlineStr}` : `Deadline: ${deadlineStr}`;
+    }
+
+    body = this.truncate(body || 'A new notice has been posted', this.MAX_BODY_LENGTH);
+
+    return {
+      title,
+      body,
+      icon: this.getIcon('notice'),
+      tag: `notice-${notice.id}`,
+      requireInteraction: notice.priority === 'urgent',
+      data: {
+        type: 'notice',
+        id: notice.id,
         timestamp: Date.now()
       }
     };
@@ -116,7 +155,7 @@ const NotificationContentFormatter = {
 
     // Convert Firestore Timestamp to Date if needed
     const d = date.toDate ? date.toDate() : new Date(date);
-    
+
     const now = new Date();
     const diffMs = d - now;
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
@@ -139,7 +178,7 @@ const NotificationContentFormatter = {
 
   /**
    * Gets appropriate icon for notification type
-   * @param {string} type - 'task' or 'event'
+   * @param {string} type - 'task', 'event', or 'notice'
    * @returns {string} Icon URL
    */
   getIcon(type) {
