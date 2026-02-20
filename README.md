@@ -529,7 +529,7 @@ For issues or questions:
 
 ## Feature Request:
 
-from 
+from [@K. M. Jakaria (0432310005101037)](https://github.com/Reaper-X003)
    1. dark theme [1d16168e1616d84040eeeeee](https://colorhunt.co/palette/1d16168e1616d84040eeeeee)
    2. light theme [7d0a0abf3131ead196eeeeee](https://colorhunt.co/palette/7d0a0abf3131ead196eeeeee)
 
