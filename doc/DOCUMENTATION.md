@@ -1259,6 +1259,9 @@ service cloud.firestore {
 | Create events (own dept/sem) | ✗ | ✗ | ✓ (semester) | ✓ (department) | ✓ |
 | Edit/Delete own events | ✗ | ✗ | ✓ | ✓ | ✓ |
 | Edit/Delete any event | ✗ | ✗ | ✗ | ✗ | ✓ |
+| Read CR notices (own section) | ✓ (read-only) | ✓ | ✓ | ✓ | ✓ |
+| Create CR notices (own section) | ✗ | ✗ | ✓ (auto-filled) | ✗ | ✓ (any section) |
+| Delete CR notices | ✗ | ✗ | ✓ (own) | ✗ | ✓ |
 | Change own profile | ✗ | ✓ (30-day cooldown) | ✓ | ✓ | ✓ |
 | Manage users | ✗ | ✗ | ✗ | ✗ | ✓ |
 | Assign/remove roles | ✗ | ✗ | ✗ | ✗ | ✓ |
@@ -1515,6 +1518,7 @@ Router.onRouteChange((routeName) => {
 | 2.28.0 | Feb 2026 | Activity Timeline & User Counter: Added interactive activity heatmap and bar chart to visualize user productivity (logins, tasks, events). Added live user counter to dashboard and footer. Mobile UI fixes: resolved clickability issues by removing overlay conflicts, improved Note button visibility logic. |
 | 2.29.0 | Feb 2026 | Session Management & UI Improvements: Added "Stay logged in" checkbox to persist session on trusted devices. Implemented Google Classroom session persistence with auto-refresh tokens. UI refinement: "Refresh Tasks" button moved to header group on mobile for better accessibility. |
 | 2.30.0 | Feb 2026 | Password Reset System Overhaul: (1) **Admin Fix**: Refactored Admin Password Reset to use Client SDK (`Auth.sendPasswordResetEmail`) instead of backend Cloud Function, effectively bootstrapping a workaround for CORS issues on the `sendPasswordReset` endpoint. (2) **Conflict Resolution**: Renamed `handlePasswordReset` to `handleAdminPasswordReset` in `app.js` to fix naming collision that broke the "Forgot Password" modal. (3) **UI Enhancements**: Added "Forgot Password" link on login failure and a new "Reset Password" button in Profile Settings. (4) **UX**: Improved visual prominence of reset links. |
+| 2.31.0 | Feb 2026 | CR Notice Creation Fix: Fixed CRs and Admins being unable to post class notices. **(Bug)** `cr-notice.js` read user profile from non-existent `localStorage` keys (`userDepartment`, `userSemester`, `userSection`) instead of `Utils.storage.get('userProfile')`. **(Fix)** `subscribeToNotices()` and `submitNotice()` now read profile via `Utils.storage.get('userProfile')`. Removed Department/Semester/Section dropdowns from Add Notice form (auto-filled from profile). Updated Firestore rules to allow Admins to create notices. Files: `js/cr-notice.js`, `index.html`, `firestore.rules`. |
 
 ---
 
@@ -1529,8 +1533,8 @@ Router.onRouteChange((routeName) => {
 
 ---
 
-*Documentation last updated: February 19, 2026*
-*Version: 2.30.0*
+*Documentation last updated: February 20, 2026*
+*Version: 2.31.0*
 
 
 ---
@@ -1865,6 +1869,24 @@ CalendarView.maxYear = currentYear + 100   // Navigation limit (future)
 
 ## Troubleshooting
 
+### CR Notice Issues
+
+**CRs cannot post notices:**
+- Verify the user's profile has `department`, `semester`, and `section` set (Profile Settings)
+- Check browser console for `User profile incomplete` log — indicates missing profile data in `localStorage`
+- Ensure the user has the CR role (check `isCR` in Firestore user document)
+- Verify Firestore rules are deployed: `firebase deploy --only firestore:rules`
+
+**Notices not appearing after posting:**
+- Check Firestore console → `cr_notices` collection for the new document
+- Verify the `department`, `semester`, `section` fields match the viewing user's profile
+- Check browser console for Firestore query errors (may indicate missing composite index)
+
+**"Profile incomplete" message in CR Notices section:**
+- User's profile is missing department, semester, or section
+- Go to Profile Settings and set all three fields
+- Reload the page after saving
+
 ### Calendar View Issues
 
 **Calendar button doesn't work:**
@@ -2073,7 +2095,7 @@ Since `activity_logs` is a new collection, existing `tasks` and `events` need to
 2130: 
 2131: ---
 
-*Last Updated: February 18, 2026*
+*Last Updated: February 20, 2026*
 
 ## Version History
 

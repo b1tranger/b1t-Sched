@@ -163,13 +163,18 @@ service cloud.firestore {
          resource.data.section == getUserSection())
       );
       
-      // Create: Only CRs can create notices for their own section
-      allow create: if isCR() && 
+      // Create: Admins can create notices for any section; CRs only for their own
+      allow create: if (isAdmin() && 
+        request.resource.data.createdBy == request.auth.uid &&
+        hasRequiredNoticeFields()
+      ) || (
+        isCR() && 
         request.resource.data.createdBy == request.auth.uid &&
         request.resource.data.department == getUserDepartment() &&
         request.resource.data.semester == getUserSemester() &&
         request.resource.data.section == getUserSection() &&
-        hasRequiredNoticeFields();
+        hasRequiredNoticeFields()
+      );
       
       // Update: Only the CR who created the notice can update it
       allow update: if isCR() && 

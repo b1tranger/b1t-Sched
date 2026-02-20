@@ -83,9 +83,10 @@ const CRNoticeViewer = {
             this.unsubscribe = null;
         }
 
-        const userDept = localStorage.getItem('userDepartment');
-        const userSem = localStorage.getItem('userSemester');
-        const userSec = localStorage.getItem('userSection');
+        const profile = Utils.storage.get('userProfile');
+        const userDept = profile && profile.department;
+        const userSem = profile && profile.semester;
+        const userSec = profile && profile.section;
 
         if (!userDept || !userSem || !userSec) {
             console.log('User profile incomplete, skipping CR notices');
@@ -267,76 +268,11 @@ const CRNoticeViewer = {
         });
     },
 
-    async openAddModal() {
+    openAddModal() {
         const form = document.getElementById('add-cr-notice-form');
         if (form) form.reset();
 
-        // Get dropdown elements
-        const deptSelect = document.getElementById('cr-notice-department');
-        const semSelect = document.getElementById('cr-notice-semester');
-        const secSelect = document.getElementById('cr-notice-section');
-
-        // Check if user is Admin
-        const user = firebase.auth().currentUser;
-        if (user) {
-            const roles = await DB.getUserRoles(user.uid);
-
-            if (roles.isAdmin) {
-                // Admin: Enable fields and load options
-                if (deptSelect) deptSelect.disabled = false;
-                if (semSelect) semSelect.disabled = false;
-                if (secSelect) secSelect.disabled = false;
-
-                // Load departments
-                const deptResult = await DB.getDepartments();
-                if (deptResult.success && deptSelect) {
-                    await UI.populateDropdown('cr-notice-department', deptResult.data);
-                }
-
-                // Load semesters (assuming standard list or fetch)
-                const semResult = await DB.getSemesters();
-                if (semResult.success && semSelect) {
-                    await UI.populateDropdown('cr-notice-semester', semResult.data);
-                }
-
-                // Add listeners update sections
-                if (deptSelect && semSelect) {
-                    const updateSections = async () => {
-                        const dept = deptSelect.value;
-                        const sem = semSelect.value;
-                        if (dept && sem) {
-                            const secResult = await DB.getSections(dept, sem);
-                            if (secResult.success && secSelect) {
-                                await UI.populateDropdown('cr-notice-section', secResult.data);
-                            }
-                        }
-                    };
-                    deptSelect.onchange = updateSections;
-                    semSelect.onchange = updateSections;
-                    // Remove old listeners to avoid duplicates if any (basic approach here)
-                }
-
-            } else {
-                // CR or Regular User: Pre-fill from profile and disable
-                const userDept = localStorage.getItem('userDepartment');
-                const userSem = localStorage.getItem('userSemester');
-                const userSec = localStorage.getItem('userSection');
-
-                if (deptSelect) {
-                    deptSelect.innerHTML = `<option value="${userDept}" selected>${userDept}</option>`;
-                    deptSelect.disabled = true;
-                }
-                if (semSelect) {
-                    semSelect.innerHTML = `<option value="${userSem}" selected>${userSem}</option>`;
-                    semSelect.disabled = true;
-                }
-                if (secSelect) {
-                    secSelect.innerHTML = `<option value="${userSec}" selected>${userSec}</option>`;
-                    secSelect.disabled = true;
-                }
-            }
-        }
-
+        // No dropdown logic needed — dept/sem/sec are auto-read from user profile on submit
         UI.showModal('add-cr-notice-modal');
     },
 
@@ -345,11 +281,6 @@ const CRNoticeViewer = {
         const description = document.getElementById('cr-notice-description').value;
         const priority = document.getElementById('cr-notice-priority').value;
 
-        // Get values from dropdowns (or localStorage as fallback if logic fails, but dropdowns should be ensuring this)
-        let targetDept = document.getElementById('cr-notice-department').value;
-        let targetSem = document.getElementById('cr-notice-semester').value;
-        let targetSec = document.getElementById('cr-notice-section').value;
-
         const user = firebase.auth().currentUser;
 
         if (!user) {
@@ -357,16 +288,19 @@ const CRNoticeViewer = {
             return;
         }
 
-        if (!targetDept || !targetSem || !targetSec) {
-            // Fallback to localStorage if dropdowns are empty (e.g. somehow bypassed)
-            // But valid for Admin is to select them.
-            alert('Please select Target Department, Semester and Section.');
+        if (!title || !description) {
+            alert('Please fill in all fields');
             return;
         }
 
+        // Read dept/sem/sec from stored user profile (same source as Events flow)
+        const profile = Utils.storage.get('userProfile');
+        const targetDept = profile && profile.department;
+        const targetSem = profile && profile.semester;
+        const targetSec = profile && profile.section;
 
-        if (!title || !description) {
-            alert('Please fill in all fields');
+        if (!targetDept || !targetSem || !targetSec) {
+            alert('Your profile is incomplete. Please set your Department, Semester, and Section in Profile Settings first.');
             return;
         }
 
