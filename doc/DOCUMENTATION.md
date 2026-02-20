@@ -1245,8 +1245,18 @@ service cloud.firestore {
 
 ### User Role Permissions Summary
 
-| Action | Blocked User | Regular User | CR | Faculty | Admin |
-|--------|-------------|--------------|-----|---------|-------|
+#### Role Descriptions
+
+- **Blocked User** — Account suspended by Admin. Read-only access to all public data. Cannot add, edit, or delete anything.
+- **Regular User (Student)** — Default role after sign-up. Can create/edit/delete own tasks, complete tasks, change own profile (30-day cooldown), take notes, and view notices.
+- **CR (Class Representative)** — Section leader. Can reset/delete all tasks in their section, create events for their semester, post notices visible to their section group (e.g., B1+B2), and edit/delete own notices.
+- **Faculty** — Views department-wide tasks (no semester/section filter). Can create events for their department and edit/delete own events.
+- **Admin** — Full access. Can manage users, assign roles, reset passwords, create/edit/delete any tasks/events/notices, and access admin logs.
+
+#### Permissions Matrix
+
+| Action | Blocked | Student | CR | Faculty | Admin |
+|--------|---------|---------|-----|---------|-------|
 | Read tasks | ✓ (read-only) | ✓ | ✓ | ✓ (dept-wide) | ✓ |
 | Create tasks | ✗ | ✓ | ✓ | ✓ | ✓ |
 | Edit own tasks | ✗ | ✓ | ✓ | ✓ | ✓ |
@@ -1259,8 +1269,9 @@ service cloud.firestore {
 | Create events (own dept/sem) | ✗ | ✗ | ✓ (semester) | ✓ (department) | ✓ |
 | Edit/Delete own events | ✗ | ✗ | ✓ | ✓ | ✓ |
 | Edit/Delete any event | ✗ | ✗ | ✗ | ✗ | ✓ |
-| Read CR notices (own section) | ✓ (read-only) | ✓ | ✓ | ✓ | ✓ |
-| Create CR notices (own section) | ✗ | ✗ | ✓ (auto-filled) | ✗ | ✓ (any section) |
+| Read CR notices (section group) | ✓ (read-only) | ✓ | ✓ | ✓ | ✓ |
+| Create CR notices (section group) | ✗ | ✗ | ✓ (auto-filled) | ✗ | ✓ (any section) |
+| Edit CR notices | ✗ | ✗ | ✓ (own only) | ✗ | ✓ (any) |
 | Delete CR notices | ✗ | ✗ | ✓ (own) | ✗ | ✓ |
 | Change own profile | ✗ | ✓ (30-day cooldown) | ✓ | ✓ | ✓ |
 | Manage users | ✗ | ✗ | ✗ | ✗ | ✓ |
@@ -2011,95 +2022,144 @@ Since `activity_logs` is a new collection, existing `tasks` and `events` need to
 - Preserves original timestamps to ensure historical accuracy in the timeline.
 
 ---
-2049: 
-2050: ## 12. Design References & Inspirations
-2051: 
-2052: ### Calendar View
-2053: 
-2054: **Desktop:** The calendar view design was inspired by **ClickUp's calendar interface**, featuring:
-2055: - Monthly grid layout with task visualization
-2056: - Compact cell design with date indicators
-2057: - Task type badges and overflow indicators
-2058: - Inline navigation controls
-2059: 
-2060: **Reference:** [ClickUp Calendar View](https://clickup.com/)
-2061: 
-2062: **Mobile:** The mobile calendar view is inspired by **Google Calendar's weekly view**, featuring:
-2063: - Horizontal scrolling through weeks of the month
-2064: - Week-by-week navigation with swipe gestures
-2065: - Compact day columns with vertical task lists
-2066: - Month navigation controls to switch between months
-2067: - Touch-optimized interface
-2068: 
-2069: **Reference:** [Google Calendar](https://calendar.google.com/)
-2070: 
-2071: ### Activity Timeline
-2072: Visualizes user productivity and engagement:
-2073: - **Heatmap**: GitHub-style contribution graph showing daily activity intensity.
-2074: - **Weekly Stats**: Bar chart showing activity distribution by day of the week.
-2075: - **Activity Log**: Chronological list of recent actions (Task Added, Completed, Event Created).
-2076: - **Backpopulation**: Utility (`migrateActivityLogs()`) to import past tasks into history.
-2077: 
-2078: ### File Upload System
-2079: The note-taking feature uses multiple file upload providers for reliability:
-2080: 
-2081: #### Primary: Firebase Storage
-2082: - **Service:** Google Firebase Cloud Storage
-2083: - **Limits:** 10 MB per file, 5 GB total (free tier)
-2084: - **Retention:** Permanent
-2085: - **Documentation:** [Firebase Storage](https://firebase.google.com/docs/storage)
-2086: 
-2087: #### Fallback 1: Catbox.moe
-2088: - **Service:** Catbox.moe File Hosting API
-2089: - **Limits:** 200 MB per file
-2090: - **Retention:** Permanent
-2091: - **API Endpoint:** `https://catbox.moe/user/api.php`
-2092: - **Documentation:** [Catbox API](https://catbox.moe/api.php)
-2093: 
-2094: #### Fallback 2: Tmpfiles.org
-2095: - **Service:** Tmpfiles.org Temporary File Hosting
-2096: - **Limits:** 100 MB per file
-2097: - **Retention:** 1 year expiration
-2098: - **API Endpoint:** `https://tmpfiles.org/api/v1/upload`
-2099: - **Documentation:** [Tmpfiles API](https://tmpfiles.org/)
-2100: 
-2101: #### Deprecated: File.io
-2102: - **Status:** Removed due to CORS issues
-2103: - **Issue:** Missing `Access-Control-Allow-Origin` header blocked browser uploads
-2104: - **Replacement:** Multi-provider fallback system (Firebase → Catbox → Tmpfiles)
-2105: 
-2106: **Implementation Details:**
-2107: - Automatic fallback on provider failure
-2108: - Progress indication during upload
-2109: - Direct download support (no new tab required)
-2110: - Markdown link generation: `[filename](url)`
-2111: - Error handling with user-friendly messages
-2112: 
-2113: ---
-2114: 
-2115: ## 13. Additional Resources
-2116: 
-2117: ### File Upload Documentation
-2118: - `doc/FILE_UPLOAD_OPTIONS_ANALYSIS.md` - Comprehensive analysis of upload options
-2119: - `doc/FILE_UPLOAD_QUICK_REFERENCE.md` - Quick reference for developers
-2120: - `doc/summaries/FIREBASE_STORAGE_MIGRATION.md` - Migration details
-2121: 
-2122: ### Calendar View Documentation
-2123: - `doc/summaries/CALENDAR_FIX_SUMMARY.md` - Calendar bug fix details
-2124: - `.kiro/specs/task-calendar-view/` - Complete spec with requirements, design, and tasks
-2125: 
-2126: ### Firebase Documentation
-2127: - [Firebase Storage Documentation](https://firebase.google.com/docs/storage)
-2128: - [Firebase Pricing](https://firebase.google.com/pricing)
-2129: - [Firestore Security Rules](https://firebase.google.com/docs/firestore/security/get-started)
-2130: 
-2131: ---
+
+## 12. Design References & Inspirations
+
+### Calendar View
+
+**Desktop:** The calendar view design was inspired by **ClickUp's calendar interface**, featuring:
+- Monthly grid layout with task visualization
+- Compact cell design with date indicators
+- Task type badges and overflow indicators
+- Inline navigation controls
+
+**Reference:** [ClickUp Calendar View](https://clickup.com/)
+
+**Mobile:** The mobile calendar view is inspired by **Google Calendar's weekly view**, featuring:
+- Horizontal scrolling through weeks of the month
+- Week-by-week navigation with swipe gestures
+- Compact day columns with vertical task lists
+- Month navigation controls to switch between months
+- Touch-optimized interface
+
+**Reference:** [Google Calendar](https://calendar.google.com/)
+
+### Activity Timeline
+Visualizes user productivity and engagement:
+- **Heatmap**: GitHub-style contribution graph showing daily activity intensity.
+- **Weekly Stats**: Bar chart showing activity distribution by day of the week.
+- **Activity Log**: Chronological list of recent actions (Task Added, Completed, Event Created).
+- **Backpopulation**: Utility (`migrateActivityLogs()`) to import past tasks into history.
+
+### File Upload System
+The note-taking feature uses multiple file upload providers for reliability:
+
+#### Primary: Firebase Storage
+- **Service:** Google Firebase Cloud Storage
+- **Limits:** 10 MB per file, 5 GB total (free tier)
+- **Retention:** Permanent
+- **Documentation:** [Firebase Storage](https://firebase.google.com/docs/storage)
+
+#### Fallback 1: Catbox.moe
+- **Service:** Catbox.moe File Hosting API
+- **Limits:** 200 MB per file
+- **Retention:** Permanent
+- **API Endpoint:** `https://catbox.moe/user/api.php`
+- **Documentation:** [Catbox API](https://catbox.moe/api.php)
+
+#### Fallback 2: Tmpfiles.org
+- **Service:** Tmpfiles.org Temporary File Hosting
+- **Limits:** 100 MB per file
+- **Retention:** 1 year expiration
+- **API Endpoint:** `https://tmpfiles.org/api/v1/upload`
+- **Documentation:** [Tmpfiles API](https://tmpfiles.org/)
+
+#### Deprecated: File.io
+- **Status:** Removed due to CORS issues
+- **Issue:** Missing `Access-Control-Allow-Origin` header blocked browser uploads
+- **Replacement:** Multi-provider fallback system (Firebase → Catbox → Tmpfiles)
+
+**Implementation Details:**
+- Automatic fallback on provider failure
+- Progress indication during upload
+- Direct download support (no new tab required)
+- Markdown link generation: `[filename](url)`
+- Error handling with user-friendly messages
+
+---
+
+## Short Guides & Tips
+
+### Uploading Files in Notes
+1. Open the **Notes** panel (pen icon in bottom-right corner)
+2. Click the **Upload** button (📎) in the notes toolbar
+3. Select a file (max 10 MB for Firebase, 200 MB for Catbox fallback)
+4. The file is uploaded automatically and a markdown download link `[filename](url)` is inserted into your note
+5. The link opens a direct download — no new tab required
+
+### Posting CR Notices
+1. Navigate to the **Notices** section (sidebar on desktop, toggle on mobile)
+2. Click **Add Notice** (visible only to CRs and Admins)
+3. Fill in Title, Priority, and Description
+4. Department, Semester, and Section are auto-filled from your profile
+5. Notices are visible to **all sub-sections** in your group (e.g., B1 notice is also seen by B2)
+
+### Using Markdown in Tasks & Events
+You can use basic markdown formatting in task and event descriptions:
+- `**bold text**` → **bold text**
+- `*italic text*` → *italic text*
+- `` `inline code` `` → `inline code`
+- `[link text](https://example.com)` → clickable link (opens in new tab)
+
+### Keyboard Shortcuts & Quick Actions
+- **Esc** — Close any open modal
+- **Click** the maroon checkbox on a task card to toggle completion
+- **Long descriptions** are truncated to 2 lines — click "See more" to expand
+- **Filter tasks** by clicking the filter icon beside "Pending Tasks" heading
+
+---
+
+## 13. Additional Resources
+
+### File Upload Documentation
+- `doc/FILE_UPLOAD_OPTIONS_ANALYSIS.md` - Comprehensive analysis of upload options
+- `doc/FILE_UPLOAD_QUICK_REFERENCE.md` - Quick reference for developers
+- `doc/summaries/FIREBASE_STORAGE_MIGRATION.md` - Migration details
+
+### Calendar View Documentation
+- `doc/summaries/CALENDAR_FIX_SUMMARY.md` - Calendar bug fix details
+- `.kiro/specs/task-calendar-view/` - Complete spec with requirements, design, and tasks
+
+### Firebase Documentation
+- [Firebase Storage Documentation](https://firebase.google.com/docs/storage)
+- [Firebase Pricing](https://firebase.google.com/pricing)
+- [Firestore Security Rules](https://firebase.google.com/docs/firestore/security/get-started)
+
+---
 
 *Last Updated: February 20, 2026*
 
 ## Version History
 
-### v2.29.0 (Current)
+### v2.32.0 (Current)
+- **New Feature**: CR Notice section merging — notices posted by B1 CR are now visible to B2 users (and vice versa). Sections are grouped by letter (A1+A2 → A).
+- **New Feature**: Compact notice cards with "See More" toggle for long descriptions (2-line truncation, expandable).
+- **New Feature**: CR Notice editing — CRs can edit their own notices; Admins can edit any notice.
+- **New Feature**: "Added by" info displayed on notice cards (shows email username).
+- **Enhancement**: CR Notice create/delete actions are now logged to the Activity Timeline.
+- **Enhancement**: Improved Edit Notice modal CSS with maroon accent, focus states, and consistent form styling.
+- **Enhancement**: Firestore rules use section group matching (`getUserSection()[0:1]`) for broader notice visibility.
+- **Fix**: Replaced broken `UI.escapeHtml` calls with `Utils.escapeAndLinkify` in notice rendering.
+
+### v2.31.0
+- **Fix**: CR Notice data population — department, semester, and section are now auto-read from user profile instead of broken manual dropdowns.
+- **Fix**: Admin notice creation — Firestore rules updated to allow Admins to create notices.
+
+### v2.30.0
+- **Enhancement**: Notice viewer profile message removed (no more "Complete your profile" blocking message).
+- **Enhancement**: PDF modal enlarged for desktop viewing.
+
+### v2.29.0
 - **New Feature**: Activity Timeline with heatmap and weekly stats.
 - **New Feature**: Live User Counter on dashboard and footer.
 - **Enhancement**: Mobile Calendar UI overhaul (centered, scrollable, borders).

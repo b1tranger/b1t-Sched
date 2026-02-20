@@ -184,6 +184,48 @@ class ActivityLogger {
   }
 
   /**
+   * Log CR notice addition
+   * @param {string} noticeId 
+   * @param {Object} noticeData 
+   * @param {Object} userProfile 
+   */
+  static async logNoticeAddition(noticeId, noticeData, userProfile) {
+    await this.logActivity('notice_added', {
+      userId: noticeData.createdBy,
+      userRole: this._determineRole(userProfile),
+      department: noticeData.department,
+      semester: noticeData.semester,
+      section: noticeData.section,
+      noticeId: noticeId,
+      extras: {
+        title: noticeData.title,
+        priority: noticeData.priority
+      }
+    });
+  }
+
+  /**
+   * Log CR notice deletion
+   * @param {string} noticeId 
+   * @param {Object} noticeData 
+   * @param {string} userId 
+   * @param {Object} userProfile 
+   */
+  static async logNoticeDeletion(noticeId, noticeData, userId, userProfile) {
+    await this.logActivity('notice_deleted', {
+      userId: userId,
+      userRole: this._determineRole(userProfile),
+      department: noticeData.department,
+      semester: noticeData.semester,
+      section: noticeData.section,
+      noticeId: noticeId,
+      extras: {
+        title: noticeData.title
+      }
+    });
+  }
+
+  /**
    * Helper to determine role from profile
    * @param {Object} profile 
    */

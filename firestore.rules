@@ -155,15 +155,18 @@ service cloud.firestore {
     }
     
     match /cr_notices/{noticeId} {
-      // Read: All authenticated users can read notices for their department/semester/section
+      // Helper: extract section group letter from user profile (e.g., 'B' from 'B1')
+      // Notices store the group letter, so we compare against it.
+      
+      // Read: All authenticated users can read notices for their department/semester/section group
       allow read: if isSignedIn() && (
         isAdmin() ||
         (resource.data.department == getUserDepartment() &&
          resource.data.semester == getUserSemester() &&
-         resource.data.section == getUserSection())
+         resource.data.section == getUserSection()[0:1])
       );
       
-      // Create: Admins can create notices for any section; CRs only for their own
+      // Create: Admins can create notices for any section; CRs only for their own group
       allow create: if (isAdmin() && 
         request.resource.data.createdBy == request.auth.uid &&
         hasRequiredNoticeFields()
@@ -172,17 +175,25 @@ service cloud.firestore {
         request.resource.data.createdBy == request.auth.uid &&
         request.resource.data.department == getUserDepartment() &&
         request.resource.data.semester == getUserSemester() &&
-        request.resource.data.section == getUserSection() &&
+        request.resource.data.section == getUserSection()[0:1] &&
         hasRequiredNoticeFields()
       );
       
-      // Update: Only the CR who created the notice can update it
-      allow update: if isCR() && 
+      // Update: Admins can update any notice; CRs can only update their own
+      // Neither can change createdBy, department, semester, or section
+      allow update: if (isAdmin() && 
+        request.resource.data.createdBy == resource.data.createdBy &&
+        request.resource.data.department == resource.data.department &&
+        request.resource.data.semester == resource.data.semester &&
+        request.resource.data.section == resource.data.section
+      ) || (
+        isCR() && 
         resource.data.createdBy == request.auth.uid &&
         request.resource.data.createdBy == resource.data.createdBy &&
         request.resource.data.department == resource.data.department &&
         request.resource.data.semester == resource.data.semester &&
-        request.resource.data.section == resource.data.section;
+        request.resource.data.section == resource.data.section
+      );
       
       // Delete: Only the CR who created the notice OR admins can delete it
       allow delete: if isAdmin() || (
