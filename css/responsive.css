@@ -9,7 +9,7 @@
    Note: CSS zoom is supported in Chromium-based
    browsers (Chrome, Edge, Opera, Samsung Internet).
    ============================================ */
-@media (max-width: 360px) {
+/* @media (max-width: 360px) {
   html {
     zoom: 85%;
   }
@@ -30,9 +30,9 @@
 @media (min-width: 769px) and (max-width: 1366px) {
   html {
     zoom: 90%;
-    /* Fixed override for 1366 screens per request */
+    /* Fixed override for 1366 screens per request
   }
-}
+} 
 
 @media (min-width: 1367px) and (max-width: 1920px) {
   html {
@@ -44,7 +44,7 @@
   html {
     zoom: 110%;
   }
-}
+} */
 
 /* Tablets and smaller */
 @media (max-width: 992px) {

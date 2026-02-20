@@ -495,6 +495,12 @@ const TimelineUI = {
                         }
                     }
                 },
+                // Use index mode so clicking anywhere in a column works
+                // (tolerant of CSS zoom coordinate offsets)
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
                 onClick: (e, elements) => {
                     if (elements.length > 0) {
                         const index = elements[0].index;

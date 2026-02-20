@@ -1584,6 +1584,7 @@ Router.onRouteChange((routeName) => {
 | 2.30.0 | Feb 2026 | Password Reset System Overhaul: (1) **Admin Fix**: Refactored Admin Password Reset to use Client SDK (`Auth.sendPasswordResetEmail`) instead of backend Cloud Function, effectively bootstrapping a workaround for CORS issues on the `sendPasswordReset` endpoint. (2) **Conflict Resolution**: Renamed `handlePasswordReset` to `handleAdminPasswordReset` in `app.js` to fix naming collision that broke the "Forgot Password" modal. (3) **UI Enhancements**: Added "Forgot Password" link on login failure and a new "Reset Password" button in Profile Settings. (4) **UX**: Improved visual prominence of reset links. |
 | 2.31.0 | Feb 2026 | CR Notice Creation Fix: Fixed CRs and Admins being unable to post class notices. **(Bug)** `cr-notice.js` read user profile from non-existent `localStorage` keys (`userDepartment`, `userSemester`, `userSection`) instead of `Utils.storage.get('userProfile')`. **(Fix)** `subscribeToNotices()` and `submitNotice()` now read profile via `Utils.storage.get('userProfile')`. Removed Department/Semester/Section dropdowns from Add Notice form (auto-filled from profile). Updated Firestore rules to allow Admins to create notices. Files: `js/cr-notice.js`, `index.html`, `firestore.rules`. |
 | 2.32.0 | Feb 2026 | Auto-Save Theme Settings: Separated theme preferences from general profile settings. Theme changes now auto-save immediately upon selection and are exempt from the 30-day profile update cooldown restriction. |
+| 2.33.0 | Feb 2026 | UI and Responsive Fixes: Fixed Activity Timeline bar chart clickability issue on zoomed displays (switched from Chart.js built-in onClick to robust index-based interaction mode). Added comprehensive dark mode overrides for Timeline modal, FAQ button, and Profile Settings Logout button. Fixed "All Resources" mobile center alignment. |
 
 ---
 
@@ -1599,7 +1600,7 @@ Router.onRouteChange((routeName) => {
 ---
 
 *Documentation last updated: February 20, 2026*
-*Version: 2.31.0*
+*Version: 2.33.0*
 
 
 ---
