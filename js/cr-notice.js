@@ -258,33 +258,52 @@ const CRNoticeViewer = {
         const needsTruncation = notice.description && (notice.description.length > 80 || notice.description.includes('\n'));
 
         const toggleBtn = needsTruncation ? `
-            <button class="cr-notice-description-toggle" data-id="${notice.id}">
-                <span>See more</span> <i class="fas fa-chevron-down"></i>
-            </button>
-        ` : '';
+        <button class="cr-notice-description-toggle" data-id="${notice.id}">
+            <span>See more</span> <i class="fas fa-chevron-down"></i>
+        </button>
+    ` : '';
+
+        // Deadline display
+        let deadlineHtml = '';
+        if (notice.deadline) {
+            const deadlineDate = new Date(notice.deadline);
+            const now = new Date();
+            const isPast = deadlineDate < now;
+            const deadlineFormatted = deadlineDate.toLocaleString(undefined, {
+                month: 'short', day: 'numeric', year: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            });
+            const deadlineClass = isPast ? 'cr-notice-deadline past' : 'cr-notice-deadline';
+            deadlineHtml = `
+            <div class="${deadlineClass}">
+                <i class="fas fa-clock"></i> Deadline: ${deadlineFormatted}
+            </div>
+        `;
+        }
 
         return `
-            <div class="cr-notice-card ${priorityClass}">
-                <div class="cr-notice-header">
-                    <div class="cr-notice-title-row">
-                         <span class="cr-notice-icon">${priorityIcon}</span>
-                         <span class="cr-notice-title">${Utils.escapeAndLinkify(notice.title)}</span>
-                    </div>
-                    <div class="cr-notice-actions">
-                        ${editBtn}
-                        ${deleteBtn}
-                    </div>
+        <div class="cr-notice-card ${priorityClass}">
+            <div class="cr-notice-header">
+                <div class="cr-notice-title-row">
+                     <span class="cr-notice-icon">${priorityIcon}</span>
+                     <span class="cr-notice-title">${Utils.escapeAndLinkify(notice.title)}</span>
                 </div>
-                <div class="cr-notice-body">
-                    <div class="cr-notice-description-text${needsTruncation ? '' : ' no-clamp'}">${descHtml}</div>
-                    ${toggleBtn}
-                </div>
-                <div class="cr-notice-footer">
-                    <small class="cr-notice-author"><i class="fas fa-user-circle"></i> ${addedBy}</small>
-                    <small>${date}</small>
+                <div class="cr-notice-actions">
+                    ${editBtn}
+                    ${deleteBtn}
                 </div>
             </div>
-    `;
+            <div class="cr-notice-body">
+                <div class="cr-notice-description-text${needsTruncation ? '' : ' no-clamp'}">${descHtml}</div>
+                ${toggleBtn}
+                ${deadlineHtml}
+            </div>
+            <div class="cr-notice-footer">
+                <small class="cr-notice-author"><i class="fas fa-user-circle"></i> ${addedBy}</small>
+                <small>${date}</small>
+            </div>
+        </div>
+`;
     },
 
     addActionListeners(container) {
@@ -327,6 +346,25 @@ const CRNoticeViewer = {
     openAddModal() {
         const form = document.getElementById('add-cr-notice-form');
         if (form) form.reset();
+
+        // Setup deadline radio button listeners
+        const deadlineNone = document.getElementById('cr-notice-deadline-none');
+        const deadlineDate = document.getElementById('cr-notice-deadline-date');
+        const deadlineInput = document.getElementById('cr-notice-deadline');
+
+        if (deadlineNone && deadlineDate && deadlineInput) {
+            // Set min to current datetime
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            deadlineInput.min = now.toISOString().slice(0, 16);
+
+            deadlineNone.checked = true;
+            deadlineInput.disabled = true;
+            deadlineInput.value = '';
+
+            deadlineNone.onchange = () => { deadlineInput.disabled = true; deadlineInput.value = ''; };
+            deadlineDate.onchange = () => { deadlineInput.disabled = false; };
+        }
 
         // No dropdown logic needed — dept/sem/sec are auto-read from user profile on submit
         UI.showModal('add-cr-notice-modal');
@@ -379,6 +417,15 @@ const CRNoticeViewer = {
                 createdByEmail: user.email || 'Unknown',
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
+
+            // Read deadline
+            const deadlineNone = document.getElementById('cr-notice-deadline-none');
+            const deadlineInput = document.getElementById('cr-notice-deadline');
+            if (deadlineNone && !deadlineNone.checked && deadlineInput && deadlineInput.value) {
+                noticeData.deadline = deadlineInput.value;
+            } else {
+                noticeData.deadline = null;
+            }
 
             const docRef = await db.collection('cr_notices').add(noticeData);
 
@@ -433,6 +480,31 @@ const CRNoticeViewer = {
         document.getElementById('edit-cr-notice-description').value = notice.description || '';
         document.getElementById('edit-cr-notice-priority').value = notice.priority || 'normal';
 
+        // Populate deadline fields
+        const deadlineNone = document.getElementById('edit-cr-notice-deadline-none');
+        const deadlineDate = document.getElementById('edit-cr-notice-deadline-date');
+        const deadlineInput = document.getElementById('edit-cr-notice-deadline');
+
+        if (deadlineNone && deadlineDate && deadlineInput) {
+            // Set min to current datetime
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            deadlineInput.min = now.toISOString().slice(0, 16);
+
+            if (notice.deadline) {
+                deadlineDate.checked = true;
+                deadlineInput.disabled = false;
+                deadlineInput.value = notice.deadline;
+            } else {
+                deadlineNone.checked = true;
+                deadlineInput.disabled = true;
+                deadlineInput.value = '';
+            }
+
+            deadlineNone.onchange = () => { deadlineInput.disabled = true; deadlineInput.value = ''; };
+            deadlineDate.onchange = () => { deadlineInput.disabled = false; };
+        }
+
         UI.showModal('edit-cr-notice-modal');
     },
 
@@ -447,6 +519,14 @@ const CRNoticeViewer = {
             return;
         }
 
+        // Read deadline
+        const deadlineNone = document.getElementById('edit-cr-notice-deadline-none');
+        const deadlineInput = document.getElementById('edit-cr-notice-deadline');
+        let deadline = null;
+        if (deadlineNone && !deadlineNone.checked && deadlineInput && deadlineInput.value) {
+            deadline = deadlineInput.value;
+        }
+
         try {
             const btn = document.querySelector('#edit-cr-notice-form button[type="submit"]');
             const originalText = btn.innerHTML;
@@ -456,7 +536,8 @@ const CRNoticeViewer = {
             await db.collection('cr_notices').doc(noticeId).update({
                 title,
                 description,
-                priority
+                priority,
+                deadline
             });
 
             UI.hideModal('edit-cr-notice-modal');

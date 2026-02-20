@@ -62,7 +62,7 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **User Counter** - Live count of total registered users displayed on the dashboard and footer
 - **Activity Timeline** - Visual heatmap and bar chart tracking user activity (logins, tasks, events, profile updates) to visualize productivity patterns. Includes a backpopulation utility for existing tasks.
 - **User Counter** - Live count of total registered users displayed on the dashboard and footer.
-- **Mobile Calendar** - Improved weekly view for mobile devices with vertical scrolling. Includes Month/Year dropdowns for quick navigation to any date.
+- **Mobile Calendar** - Monthly and weekly views for mobile with a toggle to switch between them. Monthly view features a compact date grid with maroon dot indicators for dates with tasks, today highlight, and a tappable task list panel showing course + title + deadline time. Weekly view provides vertical scrolling by week. Includes Month/Year dropdowns for quick navigation.
 - **FAQ Section** - Collapsible accordion explaining how the site works, user roles, and profile settings
 - **Footer with Credits** - Source code link, total user count, and dynamic copyright year
 
@@ -780,7 +780,10 @@ During signup, Firebase triggers `onAuthStateChanged` immediately when the user 
 **Purpose:** Manages the interactive calendar modal, displaying tasks and events in a monthly or weekly view (mobile).
 
 **Key Features:**
-- **Responsive Views:** Full monthly grid on desktop; vertically scrolling weekly view on mobile.
+- **Responsive Views:** Full monthly grid on desktop; monthly or weekly view on mobile with toggle.
+- **Mobile Monthly View:** Compact date grid with week numbers, maroon dot indicators for dates with tasks, today highlight (maroon circle), Sunday red text, other-month grayed dates. Tapping a date shows a task list panel with course name + task title + deadline time. Uses light maroon+white theme matching the website.
+- **Mobile Weekly View:** Vertically scrolling week cards with task details per day.
+- **Monthly/Weekly Toggle:** Both mobile views include toggle buttons (Monthly/Weekly) to switch between views.
 - **Task Visualization:** Displays tasks on their due dates with type-specific badges.
 - **Event Visualization:** Displays events on their scheduled dates.
 - **Interactive Navigation:** 
@@ -796,7 +799,9 @@ During signup, Firebase triggers `onAuthStateChanged` immediately when the user 
 | `init()` | Initialize the calendar module (attach global listeners). |
 | `open()` | Open the calendar modal and render the current view. |
 | `close()` | Close the calendar modal. |
-| `renderCalendar()` | Main rander function; delegates to `generateCalendarGrid` (desktop) or `renderWeeklyView` (mobile). |
+| `renderCalendar()` | Main render function; delegates to `generateCalendarGrid` (desktop), `renderMonthlyViewMobile` or `renderWeeklyView` (mobile, based on `currentMobileView`). |
+| `renderMonthlyViewMobile()` | Renders the compact monthly grid for mobile with toggle, day headers, date cells, dot indicators, and task list panel. |
+| `renderWeeklyView()` | Renders the weekly scrolling view for mobile with toggle buttons. |
 | `updateHeader()` | Updates the Month/Year dropdowns and navigation state. |
 | `previousMonth()` | Navigate to the previous month. |
 | `nextMonth()` | Navigate to the next month. |
@@ -1100,6 +1105,39 @@ Firestore Database
     │
     └── sections/
         └── {dept}-{sem}: ["A1", "A2", "B1", "B2"]
+│
+├── cr_notices/                 # CR-posted class notices
+│   └── {noticeId}/
+│       ├── title: string       # Notice title (max 200 chars)
+│       ├── description: string # Notice body (max 2000 chars)
+│       ├── department: string  # Auto-filled from poster's profile
+│       ├── semester: string    # Auto-filled from poster's profile
+│       ├── section: string     # Section group letter (e.g., "B")
+│       ├── priority: string    # "normal" | "important" | "urgent"
+│       ├── deadline: string|null # Optional ISO datetime or null
+│       ├── createdBy: string   # userId of poster
+│       ├── createdByName: string # Email username of poster
+│       └── createdAt: timestamp
+│
+├── activity_timeline/          # Immutable activity logs
+│   └── {activityId}/
+│       ├── activityType: string # "login" | "task_add" | "event_add" | etc.
+│       ├── timestamp: timestamp
+│       ├── userId: string
+│       ├── userName: string
+│       └── userRole: string
+│
+├── activity_logs/              # Legacy activity logs (backward compat)
+│   └── {logId}/
+│       └── ...
+│
+├── facultyTokens/              # Faculty auth tokens
+│   └── {facultyId}/
+│       └── ...
+│
+└── adminLogs/                  # Admin action logs
+    └── {logId}/
+        └── ...
 ```
 
 ### Firestore Security Rules (Recommended)
@@ -2137,11 +2175,21 @@ You can use basic markdown formatting in task and event descriptions:
 
 ---
 
-*Last Updated: February 20, 2026*
+*Last Updated: February 20, 2026 (v2.33.0)*
 
 ## Version History
 
-### v2.32.0 (Current)
+### v2.33.0 (Current)
+- **New Feature**: CR Notice deadline support — optional deadline field ("No official Time limit" or specific datetime) for notices, displayed with clock icon (green for active, red for past).
+- **New Feature**: Mobile Calendar Monthly View — compact date grid with week numbers, maroon dot indicators for dates with tasks, today highlight, and tappable task list panel showing course + title + deadline time.
+- **New Feature**: Monthly/Weekly toggle on both mobile calendar views — users can switch between monthly and weekly views.
+- **Enhancement**: Mobile monthly calendar uses light maroon+white theme matching the website (previously dark theme).
+- **Enhancement**: Task list panel in monthly view shows course name alongside task title.
+- **Enhancement**: Firestore rules updated with `hasValidDeadline()` helper for CR Notice deadline validation.
+- **Enhancement**: Deadline form labels styled with bottom border for visual separation.
+- **Enhancement**: Deadline radio button labels updated to "No official Time limit" (from "No Deadline") for consistency.
+
+### v2.32.0
 - **New Feature**: CR Notice section merging — notices posted by B1 CR are now visible to B2 users (and vice versa). Sections are grouped by letter (A1+A2 → A).
 - **New Feature**: Compact notice cards with "See More" toggle for long descriptions (2-line truncation, expandable).
 - **New Feature**: CR Notice editing — CRs can edit their own notices; Admins can edit any notice.

@@ -472,7 +472,7 @@
                 <div id="notice-sidebar" class="notice-sidebar mobile-only">
                     <div class="notice-sidebar-header">
                         <h3><i class="fas fa-bullhorn"></i> Notices</h3>
-                        <button id="close-notice-sidebar" class="btn btn-icon">
+                        <button id="close-notice-sidebar" class="btn btn-icon" style="color: white;">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
@@ -665,8 +665,9 @@
                                 placeholder="Task details..." rows="3"></textarea>
                         </div>
                         <div class="form-group">
-                            <label for="task-deadline">Deadline</label>
-                            <div style="display: flex; gap: 8px; align-items: center;">
+                            <label for="task-deadline"
+                                style="border-bottom: 1px solid rgba(0, 0, 0, 0.267);">Deadline</label>
+                            <div class="deadline-options" style="display: flex; gap: 8px; align-items: center;">
 
                                 <input type="radio" name="deadline-option" id="deadline-none" value="none">
                                 <label for="deadline-none" style="margin-bottom: 0;">No official Time limit</label>
@@ -746,8 +747,9 @@
                                 placeholder="Task details..." rows="3"></textarea>
                         </div>
                         <div class="form-group">
-                            <label for="edit-task-deadline">Deadline</label>
-                            <div style="display: flex; gap: 8px; align-items: center;">
+                            <label for="edit-task-deadline"
+                                style="border-bottom: 1px solid rgba(0, 0, 0, 0.267);">Deadline</label>
+                            <div class="deadline-options" style="display: flex; gap: 8px; align-items: center;">
                                 <input type="radio" name="edit-deadline-option" id="edit-deadline-date" value="date"
                                     checked>
                                 <label for="edit-deadline-date" style="margin-bottom: 0;">Set Deadline</label>
@@ -957,6 +959,20 @@
                             <label for="cr-notice-description">Description</label>
                             <textarea id="cr-notice-description" class="form-input form-textarea"
                                 placeholder="Notice details..." rows="4" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label style="border-bottom: 1px solid rgba(0, 0, 0, 0.267);">Deadline</label>
+                            <div class="deadline-options" style="display: flex; gap: 8px; align-items: center;">
+                                <input type="radio" name="cr-notice-deadline-option" id="cr-notice-deadline-none"
+                                    value="none" checked>
+                                <label for="cr-notice-deadline-none" style="margin-bottom: 0;">No official Time
+                                    limit</label>
+                                <input type="radio" name="cr-notice-deadline-option" id="cr-notice-deadline-date"
+                                    value="date">
+                                <label for="cr-notice-deadline-date" style="margin-bottom: 0;">Set Deadline</label>
+                                <input type="datetime-local" id="cr-notice-deadline" class="form-input"
+                                    style="flex:1; min-width: 180px;" disabled>
+                            </div>
                         </div>
                     </form>
                     <div class="modal-footer">
@@ -1499,6 +1515,21 @@
                                 placeholder="Enter notice details..." required></textarea>
                         </div>
 
+                        <div class="form-group">
+                            <label style="border-bottom: 1px solid rgba(0, 0, 0, 0.267);">Deadline</label>
+                            <div class="deadline-options" style="display: flex; gap: 8px; align-items: center;">
+                                <input type="radio" name="cr-notice-deadline-option" id="cr-notice-deadline-none"
+                                    value="none" checked>
+                                <label for="cr-notice-deadline-none" style="margin-bottom: 0;">No official Time
+                                    limit</label>
+                                <input type="radio" name="cr-notice-deadline-option" id="cr-notice-deadline-date"
+                                    value="date">
+                                <label for="cr-notice-deadline-date" style="margin-bottom: 0;">Set Deadline</label>
+                                <input type="datetime-local" id="cr-notice-deadline" class="form-control"
+                                    style="flex:1; min-width: 180px;" disabled>
+                            </div>
+                        </div>
+
                         <div class="form-actions">
                             <button type="button" id="cancel-add-cr-notice" class="btn btn-text">Cancel</button>
                             <button type="submit" class="btn btn-primary">
@@ -1542,6 +1573,21 @@
                                     class="text-danger">*</span></label>
                             <textarea id="edit-cr-notice-description" class="form-control" rows="4"
                                 placeholder="Enter notice details..." required></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label style="border-bottom: 1px solid rgba(0, 0, 0, 0.267);">Deadline</label>
+                            <div class="deadline-options" style="display: flex; gap: 8px; align-items: center;">
+                                <input type="radio" name="edit-cr-notice-deadline-option"
+                                    id="edit-cr-notice-deadline-none" value="none" checked>
+                                <label for="edit-cr-notice-deadline-none" style="margin-bottom: 0;">No official Time
+                                    limit</label>
+                                <input type="radio" name="edit-cr-notice-deadline-option"
+                                    id="edit-cr-notice-deadline-date" value="date">
+                                <label for="edit-cr-notice-deadline-date" style="margin-bottom: 0;">Set Deadline</label>
+                                <input type="datetime-local" id="edit-cr-notice-deadline" class="form-control"
+                                    style="flex:1; min-width: 180px;" disabled>
+                            </div>
                         </div>
 
                         <div class="form-actions">

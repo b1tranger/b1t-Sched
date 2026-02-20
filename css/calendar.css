@@ -1097,3 +1097,269 @@
     padding: var(--spacing-sm);
   }
 }
+
+/* ============================================
+   MOBILE MONTHLY VIEW STYLES
+   ============================================ */
+
+/* Monthly View Wrapper */
+.mobile-monthly-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-white, #ffffff);
+  color: var(--text-dark, #333);
+  overflow-y: auto;
+}
+
+/* Toggle Buttons */
+.mobile-calendar-toggle {
+  display: flex;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--bg-white, #ffffff);
+  border-bottom: 1px solid var(--border-light, #e0e0e0);
+}
+
+.mobile-toggle-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--border-medium, #ccc);
+  border-radius: 20px;
+  background: transparent;
+  color: var(--text-medium, #666);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mobile-toggle-btn.active {
+  background: var(--primary-maroon, #800000);
+  color: #fff;
+  border-color: var(--primary-maroon, #800000);
+}
+
+.mobile-toggle-btn:hover:not(.active) {
+  background: var(--bg-lighter, #f5f5f5);
+  color: var(--text-dark, #333);
+}
+
+/* Monthly Grid */
+.mobile-monthly-grid {
+  padding: 4px 8px;
+}
+
+/* Day Header Row */
+.mobile-month-header-row {
+  display: grid;
+  grid-template-columns: 28px repeat(7, 1fr);
+  gap: 0;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border-light, #e0e0e0);
+}
+
+.mobile-week-num-header {
+  width: 28px;
+  /* Spacer for week number column */
+}
+
+.mobile-day-header {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-medium, #666);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mobile-day-header.sunday {
+  color: #cc4444;
+}
+
+/* Week Row */
+.mobile-month-week-row {
+  display: grid;
+  grid-template-columns: 28px repeat(7, 1fr);
+  gap: 0;
+  min-height: 48px;
+}
+
+/* Week Number */
+.mobile-week-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: var(--text-light, #999);
+  font-weight: 500;
+}
+
+/* Date Cell */
+.mobile-date-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 2px;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.15s ease;
+  border-radius: 8px;
+  min-height: 44px;
+}
+
+.mobile-date-cell:active {
+  background: rgba(128, 0, 0, 0.05);
+}
+
+.mobile-date-num {
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--text-dark, #333);
+  line-height: 1;
+  z-index: 1;
+}
+
+/* Today highlight — maroon filled circle */
+.mobile-date-cell.today {
+  position: relative;
+}
+
+.mobile-date-cell.today .mobile-date-num {
+  color: #fff;
+  font-weight: 600;
+  position: relative;
+  z-index: 2;
+}
+
+.mobile-date-cell.today::after {
+  content: '';
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  background: var(--primary-maroon, #800000);
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+}
+
+/* Selected date */
+.mobile-date-cell.selected:not(.today) {
+  background: rgba(128, 0, 0, 0.08);
+  border-radius: 8px;
+}
+
+/* Sunday red text */
+.mobile-date-cell.sunday .mobile-date-num {
+  color: #cc4444;
+}
+
+.mobile-date-cell.sunday.today .mobile-date-num {
+  color: #fff;
+  /* Override for today */
+}
+
+/* Other month (grayed out) */
+.mobile-date-cell.other-month .mobile-date-num {
+  color: var(--text-light, #bbb);
+}
+
+/* Dot indicator for dates with tasks */
+.mobile-date-cell.has-tasks::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  width: 5px;
+  height: 5px;
+  background: var(--primary-maroon, #800000);
+  border-radius: 50%;
+  z-index: 3;
+}
+
+.mobile-date-cell.has-tasks.today::before {
+  background: #fff;
+}
+
+/* Task List Panel */
+.mobile-task-list {
+  padding: 12px 16px;
+  background: var(--bg-lighter, #f8f8f8);
+  border-radius: 16px 16px 0 0;
+  margin-top: 8px;
+  flex: 1;
+  min-height: 120px;
+  border-top: 1px solid var(--border-light, #e0e0e0);
+}
+
+.mobile-task-empty {
+  text-align: center;
+  color: var(--text-medium, #888);
+  font-size: 14px;
+  padding: 24px 0;
+}
+
+.mobile-task-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border-light, #e8e8e8);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.mobile-task-item:last-child {
+  border-bottom: none;
+}
+
+.mobile-task-item:active {
+  background: rgba(128, 0, 0, 0.04);
+}
+
+.mobile-task-dot {
+  width: 10px;
+  height: 10px;
+  background: var(--primary-maroon, #800000);
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.mobile-task-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.mobile-task-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-dark, #333);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mobile-task-course {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary-maroon, #800000);
+  margin-bottom: 2px;
+}
+
+.mobile-task-time {
+  font-size: 12px;
+  color: var(--text-medium, #888);
+  margin-top: 2px;
+}
+
+/* Hide mobile monthly view on desktop */
+@media (min-width: 768px) {
+
+  .mobile-monthly-wrapper,
+  .mobile-calendar-toggle {
+    display: none !important;
+  }
+}

@@ -28,6 +28,12 @@ class CalendarView {
     // Allow navigation 100 years in the past and future
     this.minYear = this.currentDate.getFullYear() - 100;
     this.maxYear = this.currentDate.getFullYear() + 100;
+
+    // Mobile view mode: 'monthly' (default) or 'weekly'
+    this.currentMobileView = 'monthly';
+
+    // Selected date for mobile monthly view (for showing tasks below)
+    this.selectedMobileDate = new Date();
   }
 
 
@@ -766,9 +772,13 @@ class CalendarView {
    * Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 4.4, 9.4
    */
   renderCalendar() {
-    // Check if mobile view and render weekly view instead
+    // Check if mobile view and render appropriate mobile view
     if (this.isMobileView()) {
-      this.renderWeeklyView();
+      if (this.currentMobileView === 'weekly') {
+        this.renderWeeklyView();
+      } else {
+        this.renderMonthlyViewMobile();
+      }
       return;
     }
 
@@ -921,6 +931,30 @@ class CalendarView {
     // Clear existing content
     gridContainer.innerHTML = '';
 
+    // --- View Toggle Buttons (same as monthly view) ---
+    const toggleRow = document.createElement('div');
+    toggleRow.className = 'mobile-calendar-toggle';
+
+    const monthlyBtn = document.createElement('button');
+    monthlyBtn.className = 'mobile-toggle-btn' + (this.currentMobileView === 'monthly' ? ' active' : '');
+    monthlyBtn.textContent = 'Monthly';
+    monthlyBtn.addEventListener('click', () => {
+      this.currentMobileView = 'monthly';
+      this.renderCalendar();
+    });
+
+    const weeklyBtn = document.createElement('button');
+    weeklyBtn.className = 'mobile-toggle-btn' + (this.currentMobileView === 'weekly' ? ' active' : '');
+    weeklyBtn.textContent = 'Weekly';
+    weeklyBtn.addEventListener('click', () => {
+      this.currentMobileView = 'weekly';
+      this.renderCalendar();
+    });
+
+    toggleRow.appendChild(monthlyBtn);
+    toggleRow.appendChild(weeklyBtn);
+    gridContainer.appendChild(toggleRow);
+
     // Create weekly container
     const weeklyContainer = document.createElement('div');
     weeklyContainer.className = 'calendar-weekly-container';
@@ -1008,6 +1042,215 @@ class CalendarView {
     if (weeklyContainer) {
       weeklyContainer.style.display = 'block';
     }
+
+    // Ensure regular grid is hidden
+    const gridElement = document.querySelector('.calendar-grid');
+    if (gridElement) gridElement.style.display = 'none';
+  }
+
+  /**
+   * Render monthly calendar view for mobile
+   * Dark-themed compact monthly grid matching the reference design
+   */
+  renderMonthlyViewMobile() {
+    // Update header first
+    this.updateHeader();
+
+    // Ensure modal exists
+    if (!this.modal) {
+      console.error('Modal not initialized');
+      return;
+    }
+
+    // Find grid container
+    let gridContainer = this.modal.querySelector('.calendar-grid-container');
+    if (!gridContainer) {
+      gridContainer = document.querySelector('.calendar-grid-container');
+    }
+    if (!gridContainer) {
+      console.error('Calendar grid container not found');
+      return;
+    }
+
+    // Ensure container is visible
+    gridContainer.style.display = 'block';
+
+    // Hide empty state initially
+    const emptyState = document.getElementById('calendar-empty-state');
+    if (emptyState) emptyState.style.display = 'none';
+
+    // Clear existing content
+    gridContainer.innerHTML = '';
+
+    // Create main wrapper
+    const monthlyWrapper = document.createElement('div');
+    monthlyWrapper.className = 'mobile-monthly-wrapper';
+
+    // --- View Toggle Buttons ---
+    const toggleRow = document.createElement('div');
+    toggleRow.className = 'mobile-calendar-toggle';
+
+    const monthlyBtn = document.createElement('button');
+    monthlyBtn.className = 'mobile-toggle-btn' + (this.currentMobileView === 'monthly' ? ' active' : '');
+    monthlyBtn.textContent = 'Monthly';
+    monthlyBtn.addEventListener('click', () => {
+      this.currentMobileView = 'monthly';
+      this.renderCalendar();
+    });
+
+    const weeklyBtn = document.createElement('button');
+    weeklyBtn.className = 'mobile-toggle-btn' + (this.currentMobileView === 'weekly' ? ' active' : '');
+    weeklyBtn.textContent = 'Weekly';
+    weeklyBtn.addEventListener('click', () => {
+      this.currentMobileView = 'weekly';
+      this.renderCalendar();
+    });
+
+    toggleRow.appendChild(monthlyBtn);
+    toggleRow.appendChild(weeklyBtn);
+    monthlyWrapper.appendChild(toggleRow);
+
+    // --- Calendar Grid ---
+    const calGrid = document.createElement('div');
+    calGrid.className = 'mobile-monthly-grid';
+
+    // Day headers row
+    const dayHeaderRow = document.createElement('div');
+    dayHeaderRow.className = 'mobile-month-header-row';
+    // Empty cell for week number column
+    const weekNumHeader = document.createElement('div');
+    weekNumHeader.className = 'mobile-week-num-header';
+    dayHeaderRow.appendChild(weekNumHeader);
+
+    const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+    dayNames.forEach((name, idx) => {
+      const dayEl = document.createElement('div');
+      dayEl.className = 'mobile-day-header' + (idx === 0 ? ' sunday' : '');
+      dayEl.textContent = name;
+      dayHeaderRow.appendChild(dayEl);
+    });
+    calGrid.appendChild(dayHeaderRow);
+
+    // Generate weeks
+    const weeks = this.getWeeksInMonth();
+    const today = new Date();
+
+    weeks.forEach(week => {
+      const weekRow = document.createElement('div');
+      weekRow.className = 'mobile-month-week-row';
+
+      // Week number
+      const weekNumEl = document.createElement('div');
+      weekNumEl.className = 'mobile-week-num';
+      // Calculate ISO week number from the Thursday of this week
+      const thursdayDate = new Date(week[4]); // Thursday
+      const startOfYear = new Date(thursdayDate.getFullYear(), 0, 1);
+      const weekNum = Math.ceil(((thursdayDate - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7);
+      weekNumEl.textContent = weekNum;
+      weekRow.appendChild(weekNumEl);
+
+      week.forEach(date => {
+        const cell = document.createElement('div');
+        cell.className = 'mobile-date-cell';
+
+        const isOtherMonth = date.getMonth() !== this.displayedMonth;
+        const isTodayDate = isToday(date);
+        const isSunday = date.getDay() === 0;
+        const tasksForDate = this.getTasksForDate(date);
+        const hasTasks = tasksForDate.length > 0;
+        const isSelected = this.formatDateKey(date) === this.formatDateKey(this.selectedMobileDate);
+
+        if (isOtherMonth) cell.classList.add('other-month');
+        if (isTodayDate) cell.classList.add('today');
+        if (isSunday) cell.classList.add('sunday');
+        if (hasTasks) cell.classList.add('has-tasks');
+        if (isSelected) cell.classList.add('selected');
+
+        // Date number
+        const dateNum = document.createElement('span');
+        dateNum.className = 'mobile-date-num';
+        dateNum.textContent = date.getDate();
+        cell.appendChild(dateNum);
+
+        // Click handler to show tasks below
+        const dateRef = new Date(date);
+        cell.addEventListener('click', () => {
+          this.selectedMobileDate = dateRef;
+          this.renderMonthlyViewMobile();
+        });
+
+        weekRow.appendChild(cell);
+      });
+
+      calGrid.appendChild(weekRow);
+    });
+
+    monthlyWrapper.appendChild(calGrid);
+
+    // --- Task List Panel Below Calendar ---
+    const taskPanel = document.createElement('div');
+    taskPanel.className = 'mobile-task-list';
+
+    const selectedTasks = this.getTasksForDate(this.selectedMobileDate);
+
+    if (selectedTasks.length === 0) {
+      const emptyMsg = document.createElement('div');
+      emptyMsg.className = 'mobile-task-empty';
+      emptyMsg.textContent = 'No tasks today. Yay!';
+      taskPanel.appendChild(emptyMsg);
+    } else {
+      selectedTasks.forEach(task => {
+        const taskItem = document.createElement('div');
+        taskItem.className = 'mobile-task-item';
+        taskItem.setAttribute('data-task-id', task.id);
+
+        // Blue dot
+        const dot = document.createElement('span');
+        dot.className = 'mobile-task-dot';
+
+        // Task info
+        const info = document.createElement('div');
+        info.className = 'mobile-task-info';
+
+        const titleEl = document.createElement('div');
+        titleEl.className = 'mobile-task-title';
+        titleEl.textContent = task.title || 'Untitled';
+
+        const courseEl = document.createElement('div');
+        courseEl.className = 'mobile-task-course';
+        courseEl.textContent = task.course || '';
+
+        const timeEl = document.createElement('div');
+        timeEl.className = 'mobile-task-time';
+        if (task.deadline && task.deadline !== 'No official Time limit') {
+          try {
+            const dl = task.deadline.toDate ? task.deadline.toDate() : new Date(task.deadline);
+            timeEl.textContent = dl.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+          } catch (e) {
+            timeEl.textContent = '';
+          }
+        }
+
+        if (task.course) info.appendChild(courseEl);
+        info.appendChild(titleEl);
+        info.appendChild(timeEl);
+
+        taskItem.appendChild(dot);
+        taskItem.appendChild(info);
+
+        // Click handler for task details
+        taskItem.addEventListener('click', () => {
+          this.showTaskDetails(task.id);
+        });
+
+        taskPanel.appendChild(taskItem);
+      });
+    }
+
+    monthlyWrapper.appendChild(taskPanel);
+
+    // Append to container
+    gridContainer.appendChild(monthlyWrapper);
 
     // Ensure regular grid is hidden
     const gridElement = document.querySelector('.calendar-grid');

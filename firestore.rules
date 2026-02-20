@@ -154,6 +154,13 @@ service cloud.firestore {
         request.resource.data.priority in ['normal', 'important', 'urgent'];
     }
     
+    // Validate optional deadline field: must be null or a non-empty string (ISO datetime)
+    function hasValidDeadline() {
+      return !request.resource.data.keys().hasAny(['deadline']) ||
+        request.resource.data.deadline == null ||
+        (request.resource.data.deadline is string && request.resource.data.deadline.size() > 0);
+    }
+    
     match /cr_notices/{noticeId} {
       // Helper: extract section group letter from user profile (e.g., 'B' from 'B1')
       // Notices store the group letter, so we compare against it.
@@ -169,30 +176,35 @@ service cloud.firestore {
       // Create: Admins can create notices for any section; CRs only for their own group
       allow create: if (isAdmin() && 
         request.resource.data.createdBy == request.auth.uid &&
-        hasRequiredNoticeFields()
+        hasRequiredNoticeFields() &&
+        hasValidDeadline()
       ) || (
         isCR() && 
         request.resource.data.createdBy == request.auth.uid &&
         request.resource.data.department == getUserDepartment() &&
         request.resource.data.semester == getUserSemester() &&
         request.resource.data.section == getUserSection()[0:1] &&
-        hasRequiredNoticeFields()
+        hasRequiredNoticeFields() &&
+        hasValidDeadline()
       );
       
       // Update: Admins can update any notice; CRs can only update their own
       // Neither can change createdBy, department, semester, or section
+      // Deadline can be changed (added, modified, or removed)
       allow update: if (isAdmin() && 
         request.resource.data.createdBy == resource.data.createdBy &&
         request.resource.data.department == resource.data.department &&
         request.resource.data.semester == resource.data.semester &&
-        request.resource.data.section == resource.data.section
+        request.resource.data.section == resource.data.section &&
+        hasValidDeadline()
       ) || (
         isCR() && 
         resource.data.createdBy == request.auth.uid &&
         request.resource.data.createdBy == resource.data.createdBy &&
         request.resource.data.department == resource.data.department &&
         request.resource.data.semester == resource.data.semester &&
-        request.resource.data.section == resource.data.section
+        request.resource.data.section == resource.data.section &&
+        hasValidDeadline()
       );
       
       // Delete: Only the CR who created the notice OR admins can delete it

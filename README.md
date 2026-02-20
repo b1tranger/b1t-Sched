@@ -15,12 +15,23 @@ A single-page application (SPA) that helps students manage academic tasks, assig
 - 👤 **User Profiles** - Set department, semester, and section once
 - 📋 **Personalized Tasks** - View tasks filtered by your academic details, with clickable links and collapsible descriptions
 - ✏️ **Edit Entries** - Users can edit their own tasks; admins can edit all tasks and events; CRs can create department events and manage their own
-- 🔗 **Dynamic Resource Links** - Department-specific routine, calendar, and faculty contacts
+- 🔗 **Dynamic Resource Links** - Department-specific routine, calendar, and faculty contacts with built-in PDF viewer
 - 📅 **Event Calendar** - Track upcoming academic events with collapsible descriptions, department scope badge, and clickable links
+- 📆 **Calendar View** - Interactive monthly calendar with task visualization, date navigation, and responsive mobile layout (monthly/weekly toggle)
+- 📣 **CR Notices** - Class Representatives can post, edit, and delete notices visible to their section group; supports priority levels and deadline tracking
+- 📰 **University Notice Viewer** - View UCAM university notices with PDF preview, powered by Vercel serverless backend with local caching
+- 🏫 **Google Classroom Integration** - View assignments and announcements from enrolled courses in a unified interface with OAuth session persistence
+- 📝 **Note Taking** - Personal notes with markdown support, auto-save, and file upload via catbox.moe/tmpfiles.org
+- 📊 **Activity Timeline** - Visual heatmap and bar chart tracking user activity (logins, tasks, events) for productivity insights
+- 🔔 **Push Notifications** - Real-time browser notifications for new tasks and events (mobile-compatible)
+- 🏆 **Contributions** - Leaderboard of top contributors (group-specific or global across all departments)
 - ⚙️ **Profile Settings** - Update your details anytime (30-day cooldown)
 - ❓ **FAQ Section** - Collapsible accordion explaining how the site works, user roles, and profile settings
 - 🎨 **Maroon Theme** - Professional dark maroon and off-white color scheme
 - 📱 **Fully Responsive** - Works on desktop, tablet, and mobile
+- 📲 **Progressive Web App** - Installable app with offline support and service worker caching
+
+> 📖 For complete documentation, see [`doc/DOCUMENTATION.md`](doc/DOCUMENTATION.md)
 
 ---
 
@@ -114,19 +125,25 @@ const firebaseConfig = {
 ```
 b1t-Sched/
 ├── index.html                    # Main SPA entry point
-├── FIREBASE_SETUP.md            # Firebase backend setup guide
-├── REDESIGN_PLAN.md             # Complete redesign documentation
-├── README.md                    # This file
+├── manifest.json                 # PWA manifest
+├── sw.js                         # Service worker
+├── README.md                     # This file
 │
-├── css/
-│   ├── colors.css               # Color variables (maroon theme)
-│   ├── main.css                 # Main styles
+├── css/                          # Stylesheets
+│   ├── colors.css               # CSS variables (maroon theme)
+│   ├── main.css                 # Core styles
 │   ├── components.css           # Reusable components
+│   ├── dashboard.css            # Dashboard layout, modals
 │   ├── navbar.css               # Navigation bar
-│   ├── user-details-card.css    # User profile card
-│   └── responsive.css           # Mobile responsive styles
+│   ├── notice.css               # Notice viewer & PDF viewer styles
+│   ├── classroom.css            # Google Classroom styles
+│   ├── calendar.css             # Calendar view styles
+│   ├── timeline.css             # Activity timeline styles
+│   ├── note.css                 # Note-taking styles
+│   ├── responsive.css           # Mobile responsive styles
+│   └── ...                      # Additional styles
 │
-├── js/
+├── js/                           # JavaScript modules
 │   ├── firebase-config.js       # Firebase configuration (⚠️ UPDATE THIS)
 │   ├── auth.js                  # Authentication logic
 │   ├── db.js                    # Database operations
@@ -134,10 +151,26 @@ b1t-Sched/
 │   ├── ui.js                    # UI rendering
 │   ├── profile.js               # Profile management
 │   ├── utils.js                 # Utility functions
+│   ├── notice.js                # University notice viewer
+│   ├── cr-notice.js             # CR notice management
+│   ├── notes.js                 # Note-taking module
+│   ├── classroom.js             # Google Classroom integration
+│   ├── calendar-view.js         # Calendar view (monthly/weekly)
+│   ├── activity-logger.js       # Activity tracking
+│   ├── timeline-data.js         # Timeline data processing
+│   ├── timeline-ui.js           # Timeline visualization
+│   ├── notification-manager.js  # Push notifications
 │   └── app.js                   # Main application logic
 │
-├── images/                      # Logos and images
-└── D1/                          # Old structure (can be archived)
+├── doc/                          # Documentation
+│   ├── DOCUMENTATION.md         # Complete project documentation
+│   ├── FIREBASE_SETUP.md        # Firebase setup guide
+│   └── ...                      # Additional docs
+│
+├── functions/                    # Firebase Cloud Functions
+│   └── index.js                 # Admin functions entry point
+│
+└── images/                       # Image assets
 ```
 
 ---
@@ -521,3 +554,38 @@ from [@foxxie911](https://github.com/foxxie911)
 ---
 
 **Ready to get started? Follow [`FIREBASE_SETUP.md`](doc/FIREBASE_SETUP.md) first!** 🚀
+
+---
+
+## 🙏 Appreciation
+
+Thanks to these individuals who helped with testing, suggestions and support.
+
+Seniors
+- [Md Kamruzzaman Shishir (1814355002)](https://github.com/MuhammadShishir)
+- [Md. Sakibul Hakim (Sadab) (2114951038)](https://github.com/foxxie911)
+- [Zobayer Hasan (2215151106)](https://github.com/zobayersq)
+- Mohammad Masud Chowdhury Mahir
+- [Md Sakib Hosen (0432220005101058)](https://github.com/chatok-jnr)
+- [Akib Reza (0432220005101061)](https://github.com/AkibReza)
+- [Md. Safrid Bhueyan (0432310005101080)](https://github.com/safridbhueyan)
+- [K. M. Jakaria (0432310005101037)](https://github.com/Reaper-X003)
+- [Md. Robiul Hassan (Rabin) (0432310005101096)](https://github.com/Arriesgado47)
+- [Md. Mahfuz (0432310005101057)](https://github.com/Mahfuz5634)
+- [Md. Masud Rahman (0432320005101064)](https://github.com/shoytanbaba99)
+- [Kazi Md. Azhar Uddin Abeer (0432320005101120)](https://github.com/4xrhd)
+- Md.Jihad Hossan (0432320005101017)
+- [Md. Muhaiminul Islam (0432320005101207)](https://github.com/Maheem0)
+
+Classmates
+- [Jannatul Ferdus (0432410005101058)](https://github.com/jannatulferdus182003)
+- [Shalehin Ahmed (0432410005101083)](https://github.com/ORNOB-083)
+- [Shamiur Hasan (0432410005101053)](https://github.com/shamiurhasan100)
+
+Juniors
+- [Mamunur Rahman (04325205101031)](https://github.com/Zirconium001)
+- [Kazi Rabit Jahir (04325205101006)](https://github.com/RabbitJahir)
+
+
+
+

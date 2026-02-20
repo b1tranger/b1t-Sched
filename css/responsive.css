@@ -4,15 +4,16 @@
 
 /* Tablets and smaller */
 @media (max-width: 992px) {
+
   .dashboard-container,
   .profile-settings-container {
     padding: var(--spacing-lg) var(--spacing-md);
   }
-  
+
   .resource-links-container {
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   }
-  
+
   .section-header h2 {
     font-size: var(--font-lg);
   }
@@ -28,58 +29,58 @@
     --font-xl: 22px;
     --font-xxl: 28px;
   }
-  
+
   .main-content {
     padding-top: 60px;
   }
-  
+
   .auth-card,
   .set-details-card,
   .profile-settings-card {
     padding: var(--spacing-lg);
   }
-  
+
   .auth-logo-img {
     width: 80px;
     height: 80px;
   }
-  
+
   .dashboard-container,
   .profile-settings-container {
     padding: var(--spacing-md);
   }
-  
+
   .resource-links-container {
     grid-template-columns: 1fr;
   }
-  
+
   /* Hide resource icons on mobile */
   .resource-link-card .resource-icon {
     display: none;
   }
-  
+
   /* Resources section mobile header */
   .resources-header {
     margin-bottom: var(--spacing-md);
   }
-  
+
   .resources-header h2 {
     font-size: var(--font-lg);
     color: var(--primary-maroon);
   }
-  
+
   /* External resources link on mobile */
   .external-resources-link {
     margin-top: var(--spacing-sm);
     background: var(--primary-maroon);
     border-color: var(--primary-maroon);
   }
-  
+
   .external-resources-link h3,
   .external-resources-link p {
     color: var(--text-white);
   }
-  
+
   .external-resources-link .resource-icon {
     display: block;
     color: var(--text-white);
@@ -87,66 +88,78 @@
     /* font-size: 1.5rem; */
     margin-bottom: var(--spacing-sm);
   }
-  
+
   .external-resources-link:hover {
     background: var(--maroon-hover);
     border-color: var(--maroon-hover);
   }
-  
+
   .section-header {
     flex-direction: column;
     align-items: flex-start;
     gap: var(--spacing-sm);
   }
-  
+
   .task-card,
   .event-card {
     padding: var(--spacing-md);
   }
-  
+
   .form-actions {
     flex-direction: column;
   }
-  
+
   .form-actions .btn {
     width: 100%;
   }
-  
+
   .profile-avatar-large {
     font-size: 4rem;
+  }
+
+  /* Stack deadline radio buttons vertically on mobile */
+  .deadline-options {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 6px !important;
+  }
+
+  .deadline-options input[type="datetime-local"] {
+    width: 100%;
   }
 }
 
 /* Very small mobile */
 @media (max-width: 480px) {
+
   .auth-container,
   .set-details-container {
     padding: var(--spacing-md);
   }
-  
+
   .auth-card,
   .set-details-card {
     padding: var(--spacing-md);
   }
-  
+
   .auth-logo h1 {
     font-size: var(--font-xl);
   }
-  
+
   .section-header h2 {
     font-size: var(--font-md);
   }
-  
+
   .task-title,
   .event-title {
     font-size: var(--font-md);
   }
-  
+
   .resource-link-card .resource-icon {
     /* font-size: 2.5rem; */
     font-size: 20px;
   }
-  
+
   .resource-link-card h3 {
     font-size: var(--font-md);
   }
@@ -154,11 +167,12 @@
 
 /* Landscape mode on mobile */
 @media (max-width: 768px) and (orientation: landscape) {
+
   .auth-container,
   .set-details-container {
     padding: var(--spacing-sm);
   }
-  
+
   .auth-card,
   .set-details-card {
     max-width: 600px;
@@ -169,13 +183,13 @@
 @media (min-width: 1400px) {
   .dashboard-container {
     max-width: 1400px;
-    
+
   }
-  
+
   .resource-links-container {
     grid-template-columns: repeat(3, 1fr);
   }
-  
+
   .tasks-container {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -183,17 +197,18 @@
 
 /* Print styles */
 @media print {
+
   .navbar,
   .user-details-card,
   .btn,
   .resource-links-section {
     display: none !important;
   }
-  
+
   .main-content {
     padding-top: 0;
   }
-  
+
   .task-card,
   .event-card {
     border: 1px solid #000;

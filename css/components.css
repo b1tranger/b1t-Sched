@@ -78,7 +78,9 @@
 
 .btn-icon:hover:not(:disabled) {
   background-color: var(--bg-lighter);
+  color: var(--primary-maroon) !important;
 }
+
 
 .btn-block {
   width: 100%;

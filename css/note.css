@@ -212,9 +212,7 @@
     color: var(--info);
     margin-top: 2px;
     flex-shrink: 0;
-}
-
-padding-left: calc(var(--spacing-md) + 4px);
+    padding-left: calc(var(--spacing-md) + 4px);
 }
 
 /* ─── Responsive Behavior ─────────────────────────── */
