@@ -227,12 +227,12 @@ const CRNoticeViewer = {
                 <div class="cr-notice-header">
                     <div class="cr-notice-title-row">
                          <span class="cr-notice-icon">${priorityIcon}</span>
-                         <span class="cr-notice-title">${UI.escapeHtml(notice.title)}</span>
+                         <span class="cr-notice-title">${Utils.escapeAndLinkify(notice.title)}</span>
                     </div>
                    ${deleteBtn}
                 </div>
                 <div class="cr-notice-body">
-                    ${UI.escapeHtml(notice.description).replace(/\n/g, '<br>')}
+                    ${Utils.escapeAndLinkify(notice.description)}
                 </div>
                 <div class="cr-notice-footer">
                     <small>${date}</small>
