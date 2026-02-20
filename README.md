@@ -528,6 +528,13 @@ For issues or questions:
 ---
 
 ## Feature Request:
+
+from 
+   1. dark theme [1d16168e1616d84040eeeeee](https://colorhunt.co/palette/1d16168e1616d84040eeeeee)
+   2. light theme [7d0a0abf3131ead196eeeeee](https://colorhunt.co/palette/7d0a0abf3131ead196eeeeee)
+
+
+
 from [@MuhammadShishir](https://github.com/MuhammadShishir):
    1. Time tracking,
    2. Adding documents,
