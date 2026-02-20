@@ -626,6 +626,20 @@
                             <textarea id="note-textarea" class="note-textarea"
                                 placeholder="Start typing your notes here... Supports markdown formatting!"></textarea>
                         </div>
+                        <div class="note-upload-section">
+                            <p class="upload-instruction">
+                                <i class="fas fa-info-circle"></i>
+                                <span>Uploads use <strong>Catbox.moe</strong> or <strong>Tmpfiles.org</strong>
+                                    (Temporary).
+                                    Back up important content.</span>
+                            </p>
+                            <button id="upload-files-btn" class="btn btn-secondary" type="button">
+                                <i class="fas fa-upload"></i> Upload Files
+                            </button>
+                            <input type="file" id="note-file-input" style="display: none;"
+                                accept="image/*,application/pdf,.doc,.docx,.txt,.zip,.rar">
+
+                        </div>
 
                         <!-- Note Preview (rendered with markdown) -->
                         <div class="note-preview">
@@ -635,19 +649,7 @@
                             </div>
                         </div>
 
-                        <div class="note-upload-section">
-                            <button id="upload-files-btn" class="btn btn-secondary" type="button">
-                                <i class="fas fa-upload"></i> Upload Files
-                            </button>
-                            <input type="file" id="note-file-input" style="display: none;"
-                                accept="image/*,application/pdf,.doc,.docx,.txt,.zip,.rar">
-                            <p class="upload-instruction">
-                                <i class="fas fa-info-circle"></i>
-                                <span>Uploads use <strong>Catbox.moe</strong> or <strong>Tmpfiles.org</strong>
-                                    (Temporary).
-                                    Back up important content.</span>
-                            </p>
-                        </div>
+
                     </div>
 
                     <div class="modal-footer">

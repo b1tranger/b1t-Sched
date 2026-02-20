@@ -156,7 +156,8 @@
 
 .notice-load-prompt i {
     font-size: 2rem;
-    color: var(--accent-maroon);
+    /* color: var(--accent-maroon); */
+    color: var(--secondary-maroonoon);
     opacity: 0.5;
 }
 
