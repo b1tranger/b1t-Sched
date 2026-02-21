@@ -558,6 +558,7 @@ from [@foxxie911](https://github.com/foxxie911)
    1. need to refine data/files 
    2. add PDF viewer: need to view resources inside the website/app (otherwise I am depending on outside sources --> not convincing)
    3. Faculty-side
+   4. add a feature, the semester of each student will update automatically at the end of semester, or with only one push of button by admin
 
 
 ---
