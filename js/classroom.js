@@ -842,7 +842,14 @@ const Classroom = {
                     <button id="sync-classroom-tasks-btn" class="btn btn-sm btn-primary" onclick="Classroom.syncAssignmentsToTasks()" title="Sync Assignments to Tasks">
                         <i class="fas fa-sync-alt"></i> Sync
                     </button>
-                    ` : ''}
+                    `
+                :
+                `
+                    <button title="Sync button placeholder">
+                        &nbsp;
+                    </button>
+                    `
+            }
                 </div>
                 <div class="classroom-view-toggle">
                     <button class="view-toggle-btn ${viewType === 'todo' ? 'active' : ''}" onclick="Classroom.switchView('todo')">
