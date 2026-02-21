@@ -304,3 +304,7 @@ body.dark-mode .upload-instruction {
     background-color: var(--bg-lighter);
     color: var(--text-medium);
 }
+
+body.dark-mode .note-preview-content a {
+    color: var(--description-link-color, var(--link-blue));
+}

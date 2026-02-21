@@ -585,3 +585,10 @@
     background: rgba(244, 67, 54, 0.1);
     color: #f44336;
 }
+
+/* Dark Mode Overrides for Links */
+body.dark-mode .cr-notice-body a,
+body.dark-mode .uni-notice-item a,
+body.dark-mode .notice-item-content a {
+    color: var(--description-link-color, var(--link-blue));
+}

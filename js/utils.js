@@ -194,14 +194,14 @@ const Utils = {
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
-      
+
       // Check if it's a file.io download link (always add download attribute)
       const isFileIOLink = link.url.includes('file.io/');
       const downloadAttr = isFileIOLink ? ' download' : '';
-      
+
       result = result.replace(
         `__MD_LINK_${index}__`,
-        `<a href="${link.url}" target="_blank" rel="noopener noreferrer"${downloadAttr}>${escapedText}</a>`
+        `<a href="${link.url}" target="_blank" rel="noopener noreferrer" class="description-link"${downloadAttr}>${escapedText}</a>`
       );
     });
 

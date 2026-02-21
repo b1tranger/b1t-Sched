@@ -9,6 +9,7 @@
   --accent-maroon: #A00000;
   --light-maroon: #B30000;
   --maroon-hover: #990000;
+  --link-blue: #add8e6;
 
   /* Background Colors */
   --bg-light: #F5F3F0;
@@ -114,4 +115,5 @@ body.dark-mode {
   --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.5);
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+  --description-link-color: var(--link-blue);
 }

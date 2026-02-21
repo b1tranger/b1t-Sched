@@ -99,9 +99,17 @@
     word-break: break-all;
 }
 
+body.dark-mode .description-link {
+    color: var(--description-link-color, var(--link-blue));
+}
+
 .description-link:hover {
     color: var(--maroon-hover);
     text-decoration: none;
+}
+
+body.dark-mode .description-link:hover {
+    filter: brightness(1.2);
 }
 
 .dashboard-sidebar .no-data-message {
