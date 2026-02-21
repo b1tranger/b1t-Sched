@@ -282,7 +282,6 @@ const UI = {
                 </div>
                 <div class="task-header-right">
                   ${facultyBadge}
-                  ${classroomBadge}
                   <span class="task-type-badge ${task.type}">${task.type || 'task'}</span>
                   <div class="task-actions-vertical">
                     ${editButton}
@@ -308,6 +307,7 @@ const UI = {
                   ${isPastDeadline && !isCompleted ? '(Overdue!)' : ''}
                   ${isUrgent && !isPastDeadline ? `(${daysUntil} day${daysUntil !== 1 ? 's' : ''} left!)` : ''}
                 </span>
+                ${classroomBadge}
               </div>
             </div>
           </div>

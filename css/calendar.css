@@ -1366,7 +1366,7 @@
   /* ============================================
    DARK MODE OVERRIDES (CALENDAR)
    ============================================ */
-  body.dark-mode .mobile-date-cell.has-tasks {
+  body.dark-mode .mobile-date-cell.selected:not(.today) {
     background-color: rgba(255, 255, 255, 0.15) !important;
     /* Semi-transparent white */
   }
