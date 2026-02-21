@@ -193,6 +193,8 @@ const DB = {
         addedBy: userId,
         addedByName: userEmail.split('@')[0],
         addedByRole: addedByRole,
+        addedFrom: data.addedFrom || null,
+        classroomWorkId: data.classroomWorkId || null,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
       console.log('Task created:', docRef.id);
@@ -318,6 +320,35 @@ const DB = {
       return { success: true, data: oldTasks };
     } catch (error) {
       console.error('Error getting old tasks:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Get active tasks by their classroomWorkId to prevent duplicates
+  async getTasksByClassroomIds(classroomWorkIds) {
+    if (!classroomWorkIds || classroomWorkIds.length === 0) return { success: true, data: [] };
+
+    try {
+      // Firebase 'in' queries are limited to 10 items at a time
+      const batches = [];
+      for (let i = 0; i < classroomWorkIds.length; i += 10) {
+        batches.push(classroomWorkIds.slice(i, i + 10));
+      }
+
+      let allTasks = [];
+      for (const batch of batches) {
+        const snapshot = await db.collection('tasks')
+          .where('status', '==', 'active')
+          .where('classroomWorkId', 'in', batch)
+          .get();
+
+        snapshot.forEach(doc => {
+          allTasks.push({ id: doc.id, ...doc.data() });
+        });
+      }
+      return { success: true, data: allTasks };
+    } catch (error) {
+      console.error('Error getting tasks by classroom IDs:', error);
       return { success: false, error: error.message };
     }
   },

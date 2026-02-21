@@ -262,6 +262,9 @@ const UI = {
     // Add Faculty badge if this is a Faculty task
     const facultyBadge = isFacultyTask ? `<span class="task-faculty-badge"><i class="fas fa-chalkboard-teacher"></i> Faculty</span>` : '';
 
+    // Add Classroom badge if added from Classroom
+    const classroomBadge = task.addedFrom === 'classroom' ? `<span class="task-type-badge assignment" style="background-color: #34a853; color: white; display: inline-flex; align-items: center; gap: 4px;"><i class="fas fa-chalkboard-teacher"></i> Classroom</span>` : '';
+
     return `
         <div class="task-card ${statusClass} ${isFacultyTask ? 'faculty-task' : ''}" data-task-id="${task.id}" data-type="${task.type || 'other'}">
           <div class="task-card-inner">
@@ -279,6 +282,7 @@ const UI = {
                 </div>
                 <div class="task-header-right">
                   ${facultyBadge}
+                  ${classroomBadge}
                   <span class="task-type-badge ${task.type}">${task.type || 'task'}</span>
                   <div class="task-actions-vertical">
                     ${editButton}

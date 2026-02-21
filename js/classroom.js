@@ -719,14 +719,114 @@ const Classroom = {
         });
     },
 
+    async syncAssignmentsToTasks() {
+        if (typeof App === 'undefined' || (!App.isAdmin && !App.isCR)) return;
+
+        const syncBtn = document.getElementById('sync-classroom-tasks-btn');
+        if (syncBtn) {
+            syncBtn.disabled = true;
+            syncBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Syncing...';
+        }
+
+        try {
+            // Get assignments from cache
+            let assignments = [];
+            if (this.cacheManager) {
+                const cachedData = await this.cacheManager.getCachedClassroomData('assignments');
+                if (cachedData && cachedData.data) {
+                    assignments = cachedData.data;
+                }
+            }
+
+            if (assignments.length === 0) {
+                alert('No assignments found to sync.');
+                return;
+            }
+
+            // Get only assignments (with a valid dueDate)
+            const syncableAssignments = assignments.filter(a => a.dueDate);
+
+            if (syncableAssignments.length === 0) {
+                alert('No assignments with due dates found to sync.');
+                return;
+            }
+
+            const classroomWorkIds = syncableAssignments.map(a => a.id);
+            const existingTasksResult = await DB.getTasksByClassroomIds(classroomWorkIds);
+            const existingIds = new Set();
+
+            if (existingTasksResult.success && existingTasksResult.data) {
+                existingTasksResult.data.forEach(task => {
+                    if (task.classroomWorkId) {
+                        existingIds.add(task.classroomWorkId);
+                    }
+                });
+            }
+
+            const userId = Auth.getUserId();
+            const userEmail = Auth.getUserEmail();
+            let addedCount = 0;
+
+            for (const assignment of syncableAssignments) {
+                if (existingIds.has(assignment.id)) continue;
+
+                // Format due date to be compatible with DB structure
+                const due = new Date(assignment.dueDate.year, assignment.dueDate.month - 1, assignment.dueDate.day, assignment.dueTime?.hours || 23, assignment.dueTime?.minutes || 59);
+
+                // Add Markdown link to description
+                const linkLabel = assignment.alternateLink ? `[View in Classroom](${assignment.alternateLink})\n\n` : '';
+                const desc = linkLabel + (assignment.description || '');
+
+                const taskData = {
+                    title: assignment.title,
+                    course: assignment.courseName || 'Classroom Assignment',
+                    type: 'assignment',
+                    description: desc,
+                    department: App.userProfile ? App.userProfile.department : 'ALL',
+                    semester: App.userProfile ? App.userProfile.semester : null,
+                    section: App.userProfile ? App.userProfile.section : null,
+                    deadline: due.toISOString(),
+                    addedFrom: 'classroom',
+                    classroomWorkId: assignment.id
+                };
+
+                const result = await DB.createTask(userId, userEmail, taskData);
+                if (result.success) {
+                    addedCount++;
+                }
+            }
+
+            alert(`Successfully synced ${addedCount} new assignment(s) to Tasks!`);
+
+            // Refresh dashboard tasks
+            if (App && typeof App.loadDashboardData === 'function') {
+                await App.loadDashboardData();
+            }
+
+        } catch (error) {
+            console.error('Error syncing assignments:', error);
+            alert('An error occurred while syncing assignments.');
+        } finally {
+            if (syncBtn) {
+                syncBtn.disabled = false;
+                syncBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Sync';
+            }
+        }
+    },
+
     renderAllItems(items, viewType) {
         // Header with Toggle
         const headerHtml = `
-            <div class="classroom-view-header">
-                <div style="display: flex; align-items: center;">
+            <div class="classroom-view-header" style="flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center; flex: 1; justify-content: space-between;">
                     <span style="font-weight: 500; font-size: 1.1rem;">
                         All Courses
                     </span>
+                    ${(viewType === 'todo' && typeof App !== 'undefined' && (App.isAdmin || App.isCR)) ? `
+                    <button id="sync-classroom-tasks-btn" class="btn btn-sm btn-primary" onclick="Classroom.syncAssignmentsToTasks()" title="Sync Assignments to Tasks">
+                        <i class="fas fa-sync-alt"></i> Sync
+                    </button>
+                    ` : ''}
                 </div>
                 <div class="classroom-view-toggle">
                     <button class="view-toggle-btn ${viewType === 'todo' ? 'active' : ''}" onclick="Classroom.switchView('todo')">
