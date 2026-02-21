@@ -877,7 +877,7 @@ const Classroom = {
                 <div style="display: flex; align-items: center; flex: 1; justify-content: space-between;">
                     <div style="display: flex; align-items: center;">
                         <button class="classroom-back-btn" onclick="Classroom.renderCourseList()" title="Back to Classes" style="margin-right: 8px;">
-                            <i class="fas fa-th-large"></i>
+                            <i class="fa-solid fa-house"></i>
                         </button>
                         <span style="font-weight: 500; font-size: 1.1rem;">
                             All Courses
