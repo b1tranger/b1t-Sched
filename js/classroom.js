@@ -106,7 +106,7 @@ const Classroom = {
                     }
                 }, timeUntilRefresh);
 
-                this.fetchCourses();
+                this.fetchCoursesAndLoadAll();
                 return;
             } else {
                 console.log('Stored token expired');
@@ -283,8 +283,8 @@ const Classroom = {
             localStorage.setItem('classroom_token_expiry', expiryTime.toString());
         }
 
-        // Fetch courses
-        this.fetchCourses();
+        // Fetch courses and load all assignments/notices
+        this.fetchCoursesAndLoadAll();
     },
 
     logout() {
@@ -365,8 +365,15 @@ const Classroom = {
             const data = await response.json();
             this.courses = data.courses || [];
 
-            // After loading courses, load all assignments
-            await this.loadAllAssignments();
+            // Reset current course when loading all
+            this.currentCourseId = null;
+
+            // After loading courses, load all items based on current view
+            if (this.currentView === 'todo') {
+                await this.loadAllAssignments();
+            } else {
+                await this.loadAllAnnouncements();
+            }
 
         } catch (error) {
             console.error(error);
@@ -715,7 +722,11 @@ const Classroom = {
 
         const containers = this.getContainers();
         containers.forEach(container => {
-            if (container) container.innerHTML = html;
+            if (container) {
+                container.innerHTML = html;
+                // Important: reset current course ID when viewing the course list
+                this.currentCourseId = null;
+            }
         });
     },
 
@@ -819,9 +830,14 @@ const Classroom = {
         const headerHtml = `
             <div class="classroom-view-header" style="flex-wrap: wrap; gap: 10px;">
                 <div style="display: flex; align-items: center; flex: 1; justify-content: space-between;">
-                    <span style="font-weight: 500; font-size: 1.1rem;">
-                        All Courses
-                    </span>
+                    <div style="display: flex; align-items: center;">
+                        <button class="classroom-back-btn" onclick="Classroom.renderCourseList()" title="Back to Classes" style="margin-right: 8px;">
+                            <i class="fas fa-th-large"></i>
+                        </button>
+                        <span style="font-weight: 500; font-size: 1.1rem;">
+                            All Courses
+                        </span>
+                    </div>
                     ${(viewType === 'todo' && typeof App !== 'undefined' && (App.isAdmin || App.isCR)) ? `
                     <button id="sync-classroom-tasks-btn" class="btn btn-sm btn-primary" onclick="Classroom.syncAssignmentsToTasks()" title="Sync Assignments to Tasks">
                         <i class="fas fa-sync-alt"></i> Sync
@@ -913,10 +929,20 @@ const Classroom = {
 
     switchView(view) {
         this.currentView = view;
-        if (view === 'todo') {
-            this.loadAllAssignments();
+        if (this.currentCourseId) {
+            // If viewing a specific course, fetch only for that course
+            if (view === 'todo') {
+                this.fetchCourseWork(this.currentCourseId);
+            } else {
+                this.fetchAnnouncements(this.currentCourseId);
+            }
         } else {
-            this.loadAllAnnouncements();
+            // Otherwise load all courses
+            if (view === 'todo') {
+                this.loadAllAssignments();
+            } else {
+                this.loadAllAnnouncements();
+            }
         }
     },
 
