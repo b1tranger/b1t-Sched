@@ -221,7 +221,7 @@ body.dark-mode .classroom-modal-header {
     border-radius: 4px;
     /* Standard G-Suite style */
     font-weight: 500;
-    font-family: 'Google Sans', Roboto, Arial, sans-serif;
+    font-family: 'Inter', 'Google Sans', Roboto, Arial, sans-serif;
     /* Try to match if available */
     display: flex;
     align-items: center;

@@ -1,0 +1,38 @@
+
+https://www.realtimecolors.com/?colors=e7f0dc-0e1407-badd93-578323-89d134&fonts=Inter-Inter
+
+##################################
+
+https://www.realtimecolors.com/?colors=d6faea-020e08-80f0b8-12989c-3bcae8&fonts=Inter-Inter
+
+##################################
+
+--text: #f9fbf9;
+--background: #030703;
+--primary: #31bf33;
+--secondary: #157917;
+--accent: #11b014;
+
+##################################
+
+--text: #eceded;
+--background: #080e0d;
+--primary: #9bdcd9;
+--secondary: #19948f;
+--accent: #2df9ef;
+
+##################################
+
+--text: #d6faea;
+--background: #020e08;
+--primary: #80f0b8;
+--secondary: #12989c;
+--accent: #3bcae8;
+
+##################################
+
+--text: #e7f0dc;
+--background: #0e1407;
+--primary: #badd93;
+--secondary: #578323;
+--accent: #89d134;

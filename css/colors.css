@@ -84,34 +84,32 @@
 
 /* Dark mode variables */
 body.dark-mode {
-  /* Using RealtimeColors palette: #f0f1ea, #1a1c0d, #d4dd93, #7e8b1b, #d5eb2c */
-  /* --bg-dark-gradient-start: #1a1c0d;
-  --bg-dark-gradient-end: #101206; */
-  --bg-dark-gradient-start: #0b0c06;
-  --bg-dark-gradient-end: #101206;
+  /* Using RealtimeColors palette: #e7f0dc, #000000, #badd93, #578323, #89d134 */
+  --bg-dark-gradient-start: #000000;
+  --bg-dark-gradient-end: #0d0d0d;
 
-  --primary-maroon: #d4dd93;
-  --secondary-maroon: #7e8b1b;
-  --accent-maroon: #d5eb2c;
-  --light-maroon: #d5eb2c;
-  --maroon-hover: #d5eb2c;
+  --primary-maroon: #badd93;
+  --secondary-maroon: #578323;
+  --accent-maroon: #89d134;
+  --light-maroon: #89d134;
+  --maroon-hover: #89d134;
 
-  --bg-light: #2c2f18;
+  --bg-light: #1a1a1a;
   /* Fallback for the solid background where gradient isn't applied */
-  --bg-lighter: #202312;
+  --bg-lighter: #262626;
   /* Slightly darker shade */
-  --bg-white: #1a1c0d;
+  --bg-white: #0d0d0d;
   /* Cards and modal backgrounds */
-  --bg-dark: #101206;
+  --bg-dark: #000000;
 
-  --text-dark: #f0f1ea;
-  --text-medium: #d4dd93;
-  --text-light: #7e8b1b;
-  --text-white: #1a1c0d;
+  --text-dark: #e7f0db;
+  --text-medium: #badd93;
+  --text-light: #578323;
+  --text-white: #0d1208;
 
-  --border-light: #2c2f18;
-  --border-medium: #06402B;
-  --border-dark: #96D9C0;
+  --border-light: #1a1a1a;
+  --border-medium: #333333;
+  --border-dark: #4d4d4d;
 
   --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.5);
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);

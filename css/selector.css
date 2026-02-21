@@ -20,7 +20,7 @@
 
  /* --------------------------------------------------------------------- */
 
-/* DISABLING TAB HIGHLIGHT */
+ /* DISABLING TAB HIGHLIGHT */
  .dropdown-header,
  .dropdown-item,
  .semester-button,
@@ -181,7 +181,7 @@
  .custom-dropdown {
      position: relative;
      width: 220px;
-     font-family: Arial, sans-serif;
+     font-family: 'Inter', Arial, sans-serif;
  }
 
  .selected {
