@@ -581,7 +581,7 @@ Seniors
 - [Md. Mahfuz (0432310005101057)](https://github.com/Mahfuz5634)
 - [Md. Masud Rahman (0432320005101064)](https://github.com/shoytanbaba99)
 - [Kazi Md. Azhar Uddin Abeer (0432320005101120)](https://github.com/4xrhd)
-- Md.Jihad Hossan (0432320005101017)
+- [Md.Jihad Hossan (0432320005101017)](https://github.com/tofazmahmud)
 - [Md. Muhaiminul Islam (0432320005101207)](https://github.com/Maheem0)
 
 Classmates
