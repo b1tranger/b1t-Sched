@@ -845,7 +845,7 @@ const Classroom = {
                     `
                 :
                 `
-                    <button title="Sync button placeholder">
+                    <button title="Sync button placeholder" style="color: transparent;padding: var(--spacing-sm) var(--spacing-lg);">
                         &nbsp;
                     </button>
                     `
