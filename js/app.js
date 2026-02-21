@@ -158,6 +158,7 @@ const App = {
   allUsers: [],
   isSigningUp: false, // Flag to prevent auth state handling during signup
   currentFilter: 'all', // State to track active task filter
+  classroomInitPromise: null, // Store init promise to await later
 
   async init() {
     console.log('Initializing b1t-Sched...');
@@ -196,7 +197,7 @@ const App = {
     this.setupUserManagementListeners();
 
     // Initialize Google Classroom
-    Classroom.init();
+    this.classroomInitPromise = Classroom.init();
 
     // Initialize Note Manager
     NoteManager.init();
@@ -1088,6 +1089,13 @@ const App = {
       // First-time login, show set details
       Router.navigate('set-details');
       await this.loadSetDetailsForm();
+    }
+
+    // Wait for Google Classroom initialization (silent refresh) to complete
+    // This hides the GIS flicker behind the loading screen
+    if (this.classroomInitPromise) {
+      console.log('[App] Waiting for Classroom initialization...');
+      await this.classroomInitPromise;
     }
 
     UI.showLoading(false);

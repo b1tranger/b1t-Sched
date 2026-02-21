@@ -38,7 +38,7 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **Event Calendar** - Track upcoming academic events with basic markdown, clickable links, collapsible descriptions (2-line truncation), and department scope badge (ALL/CSE/etc.)
 - **Event Editing** - Admins can edit all events; CRs can edit/delete their own events
 - **Resource Links** - Quick access to department-specific resources with built-in PDF viewer (desktop: Google Docs Viewer in modal; mobile: opens in new tab)
-- **Google Classroom Integration** - View all assignments and announcements from enrolled courses in a unified interface with OAuth authentication and session persistence (auto-refresh tokens). Includes a one-click **Sync to Tasks** feature for Admins/CRs to automatically add Classroom assignments to the main Tasks list (avoids duplicates).
+- **Google Classroom Integration** - View all assignments and announcements from enrolled courses in a unified interface with OAuth authentication and session persistence (auto-refresh tokens). Includes a one-click **Sync to Tasks** feature for Admins/CRs to automatically add Classroom assignments to the main Tasks list (avoids duplicates). The initialization process is synchronized with the app's loading screen to hide the Google Identity Services (GIS) silent refresh flicker.
 - **Session Security** - Automatic logout after 1 hour of inactivity (unless "Stay logged in" is checked), with activity-based timer reset for enhanced security
 - **Stay Logged In** - Optional "Trust this device" checkbox on login to persist session indefinitely on safe devices
 - **Role Badges** - Visual indicators for CR and Faculty contributors in task cards and contribution lists
@@ -798,6 +798,33 @@ During signup, Firebase triggers `onAuthStateChanged` immediately when the user 
 |--------|-------------|
 | `init()` | Initialize the calendar module (attach global listeners). |
 | `open()` | Open the calendar modal and render the current view. |
+
+---
+
+### 12. Classroom (classroom.js)
+
+**Purpose:** Google Classroom API integration for fetching courses, assignments, and announcements.
+
+**Authentication Flow:**
+- Uses **Google Identity Services (GIS)** for OAuth 2.0.
+- Implements a promise-based initialization (`init()`) that allows the main application to synchronize the loading screen with the authentication check.
+- **Silent Refresh:** Attempts to restore session via `prompt: 'none'` if previously connected. This process is hidden behind the app's initial "Loading..." screen to prevent pop-up flicker.
+- **Timeout:** Includes a 5-second safety timeout to ensure the app proceeds to load even if the Google API is slow or blocked.
+
+**Properties:**
+- `accessToken`: Current OAuth 2.0 access token.
+- `courses`: Cached list of enrolled courses.
+- `_authResolve`: Internal resolver to signal authentication completion to the main app.
+
+| Method | Parameters | Returns | Description |
+|--------|------------|---------|-------------|
+| `init()` | - | Promise | Initialize GIS client and check for persisted session. |
+| `checkPersistedSession()` | - | Promise | Check storage for valid token or attempt silent refresh. |
+| `login()` | - | void | Trigger manual OAuth login popup. |
+| `handleAuthSuccess(response)` | object | void | Handle successful token acquisition and start data fetching. |
+| `fetchCoursesAndLoadAll()` | - | void | Batch load courses and their associated work/announcements. |
+| `syncClassroomToTasks(courseId)` | string | void | (Admin/CR only) Sync assignments to the main task list. |
+| `logout()` | - | void | Clear tokens and reset connection status. |
 | `close()` | Close the calendar modal. |
 | `renderCalendar()` | Main render function; delegates to `generateCalendarGrid` (desktop), `renderMonthlyViewMobile` or `renderWeeklyView` (mobile, based on `currentMobileView`). |
 | `renderMonthlyViewMobile()` | Renders the compact monthly grid for mobile with toggle, day headers, date cells, dot indicators, and task list panel. |
@@ -2192,16 +2219,16 @@ You can use basic markdown formatting in task and event descriptions:
 
 ---
 
-*Last Updated: February 20, 2026 (v2.33.0)*
+*Last Updated: February 21, 2026 (v2.35.0)*
 
 ## Version History
 
-### v2.34.0 (Current)
-- **New Feature**: Push notifications for CR Notices — users now receive mobile/desktop push notifications when a new CR notice is posted in their section, with priority indicators (🔴 urgent, ⚠️ important) and deadline info.
-- **Enhancement**: Urgent CR notices use `requireInteraction: true` to persist until dismissed.
-- **Enhancement**: Zoom normalization in `responsive.css` — CSS `zoom` rules per screen width breakpoint (85%–110%) to prevent UI overflow on devices rendering at non-standard zoom levels.
-- **Enhancement**: Manifest `theme_color` updated to `#660000` (maroon) for PWA theming.
-- **Refactor**: `handleNotificationClick` simplified — all notification types navigate to dashboard (removed redundant per-type if/else blocks).
+### v2.35.0 (Current)
+- **Fix**: Google Classroom Sign-In Flicker — updated initialization logic to be promise-based, allowing the application to hide the brief GIS silent refresh popup behind the initial loading screen.
+- **Enhancement**: Added a 5-second safety timeout to Classroom initialization to prevent the app from hanging on slow network connections.
+- **Refactor**: `Classroom.init()` and `Classroom.checkPersistedSession()` now return Promises for better synchronization with the main app lifecycle.
+
+### v2.34.0
 
 ### v2.33.0
 - **New Feature**: CR Notice deadline support — optional deadline field ("No official Time limit" or specific datetime) for notices, displayed with clock icon (green for active, red for past).

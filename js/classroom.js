@@ -18,6 +18,9 @@ const Classroom = {
     currentCourseId: null,
     currentView: 'todo', // 'todo' or 'notifications'
     refreshTimer: null,
+    _authResolve: null, // Promise resolver for session check
+    _authReject: null,  // Promise rejecter for session check
+    _sessionCheckTimeout: null,
 
     // Cache
     cache: {},
@@ -34,103 +37,142 @@ const Classroom = {
     init() {
         console.log('Initializing Google Classroom module...');
 
-        // Wait for Google Identity Services script to load
-        if (typeof google === 'undefined' || !google.accounts || !google.accounts.oauth2) {
-            console.warn('Google Identity Services not loaded yet. Retrying in 500ms...');
+        return new Promise((resolve) => {
+            // Wait for Google Identity Services script to load
+            if (typeof google === 'undefined' || !google.accounts || !google.accounts.oauth2) {
+                console.warn('Google Identity Services not loaded yet. Retrying in 500ms...');
 
-            // Retry up to 10 times
-            if (!this.initRetryCount) this.initRetryCount = 0;
-            this.initRetryCount++;
+                // Retry up to 10 times
+                if (!this.initRetryCount) this.initRetryCount = 0;
+                this.initRetryCount++;
 
-            if (this.initRetryCount <= 10) {
-                console.log(`Retry attempt ${this.initRetryCount}/10`);
-                setTimeout(() => this.init(), 500);
-                return;
-            } else {
-                console.error('Failed to load Google Identity Services after 10 retries');
-                this.renderError('Google Classroom is currently unavailable. Please check your internet connection and refresh the page.');
-                return;
-            }
-        }
-
-        console.log('Google Identity Services detected successfully');
-
-        // Initialize Token Client
-        this.tokenClient = google.accounts.oauth2.initTokenClient({
-            client_id: this.CLIENT_ID,
-            scope: this.SCOPES,
-            callback: (tokenResponse) => {
-                if (tokenResponse.error) {
-                    console.error('Error fetching access token:', tokenResponse);
-                    this.renderError('Failed to authenticate with Google.');
+                if (this.initRetryCount <= 10) {
+                    console.log(`Retry attempt ${this.initRetryCount}/10`);
+                    setTimeout(() => this.init().then(resolve), 500);
+                    return;
+                } else {
+                    console.error('Failed to load Google Identity Services after 10 retries');
+                    this.renderError('Google Classroom is currently unavailable.');
+                    resolve(false);
                     return;
                 }
-                this.accessToken = tokenResponse.access_token;
-                console.log('Access token received');
-                this.handleAuthSuccess(tokenResponse);
-            },
+            }
+
+            console.log('Google Identity Services detected successfully');
+
+            // Initialize Token Client
+            this.tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: this.CLIENT_ID,
+                scope: this.SCOPES,
+                callback: (tokenResponse) => {
+                    if (tokenResponse.error) {
+                        console.error('Error fetching access token:', tokenResponse);
+                        this._handleAuthError(tokenResponse.error);
+                        return;
+                    }
+                    this.accessToken = tokenResponse.access_token;
+                    console.log('Access token received');
+                    this.handleAuthSuccess(tokenResponse);
+                },
+            });
+
+            console.log('Token client initialized successfully');
+
+            this.setupEventListeners();
+            this.isInitialized = true;
+            this.renderInitialState();
+
+            // Check for persisted connection - returns a promise
+            this.checkPersistedSession().then(resolve);
+
+            console.log('Google Classroom module setup complete');
         });
-
-        console.log('Token client initialized successfully');
-
-        this.setupEventListeners();
-        this.isInitialized = true;
-        this.renderInitialState();
-
-        // Check for persisted connection
-        this.checkPersistedSession();
-
-        console.log('Google Classroom module initialized successfully');
     },
 
     checkPersistedSession() {
-        const token = localStorage.getItem('classroom_token');
-        const expiryStr = localStorage.getItem('classroom_token_expiry');
-        const isConnected = localStorage.getItem('classroom_connected') === 'true';
+        return new Promise((resolve) => {
+            const token = localStorage.getItem('classroom_token');
+            const expiryStr = localStorage.getItem('classroom_token_expiry');
+            const isConnected = localStorage.getItem('classroom_connected') === 'true';
 
-        if (token && expiryStr) {
-            const expiryTime = parseInt(expiryStr);
-            // Check if token is valid (with 5 min buffer)
-            if (Date.now() < expiryTime - (5 * 60 * 1000)) {
-                console.log('Restoring valid Classroom session from storage...');
-                this.accessToken = token;
+            // Store resolve context to be called when auth succeeds or fails
+            this._authResolve = resolve;
 
-                // Schedule refresh
-                const timeUntilRefresh = Math.max(expiryTime - Date.now() - (5 * 60 * 1000), 0);
+            // Set a timeout to prevent blocking the app load if GIS is slow (5s)
+            this._sessionCheckTimeout = setTimeout(() => {
+                console.log('Classroom session check timed out');
+                this._cleanupAuthPromise(false);
+            }, 5000);
 
-                if (this.refreshTimer) clearTimeout(this.refreshTimer);
-                this.refreshTimer = setTimeout(() => {
-                    console.log('Refreshing Classroom token...');
-                    if (this.tokenClient) {
-                        this.tokenClient.requestAccessToken({ prompt: 'none' });
-                    }
-                }, timeUntilRefresh);
+            if (token && expiryStr) {
+                const expiryTime = parseInt(expiryStr);
+                // Check if token is valid (with 5 min buffer)
+                if (Date.now() < expiryTime - (5 * 60 * 1000)) {
+                    console.log('Restoring valid Classroom session from storage...');
+                    this.accessToken = token;
 
-                this.fetchCoursesAndLoadAll();
-                return;
-            } else {
-                console.log('Stored token expired');
-            }
-        }
+                    // Schedule refresh
+                    const timeUntilRefresh = Math.max(expiryTime - Date.now() - (5 * 60 * 1000), 0);
 
-        // If no valid token but was connected, try silent refresh
-        if (isConnected) {
-            console.log('Attempting to restore session via silent refresh...');
-            // Wait a moment for token client to be ready
-            setTimeout(() => {
-                if (this.tokenClient) {
-                    try {
-                        // Use 'none' to avoid popup
-                        this.tokenClient.requestAccessToken({ prompt: 'none' });
-                    } catch (e) {
-                        console.error('Silent refresh failed:', e);
-                        this.logout(); // Clean up invalid state
-                    }
+                    if (this.refreshTimer) clearTimeout(this.refreshTimer);
+                    this.refreshTimer = setTimeout(() => {
+                        console.log('Refreshing Classroom token...');
+                        if (this.tokenClient) {
+                            this.tokenClient.requestAccessToken({ prompt: 'none' });
+                        }
+                    }, timeUntilRefresh);
+
+                    this.fetchCoursesAndLoadAll();
+                    this._cleanupAuthPromise(true);
+                    return;
+                } else {
+                    console.log('Stored token expired');
                 }
-            }, 1000);
-        }
+            }
 
-        console.log('Google Classroom module initialized successfully');
+            // If no valid token but was connected, try silent refresh
+            if (isConnected) {
+                console.log('Attempting to restore session via silent refresh...');
+                // Wait a moment for token client to be ready
+                setTimeout(() => {
+                    if (this.tokenClient) {
+                        try {
+                            // Use 'none' to avoid popup
+                            this.tokenClient.requestAccessToken({ prompt: 'none' });
+                        } catch (e) {
+                            console.error('Silent refresh failed:', e);
+                            this.logout(); // Clean up invalid state
+                            this._cleanupAuthPromise(false);
+                        }
+                    } else {
+                        this._cleanupAuthPromise(false);
+                    }
+                }, 1000);
+            } else {
+                // No session to restore
+                this._cleanupAuthPromise(false);
+            }
+        });
+    },
+
+    _cleanupAuthPromise(result) {
+        if (this._sessionCheckTimeout) {
+            clearTimeout(this._sessionCheckTimeout);
+            this._sessionCheckTimeout = null;
+        }
+        if (this._authResolve) {
+            this._authResolve(result);
+            this._authResolve = null;
+        }
+    },
+
+    _handleAuthError(error) {
+        if (error === 'immediate_failed') {
+            console.log('Silent refresh failed (immediate_failed)');
+        } else {
+            this.renderError('Failed to authenticate with Google.');
+        }
+        this._cleanupAuthPromise(false);
     },
 
     setupEventListeners() {
@@ -285,6 +327,9 @@ const Classroom = {
 
         // Fetch courses and load all assignments/notices
         this.fetchCoursesAndLoadAll();
+
+        // Resolve the init promise if it was waiting
+        this._cleanupAuthPromise(true);
     },
 
     logout() {
