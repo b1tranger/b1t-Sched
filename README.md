@@ -530,18 +530,18 @@ For issues or questions:
 ## Feature Request:
 
 from [@K. M. Jakaria (0432310005101037)](https://github.com/Reaper-X003)
-   1. dark theme [1d16168e1616d84040eeeeee](https://colorhunt.co/palette/1d16168e1616d84040eeeeee)
-   2. light theme [7d0a0abf3131ead196eeeeee](https://colorhunt.co/palette/7d0a0abf3131ead196eeeeee)
-   3. Add Monthly Calender view for mobile Tasks.
-   4. Add Classroom tasks atumatically adding to the tasks (Automation)
+   - [ ] dark theme [1d16168e1616d84040eeeeee](https://colorhunt.co/palette/1d16168e1616d84040eeeeee)
+   - [ ] light theme [7d0a0abf3131ead196eeeeee](https://colorhunt.co/palette/7d0a0abf3131ead196eeeeee)
+   - [x] Add Monthly Calender view for mobile Tasks.
+   - [x] Add Classroom tasks atumatically adding to the tasks (Automation) (admin: added a button to "sync" the assignments and add them as tasks)
 
 
 
 from [@MuhammadShishir](https://github.com/MuhammadShishir):
-   1. Time tracking,
-   2. Adding documents,
-   3. Adding AI support, 
-   4. Add a timeline view and table view ....
+   - [x] Time tracking,
+   - [x] Adding documents,
+   - [ ] Adding AI support, 
+   - [x] Add a timeline view and table view ....
 ```
 I will need some elaboration:
 1. Time Tracking: Timeline? like who posted what and when? Is it a different feature?
@@ -549,15 +549,16 @@ I will need some elaboration:
 3. AI support: how about a model trained with my whole resources dump of all questions, notes, outlines collected?
 ```
    Install clickup and see, 
-   1. Time tracking is per task time tracking using a stop watch or timer button per task
-   2. In a task many documents r generated or given to use, if we add them here it will be easy to maintain and later we can just share the link to people who need it
-   3. AI support is for updating tasks, creating files and answering questions
-   4. The two views I mentioned r the easiest, just call ur tasks into two tabs, one should look like a table of task and another will have calender view and tasks in them showing u ur work timeline, just go to clickup for reference ....
+   - [ ] Time tracking is per task time tracking using a stop watch or timer button per task ( admin: added timeline, but no timer for each ask)
+   - [ ] In a task many documents r generated or given to use, if we add them here it will be easy to maintain and later we can just share the link to people who need it ( admin: added temp uploads in notes )
+   - [ ] AI support is for updating tasks, creating files and answering questions
+   - [x] The two views I mentioned r the easiest, just call ur tasks into two tabs, one should look like a table of task and another will have calender view and tasks in them showing u ur work timeline, just go to clickup for reference ....
 
 from [@foxxie911](https://github.com/foxxie911)
-   1. need to refine data/files 
-   2. add PDF viewer: need to view resources inside the website/app (otherwise I am depending on outside sources --> not convincing)
-   3. Faculty-side
+   - [ ] need to refine data/files (all digital versions; routines formatted)
+   - [x] add PDF viewer: need to view resources inside the website/app (otherwise I am depending on outside sources --> not convincing)
+   - [x] Faculty-side ( admin: have added the roles, they have separate space for tasks in theory)
+   - [ ] add a feature, the semester of each student will update automatically at the end of semester, or with only one push of button by admin
 
 
 ---
