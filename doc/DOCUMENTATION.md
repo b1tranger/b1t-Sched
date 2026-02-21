@@ -1584,6 +1584,7 @@ Router.onRouteChange((routeName) => {
 | 2.33.0 | Feb 2026 | UI and Responsive Fixes: Fixed Activity Timeline bar chart clickability issue on zoomed displays (switched from Chart.js built-in onClick to robust index-based interaction mode). Added comprehensive dark mode overrides for Timeline modal, FAQ button, and Profile Settings Logout button. Fixed "All Resources" mobile center alignment. |
 | 2.34.0 | Feb 2026 | Classroom Sync to Tasks Feature: Added "Sync to Tasks" button functionality for Admins and CRs in the Google Classroom To-Do interface. Features: one-click sync of active assignments into b1t-Sched tasks, duplicate prevention via `classroomWorkId` DB queries, automatic conversion of due dates, appended markdown links redirecting to the Google Classroom assignment, and a custom "Added from Classroom" green badge in the Tasks UI. |
 | 2.35.0 | Feb 2026 | Dark Theme Overhaul: Implemented a new dark theme based on the Realtime Colors palette (--text: #e7f0dc; --background: #000000; --primary: #badd93; --secondary: #578323; --accent: #89d134;). Updated `css/colors.css` with new primary, secondary, accent, and text colors. Updated `css/styles.css`, `css/main.css`, `css/responsive.css`, and `css/calendar.css` to integrate the new color scheme across the entire application. Updated `package.json` with new color palette metadata. |
+| 2.36.0 | Feb 2026 | Google Classroom API now loads content from All Courses right after Sign In, instead of loading the enrolled courses. A dedicated button is added to load the enrolled courses. |
 
 ---
 
