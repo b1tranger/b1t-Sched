@@ -97,14 +97,21 @@ const Profile = {
         const selectedTheme = e.target.value;
         if (selectedTheme === 'dark') {
           document.body.classList.add('dark-mode');
+          document.body.classList.remove('gray-mode');
         } else if (selectedTheme === 'light') {
+          document.body.classList.remove('dark-mode');
+          document.body.classList.remove('gray-mode');
+        } else if (selectedTheme === 'gray') {
+          document.body.classList.add('gray-mode');
           document.body.classList.remove('dark-mode');
         } else {
           // system default
           if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            document.body.classList.add('dark-mode');
+            document.body.classList.add('gray-mode');
+            document.body.classList.remove('dark-mode');
           } else {
             document.body.classList.remove('dark-mode');
+            document.body.classList.remove('gray-mode');
           }
         }
 

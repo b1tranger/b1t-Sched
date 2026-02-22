@@ -1377,3 +1377,11 @@
     color: #d4dd93 !important;
   }
 }
+
+/* Dark & Gray Mode Overdue Overrides */
+body.dark-mode .calendar-task-overdue,
+body.gray-mode .calendar-task-overdue,
+body.dark-mode .day-task.overdue,
+body.gray-mode .day-task.overdue {
+  background-color: rgba(220, 53, 69, 0.2);
+}

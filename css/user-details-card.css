@@ -108,3 +108,8 @@ body.dark-mode .user-email {
   color: var(--text-dark);
   /* Evaluates to off-white (#f0f1ea) */
 }
+
+/* Gray Mode Override */
+body.gray-mode .user-email {
+  color: var(--text-dark);
+}

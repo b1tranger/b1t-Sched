@@ -1046,14 +1046,21 @@ const App = {
       const userTheme = this.userProfile.theme || 'system';
       if (userTheme === 'dark') {
         document.body.classList.add('dark-mode');
+        document.body.classList.remove('gray-mode');
       } else if (userTheme === 'light') {
+        document.body.classList.remove('dark-mode');
+        document.body.classList.remove('gray-mode');
+      } else if (userTheme === 'gray') {
+        document.body.classList.add('gray-mode');
         document.body.classList.remove('dark-mode');
       } else {
         // System default map
         if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-          document.body.classList.add('dark-mode');
+          document.body.classList.add('gray-mode');
+          document.body.classList.remove('dark-mode');
         } else {
           document.body.classList.remove('dark-mode');
+          document.body.classList.remove('gray-mode');
         }
       }
 

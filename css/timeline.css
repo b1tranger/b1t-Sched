@@ -288,3 +288,53 @@ body.dark-mode .form-select {
         height: 10px;
     }
 }
+
+/* Gray Mode Overrides */
+body.gray-mode .timeline-viz-container {
+    background: var(--bg-lighter);
+    border-color: var(--border-medium);
+}
+
+body.gray-mode .timeline-controls {
+    background: var(--bg-lighter);
+    border-color: var(--border-medium);
+}
+
+body.gray-mode .timeline-controls label {
+    color: var(--text-dark);
+}
+
+body.gray-mode .stat-card {
+    background: var(--bg-lighter);
+    border-color: var(--border-medium);
+}
+
+body.gray-mode .stat-card h4 {
+    color: var(--text-dark);
+}
+
+body.gray-mode .stat-card p {
+    color: var(--text-light);
+}
+
+body.gray-mode .detail-group h4 {
+    color: var(--text-dark);
+}
+
+body.gray-mode .heatmap-legend {
+    color: var(--text-light);
+}
+
+body.gray-mode .heatmap-months {
+    color: var(--text-light);
+}
+
+body.gray-mode .btn-icon {
+    color: var(--text-light);
+}
+
+body.gray-mode .form-select {
+    background-color: var(--bg-white);
+    color: var(--text-dark);
+    border-color: var(--border-medium);
+}

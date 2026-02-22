@@ -45,6 +45,7 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **Responsive Design** - Works on desktop, tablet, and mobile
 - **Maroon Theme** - Professional dark maroon and off-white color scheme
 - **Dark Theme Customization** - Dynamic, RealtimeColors-based dark theme (`#1a1c0d`, `#d4dd93`, `#d5eb2c` palette) with seamless toggling via "Appearance Settings" in the Profile menu. Avoids caching FOUC (flash of unstyled content) via inline scripting.
+- **Gray Mode Theme** - A sleek monochromatic alternative theme. Modern system dark mode preferences now default to "Gray Mode" for a premium, low-strain experience. Includes full UI integration for Classroom, Timeline, and Dashboards.
 - **Admin Features** - Task reset, task/event delete, event creation, user management with password reset and deletion
 - **Admin User Management** - View all users, manage roles (CR/Faculty/Blocked), edit user profiles, send password resets (via Client SDK), delete users
 - **Password Reset Enhancements** - "Forgot Password" link on login failure, "Reset Password" button in Profile Settings, and robust Admin reset functionality bypassing CORS issues
@@ -402,7 +403,7 @@ The module automatically listens for user activity events (`mousedown`, `keydown
   isCR: boolean,          // Optional - CR privileges (set via admin panel)
   isFaculty: boolean,     // Optional - Faculty privileges (set via admin panel)
   isBlocked: boolean,     // Optional - blocked/restricted user (set via admin panel)
-  theme: string,          // Optional - User's selected theme ('system', 'light', 'dark')
+  theme: string,          // Optional - User's selected theme ('system', 'light', 'dark', 'gray')
   lastProfileChange: Timestamp, // Optional - last profile edit timestamp (30-day cooldown)
   lastProfileChangeByAdmin: Timestamp, // Optional - last admin edit timestamp
   createdAt: Timestamp,
@@ -1022,11 +1023,23 @@ responsive.css      → Media Queries + Zoom Normalization
 --text-white: #FFFFFF;
 
 /* Status Colors */
---success: #28a745;
---warning: #ffc107;
---danger: #dc3545;
 --info: #17a2b8;
+--danger: #dc3545;
+
+/* Theme Overrides are applied via body classes: .dark-mode, .gray-mode */
 ```
+
+### Gray Mode Theme
+The Gray Mode theme provides a high-contrast, low-brightness monochromatic experience. It is the default fallback for system dark mode users.
+
+**Key Gray Mode Variables:**
+- `--primary-maroon`: #ff6360 (Vibrant coral accent)
+- `--bg-dark`: #161616
+- `--text-dark`: #eae9f1
+- `--border-medium`: #404040
+
+### Dark Mode (Realtime Colors)
+The standard dark theme uses a high-contrast palette with deep backgrounds (#000000) and lime/yellow accents.
 
 ### Spacing Scale
 
@@ -1611,7 +1624,8 @@ Router.onRouteChange((routeName) => {
 | 2.33.0 | Feb 2026 | UI and Responsive Fixes: Fixed Activity Timeline bar chart clickability issue on zoomed displays (switched from Chart.js built-in onClick to robust index-based interaction mode). Added comprehensive dark mode overrides for Timeline modal, FAQ button, and Profile Settings Logout button. Fixed "All Resources" mobile center alignment. |
 | 2.34.0 | Feb 2026 | Classroom Sync to Tasks Feature: Added "Sync to Tasks" button functionality for Admins and CRs in the Google Classroom To-Do interface. Features: one-click sync of active assignments into b1t-Sched tasks, duplicate prevention via `classroomWorkId` DB queries, automatic conversion of due dates, appended markdown links redirecting to the Google Classroom assignment, and a custom "Added from Classroom" green badge in the Tasks UI. |
 | 2.35.0 | Feb 2026 | Dark Theme Overhaul: Implemented a new dark theme based on the Realtime Colors palette (--text: #e7f0dc; --background: #000000; --primary: #badd93; --secondary: #578323; --accent: #89d134;). Updated `css/colors.css` with new primary, secondary, accent, and text colors. Updated `css/styles.css`, `css/main.css`, `css/responsive.css`, and `css/calendar.css` to integrate the new color scheme across the entire application. Updated `package.json` with new color palette metadata. |
-| 2.36.0 | Feb 2026 | Google Classroom API now loads content from All Courses right after Sign In, instead of loading the enrolled courses. A dedicated button is added to load the enrolled courses. |
+| 2.36.0 | Feb 2026 | Google Classroom API now loads content from All Courses right after Sign In, instead of loading the enrolled courses. |
+| 2.37.0 | Feb 2026 | **Theming & UX Overhaul**: 1. **Gray Mode Theme**: Added a new monochromatic theme; set as the default for system dark mode preferences. 2. **Overdue Task Styling**: Redesigned overdue backgrounds for dark/gray modes to ensure clarity without excessive brightness (`rgba(220, 53, 69, 0.15)`). 3. **Classroom UI Theming**: Full theme integration for Google Classroom components in Gray Mode. 4. **FOUC Prevention**: Enhanced inline script to handle Gray Mode initialization. |
 
 ---
 
@@ -1626,8 +1640,8 @@ Router.onRouteChange((routeName) => {
 
 ---
 
-*Documentation last updated: February 20, 2026*
-*Version: 2.33.0*
+*Documentation last updated: February 23, 2026*
+*Version: 2.37.0*
 
 
 ---
@@ -2219,11 +2233,21 @@ You can use basic markdown formatting in task and event descriptions:
 
 ---
 
-*Last Updated: February 21, 2026 (v2.35.0)*
+*Last Updated: February 23, 2026 (v2.37.0)*
 
 ## Version History
 
-### v2.35.0 (Current)
+### v2.37.0 (Current)
+- **New Feature**: **Gray Mode Theme** — Added a sleek monochromatic theme available in Profile Appearance settings.
+- **Enhancement**: **System Dark Mode Default** — System theme preference now defaults to "Gray Mode" for a better low-strain experience.
+- **Fix**: **Overdue Task Styling** — Redesigned overdue highlights for all dark themes to ensure readability.
+- **Enhancement**: **Full Component Integration** — Classroom, Timeline, and Dashboards fully updated for monochromatic Gray Mode consistency.
+
+### v2.36.0
+- **Enhancement**: Google Classroom API now loads content from All Courses right after Sign In.
+- **New Feature**: Dedicated button to load enrolled courses list.
+
+### v2.35.0
 - **Fix**: Google Classroom Sign-In Flicker — updated initialization logic to be promise-based, allowing the application to hide the brief GIS silent refresh popup behind the initial loading screen.
 - **Enhancement**: Added a 5-second safety timeout to Classroom initialization to prevent the app from hanging on slow network connections.
 - **Refactor**: `Classroom.init()` and `Classroom.checkPersistedSession()` now return Promises for better synchronization with the main app lifecycle.

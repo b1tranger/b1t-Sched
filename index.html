@@ -53,10 +53,13 @@
                     document.documentElement.classList.add('dark-mode');
                     // In this app, many styles target body.dark-mode
                     window.addEventListener('DOMContentLoaded', () => document.body.classList.add('dark-mode'));
+                } else if (theme === 'gray') {
+                    document.documentElement.classList.add('gray-mode');
+                    window.addEventListener('DOMContentLoaded', () => document.body.classList.add('gray-mode'));
                 } else if (theme === 'system') {
                     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                        document.documentElement.classList.add('dark-mode');
-                        window.addEventListener('DOMContentLoaded', () => document.body.classList.add('dark-mode'));
+                        document.documentElement.classList.add('gray-mode');
+                        window.addEventListener('DOMContentLoaded', () => document.body.classList.add('gray-mode'));
                     }
                 }
             } catch (e) {
@@ -1131,6 +1134,7 @@
                                     <option value="system">System Default</option>
                                     <option value="light">Light Mode</option>
                                     <option value="dark">Dark Mode</option>
+                                    <option value="gray">Gray Mode</option>
                                 </select>
                             </div>
 
@@ -1373,6 +1377,22 @@
 
             <!-- FAQ Section (visible when logged in) -->
             <section id="faq-section" class="faq-section" style="display: none;">
+                <style>
+                    body.gray-mode #faq-section {
+                        color: var(--text-light);
+                    }
+
+                    body.gray-mode #faq-section .faq-parent-heading,
+                    body.gray-mode #faq-section .faq-question,
+                    body.gray-mode #faq-section .faq-answer p,
+                    body.gray-mode #faq-section .faq-answer li {
+                        color: var(--text-light);
+                    }
+
+                    body.gray-mode #faq-section .faq-answer strong {
+                        color: var(--text-medium);
+                    }
+                </style>
                 <details class="faq-parent">
                     <summary class="faq-parent-heading">
                         <!-- <i class="fas fa-question-circle"></i> -->

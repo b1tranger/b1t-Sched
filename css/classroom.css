@@ -21,6 +21,24 @@ body.dark-mode {
     --classroom-bg-secondary: #101206;
 }
 
+/* Override Google Classroom Colors for Gray Mode */
+body.gray-mode {
+    --classroom-green: #ff6360;
+    /* Mapping from --primary-maroon */
+    --classroom-green-hover: #e05552;
+    /* Slightly darker */
+    --classroom-bg: #1a1a1a;
+    /* Mapping from --bg-white */
+    --classroom-text: #ffffff;
+    /* Mapping from --text-white */
+    --classroom-text-secondary: #eae9f1;
+    /* Mapping from --text-dark */
+    --classroom-border: #404040;
+    /* Mapping from --border-medium */
+    --classroom-bg-secondary: #2b2b2b;
+    /* Mapping from --bg-light */
+}
+
 /* =========================================
    Floating Action Button (Dashboard)
    ========================================= */

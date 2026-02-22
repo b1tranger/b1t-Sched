@@ -1787,3 +1787,14 @@ body.dark-mode #dismiss-notifications-btn:hover,
 body.dark-mode #dismiss-install-btn:hover {
     background-color: rgba(255, 255, 255, 0.1) !important;
 }
+
+/* Dark & Gray Mode Overdue Overrides */
+body.dark-mode .task-card.incomplete,
+body.gray-mode .task-card.incomplete {
+    background-color: rgba(220, 53, 69, 0.15);
+}
+
+body.dark-mode .old-task-item.overdue,
+body.gray-mode .old-task-item.overdue {
+    background-color: rgba(220, 53, 69, 0.15);
+}
