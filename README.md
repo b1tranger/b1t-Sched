@@ -591,6 +591,9 @@ Classmates
 - [Jannatul Ferdus (0432410005101058)](https://github.com/jannatulferdus182003)
 - [Shalehin Ahmed (0432410005101083)](https://github.com/ORNOB-083)
 - [Shamiur Hasan (0432410005101053)](https://github.com/shamiurhasan100)
+- [Md. Jubair Ahammed (0432410005101112)](https://github.com/JubairAhammedJubu)
+- [Saha Pradyumna Prasad (Ankur) (0432410005101159)](https://github.com/Saha-Pradyumna-Prasad)
+- [Manik Halder (0432410005101113)](https://github.com/RayneAshe0)
 
 Juniors
 - [Mamunur Rahman (04325205101031)](https://github.com/Zirconium001)
