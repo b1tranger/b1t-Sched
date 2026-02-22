@@ -3,7 +3,7 @@
  * Handles caching strategies, offline functionality, and background sync
  */
 
-const CACHE_VERSION = 'v2.36.0';
+const CACHE_VERSION = 'v2.37.0';
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `dynamic-${CACHE_VERSION}`;
 const API_CACHE = `api-${CACHE_VERSION}`;
