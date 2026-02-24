@@ -529,7 +529,7 @@ For issues or questions:
 
 ## Feature Request:
 
-from [@zafrul.islam@uits.edu.bd](zafrul.islam@uits.edu.bd)
+from [@zafrul.islam@uits.edu.bd](mailto:zafrul.islam@uits.edu.bd)
    - [ ] task cards divided into smaller cards for each detail (deadline in a card, title in another card) to make it easier to get innone look
    - [ ] promote to 59 batch juniors
    - [ ] click logo to go to home screen
@@ -580,7 +580,7 @@ from [@foxxie911](https://github.com/foxxie911)
 Thanks to these individuals who helped with testing, suggestions and support.
 
 Faculties
-- [@zafrul.islam@uits.edu.bd](zafrul.islam@uits.edu.bd)
+- [@zafrul.islam@uits.edu.bd](mailto:zafrul.islam@uits.edu.bd)
 
 Seniors
 - [Md Kamruzzaman Shishir (1814355002)](https://github.com/MuhammadShishir)
