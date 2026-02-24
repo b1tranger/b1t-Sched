@@ -529,6 +529,14 @@ For issues or questions:
 
 ## Feature Request:
 
+from [@zafrul.islam@uits.edu.bd](zafrul.islam@uits.edu.bd)
+   - [ ] task cards divided into smaller cards for each detail (deadline in a card, title in another card) to make it easier to get innone look
+   - [ ] promote to 59 batch juniors
+   - [ ] click logo to go to home screen
+
+from [@Helal Udding Patwary (Shakil) (0432410005101086)](https://github.com/Binary-Eclipse)
+   - [ ] short faq explaining each section
+
 from [@K. M. Jakaria (0432310005101037)](https://github.com/Reaper-X003)
    - [ ] dark theme [1d16168e1616d84040eeeeee](https://colorhunt.co/palette/1d16168e1616d84040eeeeee)
    - [ ] light theme [7d0a0abf3131ead196eeeeee](https://colorhunt.co/palette/7d0a0abf3131ead196eeeeee)
@@ -571,6 +579,9 @@ from [@foxxie911](https://github.com/foxxie911)
 
 Thanks to these individuals who helped with testing, suggestions and support.
 
+Faculties
+- [@zafrul.islam@uits.edu.bd](zafrul.islam@uits.edu.bd)
+
 Seniors
 - [Md Kamruzzaman Shishir (1814355002)](https://github.com/MuhammadShishir)
 - [Md. Sakibul Hakim (Sadab) (2114951038)](https://github.com/foxxie911)
@@ -594,6 +605,7 @@ Classmates
 - [Md. Jubair Ahammed (0432410005101112)](https://github.com/JubairAhammedJubu)
 - [Saha Pradyumna Prasad (Ankur) (0432410005101159)](https://github.com/Saha-Pradyumna-Prasad)
 - [Manik Halder (0432410005101113)](https://github.com/RayneAshe0)
+- [@Helal Udding Patwary (Shakil) (0432410005101086)](https://github.com/Binary-Eclipse)
 
 Juniors
 - [Mamunur Rahman (04325205101031)](https://github.com/Zirconium001)
