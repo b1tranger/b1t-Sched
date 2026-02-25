@@ -318,6 +318,22 @@
     .note-preview-content {
         min-height: 100px;
     }
+
+    /* Responsive Footer for Note Modal */
+    #note-modal .modal-footer {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: var(--spacing-sm);
+        padding: var(--spacing-md);
+    }
+
+    #note-modal .modal-footer .btn {
+        flex: 1 1 40%;
+        /* Allow buttons to take ~half width and wrap */
+        min-width: 100px;
+        padding: var(--spacing-sm);
+        font-size: var(--font-sm);
+    }
 }
 
 /* Desktop: Centered popup */
