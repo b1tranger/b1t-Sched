@@ -56,7 +56,7 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **Profile Change Cooldown** - Users can only change profile once per 30 days (anti-spam)
 - **Two-Column Layout** - Events sidebar on desktop, slide-out panel (40vw) on mobile
 - **Notice Viewer** - View UCAM university notices with PDF preview (desktop modal with split-pane layout; mobile slide-out sidebar), powered by Vercel serverless backend with local caching
-- **Note Taking** - Personal note-taking feature with markdown support, auto-save, and automatic file upload via file.io API with direct download support (no new tab required)
+- **Note Taking** - Personal note-taking feature with markdown support, auto-save, and PDF export. Supports file attachments via temporary link sharing (Catbox/Tmpfiles) and a "Shorten" feature that exports notes as a local `.md` file for manual sharing. PDF export is optimized for both light and dark themes with forced visibility.
 - **Task Filtering** - Filter pending tasks by type (Assignment, Homework, Exam, Project, Presentation, Other)
 - **Global Contributions** - View a leaderboard of top contributors (group-specific or global across all departments)
 - **User Counter** - Live count of total registered users displayed on the dashboard and footer
@@ -2240,7 +2240,13 @@ You can use basic markdown formatting in task and event descriptions:
 
 ## Version History
 
-### v2.37.0 (Current)
+### v2.38.0 (Current)
+- **Fix**: **Note PDF Export** — Forced a white background and black text during PDF generation to ensure visibility in dark mode. Added `.printing-pdf` CSS class for style overrides.
+- **Enhancement**: **Note Shorten Feature** — Simplified "Shorten" to a local `.md` download with the `shortened-` prefix, bypassing JS upload blocks and CORS issues.
+- **Fix**: **Note Modal UI** — Added `min-height: 0` to the modal body and adjusted flex properties to prevent message banners from overlapping with text fields or action buttons.
+- **Enhancement**: **Upload Fallback Reordering** — Reordered third-party upload providers to prioritize reliable services (Catbox, Tmpfiles) and put `file.io` as the final fallback.
+
+### v2.37.0 (Stable)
 - **New Feature**: **Gray Mode Theme** — Added a sleek monochromatic theme available in Profile Appearance settings.
 - **Enhancement**: **System Dark Mode Default** — System theme preference now defaults to "Gray Mode" for a better low-strain experience.
 - **Fix**: **Overdue Task Styling** — Redesigned overdue highlights for all dark themes to ensure readability.

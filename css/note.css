@@ -102,6 +102,8 @@
     padding: var(--spacing-lg);
     overflow-y: auto;
     flex: 1;
+    min-height: 0;
+    /* Important for flex child with overflow */
 }
 
 /* ─── Merged Editor / Preview Section ───────────────── */
@@ -138,6 +140,13 @@
 .note-textarea:focus {
     outline: none;
     border-color: var(--accent-maroon);
+}
+
+/* Force black text for PDF printing */
+.note-preview-content.printing-pdf,
+.note-preview-content.printing-pdf * {
+    color: #000000 !important;
+    background-color: transparent !important;
 }
 
 .note-textarea::placeholder {

@@ -380,9 +380,9 @@ const NoteManager = {
   async uploadWithFallback(file) {
     const providers = [
       // { name: 'Firebase Storage', method: () => this.uploadToFirebaseStorage(file), maxSize: 10 * 1024 * 1024 }, // Disabled
-      { name: 'File.io', method: () => this.uploadToFileIO(file), maxSize: 100 * 1024 * 1024 },
       { name: 'Tmpfiles', method: () => this.uploadToTmpfiles(file), maxSize: 100 * 1024 * 1024 },
-      { name: 'Catbox', method: () => this.uploadToCatbox(file), maxSize: 200 * 1024 * 1024 }
+      { name: 'Catbox', method: () => this.uploadToCatbox(file), maxSize: 200 * 1024 * 1024 },
+      { name: 'File.io', method: () => this.uploadToFileIO(file), maxSize: 100 * 1024 * 1024 }
     ];
 
     let lastError = null;
@@ -803,20 +803,16 @@ const NoteManager = {
 
       // Ensure html2pdf is loaded
       if (typeof window.html2pdf !== 'undefined') {
-        // Temporarily apply a class to handle dark-mode text visibility if needed
-        // but backgroundColor: '#ffffff' in html2canvas often fixes the blank issue
-        // because it forces a non-transparent background. 
-        // We também ensure text is dark for the export.
-        const originalColor = previewContent.style.color;
-        previewContent.style.color = '#000000'; // Force black text for PDF
+        // Apply printing-pdf class to force black text via CSS
+        previewContent.classList.add('printing-pdf');
 
         window.html2pdf().set(opt).from(previewContent).save()
           .then(() => {
-            previewContent.style.color = originalColor; // Restore
+            previewContent.classList.remove('printing-pdf');
             this.showMessage('PDF Exported Successfully!', 'success');
           })
           .catch(err => {
-            previewContent.style.color = originalColor; // Restore
+            previewContent.classList.remove('printing-pdf');
             console.error('PDF Export Error:', err);
             this.showMessage('Failed to generate PDF.', 'error');
           });
@@ -859,38 +855,10 @@ const NoteManager = {
 
     // Create a Blob from the note content as a .md file
     const blob = new Blob([noteContent], { type: 'text/markdown' });
-    const filename = `note_${Date.now()}.md`;
-    const file = new File([blob], filename, { type: 'text/markdown' });
+    const filename = `shortened-${Date.now()}.md`;
 
-    // Show progress on the shorten button
-    const shortenBtn = document.getElementById('shorten-note-btn');
-    const originalText = shortenBtn ? shortenBtn.innerHTML : '';
-    if (shortenBtn) {
-      shortenBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Shortening...';
-      shortenBtn.disabled = true;
-    }
-
+    // Fallback: Local download of the .md file (Simplified: Upload logic removed due to JS upload blocks)
     try {
-      const result = await this.uploadWithFallback(file);
-
-      // Replace note content with the download link
-      const shortenedContent = `[📄 ${filename}](${result.url})`;
-      textarea.value = shortenedContent;
-
-      // Update preview and save
-      this.updatePreview(shortenedContent);
-      await this.saveNote(this.currentUserId, shortenedContent);
-
-      let message = `Note shortened to a download link via ${result.provider}!`;
-      if (result.expiresIn) {
-        message += ` (Link expires in ${result.expiresIn})`;
-      }
-      this.showMessage(message, 'success');
-      this.switchToPreview();
-    } catch (error) {
-      console.error('Shorten upload failed, falling back to local download:', error);
-
-      // Fallback: Local download of the .md file
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -900,10 +868,11 @@ const NoteManager = {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      this.showMessage('Upload failed (CORS/Network error). Your note has been downloaded locally as a .md file instead.', 'warning');
-
-      // Show file.io fallback suggestion as well
-      if (fallback) fallback.style.display = 'flex';
+      this.showMessage('Note exported locally as .md file. Please upload it manually to share.', 'success');
+      this.switchToPreview();
+    } catch (error) {
+      console.error('Shorten local download failed:', error);
+      this.showMessage('Failed to export note file.', 'error');
     } finally {
       if (shortenBtn) {
         shortenBtn.innerHTML = originalText;
