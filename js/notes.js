@@ -792,17 +792,31 @@ const NoteManager = {
         margin: 0.5,
         filename: `My_Notes_${new Date().toLocaleDateString().replace(/\//g, '-')}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          logging: false
+        },
         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
       };
 
       // Ensure html2pdf is loaded
       if (typeof window.html2pdf !== 'undefined') {
+        // Temporarily apply a class to handle dark-mode text visibility if needed
+        // but backgroundColor: '#ffffff' in html2canvas often fixes the blank issue
+        // because it forces a non-transparent background. 
+        // We também ensure text is dark for the export.
+        const originalColor = previewContent.style.color;
+        previewContent.style.color = '#000000'; // Force black text for PDF
+
         window.html2pdf().set(opt).from(previewContent).save()
           .then(() => {
+            previewContent.style.color = originalColor; // Restore
             this.showMessage('PDF Exported Successfully!', 'success');
           })
           .catch(err => {
+            previewContent.style.color = originalColor; // Restore
             console.error('PDF Export Error:', err);
             this.showMessage('Failed to generate PDF.', 'error');
           });
@@ -874,10 +888,21 @@ const NoteManager = {
       this.showMessage(message, 'success');
       this.switchToPreview();
     } catch (error) {
-      console.error('Shorten error:', error);
-      this.showMessage('Failed to shorten note: ' + error.message, 'error');
+      console.error('Shorten upload failed, falling back to local download:', error);
 
-      // Show file.io fallback suggestion
+      // Fallback: Local download of the .md file
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      this.showMessage('Upload failed (CORS/Network error). Your note has been downloaded locally as a .md file instead.', 'warning');
+
+      // Show file.io fallback suggestion as well
       if (fallback) fallback.style.display = 'flex';
     } finally {
       if (shortenBtn) {
