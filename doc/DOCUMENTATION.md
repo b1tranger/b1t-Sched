@@ -1628,6 +1628,7 @@ Router.onRouteChange((routeName) => {
 | 2.36.0 | Feb 2026 | Google Classroom API now loads content from All Courses right after Sign In, instead of loading the enrolled courses. |
 | 2.37.0 | Feb 2026 | **Theming & UX Overhaul**: 1. **Gray Mode Theme**: Added a new monochromatic theme; set as the default for system dark mode preferences. 2. **Overdue Task Styling**: Redesigned overdue backgrounds for dark/gray modes to ensure clarity without excessive brightness (`rgba(220, 53, 69, 0.15)`). 3. **Classroom UI Theming**: Full theme integration for Google Classroom components in Gray Mode. 4. **FOUC Prevention**: Enhanced inline script to handle Gray Mode initialization. |
 | 2.38.0 | Feb 2026 | **Bug Fixes & UI Enhancements**: (1) Notice Refresh: Added "Refresh Notices" button to UI that passes `?refresh=true` to backend to bypass server-side caching. (2) Mobile Zoom & Canvas Coordinate Fix: Applied dynamic JS-based 95% zoom (`document.body.style.zoom`) for screens <= 768px, with specific resets in `timeline-ui.js` to preserve `Chart.js` canvas coordinate integrity when modal is active. (3) Empty states: Added `"No upcoming events"` fallback for mobile Events sidebar. (4) Notes Modals: Fixed Note Preview infinitely growing by enforcing `max-height: 48vh;` internal scrolling. (5) Section Guides: Added hoverable/clickable tooltips (`<i class="fas fa-info-circle">`) to main feature headers explaining their purpose for new users. |
+| 2.39.0 | Feb 2026 | **Note Section Overhaul**: (1) **PDF Export**: Integrated `html2pdf.js` for one-click note-to-PDF generation. (2) **Automatic ZIP Fallback**: Integrated `JSZip` to client-side compress unsupported file types (e.g., `.sh`, `.exe`) into `.zip` blobs before upload. (3) **Layout Optimization**: Removed fixed `max-height` constraints in `css/note.css` to enable full flexbox expansion, eliminating whitespace gaps in the note modal editor. |
 
 ---
 
@@ -1643,7 +1644,7 @@ Router.onRouteChange((routeName) => {
 ---
 
 *Documentation last updated: February 25, 2026*
-*Version: 2.38.0*
+*Version: 2.39.0*
 
 
 ---

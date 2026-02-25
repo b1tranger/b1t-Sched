@@ -125,7 +125,6 @@
     width: 100%;
     flex: 1;
     min-height: 250px;
-    max-height: 48vh;
     padding: var(--spacing-md);
     border: 2px solid var(--border-light);
     border-radius: var(--radius-md);
@@ -152,7 +151,6 @@
     border-radius: var(--radius-md);
     background-color: var(--bg-lighter);
     min-height: 250px;
-    max-height: 48vh;
     font-size: var(--font-md);
     line-height: 1.6;
     color: var(--text-dark);

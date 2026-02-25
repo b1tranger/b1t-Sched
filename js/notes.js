@@ -66,6 +66,12 @@ const NoteManager = {
       shortenBtn.addEventListener('click', () => this.handleShortenNote());
     }
 
+    // Export PDF button
+    const exportPdfBtn = document.getElementById('export-pdf-btn');
+    if (exportPdfBtn) {
+      exportPdfBtn.addEventListener('click', () => this.handleExportPdf());
+    }
+
     // Upload files button - trigger file input
     const uploadBtn = document.getElementById('upload-files-btn');
     if (uploadBtn) {
@@ -292,7 +298,7 @@ const NoteManager = {
 
   // Handle file selection
   async handleFileSelect(event) {
-    const file = event.target.files[0];
+    let file = event.target.files[0];
     if (!file) return;
 
     // Validate file size (max 200MB for Catbox, 10MB for Firebase)
@@ -300,6 +306,28 @@ const NoteManager = {
     if (file.size > maxSize) {
       this.showMessage('File is too large. Maximum size is 200MB.', 'error');
       return;
+    }
+
+    // Check if JSZip is needed for unsupported extensions
+    const safeExtensions = ['.pdf', '.doc', '.docx', '.txt', '.zip', '.rar', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.mp4', '.mp3', '.csv', '.xlsx', '.pptx'];
+    const fileName = file.name.toLowerCase();
+    const isSafe = safeExtensions.some(ext => fileName.endsWith(ext));
+
+    if (!isSafe && typeof JSZip !== 'undefined') {
+      try {
+        this.showMessage('Compressing unsupported file type...', 'info');
+        const zip = new JSZip();
+        zip.file(file.name, file);
+        const zipBlob = await zip.generateAsync({ type: 'blob' });
+
+        // Create a new File object from the blob
+        const newFileName = file.name.split('.').slice(0, -1).join('.') + '.zip';
+        file = new File([zipBlob], newFileName, { type: 'application/zip' });
+      } catch (err) {
+        console.error('JSZip compression failed:', err);
+        this.showMessage('Failed to compress file before upload.', 'error');
+        return;
+      }
     }
 
     // Hide file.io fallback at start of new upload
@@ -704,6 +732,59 @@ const NoteManager = {
     } catch (error) {
       console.error('Error clearing note:', error);
       this.showMessage('Failed to clear note. Please try again.', 'error');
+    }
+  },
+
+  // ──────────────────────────────────────────────
+  // EXPORT TO PDF
+  // ──────────────────────────────────────────────
+
+  async handleExportPdf() {
+    // If we're in edit mode, switch to preview so we can target the HTML Content
+    if (this.isEditing) {
+      this.switchToPreview();
+    }
+
+    const previewContent = document.getElementById('note-preview-content');
+    if (!previewContent) {
+      this.showMessage('Nothing to export!', 'error');
+      return;
+    }
+
+    // Check if it's just the empty placeholder
+    const textContext = previewContent.innerText.trim();
+    if (textContext.startsWith('Tap here to start writing') || !textContext) {
+      this.showMessage('Write some notes first to export as PDF.', 'error');
+      return;
+    }
+
+    try {
+      this.showMessage('Generating PDF...', 'info');
+      // Configuration for html2pdf
+      const opt = {
+        margin: 0.5,
+        filename: `My_Notes_${new Date().toLocaleDateString().replace(/\//g, '-')}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+
+      // Ensure html2pdf is loaded
+      if (typeof window.html2pdf !== 'undefined') {
+        window.html2pdf().set(opt).from(previewContent).save()
+          .then(() => {
+            this.showMessage('PDF Exported Successfully!', 'success');
+          })
+          .catch(err => {
+            console.error('PDF Export Error:', err);
+            this.showMessage('Failed to generate PDF.', 'error');
+          });
+      } else {
+        this.showMessage('PDF library is not loaded. Please try again.', 'error');
+      }
+    } catch (error) {
+      console.error('PDF Export Setup Error:', error);
+      this.showMessage('Failed to start PDF generation.', 'error');
     }
   },
 
