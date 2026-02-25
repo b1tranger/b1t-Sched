@@ -380,8 +380,9 @@ const NoteManager = {
   async uploadWithFallback(file) {
     const providers = [
       // { name: 'Firebase Storage', method: () => this.uploadToFirebaseStorage(file), maxSize: 10 * 1024 * 1024 }, // Disabled
-      { name: 'Catbox', method: () => this.uploadToCatbox(file), maxSize: 200 * 1024 * 1024 },
-      { name: 'Tmpfiles', method: () => this.uploadToTmpfiles(file), maxSize: 100 * 1024 * 1024 }
+      { name: 'File.io', method: () => this.uploadToFileIO(file), maxSize: 100 * 1024 * 1024 },
+      { name: 'Tmpfiles', method: () => this.uploadToTmpfiles(file), maxSize: 100 * 1024 * 1024 },
+      { name: 'Catbox', method: () => this.uploadToCatbox(file), maxSize: 200 * 1024 * 1024 }
     ];
 
     let lastError = null;
@@ -484,6 +485,32 @@ const NoteManager = {
     } catch (error) {
       console.error('Firebase Storage upload error:', error);
       throw new Error(error.message || 'Failed to upload to Firebase Storage');
+    }
+  },
+
+  // Upload file to file.io (temporary, CORS-friendly)
+  async uploadToFileIO(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch('https://file.io', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error(`Upload failed with status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.message || 'File.io upload failed');
+      }
+
+      return data.link;
+    } catch (error) {
+      throw new Error(error.message || 'Network error during File.io upload');
     }
   },
 
