@@ -170,6 +170,10 @@ const App = {
     this.filterPopup = new FilterPopup();
     this.deleteUserDialog = new DeleteUserDialog();
 
+    // Setup mobile zoom
+    this.adjustMobileZoom();
+    window.addEventListener('resize', () => this.adjustMobileZoom());
+
     // Setup authentication state listener
     Auth.onAuthStateChanged(async (user) => {
       // Skip handling during signup process
@@ -243,6 +247,15 @@ const App = {
     const currentRoute = Router.getCurrentRoute();
     if (currentRoute) {
       UI.updateSectionVisibility(currentRoute);
+    }
+  },
+
+  adjustMobileZoom() {
+    // Only apply on mobile displays (<= 768px)
+    if (window.innerWidth <= 768) {
+      document.body.style.zoom = '95%';
+    } else {
+      document.body.style.zoom = '';
     }
   },
 

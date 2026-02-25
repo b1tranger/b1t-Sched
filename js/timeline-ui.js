@@ -55,7 +55,12 @@ const TimelineUI = {
         <div id="timeline-modal" class="modal" style="display: none;">
             <div class="modal-content" style="max-width: 1000px; width: 95%;">
                 <div class="modal-header">
-                    <h2>Activity Timeline</h2>
+                    <h2 class="modal-title">
+                        <i class="fas fa-chart-line"></i> Activity Timeline
+                        <span class="section-guide-tooltip" data-tooltip="A heatmap showing your productivity. The greener the cell, the more tasks/events were active on that day! Click a cell to see the chart.">
+                            <i class="fas fa-info-circle"></i>
+                        </span>
+                    </h2>
                     <span class="close-btn" id="close-timeline-modal">&times;</span>
                 </div>
                 <div class="modal-body">
@@ -226,6 +231,11 @@ const TimelineUI = {
 
     open() {
         if (this.modal) {
+            // Temporarily remove zoom to fix canvas coordinate bugs
+            if (document.body.style.zoom) {
+                this.originalZoom = document.body.style.zoom;
+                document.body.style.zoom = '1';
+            }
             this.modal.style.display = 'flex';
             this.loadData();
         }
@@ -234,6 +244,11 @@ const TimelineUI = {
     close() {
         if (this.modal) {
             this.modal.style.display = 'none';
+            // Restore zoom
+            if (this.originalZoom) {
+                document.body.style.zoom = this.originalZoom;
+                this.originalZoom = null;
+            }
         }
     },
 

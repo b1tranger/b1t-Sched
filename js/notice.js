@@ -70,6 +70,16 @@ const NoticeViewer = {
             loadBtnMobile.addEventListener('click', () => this.loadNotices());
         }
 
+        // Add refresh button listeners
+        const refreshBtnDesktop = document.getElementById('refresh-notices-btn-desktop');
+        if (refreshBtnDesktop) {
+            refreshBtnDesktop.addEventListener('click', () => this.loadNotices(true));
+        }
+        const refreshBtnMobile = document.getElementById('refresh-notices-btn-mobile');
+        if (refreshBtnMobile) {
+            refreshBtnMobile.addEventListener('click', () => this.loadNotices(true));
+        }
+
         // Dashboard: Load Notices button
         const loadBtnDashboard = document.getElementById('load-notices-btn-dashboard');
         if (loadBtnDashboard) {
@@ -133,9 +143,9 @@ const NoticeViewer = {
     // FETCH NOTICES
     // ──────────────────────────────────────────────
 
-    async loadNotices() {
+    async loadNotices(forceRefresh = false) {
         // If already loaded in this session, just render
-        if (this.noticesLoaded && this.notices.length > 0) {
+        if (!forceRefresh && this.noticesLoaded && this.notices.length > 0) {
             this.renderAllNotices();
             return;
         }
@@ -144,7 +154,8 @@ const NoticeViewer = {
         this.showLoadingState();
 
         try {
-            const response = await fetch(`${this.API_BASE}/api/notices`);
+            const url = forceRefresh ? `${this.API_BASE}/api/notices?refresh=true` : `${this.API_BASE}/api/notices`;
+            const response = await fetch(url);
 
             if (!response.ok) {
                 throw new Error(`Server returned ${response.status}`);
@@ -212,8 +223,14 @@ const NoticeViewer = {
         const listDesktop = document.getElementById('notice-list-desktop');
         const listMobile = document.getElementById('notice-list-mobile');
 
+        const refreshBtnDesktop = document.getElementById('refresh-notices-btn-desktop');
+        const refreshBtnMobile = document.getElementById('refresh-notices-btn-mobile');
+
         if (loadPromptDesktop) loadPromptDesktop.style.display = 'none';
         if (loadPromptMobile) loadPromptMobile.style.display = 'none';
+
+        if (refreshBtnDesktop) refreshBtnDesktop.style.display = 'block';
+        if (refreshBtnMobile) refreshBtnMobile.style.display = 'block';
 
         if (listDesktop) listDesktop.style.display = 'block';
         if (listMobile) listMobile.style.display = 'flex';

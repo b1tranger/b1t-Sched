@@ -119,6 +119,73 @@ body.dark-mode .btn-icon:hover:not(:disabled) {
   background-color: rgba(212, 221, 147, 0.1);
 }
 
+/* Tooltip Guides */
+.section-guide-tooltip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: help;
+  color: var(--text-medium);
+  opacity: 0.7;
+  font-size: 0.75em;
+  margin-left: 8px;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.section-guide-tooltip:hover {
+  color: var(--primary-maroon);
+  opacity: 1;
+}
+
+.section-guide-tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 150%;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  background-color: var(--text-dark);
+  color: var(--bg-white);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  font-weight: normal;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  width: max-content;
+  max-width: 250px;
+  box-shadow: var(--shadow-md);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  z-index: var(--z-tooltip, 1070);
+  pointer-events: none;
+}
+
+.section-guide-tooltip::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  border: 6px solid transparent;
+  border-top-color: var(--text-dark);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  z-index: var(--z-tooltip, 1070);
+  pointer-events: none;
+}
+
+.section-guide-tooltip:hover::after,
+.section-guide-tooltip:hover::before {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(150%);
+}
+
 /* Forms */
 .form-group {
   margin-bottom: var(--spacing-lg);

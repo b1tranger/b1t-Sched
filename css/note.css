@@ -104,15 +104,28 @@
     flex: 1;
 }
 
-/* ─── Note Editor Section ─────────────────────────── */
-.note-editor {
+/* ─── Merged Editor / Preview Section ───────────────── */
+.note-merged-container {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    /* Take up available vertical space */
+    min-height: 250px;
+    margin-bottom: var(--spacing-md);
+}
+
+.note-preview-wrapper,
+.note-editor-wrapper {
+    height: 100%;
     display: flex;
     flex-direction: column;
 }
 
 .note-textarea {
     width: 100%;
-    min-height: 200px;
+    flex: 1;
+    min-height: 250px;
+    max-height: 48vh;
     padding: var(--spacing-md);
     border: 2px solid var(--border-light);
     border-radius: var(--radius-md);
@@ -132,29 +145,30 @@
     color: var(--text-light);
 }
 
-/* ─── Note Preview Section ────────────────────────── */
-.note-preview {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-sm);
-}
-
-.note-preview h3 {
-    font-size: var(--font-md);
-    font-weight: var(--font-semibold);
-    color: var(--text-dark);
-    margin: 0;
-}
-
 .note-preview-content {
+    flex: 1;
     padding: var(--spacing-md);
     border: 2px solid var(--border-light);
     border-radius: var(--radius-md);
     background-color: var(--bg-lighter);
-    min-height: 150px;
+    min-height: 250px;
+    max-height: 48vh;
     font-size: var(--font-md);
     line-height: 1.6;
     color: var(--text-dark);
+    cursor: text;
+    /* Indicate it can be clicked to type */
+    overflow-y: auto;
+}
+
+.note-preview-content:hover {
+    border-color: rgba(128, 0, 0, 0.3);
+    /* subtle hint that it's interactive */
+}
+
+.note-preview-content:focus {
+    outline: none;
+    border-color: var(--accent-maroon);
 }
 
 .note-preview-content .note-empty-message {
@@ -166,6 +180,9 @@
 .note-preview-content a {
     color: var(--accent-maroon);
     text-decoration: underline;
+    position: relative;
+    z-index: 2;
+    /* Ensure links are clickable above the wrapper */
 }
 
 .note-preview-content a:hover {
@@ -193,6 +210,13 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
+.note-upload-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
 }
 
 .upload-instruction {
@@ -212,7 +236,69 @@
     color: var(--info);
     margin-top: 2px;
     flex-shrink: 0;
-    padding-left: calc(var(--spacing-md) + 4px);
+}
+
+/* ─── Fallback & Helpers ──────────────────────────── */
+.note-fileio-fallback {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+    font-size: var(--font-sm);
+    color: var(--text-dark);
+    margin-top: var(--spacing-xs);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background-color: #fff3cd;
+    /* Warning yellowish */
+    border-left: 4px solid #ffc107;
+    border-radius: var(--radius-sm);
+}
+
+.note-fileio-fallback i {
+    color: #ffc107;
+    margin-top: 2px;
+}
+
+.note-fileio-fallback a {
+    color: #d39e00;
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+.note-download-helper {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: var(--font-sm);
+    color: var(--text-dark);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background-color: #d4edda;
+    /* Success greenish */
+    border-left: 4px solid #28a745;
+    border-radius: var(--radius-sm);
+    margin-top: var(--spacing-sm);
+    animation: fadeIn 0.3s ease;
+}
+
+.note-download-helper i {
+    color: #28a745;
+}
+
+.note-download-helper a {
+    color: #155724;
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* ─── Responsive Behavior ─────────────────────────── */

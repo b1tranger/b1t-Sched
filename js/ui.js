@@ -361,6 +361,7 @@ const UI = {
   renderEvents(events, isAdmin = false, isCR = false, isFaculty = false, currentUserId = null) {
     const container = document.getElementById('events-container');
     const noEventsMsg = document.getElementById('no-events-message');
+    const noEventsMsgMobile = document.getElementById('no-events-message-mobile');
     const mobileContainer = document.getElementById('events-container-mobile');
 
     if (!container) return;
@@ -369,10 +370,12 @@ const UI = {
       container.innerHTML = '';
       if (mobileContainer) mobileContainer.innerHTML = '';
       noEventsMsg.style.display = 'block';
+      if (noEventsMsgMobile) noEventsMsgMobile.style.display = 'block';
       return;
     }
 
     noEventsMsg.style.display = 'none';
+    if (noEventsMsgMobile) noEventsMsgMobile.style.display = 'none';
     const eventsHTML = events.map(event => {
       const eventDate = event.date ? event.date.toDate() : new Date();
       const day = eventDate.getDate();

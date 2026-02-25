@@ -5,6 +5,8 @@
 const NoteManager = {
   autoSaveTimer: null,
   currentUserId: null,
+  isEditing: false,
+  UPLOAD_TIMEOUT: 20000, // 20 seconds per provider
 
   // Initialize note functionality
   init() {
@@ -58,6 +60,12 @@ const NoteManager = {
       clearBtn.addEventListener('click', () => this.handleClear());
     }
 
+    // Shorten button
+    const shortenBtn = document.getElementById('shorten-note-btn');
+    if (shortenBtn) {
+      shortenBtn.addEventListener('click', () => this.handleShortenNote());
+    }
+
     // Upload files button - trigger file input
     const uploadBtn = document.getElementById('upload-files-btn');
     if (uploadBtn) {
@@ -76,6 +84,35 @@ const NoteManager = {
       textarea.addEventListener('input', (e) => {
         this.updatePreview(e.target.value);
         this.setupAutoSave(e.target.value);
+      });
+
+      // When user clicks outside textarea or it loses focus, switch to preview
+      textarea.addEventListener('blur', () => {
+        // Small delay to allow button clicks to register first
+        setTimeout(() => {
+          this.switchToPreview();
+        }, 200);
+      });
+    }
+
+    // Click on preview to switch to editor
+    const previewContent = document.getElementById('note-preview-content');
+    if (previewContent) {
+      previewContent.addEventListener('click', (e) => {
+        // Don't switch to edit if user clicked a link
+        if (e.target.tagName === 'A') {
+          this.handleNoteLinkClick(e);
+          return;
+        }
+        this.switchToEditor();
+      });
+
+      // Also support keyboard activation
+      previewContent.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          this.switchToEditor();
+        }
       });
     }
 
@@ -97,6 +134,77 @@ const NoteManager = {
           this.closeModal();
         }
       });
+    }
+  },
+
+  // ──────────────────────────────────────────────
+  // PREVIEW / EDITOR MODE SWITCHING
+  // ──────────────────────────────────────────────
+
+  switchToEditor() {
+    const previewWrapper = document.getElementById('note-preview-wrapper');
+    const editorWrapper = document.getElementById('note-editor-wrapper');
+    const textarea = document.getElementById('note-textarea');
+
+    if (previewWrapper) previewWrapper.style.display = 'none';
+    if (editorWrapper) editorWrapper.style.display = 'block';
+    if (textarea) {
+      textarea.focus();
+      // Move cursor to end
+      textarea.selectionStart = textarea.value.length;
+      textarea.selectionEnd = textarea.value.length;
+    }
+    this.isEditing = true;
+  },
+
+  switchToPreview() {
+    const previewWrapper = document.getElementById('note-preview-wrapper');
+    const editorWrapper = document.getElementById('note-editor-wrapper');
+    const textarea = document.getElementById('note-textarea');
+
+    if (previewWrapper) previewWrapper.style.display = 'block';
+    if (editorWrapper) editorWrapper.style.display = 'none';
+
+    // Update preview with current textarea content
+    if (textarea) {
+      this.updatePreview(textarea.value);
+    }
+    this.isEditing = false;
+  },
+
+  // Handle link clicks inside the preview to trigger downloads
+  handleNoteLinkClick(e) {
+    e.preventDefault();
+    const link = e.target;
+    const url = link.href;
+
+    if (!url || url === '#') return;
+
+    // Try to trigger direct download
+    const downloadHelper = document.getElementById('note-download-helper');
+    const fallbackLink = document.getElementById('note-download-fallback-link');
+
+    // Create a temporary anchor to force download
+    const tempLink = document.createElement('a');
+    tempLink.href = url;
+    tempLink.target = '_blank';
+    tempLink.rel = 'noopener noreferrer';
+    // Try setting download attribute (works for same-origin)
+    const filename = url.split('/').pop() || 'download';
+    tempLink.download = filename;
+    document.body.appendChild(tempLink);
+    tempLink.click();
+    document.body.removeChild(tempLink);
+
+    // Show the download helper with fallback link
+    if (downloadHelper && fallbackLink) {
+      fallbackLink.href = url;
+      downloadHelper.style.display = 'flex';
+
+      // Auto-hide after 8 seconds
+      setTimeout(() => {
+        downloadHelper.style.display = 'none';
+      }, 8000);
     }
   },
 
@@ -124,7 +232,6 @@ const NoteManager = {
   // Open note modal
   openModal() {
     const modal = document.getElementById('note-modal');
-    const textarea = document.getElementById('note-textarea');
     const noteToggle = document.getElementById('note-toggle');
     const noteButtonDesktop = document.getElementById('note-button-desktop');
 
@@ -136,10 +243,12 @@ const NoteManager = {
       if (noteToggle) noteToggle.setAttribute('aria-expanded', 'true');
       if (noteButtonDesktop) noteButtonDesktop.setAttribute('aria-expanded', 'true');
 
-      // Focus textarea
-      if (textarea) {
-        setTimeout(() => textarea.focus(), 100);
-      }
+      // Always start in preview mode when opening
+      this.switchToPreview();
+
+      // Hide file.io fallback on modal open
+      const fallback = document.getElementById('note-fileio-fallback');
+      if (fallback) fallback.style.display = 'none';
 
       // Load note if user is authenticated
       if (this.currentUserId) {
@@ -161,6 +270,15 @@ const NoteManager = {
       // Update button aria-expanded
       if (noteToggle) noteToggle.setAttribute('aria-expanded', 'false');
       if (noteButtonDesktop) noteButtonDesktop.setAttribute('aria-expanded', 'false');
+    }
+
+    // If we were editing, save before closing
+    if (this.isEditing) {
+      const textarea = document.getElementById('note-textarea');
+      if (textarea && this.currentUserId) {
+        this.saveNote(this.currentUserId, textarea.value);
+      }
+      this.isEditing = false;
     }
   },
 
@@ -184,6 +302,10 @@ const NoteManager = {
       return;
     }
 
+    // Hide file.io fallback at start of new upload
+    const fallback = document.getElementById('note-fileio-fallback');
+    if (fallback) fallback.style.display = 'none';
+
     // Show upload status
     const uploadBtn = document.getElementById('upload-files-btn');
     const originalText = uploadBtn ? uploadBtn.innerHTML : '';
@@ -195,6 +317,9 @@ const NoteManager = {
     try {
       // Try multi-provider upload with fallback
       const result = await this.uploadWithFallback(file);
+
+      // Switch to editor to insert the link
+      this.switchToEditor();
 
       // Insert markdown link into textarea at cursor position
       this.insertLinkIntoNote(file.name, result.url);
@@ -208,6 +333,9 @@ const NoteManager = {
     } catch (error) {
       console.error('Upload error:', error);
       this.showMessage('Failed to upload file: ' + error.message, 'error');
+
+      // Show file.io fallback suggestion
+      if (fallback) fallback.style.display = 'flex';
     } finally {
       // Reset button
       if (uploadBtn) {
@@ -220,7 +348,7 @@ const NoteManager = {
     }
   },
 
-  // Upload with fallback to multiple providers
+  // Upload with fallback to multiple providers (with per-provider timeout)
   async uploadWithFallback(file) {
     const providers = [
       // { name: 'Firebase Storage', method: () => this.uploadToFirebaseStorage(file), maxSize: 10 * 1024 * 1024 }, // Disabled
@@ -239,7 +367,14 @@ const NoteManager = {
 
       try {
         console.log(`Attempting upload to ${provider.name}...`);
-        const url = await provider.method();
+
+        // Race the upload against a timeout
+        const url = await Promise.race([
+          provider.method(),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error(`${provider.name} upload timed out after ${this.UPLOAD_TIMEOUT / 1000}s`)), this.UPLOAD_TIMEOUT)
+          )
+        ]);
 
         // Determine expiration info
         let expiresIn = null;
@@ -271,9 +406,6 @@ const NoteManager = {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('upload_preset', uploadPreset);
-
-    // Optional: Add folder, tags, etc. if needed
-    // formData.append('folder', 'b1t_sched_notes');
 
     try {
       const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/upload`, {
@@ -423,7 +555,7 @@ const NoteManager = {
     if (!preview) return;
 
     if (!content || content.trim() === '') {
-      preview.innerHTML = '<p class="note-empty-message">Your formatted notes will appear here...</p>';
+      preview.innerHTML = '<p class="note-empty-message">Tap here to start writing your notes... Supports markdown formatting!</p>';
     } else {
       // Use existing utility from utils.js
       preview.innerHTML = Utils.escapeAndLinkify(content);
@@ -527,6 +659,8 @@ const NoteManager = {
     if (textarea) {
       await this.saveNote(this.currentUserId, textarea.value);
       this.showMessage('Note saved successfully!', 'success');
+      // Switch to preview after saving
+      this.switchToPreview();
     }
   },
 
@@ -565,10 +699,83 @@ const NoteManager = {
       }
 
       this.updatePreview('');
+      this.switchToPreview();
       this.showMessage('Note cleared successfully!', 'success');
     } catch (error) {
       console.error('Error clearing note:', error);
       this.showMessage('Failed to clear note. Please try again.', 'error');
+    }
+  },
+
+  // ──────────────────────────────────────────────
+  // SHORTEN NOTE AUTOMATION
+  // ──────────────────────────────────────────────
+
+  async handleShortenNote() {
+    if (!this.currentUserId) {
+      this.showMessage('You must be logged in to shorten notes.', 'error');
+      return;
+    }
+
+    const textarea = document.getElementById('note-textarea');
+    if (!textarea || !textarea.value.trim()) {
+      this.showMessage('Nothing to shorten. Write some notes first!', 'error');
+      return;
+    }
+
+    const confirmed = confirm(
+      'This will convert all your note text into a downloadable .md file link. ' +
+      'Your current note content will be replaced with the download link. Continue?'
+    );
+    if (!confirmed) return;
+
+    const noteContent = textarea.value;
+
+    // Hide file.io fallback at start
+    const fallback = document.getElementById('note-fileio-fallback');
+    if (fallback) fallback.style.display = 'none';
+
+    // Create a Blob from the note content as a .md file
+    const blob = new Blob([noteContent], { type: 'text/markdown' });
+    const filename = `note_${Date.now()}.md`;
+    const file = new File([blob], filename, { type: 'text/markdown' });
+
+    // Show progress on the shorten button
+    const shortenBtn = document.getElementById('shorten-note-btn');
+    const originalText = shortenBtn ? shortenBtn.innerHTML : '';
+    if (shortenBtn) {
+      shortenBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Shortening...';
+      shortenBtn.disabled = true;
+    }
+
+    try {
+      const result = await this.uploadWithFallback(file);
+
+      // Replace note content with the download link
+      const shortenedContent = `[📄 ${filename}](${result.url})`;
+      textarea.value = shortenedContent;
+
+      // Update preview and save
+      this.updatePreview(shortenedContent);
+      await this.saveNote(this.currentUserId, shortenedContent);
+
+      let message = `Note shortened to a download link via ${result.provider}!`;
+      if (result.expiresIn) {
+        message += ` (Link expires in ${result.expiresIn})`;
+      }
+      this.showMessage(message, 'success');
+      this.switchToPreview();
+    } catch (error) {
+      console.error('Shorten error:', error);
+      this.showMessage('Failed to shorten note: ' + error.message, 'error');
+
+      // Show file.io fallback suggestion
+      if (fallback) fallback.style.display = 'flex';
+    } finally {
+      if (shortenBtn) {
+        shortenBtn.innerHTML = originalText;
+        shortenBtn.disabled = false;
+      }
     }
   },
 

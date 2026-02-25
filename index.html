@@ -353,6 +353,10 @@
                             <div class="section-header">
                                 <h2>
                                     <i class="fas fa-tasks"></i> Pending Tasks
+                                    <span class="section-guide-tooltip"
+                                        data-tooltip="View and manage active tasks. Filter by type. Click checkboxes to complete them. Overdue tasks are highlighted in red.">
+                                        <i class="fas fa-info-circle"></i>
+                                    </span>
                                     <button id="refresh-tasks-btn" class="btn btn-text-icon" title="Refresh tasks"
                                         style="margin-left:5px">
                                         <i class="fas fa-sync-alt"
@@ -445,7 +449,13 @@
                     <aside class="dashboard-sidebar desktop-only">
                         <section class="events-section">
                             <div class="section-header">
-                                <h2><i class="fas fa-calendar-alt"></i> Upcoming Events</h2>
+                                <h2>
+                                    <i class="fas fa-calendar-alt"></i> Upcoming Events
+                                    <span class="section-guide-tooltip"
+                                        data-tooltip="Official events created by Admin, CR, or Faculty. Check here for general announcements, holidays, and schedules.">
+                                        <i class="fas fa-info-circle"></i>
+                                    </span>
+                                </h2>
                             </div>
 
                             <div id="events-container" class="events-container">
@@ -481,13 +491,22 @@
                 <!-- Mobile Events Sidebar -->
                 <div id="events-sidebar" class="events-sidebar mobile-only">
                     <div class="events-sidebar-header">
-                        <h3><i class="fas fa-calendar-alt"></i> Events</h3>
+                        <h3><i class="fas fa-calendar-alt"></i> Events
+                            <span class="section-guide-tooltip"
+                                data-tooltip="Official events created by Admin, CR, or Faculty. Check here for general announcements, holidays, and schedules.">
+                                <i class="fas fa-info-circle"></i>
+                            </span>
+                        </h3>
                         <button id="close-events-sidebar" class="btn btn-icon">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
                     <div id="events-container-mobile" class="events-container-mobile">
                         <!-- Events will be cloned here for mobile -->
+                    </div>
+                    <div id="no-events-message-mobile" class="no-data-message" style="display: none;">
+                        <i class="fas fa-calendar-check"></i>
+                        <p>No upcoming events.</p>
                     </div>
                     <!-- Mobile Events Actions -->
                     <div class="events-sidebar-actions">
@@ -511,7 +530,13 @@
                 <!-- Mobile Notice Sidebar -->
                 <div id="notice-sidebar" class="notice-sidebar mobile-only">
                     <div class="notice-sidebar-header">
-                        <h3><i class="fas fa-bullhorn"></i> Notices</h3>
+                        <h3>
+                            <i class="fas fa-bullhorn"></i> Notices
+                            <span class="section-guide-tooltip"
+                                data-tooltip="Fetches PDF notices directly from the UCAM portal. Caches for 7 days. Use the Refresh button to bypass the cache.">
+                                <i class="fas fa-info-circle"></i>
+                            </span>
+                        </h3>
                         <button id="close-notice-sidebar" class="btn btn-icon" style="color: white;">
                             <i class="fas fa-times"></i>
                         </button>
@@ -536,8 +561,13 @@
 
                         <!-- Bottom Section: University Notices -->
                         <div class="notice-mobile-section">
-                            <div class="notice-section-header">
+                            <div class="notice-section-header"
+                                style="justify-content: space-between; display: flex; align-items: center;">
                                 <span><i class="fas fa-university"></i> University Notices</span>
+                                <button id="refresh-notices-btn-mobile" class="btn btn-sm btn-secondary"
+                                    style="display: none;">
+                                    <i class="fas fa-sync-alt"></i> Refresh
+                                </button>
                             </div>
                             <div id="uni-notice-content-mobile" class="notice-section-body">
                                 <div id="notice-load-prompt-mobile" class="notice-load-prompt">
@@ -563,7 +593,13 @@
                 <!-- Google Classroom Sidebar (Mobile) -->
                 <div id="classroom-sidebar" class="classroom-sidebar mobile-only">
                     <div class="classroom-header">
-                        <h3><i class="fas fa-chalkboard"></i> Classroom</h3>
+                        <h3>
+                            <i class="fas fa-chalkboard"></i> Classroom
+                            <span class="section-guide-tooltip"
+                                data-tooltip="Syncs assignments from your active Google Classroom courses. Toggle between To-Do and Announcements. Use 'Sync' to import them as regular tasks.">
+                                <i class="fas fa-info-circle"></i>
+                            </span>
+                        </h3>
                         <button id="close-classroom-sidebar" class="classroom-close-btn">
                             <i class="fas fa-times"></i>
                         </button>
@@ -583,7 +619,13 @@
             <div id="classroom-modal" class="modal" style="display: none;">
                 <div class="modal-content classroom-modal-content">
                     <div class="classroom-modal-header">
-                        <h2 class="classroom-modal-title"><i class="fas fa-chalkboard"></i> Google Classroom</h2>
+                        <h2 class="classroom-modal-title">
+                            <i class="fas fa-chalkboard"></i> Google Classroom
+                            <span class="section-guide-tooltip"
+                                data-tooltip="Syncs assignments from your active Google Classroom courses. Toggle between To-Do and Announcements. Use 'Sync' to import them as regular tasks.">
+                                <i class="fas fa-info-circle"></i>
+                            </span>
+                        </h2>
                         <button id="close-classroom-modal" class="btn btn-icon" style="color: white;">
                             <i class="fas fa-times"></i>
                         </button>
@@ -617,6 +659,10 @@
                     <div class="modal-header">
                         <h2 id="note-modal-title" class="modal-title">
                             <i class="fas fa-sticky-note" aria-hidden="true"></i> My Notes
+                            <span class="section-guide-tooltip"
+                                data-tooltip="Write private markdown notes. Auto-saves as you type. Use the Upload Files feature to attach files locally via temporary link sharing.">
+                                <i class="fas fa-info-circle"></i>
+                            </span>
                         </h2>
                         <button id="close-note-modal" class="btn btn-icon" aria-label="Close notes">
                             <i class="fas fa-times" aria-hidden="true"></i>
@@ -627,11 +673,26 @@
                         <!-- Message Container -->
                         <div id="note-message" class="message" style="display: none;"></div>
 
-                        <!-- Note Editor -->
-                        <div class="note-editor">
-                            <textarea id="note-textarea" class="note-textarea"
-                                placeholder="Start typing your notes here... Supports markdown formatting!"></textarea>
+                        <!-- Merged Editor/Preview Container -->
+                        <div class="note-merged-container">
+                            <!-- Preview (shown by default, hidden when editing) -->
+                            <div id="note-preview-wrapper" class="note-preview-wrapper">
+                                <div id="note-preview-content" class="note-preview-content" tabindex="0" role="button"
+                                    aria-label="Click to edit note">
+                                    <p class="note-empty-message">Tap here to start writing your notes... Supports
+                                        markdown formatting!</p>
+                                </div>
+                            </div>
+
+                            <!-- Editor (hidden by default, shown when editing) -->
+                            <div id="note-editor-wrapper" class="note-editor-wrapper" style="display: none;">
+                                <textarea id="note-textarea" class="note-textarea"
+                                    placeholder="Start typing your notes here... Supports markdown formatting!"
+                                    rows="12"></textarea>
+                            </div>
                         </div>
+
+                        <!-- Upload Section -->
                         <div class="note-upload-section">
                             <p class="upload-instruction">
                                 <i class="fas fa-info-circle"></i>
@@ -639,28 +700,37 @@
                                     (Temporary).
                                     Back up important content.</span>
                             </p>
-                            <button id="upload-files-btn" class="btn btn-secondary" type="button">
-                                <i class="fas fa-upload"></i> Upload Files
-                            </button>
-                            <input type="file" id="note-file-input" style="display: none;"
-                                accept="image/*,application/pdf,.doc,.docx,.txt,.zip,.rar">
-
-                        </div>
-
-                        <!-- Note Preview (rendered with markdown) -->
-                        <div class="note-preview">
-                            <h3>Preview</h3>
-                            <div id="note-preview-content" class="note-preview-content">
-                                <p class="note-empty-message">Your formatted notes will appear here...</p>
+                            <div class="note-upload-actions">
+                                <button id="upload-files-btn" class="btn btn-secondary" type="button">
+                                    <i class="fas fa-upload"></i> Upload Files
+                                </button>
+                                <input type="file" id="note-file-input" style="display: none;"
+                                    accept="image/*,application/pdf,.doc,.docx,.txt,.zip,.rar">
+                            </div>
+                            <!-- file.io fallback (hidden by default, shown after all providers fail) -->
+                            <div id="note-fileio-fallback" class="note-fileio-fallback" style="display: none;">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <span>Upload failed. You can manually upload your file at
+                                    <a href="https://file.io" target="_blank" rel="noopener noreferrer">file.io</a>
+                                    and paste the share link into your note.</span>
                             </div>
                         </div>
 
-
+                        <!-- Download helper (shown when a file link is clicked) -->
+                        <div id="note-download-helper" class="note-download-helper" style="display: none;">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Download started. <a id="note-download-fallback-link" href="#" target="_blank"
+                                    rel="noopener noreferrer">Click here</a> if the download doesn't start.</span>
+                        </div>
                     </div>
 
                     <div class="modal-footer">
                         <button id="clear-note-btn" class="btn btn-danger">
                             <i class="fas fa-trash"></i> Clear
+                        </button>
+                        <button id="shorten-note-btn" class="btn btn-secondary"
+                            title="Convert note text to a downloadable .md file link">
+                            <i class="fas fa-compress-alt"></i> Shorten
                         </button>
                         <button id="save-note-btn" class="btn btn-primary">
                             <i class="fas fa-save"></i> Save
@@ -927,7 +997,13 @@
             <div id="notice-modal" class="modal" style="display: none;">
                 <div class="modal-content notice-modal-content">
                     <div class="modal-header">
-                        <h2 class="modal-title"><i class="fas fa-bullhorn"></i> Notices</h2>
+                        <h2 class="modal-title">
+                            <i class="fas fa-bullhorn"></i> Notices
+                            <span class="section-guide-tooltip"
+                                data-tooltip="Fetches PDF notices directly from the UCAM portal. Caches for 7 days. Use the Refresh button to bypass the cache.">
+                                <i class="fas fa-info-circle"></i>
+                            </span>
+                        </h2>
                         <button id="close-notice-modal" class="btn btn-icon">
                             <i class="fas fa-times"></i>
                         </button>
@@ -953,8 +1029,13 @@
 
                             <!-- Right Column: University Notices -->
                             <div class="notice-column">
-                                <div class="notice-column-header">
-                                    <h3><i class="fas fa-university"></i> University Notices</h3>
+                                <div class="notice-column-header"
+                                    style="justify-content: space-between; display: flex; align-items: center;">
+                                    <h3 style="margin: 0;"><i class="fas fa-university"></i> University Notices</h3>
+                                    <button id="refresh-notices-btn-desktop" class="btn btn-sm btn-secondary"
+                                        style="display: none;">
+                                        <i class="fas fa-sync-alt"></i> Refresh
+                                    </button>
                                 </div>
                                 <div class="notice-column-content" id="uni-notice-content-desktop">
                                     <!-- Initial State: Load Button -->
@@ -1509,48 +1590,6 @@
 
         </main>
 
-        <!-- Desktop Notice Modal -->
-        <div id="notice-modal" class="modal" style="display: none;">
-            <div class="modal-content notice-modal-content">
-                <div class="modal-header">
-                    <h2 class="modal-title"><i class="fas fa-bullhorn"></i> Notices</h2>
-                    <button id="close-notice-modal" class="btn btn-icon">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="modal-body notice-modal-body">
-                    <div class="notice-desktop-grid">
-                        <!-- Left Column: CR Notices -->
-                        <div class="notice-column">
-                            <div class="notice-column-header">
-                                <h3><i class="fas fa-chalkboard-teacher"></i> Class Notices</h3>
-                                <button id="add-cr-notice-btn-desktop" class="btn btn-sm btn-primary cr-only-notice"
-                                    style="display: none;">
-                                    <i class="fas fa-plus"></i> Add Notice
-                                </button>
-                            </div>
-                            <div id="notice-load-prompt-desktop" class="notice-load-prompt">
-                                <i class="fas fa-spinner fa-spin"></i>
-                                <p>Loading...</p>
-                            </div>
-                            <div id="cr-notice-list-desktop" class="notice-column-content">
-                                <!-- CR Notices rendered here -->
-                            </div>
-                        </div>
-
-                        <!-- Right Column: University Notices -->
-                        <div class="notice-column">
-                            <div class="notice-column-header">
-                                <h3><i class="fas fa-university"></i> University Notices</h3>
-                            </div>
-                            <div id="notice-list-desktop" class="notice-column-content">
-                                <!-- University Notices rendered here -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <!-- Add CR Notice Modal -->
         <div id="add-cr-notice-modal" class="modal" style="display: none;">
@@ -1614,7 +1653,11 @@
         <div id="edit-cr-notice-modal" class="modal" style="display: none;">
             <div class="modal-content modal-content-sm">
                 <div class="modal-header">
-                    <h2 class="modal-title"><i class="fas fa-edit"></i> Edit Notice</h2>
+                    <h2 class="modal-title">
+                        <i class="fas fa-edit"></i> Edit Notice
+                        <i class="fas fa-info-circle section-guide-tooltip"
+                            data-tooltip="Fetches PDF notices directly from the UCAM portal. Caches for 7 days. Use the Refresh button to bypass the cache."></i>
+                    </h2>
                     <button id="close-edit-cr-notice-modal" class="btn btn-icon">
                         <i class="fas fa-times"></i>
                     </button>

@@ -592,7 +592,7 @@ NoticeViewer.CACHE_TTL = 7 * 24 * 60 * 60 * 1000               // 7-day cache TT
 | `init()` | - | Initialize notice viewer: setup event listeners for desktop modal and mobile sidebar; attach load/close buttons |
 | `checkCache()` | - | Check localStorage for cached notices within TTL; returns cached data or `null` |
 | `saveToCache(notices)` | array | Save fetched notices to localStorage with timestamp |
-| `loadNotices()` | - | Fetch notices from Vercel backend with cache fallback; renders to desktop and mobile containers. On server error (503), attempts to load from cache and displays warning banner. |
+| `loadNotices(forceRefresh)` | boolean | Fetch notices from Vercel backend with cache fallback; renders to desktop and mobile containers. If `forceRefresh` is true, passes `?refresh=true` to bypass the server cache. |
 | `renderAllNotices()` | - | Render notice lists in both desktop and mobile containers |
 | `renderNoticeList(containerId, isMobile)` | string, boolean | Render notice list items into a given container (desktop: clickable list with PDF preview) |
 | `renderNoticeListMobile(containerId)` | string | Render mobile-optimized notice list (tap to open PDF in new tab) |
@@ -604,6 +604,11 @@ NoticeViewer.CACHE_TTL = 7 * 24 * 60 * 60 * 1000               // 7-day cache TT
 | `openNoticeModal()` | - | Open desktop notice modal |
 | `closeNoticeModal()` | - | Close desktop notice modal |
 
+**Backend PDF Fetching & Notice Scraping:**
+The Vercel backend (`/api/notices`) scans the UCAM portal for new notices. If the primary listing page fails to scrape, it falls back to an ID-probing approach. It starts from a base seed ID (currently defaulting to `727`) and probes up to 10 IDs ahead to find newly uploaded notices. To reduce loading times and bypass CORS restrictions when downloading PDFs, the backend provides a proxy endpoint (`/api/pdf?id=...`). The client frontend uses this endpoint, allowing the serverless function to download the PDF, attach appropriate headers, and stream it securely to the client.
+
+**Refresh Logic:** A "Refresh Notices" button is available in the headers of both the mobile and desktop views. Clicking it skips the local cache, appends `?refresh=true` to the API request, and instructs the serverless backend to bypass its 5-minute memory cache to fetch the latest IDs immediately.
+
 **Desktop Flow:** Navbar "Notice" button → Modal opens → Click "Load Notices" → Notice list + PDF preview panel (split-pane layout) → Click notice → PDF loads in embedded iframe → Open/Download buttons
 
 **Mobile Flow:** Floating "Notices" toggle → Sidebar slides in → Click "Load Notices" → Notice list → Tap notice → PDF opens in new tab
@@ -614,13 +619,15 @@ NoticeViewer.CACHE_TTL = 7 * 24 * 60 * 60 * 1000               // 7-day cache TT
 
 ### 8. NoteManager (notes.js)
 
-**Purpose:** Personal note-taking with markdown support and automatic file upload
+**Purpose:** Personal note-taking with markdown support, auto-save, merged UI, and comprehensive file upload fallbacks.
 
 #### Configuration
 
 ```javascript
 NoteManager.autoSaveTimer = null           // Auto-save debounce timer
 NoteManager.currentUserId = null           // Current authenticated user
+NoteManager.isEditing = false              // State toggle for merged editor
+NoteManager.UPLOAD_TIMEOUT = 20000         // 20-second timeout per upload provider
 ```
 
 #### Methods
@@ -628,14 +635,17 @@ NoteManager.currentUserId = null           // Current authenticated user
 | Method | Parameters | Description |
 |--------|------------|-------------|
 | `init()` | - | Initialize note module with auth listener |
-| `setupEventListeners()` | - | Attach event listeners for modal, buttons, file input |
+| `setupEventListeners()` | - | Attach event listeners for modal, buttons, file input, and editor toggle |
 | `enableNoteFeature()` | - | Show note toggle buttons for authenticated users |
 | `disableNoteFeature()` | - | Hide note toggle buttons for unauthenticated users |
-| `openModal()` | - | Open note modal and load user's note |
+| `openModal()` | - | Open note modal in preview mode and load user's note |
 | `closeModal()` | - | Close note modal |
+| `switchToEditor()` / `switchToPreview()` | - | Toggle between the textarea editor and the live markdown preview pane |
+| `handleNoteLinkClick(e)` | Event | Intercept clicks on links in the preview to force immediate download, providing a fallback link |
 | `triggerFileUpload()` | - | Trigger hidden file input click |
-| `handleFileSelect(event)` | Event | Handle file selection and upload |
-| `uploadToFileIO(file)` | File | Upload file to file.io API, returns direct download URL |
+| `handleFileSelect(event)` | Event | Handle file selection and upload process |
+| `uploadWithFallback(file)` | File | Upload file trying multiple providers (Catbox, Tmpfiles) with a 20s timeout race |
+| `handleShortenNote()` | - | Convert current note text into a downloadable `.md` file, upload it, and replace note content with its link |
 | `insertLinkIntoNote(filename, url)` | string, string | Insert markdown link at cursor position in textarea |
 | `updatePreview(content)` | string | Update preview pane with formatted markdown |
 | `setupAutoSave(content)` | string | Setup auto-save with 500ms debounce |
@@ -648,23 +658,14 @@ NoteManager.currentUserId = null           // Current authenticated user
 | `showMessage(message, type)` | string, string | Display message to user |
 
 **Features:**
-- **Auto-save:** Saves note content automatically with 500ms debounce
-- **File Upload:** Automatic upload to file.io API (max 100MB per file)
-- **Direct Download URLs:** file.io provides direct download links (available for 14 days)
-- **Markdown Links:** Inserts `[filename](url)` at cursor position after upload
-- **Preview Pane:** Live preview with markdown rendering (bold, italic, code, links)
-- **Persistent Storage:** Notes stored in Firestore user document (max 1MB)
-- **Upload Progress:** Shows spinner during file upload
-- **Error Handling:** Validates file size and handles upload failures
-
-**Upload Flow:** Click "Upload Files" → Select file → Auto-upload to file.io → Insert markdown link at cursor → Auto-save note
-
-**file.io API:**
-- Endpoint: `https://file.io/`
-- Method: POST with FormData
-- Max file size: 100MB
-- Response: `{success: true, link: "https://file.io/abc123"}`
-- Files available for 14 days with direct download support
+- **Merged UI:** Start in preview mode; click/tap the preview to seamlessly switch to editing.
+- **Auto-save:** Saves note content automatically with 500ms debounce.
+- **Robust File Uploads:** Tries Catbox (up to 200MB) followed by Tmpfiles (up to 100MB), racing against a 20-second timeout per provider.
+- **Upload Fallback:** If all automatic uploads fail, shows a helper message suggesting manual upload to file.io.
+- **Immediate Downloads:** Clicking a file link triggers an immediate download using a temporary anchor tag, showing a helper message if browser block occurs.
+- **"Shorten" Automation:** Allows users to convert their entire text note into a hosted `.md` file to save space and simplify sharing.
+- **Markdown Links:** Inserts `[filename](url)` at cursor position after upload.
+- **Persistent Storage:** Notes stored in Firestore user document (max 1MB).
 
 ---
 
@@ -1626,6 +1627,7 @@ Router.onRouteChange((routeName) => {
 | 2.35.0 | Feb 2026 | Dark Theme Overhaul: Implemented a new dark theme based on the Realtime Colors palette (--text: #e7f0dc; --background: #000000; --primary: #badd93; --secondary: #578323; --accent: #89d134;). Updated `css/colors.css` with new primary, secondary, accent, and text colors. Updated `css/styles.css`, `css/main.css`, `css/responsive.css`, and `css/calendar.css` to integrate the new color scheme across the entire application. Updated `package.json` with new color palette metadata. |
 | 2.36.0 | Feb 2026 | Google Classroom API now loads content from All Courses right after Sign In, instead of loading the enrolled courses. |
 | 2.37.0 | Feb 2026 | **Theming & UX Overhaul**: 1. **Gray Mode Theme**: Added a new monochromatic theme; set as the default for system dark mode preferences. 2. **Overdue Task Styling**: Redesigned overdue backgrounds for dark/gray modes to ensure clarity without excessive brightness (`rgba(220, 53, 69, 0.15)`). 3. **Classroom UI Theming**: Full theme integration for Google Classroom components in Gray Mode. 4. **FOUC Prevention**: Enhanced inline script to handle Gray Mode initialization. |
+| 2.38.0 | Feb 2026 | **Bug Fixes & UI Enhancements**: (1) Notice Refresh: Added "Refresh Notices" button to UI that passes `?refresh=true` to backend to bypass server-side caching. (2) Mobile Zoom & Canvas Coordinate Fix: Applied dynamic JS-based 95% zoom (`document.body.style.zoom`) for screens <= 768px, with specific resets in `timeline-ui.js` to preserve `Chart.js` canvas coordinate integrity when modal is active. (3) Empty states: Added `"No upcoming events"` fallback for mobile Events sidebar. (4) Notes Modals: Fixed Note Preview infinitely growing by enforcing `max-height: 48vh;` internal scrolling. (5) Section Guides: Added hoverable/clickable tooltips (`<i class="fas fa-info-circle">`) to main feature headers explaining their purpose for new users. |
 
 ---
 
@@ -1640,8 +1642,8 @@ Router.onRouteChange((routeName) => {
 
 ---
 
-*Documentation last updated: February 23, 2026*
-*Version: 2.37.0*
+*Documentation last updated: February 25, 2026*
+*Version: 2.38.0*
 
 
 ---
