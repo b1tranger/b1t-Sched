@@ -340,7 +340,7 @@ const UI = {
       const statusClass = isCompleted ? 'completed' : 'overdue';
 
       return `
-        <div class="old-task-item ${statusClass}">
+        <div class="old-task-item ${statusClass}" data-task-id="${task.id}" style="cursor: pointer;">
           <i class="fas ${iconClass}"></i>
           <div class="task-info">
             <div class="task-title">${task.title || 'Untitled Task'}</div>
@@ -461,7 +461,7 @@ const UI = {
       const eventDate = event.date ? event.date.toDate() : new Date();
 
       return `
-        <div class="old-event-item">
+        <div class="old-event-item" data-event-id="${event.id}" style="cursor: pointer;">
           <i class="fas fa-calendar-check completed-icon"></i>
           <div class="event-info">
             <div class="event-title">${event.title || 'Untitled Event'}</div>
@@ -608,6 +608,30 @@ const UI = {
       modal.style.display = 'none';
       document.body.style.overflow = '';
     }
+  },
+
+  // Show generic item details modal
+  showItemDetailsModal(title, contentHTML) {
+    const titleEl = document.getElementById('item-details-title');
+    const bodyEl = document.getElementById('item-details-body');
+
+    if (titleEl) titleEl.textContent = title;
+    if (bodyEl) bodyEl.innerHTML = contentHTML;
+
+    const closeBtn = document.getElementById('close-item-details-modal');
+    if (closeBtn && !closeBtn.dataset.listener) {
+      closeBtn.addEventListener('click', () => this.hideModal('item-details-modal'));
+      closeBtn.dataset.listener = 'true';
+    }
+    const modal = document.getElementById('item-details-modal');
+    if (modal && !modal.dataset.listener) {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) this.hideModal('item-details-modal');
+      });
+      modal.dataset.listener = 'true';
+    }
+
+    this.showModal('item-details-modal');
   },
 
   // Toggle events sidebar (mobile)

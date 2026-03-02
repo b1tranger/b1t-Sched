@@ -435,6 +435,72 @@ const App = {
         }
       });
     }
+
+    // Setup delegation for old tasks modal clicks
+    const oldTasksContainer = document.getElementById('old-tasks-container');
+    if (oldTasksContainer) {
+      oldTasksContainer.addEventListener('click', (e) => {
+        const item = e.target.closest('.old-task-item');
+        if (item && this.oldTasks) {
+          const taskId = item.dataset.taskId;
+          const task = this.oldTasks.find(t => t.id === taskId);
+          if (task) {
+            const deadline = task.deadline ? task.deadline.toDate() : new Date();
+            const isCompleted = task.isCompleted || false;
+            const completedDate = task.completedAt ? task.completedAt.toDate() : null;
+            const contentHTML = `
+              <div style="margin-bottom: 15px;">
+                <strong>Course:</strong> <span style="background-color: var(--primary-maroon); color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.9em;">${task.course || 'N/A'}</span>
+              </div>
+              <div style="margin-bottom: 15px;">
+                <strong>Type:</strong> <span style="text-transform: capitalize;">${task.type || 'N/A'}</span>
+              </div>
+              <div style="margin-bottom: 15px;">
+                <strong>Deadline:</strong> ${Utils.formatDateShort(deadline)}
+              </div>
+              ${isCompleted && completedDate ? `<div style="margin-bottom: 15px; color: var(--success);"><i class="fas fa-check-circle"></i> <strong>Completed:</strong> ${Utils.formatDateShort(completedDate)}</div>` : `<div style="margin-bottom: 15px; color: var(--danger);"><i class="fas fa-times-circle"></i> <strong>Status:</strong> Not completed</div>`}
+              <div>
+                <strong>Description:</strong>
+                <div style="margin-top: 5px; padding: 10px; background-color: var(--bg-lighter); border-radius: 8px;">
+                  ${Utils.escapeAndLinkify(task.description) || 'No description provided.'}
+                </div>
+              </div>
+            `;
+            UI.showItemDetailsModal(task.title || 'Task Details', contentHTML);
+          }
+        }
+      });
+    }
+
+    // Setup delegation for old events modal clicks
+    const oldEventsContainer = document.getElementById('old-events-container');
+    if (oldEventsContainer) {
+      oldEventsContainer.addEventListener('click', (e) => {
+        const item = e.target.closest('.old-event-item');
+        if (item && this.oldEvents) {
+          const eventId = item.dataset.eventId;
+          const event = this.oldEvents.find(ev => ev.id === eventId);
+          if (event) {
+            const eventDate = event.date ? event.date.toDate() : new Date();
+            const contentHTML = `
+              <div style="margin-bottom: 15px;">
+                <strong>Target Dept:</strong> <span style="background-color: var(--primary-maroon); color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.9em;">${event.department || 'ALL'}</span>
+              </div>
+              <div style="margin-bottom: 15px;">
+                <strong>Date:</strong> ${Utils.formatDateShort(eventDate)}
+              </div>
+              <div>
+                <strong>Description:</strong>
+                <div style="margin-top: 5px; padding: 10px; background-color: var(--bg-lighter); border-radius: 8px;">
+                  ${Utils.escapeAndLinkify(event.description) || 'No description provided.'}
+                </div>
+              </div>
+            `;
+            UI.showItemDetailsModal(event.title || 'Event Details', contentHTML);
+          }
+        }
+      });
+    }
   },
 
   setupEventsSidebarListeners() {
@@ -546,6 +612,7 @@ const App = {
 
     const result = await DB.getOldTasks(userId, department, semester, section);
     if (result.success) {
+      this.oldTasks = result.data;
       UI.renderOldTasks(result.data);
     }
   },
@@ -1899,6 +1966,7 @@ const App = {
 
     const result = await DB.getOldEvents(department);
     if (result.success) {
+      this.oldEvents = result.data;
       UI.renderOldEvents(result.data);
     }
   },

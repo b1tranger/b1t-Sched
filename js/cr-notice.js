@@ -63,6 +63,15 @@ const CRNoticeViewer = {
                 this.submitEditNotice();
             });
         }
+
+        // Old Notices Modal Listeners
+        const viewOldBtnDesktop = document.getElementById('view-old-cr-notices-btn-desktop');
+        const viewOldBtnMobile = document.getElementById('view-old-cr-notices-btn-mobile');
+        const closeOldModalBtn = document.getElementById('close-old-cr-notices-modal');
+
+        if (viewOldBtnDesktop) viewOldBtnDesktop.addEventListener('click', () => UI.showModal('old-cr-notices-modal'));
+        if (viewOldBtnMobile) viewOldBtnMobile.addEventListener('click', () => UI.showModal('old-cr-notices-modal'));
+        if (closeOldModalBtn) closeOldModalBtn.addEventListener('click', () => UI.hideModal('old-cr-notices-modal'));
     },
 
     async checkCROrAdmin() {
@@ -175,44 +184,91 @@ const CRNoticeViewer = {
     },
 
     renderAllNotices() {
+        const now = new Date();
+        this.activeNotices = [];
+        this.oldNotices = [];
+
+        this.notices.forEach(notice => {
+            if (notice.deadline) {
+                const deadlineDate = new Date(notice.deadline);
+                if (deadlineDate < now) {
+                    this.oldNotices.push(notice);
+                } else {
+                    this.activeNotices.push(notice);
+                }
+            } else {
+                this.activeNotices.push(notice);
+            }
+        });
+
         this.renderDesktopList();
         this.renderMobileList();
+        this.renderOldNoticesList();
     },
 
     renderDesktopList() {
-        const container = document.getElementById('cr-notice-list-desktop');
-        if (!container) return;
+        const activeContainer = document.getElementById('cr-notice-list-desktop');
 
-        if (this.notices.length === 0) {
-            container.innerHTML = `
-                <div class="notice-empty-state">
-                    <i class="fas fa-clipboard"></i>
-                    <p>No notices from CR yet</p>
-                </div>
-            `;
-            return;
+        if (activeContainer) {
+            if (this.activeNotices.length === 0) {
+                activeContainer.innerHTML = `
+                    <div class="notice-empty-state">
+                        <i class="fas fa-clipboard"></i>
+                        <p>No active notices</p>
+                    </div>
+                `;
+            } else {
+                activeContainer.innerHTML = this.activeNotices.map(notice => this.createNoticeCard(notice)).join('');
+                this.addActionListeners(activeContainer);
+            }
         }
-
-        container.innerHTML = this.notices.map(notice => this.createNoticeCard(notice)).join('');
-        this.addActionListeners(container);
     },
 
     renderMobileList() {
-        const container = document.getElementById('cr-notice-list-mobile');
-        if (!container) return;
+        const activeContainer = document.getElementById('cr-notice-list-mobile');
 
-        if (this.notices.length === 0) {
-            container.innerHTML = `
-                <div class="notice-empty-state">
-                    <i class="fas fa-clipboard"></i>
-                    <p>No notices from CR yet</p>
-                </div>
-            `;
-            return;
+        if (activeContainer) {
+            if (this.activeNotices.length === 0) {
+                activeContainer.innerHTML = `
+                    <div class="notice-empty-state">
+                        <i class="fas fa-clipboard"></i>
+                        <p>No active notices</p>
+                    </div>
+                `;
+            } else {
+                activeContainer.innerHTML = this.activeNotices.map(notice => this.createNoticeCard(notice)).join('');
+                this.addActionListeners(activeContainer);
+            }
         }
+    },
 
-        container.innerHTML = this.notices.map(notice => this.createNoticeCard(notice)).join('');
-        this.addActionListeners(container);
+    renderOldNoticesList() {
+        const oldContainer = document.getElementById('old-cr-notices-container');
+        const noOldMsg = document.getElementById('no-old-cr-notices-message');
+
+        if (!oldContainer) return;
+
+        if (this.oldNotices.length === 0) {
+            oldContainer.innerHTML = '';
+            if (noOldMsg) noOldMsg.style.display = 'block';
+        } else {
+            if (noOldMsg) noOldMsg.style.display = 'none';
+            oldContainer.innerHTML = this.oldNotices.map(notice => this.createOldNoticeItem(notice)).join('');
+            this.addActionListeners(oldContainer, true);
+        }
+    },
+
+    createOldNoticeItem(notice) {
+        const date = notice.timestamp ? new Date(notice.timestamp.toDate()).toLocaleDateString() : 'Just now';
+        return `
+        <div class="old-notice-item" data-notice-id="${notice.id}" style="cursor: pointer; padding: 10px; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; gap: 10px; background-color: var(--bg-white);">
+          <i class="fas fa-history" style="color: var(--text-medium);"></i>
+          <div style="flex: 1;">
+            <div style="font-weight: 500; font-size: 0.9em; color: var(--text-dark);">${Utils.escapeAndLinkify(notice.title)}</div>
+            <div style="font-size: 0.8em; color: var(--text-medium);">${date}</div>
+          </div>
+        </div>
+        `;
     },
 
     createNoticeCard(notice) {
@@ -306,7 +362,39 @@ const CRNoticeViewer = {
 `;
     },
 
-    addActionListeners(container) {
+    addActionListeners(container, isOld = false) {
+        if (isOld) {
+            container.querySelectorAll('.old-notice-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    const noticeId = item.dataset.noticeId;
+                    const notice = this.oldNotices.find(n => n.id === noticeId);
+                    if (notice) {
+                        const date = notice.timestamp ? new Date(notice.timestamp.toDate()).toLocaleDateString() : 'Unknown date';
+                        const addedBy = notice.createdByEmail ? notice.createdByEmail.split('@')[0] : 'Unknown';
+                        const contentHTML = `
+                          <div style="margin-bottom: 15px;">
+                            <strong>Priority:</strong> <span style="text-transform: capitalize;">${notice.priority || 'Normal'}</span>
+                          </div>
+                          <div style="margin-bottom: 15px;">
+                            <strong>Posted By:</strong> ${addedBy}
+                          </div>
+                          <div style="margin-bottom: 15px;">
+                            <strong>Date Posted:</strong> ${date}
+                          </div>
+                          <div>
+                            <strong>Description:</strong>
+                            <div style="margin-top: 5px; padding: 10px; background-color: var(--bg-lighter); border-radius: 8px;">
+                              ${Utils.escapeAndLinkify(notice.description) || 'No description provided.'}
+                            </div>
+                          </div>
+                        `;
+                        UI.showItemDetailsModal(notice.title || 'Notice Details', contentHTML);
+                    }
+                });
+            });
+            return;
+        }
+
         // Re-apply visibility for cr-only elements after innerHTML replacement
         if (this._isCR || this._isAdmin) {
             container.querySelectorAll('.cr-only-notice').forEach(el => el.style.display = 'inline-flex');
