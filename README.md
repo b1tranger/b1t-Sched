@@ -597,6 +597,7 @@ Seniors
 - [Kazi Md. Azhar Uddin Abeer (0432320005101120)](https://github.com/4xrhd)
 - [Md.Jihad Hossan (0432320005101017)](https://github.com/tofazmahmud)
 - [Md. Muhaiminul Islam (0432320005101207)](https://github.com/Maheem0)
+- [Rudro Antony Mrong (0432320005101059)](https://github.com/LackOfHP)
 
 Classmates
 - [Jannatul Ferdus (0432410005101058)](https://github.com/jannatulferdus182003)
