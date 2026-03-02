@@ -1196,15 +1196,15 @@ const App = {
     this.isBlocked = false;
     Utils.storage.clear();
 
-    // Hide footer when not logged in
+    // Hide dashboard-specific elements when not logged in
     const appFooter = document.getElementById('app-footer');
     const contribSection = document.getElementById('contributions-section');
-    if (appFooter) {
-      appFooter.style.display = 'none';
-    }
-    if (contribSection) {
-      contribSection.style.display = 'none';
-    }
+    const noteToggleMobile = document.getElementById('note-toggle');
+    const noteButtonDesktop = document.getElementById('note-button-desktop');
+    if (appFooter) appFooter.style.display = 'none';
+    if (contribSection) contribSection.style.display = 'none';
+    if (noteToggleMobile) noteToggleMobile.style.setProperty('display', 'none', 'important');
+    if (noteButtonDesktop) noteButtonDesktop.style.setProperty('display', 'none', 'important');
   },
 
   async loadSetDetailsForm() {

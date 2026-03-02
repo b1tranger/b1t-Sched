@@ -46,6 +46,8 @@ const Profile = {
         try {
           const confirmed = confirm('Are you sure you want to logout?');
           if (confirmed) {
+            // Show loading screen immediately to hide all dashboard elements
+            UI.showLoading(true);
             self.currentProfile = null;
             await Auth.logout();
             // Navigate to login
