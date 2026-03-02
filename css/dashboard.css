@@ -1729,8 +1729,7 @@ body.dark-mode .btn-danger:hover {
 }
 
 /* Home Screen: Pending Tasks deadlines to white */
-body.dark-mode .task-deadline,
-body.dark-mode .task-deadline.urgent {
+body.dark-mode .task-deadline {
     color: var(--text-dark);
     /* text-dark evaluates to white/off-white in new palette */
 }

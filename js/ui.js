@@ -11,9 +11,11 @@ const UI = {
     if (show) {
       loadingScreen.style.display = 'flex';
       appContainer.style.display = 'none';
+      document.body.style.overflow = 'hidden';
     } else {
       loadingScreen.style.display = 'none';
       appContainer.style.display = 'block';
+      document.body.style.overflow = '';
     }
   },
 
@@ -522,21 +524,10 @@ const UI = {
       }
     });
 
-    // Show CR info message for non-CR/non-Admin/non-Faculty users
+    // Hide CR info message for non-CR/non-Admin/non-Faculty users
     const crInfoMessage = document.getElementById('cr-info-message');
     if (crInfoMessage) {
       crInfoMessage.style.display = (isAdmin || isCR || isFaculty) ? 'none' : 'block';
-    }
-
-    // Show footer when logged in
-    const appFooter = document.getElementById('app-footer');
-    if (appFooter) {
-      appFooter.style.display = 'block';
-      // Set current year
-      const yearSpan = document.getElementById('footer-year');
-      if (yearSpan) {
-        yearSpan.textContent = new Date().getFullYear();
-      }
     }
   },
 
@@ -659,6 +650,7 @@ const UI = {
     const userCounter = document.getElementById('total-user-counter');
     const noteToggleMobile = document.getElementById('note-toggle');
     const noteButtonDesktop = document.getElementById('note-button-desktop');
+    const appFooter = document.getElementById('app-footer');
 
     // Helper to safely toggle display
     // IMPORTANT: Note buttons use .mobile-only/.desktop-only classes which have !important
@@ -672,28 +664,30 @@ const UI = {
         el.style.setProperty('display', 'none', 'important');
       }
     };
-
     if (routeName === 'dashboard') {
       if (faqSection) faqSection.style.display = 'block';
       if (contribSection) contribSection.style.display = 'block';
       if (userCounter) userCounter.style.display = 'block';
 
+      // Show footer and set year only on dashboard
+      if (appFooter) {
+        appFooter.style.display = 'block';
+        const yearSpan = document.getElementById('footer-year');
+        if (yearSpan) {
+          yearSpan.textContent = new Date().getFullYear();
+        }
+      }
+
       // Check auth state for Notes
-      // 1. Use forceAuthStatus if provided (boolean)
-      // 2. Check Auth module (js/auth.js)
-      // 3. Check generic window/firebase auth
       let isAuthenticated = false;
 
       if (forceAuthStatus !== null) {
         isAuthenticated = forceAuthStatus;
-        console.log('[UI] Using forced auth status:', isAuthenticated);
       } else {
-        // Try to get current user from Auth module or global objects
         const currentUser = (typeof Auth !== 'undefined' ? Auth.getCurrentUser() : null) ||
           (window.auth && window.auth.currentUser) ||
           (window.firebase && firebase.auth().currentUser);
         isAuthenticated = !!currentUser;
-        console.log('[UI] Detected auth status:', isAuthenticated);
       }
 
       if (isAuthenticated) {
@@ -708,6 +702,7 @@ const UI = {
       if (faqSection) faqSection.style.display = 'none';
       if (contribSection) contribSection.style.display = 'none';
       if (userCounter) userCounter.style.display = 'none';
+      if (appFooter) appFooter.style.display = 'none';
 
       setNoteVisibility(noteToggleMobile, false);
       setNoteVisibility(noteButtonDesktop, false);

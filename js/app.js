@@ -159,6 +159,7 @@ const App = {
   isSigningUp: false, // Flag to prevent auth state handling during signup
   currentFilter: 'all', // State to track active task filter
   classroomInitPromise: null, // Store init promise to await later
+  isLoadingData: false, // Prevent duplicate data fetches during initialization
 
   async init() {
     console.log('Initializing b1t-Sched...');
@@ -1150,10 +1151,6 @@ const App = {
       // Show blocked user warning if applicable
       UI.toggleBlockedUserMode(this.isBlocked);
 
-      // Show footer when logged in
-      const appFooter = document.getElementById('app-footer');
-      if (appFooter) appFooter.style.display = 'block';
-
       // Initialize notification system
       await NotificationManager.init();
 
@@ -1170,7 +1167,8 @@ const App = {
         await Profile.loadProfile();
       } else {
         Router.navigate('dashboard');
-        await this.loadDashboardData();
+        // Ensure data is loaded before we hide the loading screen
+        await this.loadDashboardData(false);
       }
     } else {
       // First-time login, show set details
@@ -1189,8 +1187,8 @@ const App = {
   },
 
   handleUnauthenticatedUser() {
-    UI.showLoading(false);
     Router.navigate('login');
+    UI.showLoading(false);
     this.userProfile = null;
     this.isAdmin = false;
     this.isCR = false;
@@ -1302,75 +1300,69 @@ const App = {
     }
   },
 
-  async loadDashboardData() {
-    if (!this.userProfile) return;
+  async loadDashboardData(showLoader = true) {
+    if (!this.userProfile || this.isLoadingData) return;
+    this.isLoadingData = true;
 
-    UI.showLoading(true);
+    try {
+      if (showLoader) UI.showLoading(true);
 
-    const userId = Auth.getUserId();
-    const { department, semester, section } = this.userProfile;
+      const userId = Auth.getUserId();
+      const { department, semester, section } = this.userProfile;
 
-    // Load resource links
-    const resourceResult = await DB.getResourceLinks(department);
-    if (resourceResult.success) {
-      UI.renderResourceLinks(resourceResult.data);
-    }
-
-    // Load user's task completions
-    const completionsResult = await DB.getUserTaskCompletions(userId);
-    if (completionsResult.success) {
-      this.userCompletions = completionsResult.data;
-    }
-
-    // Load tasks - Faculty users get department-wide tasks, others get section-specific tasks
-    let tasksResult;
-    if (this.isFaculty) {
-      tasksResult = await DB.getFacultyTasks(department);
-    } else {
-      tasksResult = await DB.getTasks(department, semester, section);
-    }
-
-    if (tasksResult.success) {
-      this.currentTasks = tasksResult.data;
-      UI.renderTasks(this.currentTasks, this.userCompletions, this.isAdmin, this.isCR, userId);
-
-      // Notify calendar view of task updates
-      if (this.calendarView) {
-        this.calendarView.onTasksUpdated();
+      // Load resource links
+      const resourceResult = await DB.getResourceLinks(department);
+      if (resourceResult.success) {
+        UI.renderResourceLinks(resourceResult.data);
       }
-    } else {
-      console.error('Failed to load tasks:', tasksResult.error);
-      // Check if it's an index error
-      if (tasksResult.error && tasksResult.error.includes('index')) {
-        alert('Firestore index required. Check browser console for the index creation link.');
+
+      // Load user's task completions
+      const completionsResult = await DB.getUserTaskCompletions(userId);
+      if (completionsResult.success) {
+        this.userCompletions = completionsResult.data;
       }
+
+      // Load tasks
+      let tasksResult;
+      if (this.isFaculty) {
+        tasksResult = await DB.getFacultyTasks(department);
+      } else {
+        tasksResult = await DB.getTasks(department, semester, section);
+      }
+
+      if (tasksResult.success) {
+        this.currentTasks = tasksResult.data;
+        UI.renderTasks(this.currentTasks, this.userCompletions, this.isAdmin, this.isCR, userId);
+        if (this.calendarView) {
+          this.calendarView.onTasksUpdated();
+        }
+      }
+
+      // Load events
+      const eventsResult = await DB.getEvents(department);
+      if (eventsResult.success) {
+        this.currentEvents = eventsResult.data;
+        UI.renderEvents(this.currentEvents, this.isAdmin, this.isCR, this.isFaculty, userId);
+      }
+
+      this.setupTaskFilterListeners();
+
+      // Re-apply current filter if set
+      if (this.currentFilter && this.currentFilter !== 'all') {
+        const radio = document.querySelector(`input[name="task-filter"][value="${this.currentFilter}"]`);
+        if (radio) radio.checked = true;
+        this.filterTasksByType(this.currentFilter);
+        const clearBtn = document.getElementById('clear-task-filter-btn');
+        if (clearBtn) clearBtn.style.display = 'inline-flex';
+      }
+
+      this.updateUserCount();
+    } catch (error) {
+      console.error('[App] Error in loadDashboardData:', error);
+    } finally {
+      this.isLoadingData = false;
+      if (showLoader) UI.showLoading(false);
     }
-
-    // Load events
-    const eventsResult = await DB.getEvents(department);
-    if (eventsResult.success) {
-      this.currentEvents = eventsResult.data;
-      UI.renderEvents(this.currentEvents, this.isAdmin, this.isCR, this.isFaculty, userId);
-    }
-
-    // Setup new features listeners (safe to call multiple times as they replace old ones or we can check init)
-    this.setupTaskFilterListeners();
-
-    // Re-apply current filter if set
-    if (this.currentFilter && this.currentFilter !== 'all') {
-      const radio = document.querySelector(`input[name="task-filter"][value="${this.currentFilter}"]`);
-      if (radio) radio.checked = true;
-      this.filterTasksByType(this.currentFilter);
-
-      // Show clear button
-      const clearBtn = document.getElementById('clear-task-filter-btn');
-      if (clearBtn) clearBtn.style.display = 'inline-flex';
-    }
-
-    // Update total user count
-    this.updateUserCount();
-
-    UI.showLoading(false);
   },
 
   // ============================================
@@ -1785,7 +1777,6 @@ const App = {
           // Update cache asynchronously
           DB.updateUserCountCache(count);
         } else {
-          // Fallback to cache if list fails
           const cacheResult = await DB.getUserCountFromCache();
           if (cacheResult.success) {
             count = cacheResult.count;
@@ -1798,26 +1789,15 @@ const App = {
         if (cacheResult.success) {
           count = cacheResult.count;
           usedCache = true;
-        } else {
-          // If no cache exists yet, just hide
-          if (counterContainer) counterContainer.style.display = 'none';
-          return;
         }
       }
 
       if (count > 0) {
         if (countElModal) countElModal.textContent = count;
         if (countElFooter) countElFooter.textContent = count;
-
-        if (counterContainer) {
-          counterContainer.style.display = 'flex';
-        }
-      } else {
-        if (counterContainer) counterContainer.style.display = 'none';
       }
     } catch (e) {
       console.warn('Error fetching user count:', e);
-      if (counterContainer) counterContainer.style.display = 'none';
     }
   },
 

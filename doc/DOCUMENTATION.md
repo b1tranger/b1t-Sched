@@ -44,8 +44,9 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **Role Badges** - Visual indicators for CR and Faculty contributors in task cards and contribution lists
 - **Responsive Design** - Works on desktop, tablet, and mobile
 - **Maroon Theme** - Professional dark maroon and off-white color scheme
-- **Dark Theme Customization** - Dynamic, RealtimeColors-based dark theme (`#1a1c0d`, `#d4dd93`, `#d5eb2c` palette) with seamless toggling via "Appearance Settings" in the Profile menu. Avoids caching FOUC (flash of unstyled content) via inline scripting.
+- **Dark Theme Customization** - Dynamic, RealtimeColors-based dark theme (`#1a1c0d`, `#d4dd93`, `#d5eb2c` palette) with seamless toggling via "Appearance Settings" in the Profile menu. Avoids caching FOUC (flash of unstyled content) via inline scripting. Includes high-contrast, dark red styling (`#8b0000`) for urgent deadline visibility.
 - **Gray Mode Theme** - A sleek monochromatic alternative theme. Modern system dark mode preferences now default to "Gray Mode" for a premium, low-strain experience. Includes full UI integration for Classroom, Timeline, and Dashboards.
+- **Improved Initial Preloader** - A synchronized loading screen that persists until all dashboard data is fully fetched. Features a high `z-index` overlay (10005) and body scroll locking to prevent premature element visibility.
 - **Admin Features** - Task reset, task/event delete, event creation, user management with password reset and deletion
 - **Admin User Management** - View all users, manage roles (CR/Faculty/Blocked), edit user profiles, send password resets (via Client SDK), delete users
 - **Password Reset Enhancements** - "Forgot Password" link on login failure, "Reset Password" button in Profile Settings, and robust Admin reset functionality bypassing CORS issues
@@ -59,8 +60,6 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **Note Taking** - Personal note-taking feature with markdown support, auto-save, and PDF export. Supports file attachments via temporary link sharing (Catbox/Tmpfiles) and a "Shorten" feature that exports notes as a local `.md` file for manual sharing. PDF export is optimized for both light and dark themes with forced visibility.
 - **Task Filtering** - Filter pending tasks by type (Assignment, Homework, Exam, Project, Presentation, Other)
 - **Global Contributions** - View a leaderboard of top contributors (group-specific or global across all departments)
-- **User Counter** - Live count of total registered users displayed on the dashboard and footer
-- **Activity Timeline** - Visual heatmap and bar chart tracking user activity (logins, tasks, events, profile updates) to visualize productivity patterns. Includes a backpopulation utility for existing tasks.
 - **User Counter** - Live count of total registered users displayed on the dashboard and footer.
 - **Mobile Calendar** - Monthly and weekly views for mobile with a toggle to switch between them. Monthly view features a compact date grid with maroon dot indicators for dates with tasks, today highlight, and a tappable task list panel showing course + title + deadline time. Weekly view provides vertical scrolling by week. Includes Month/Year dropdowns for quick navigation.
 - **FAQ Section** - Collapsible accordion explaining how the site works, user roles, and profile settings
@@ -2240,7 +2239,14 @@ You can use basic markdown formatting in task and event descriptions:
 
 ## Version History
 
-### v2.38.0 (Current)
+### v2.39.0 (Current)
+- **Fix**: **Urgent Deadline Visibility** — Updated Dark Mode styling for urgent deadlines to use high-contrast dark red (`#8b0000`) text, improving readability over the warning background.
+- **Fix**: **Application Preloader Logic** — Resolved issue where the footer and user counter were visible prematurely during initial load; visibility is now synchronized with data completion.
+- **Enhancement**: **Enhanced Loading Screen** — Increased preloader `z-index` to `10005` and implemented body scroll locking while the loading screen is active.
+- **Refactor**: **Visibility Controller** — Centralized all dashboard-specific element visibility (Footer, Total User Count, FAQ, Contributions) into the route-based logic in `UI.updateSectionVisibility()`.
+- **Refactor**: **Data Fetching Synchronization** — Added `isLoadingData` state and improved `handleAuthenticatedUser` logic to ensure the dashboard is fully populated before revealing the UI.
+
+### v2.38.0 (Stable)
 - **Fix**: **Note PDF Export** — Forced a white background and black text during PDF generation to ensure visibility in dark mode. Added `.printing-pdf` CSS class for style overrides.
 - **Enhancement**: **Note Shorten Feature** — Simplified "Shorten" to a local `.md` download with the `shortened-` prefix, bypassing JS upload blocks and CORS issues.
 - **Fix**: **Note Modal UI** — Added `min-height: 0` to the modal body and adjusted flex properties to prevent message banners from overlapping with text fields or action buttons.
