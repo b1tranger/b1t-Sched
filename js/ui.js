@@ -7,15 +7,23 @@ const UI = {
   showLoading(show = true) {
     const loadingScreen = document.getElementById('loading-screen');
     const appContainer = document.getElementById('app');
+    const noteToggleMobile = document.getElementById('note-toggle');
+    const noteButtonDesktop = document.getElementById('note-button-desktop');
 
     if (show) {
       loadingScreen.style.display = 'flex';
       appContainer.style.display = 'none';
       document.body.style.overflow = 'hidden';
+      // Hide note buttons during loading (.hidden has !important to override .mobile-only/.desktop-only)
+      if (noteToggleMobile) noteToggleMobile.classList.add('hidden');
+      if (noteButtonDesktop) noteButtonDesktop.classList.add('hidden');
     } else {
       loadingScreen.style.display = 'none';
       appContainer.style.display = 'block';
       document.body.style.overflow = '';
+      // Remove hidden class so CSS visibility classes can take over
+      if (noteToggleMobile) noteToggleMobile.classList.remove('hidden');
+      if (noteButtonDesktop) noteButtonDesktop.classList.remove('hidden');
     }
   },
 

@@ -459,8 +459,9 @@ body.dark-mode .task-deadline.urgent {
 .tasks-container a,
 .events-container a,
 .modal-body a {
-  color: rgb(68, 71, 250) !important;
+  color: rgb(255, 155, 24) !important;
   text-decoration: underline;
+  text-shadow: 0 0 5px rgba(255, 155, 24, 0.5);
 }
 
 .task-type-badge {
