@@ -48,7 +48,8 @@ body.gray-mode {
 .classroom-toggle {
     position: fixed;
     right: 0;
-    top: 280px;
+    /* top: 280px; */
+    bottom: 200px;
     /* Below Notice (200px) and Events (120px) */
     background-color: var(--classroom-green);
     color: white;
