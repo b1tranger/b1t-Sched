@@ -42,7 +42,7 @@ class OfflineIndicator {
   createIndicator() {
     // Check if indicator already exists
     this.indicator = document.getElementById('offline-indicator');
-    
+
     if (!this.indicator) {
       // Create indicator
       this.indicator = document.createElement('div');
@@ -53,7 +53,7 @@ class OfflineIndicator {
         <i class="fas fa-wifi-slash"></i>
         <span>You're offline. Showing cached content.</span>
       `;
-      
+
       document.body.appendChild(this.indicator);
       console.log('[Offline Indicator] Indicator element created');
     }
@@ -65,6 +65,7 @@ class OfflineIndicator {
   showOfflineIndicator() {
     if (this.indicator) {
       this.indicator.style.display = 'flex';
+      document.body.classList.add('offline-active');
       console.log('[Offline Indicator] Showing indicator');
     }
   }
@@ -75,6 +76,7 @@ class OfflineIndicator {
   hideOfflineIndicator() {
     if (this.indicator) {
       this.indicator.style.display = 'none';
+      document.body.classList.remove('offline-active');
       console.log('[Offline Indicator] Hiding indicator');
     }
   }

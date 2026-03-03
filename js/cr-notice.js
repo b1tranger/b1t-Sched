@@ -264,7 +264,7 @@ const CRNoticeViewer = {
         <div class="old-notice-item" data-notice-id="${notice.id}" style="cursor: pointer; padding: 10px; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; gap: 10px; background-color: var(--bg-white);">
           <i class="fas fa-history" style="color: var(--text-medium);"></i>
           <div style="flex: 1;">
-            <div style="font-weight: 500; font-size: 0.9em; color: var(--text-dark);">${Utils.escapeAndLinkify(notice.title)}</div>
+            <div style="font-weight: 500; font-size: 0.9em; color: var(--text-dark); word-break: break-word;">${Utils.escapeAndLinkify(notice.title)}</div>
             <div style="font-size: 0.8em; color: var(--text-medium);">${date}</div>
           </div>
         </div>

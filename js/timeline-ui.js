@@ -61,7 +61,7 @@ const TimelineUI = {
                             <i class="fas fa-info-circle"></i>
                         </span>
                     </h2>
-                    <span class="close-btn" id="close-timeline-modal">&times;</span>
+                    <button class="btn btn-icon" id="close-timeline-modal"><i class="fas fa-times"></i></button>
                 </div>
                 <div class="modal-body">
                     <div class="timeline-controls">
@@ -146,7 +146,7 @@ const TimelineUI = {
             <div class="modal-content" style="max-width: 500px;">
                 <div class="modal-header">
                     <h3 id="popup-date-title">Date</h3>
-                    <span class="close-btn" id="close-popup-btn">&times;</span>
+                    <button class="btn btn-icon" id="close-popup-btn"><i class="fas fa-times"></i></button>
                 </div>
                 <div class="modal-body" id="popup-details-body" style="max-height: 400px; overflow-y: auto;">
                     <!-- Content injected here -->

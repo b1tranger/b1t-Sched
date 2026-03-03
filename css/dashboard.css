@@ -535,9 +535,7 @@ body.dark-mode .description-link:hover {
     font-weight: var(--font-medium);
     color: var(--text-dark);
     margin-bottom: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    word-break: break-word;
 }
 
 .old-task-item .task-meta {
@@ -709,6 +707,12 @@ body.dark-mode .description-link:hover {
 
 }
 
+/* Prevent task title from extending under the type badge */
+.task-header>div:first-child {
+    padding-right: 110px;
+    word-break: break-word;
+}
+
 /* Vertical task actions (edit/delete buttons) */
 .task-actions-vertical {
     display: flex;
@@ -841,9 +845,7 @@ body.dark-mode .description-link:hover {
     font-weight: var(--font-medium);
     color: var(--text-dark);
     margin-bottom: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    word-break: break-word;
 }
 
 .old-event-item .event-meta {

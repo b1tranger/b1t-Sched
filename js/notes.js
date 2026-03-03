@@ -186,31 +186,31 @@ const NoteManager = {
 
     if (!url || url === '#') return;
 
-    // Try to trigger direct download
+    // Open the file URL directly — browsers will download or display based on content type
+    window.open(url, '_blank', 'noopener,noreferrer');
+
+    // Show the download helper with platform-specific fallback instructions
     const downloadHelper = document.getElementById('note-download-helper');
     const fallbackLink = document.getElementById('note-download-fallback-link');
 
-    // Create a temporary anchor to force download
-    const tempLink = document.createElement('a');
-    tempLink.href = url;
-    tempLink.target = '_blank';
-    tempLink.rel = 'noopener noreferrer';
-    // Try setting download attribute (works for same-origin)
-    const filename = url.split('/').pop() || 'download';
-    tempLink.download = filename;
-    document.body.appendChild(tempLink);
-    tempLink.click();
-    document.body.removeChild(tempLink);
-
-    // Show the download helper with fallback link
     if (downloadHelper && fallbackLink) {
       fallbackLink.href = url;
+
+      // Detect mobile vs desktop for appropriate instructions
+      const isMobile = window.innerWidth <= 768 || /Mobi|Android/i.test(navigator.userAgent);
+      const helperText = downloadHelper.querySelector('.download-helper-text');
+      if (helperText) {
+        helperText.innerHTML = isMobile
+          ? 'If the file didn\'t download, <strong>press and hold</strong> the link above, then tap <strong>"Open in new tab"</strong>.'
+          : 'If the file didn\'t download, <strong>right-click</strong> the link above and select <strong>"Save link as..."</strong>.';
+      }
+
       downloadHelper.style.display = 'flex';
 
-      // Auto-hide after 8 seconds
+      // Auto-hide after 10 seconds
       setTimeout(() => {
         downloadHelper.style.display = 'none';
-      }, 8000);
+      }, 10000);
     }
   },
 

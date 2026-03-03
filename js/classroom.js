@@ -130,24 +130,12 @@ const Classroom = {
                 }
             }
 
-            // If no valid token but was connected, try silent refresh
+            // If no valid token but was connected, defer silent refresh to when user opens Classroom
+            // This avoids the Google Sign-In iframe/popup flash during page load
             if (isConnected) {
-                console.log('Attempting to restore session via silent refresh...');
-                // Wait a moment for token client to be ready
-                setTimeout(() => {
-                    if (this.tokenClient) {
-                        try {
-                            // Use 'none' to avoid popup
-                            this.tokenClient.requestAccessToken({ prompt: 'none' });
-                        } catch (e) {
-                            console.error('Silent refresh failed:', e);
-                            this.logout(); // Clean up invalid state
-                            this._cleanupAuthPromise(false);
-                        }
-                    } else {
-                        this._cleanupAuthPromise(false);
-                    }
-                }, 1000);
+                console.log('Session expired — deferring silent refresh to user interaction');
+                this.needsSilentRefresh = true;
+                this._cleanupAuthPromise(false);
             } else {
                 // No session to restore
                 this._cleanupAuthPromise(false);
@@ -241,6 +229,22 @@ const Classroom = {
             this.toggleSidebar(true);
         } else {
             this.toggleModal(true);
+        }
+
+        // If we deferred a silent refresh from page load, attempt it now
+        if (this.needsSilentRefresh && !this.accessToken) {
+            this.needsSilentRefresh = false;
+            console.log('Attempting deferred silent refresh...');
+            this.renderLoading('Reconnecting to Google Classroom...');
+            if (this.tokenClient) {
+                try {
+                    this.tokenClient.requestAccessToken({ prompt: 'none' });
+                } catch (e) {
+                    console.error('Deferred silent refresh failed:', e);
+                    this.logout(); // Clean up invalid state
+                }
+            }
+            return;
         }
 
         // If not authenticated, show login button

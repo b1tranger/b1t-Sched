@@ -865,13 +865,52 @@ body.dark-mode .install-prompt {
   font-size: 16px;
 }
 
-/* Adjust main content when offline indicator is shown */
-body:has(.offline-indicator[style*="display: flex"]) .navbar {
+/* Mobile: reduce offline banner height */
+@media (max-width: 768px) {
+  .offline-indicator {
+    padding: 6px 12px;
+    font-size: 12px;
+    gap: 6px;
+  }
+
+  .offline-indicator i {
+    font-size: 13px;
+  }
+}
+
+/* Adjust ALL content when offline indicator is shown (using body class for compatibility) */
+body.offline-active .navbar {
   top: 44px;
 }
 
-body:has(.offline-indicator[style*="display: flex"]) .main-content {
+body.offline-active .main-content {
   margin-top: 44px;
+}
+
+/* Push all fixed sidebar toggles down when offline */
+body.offline-active .events-toggle,
+body.offline-active .notice-toggle,
+body.offline-active .classroom-toggle,
+body.offline-active .note-toggle {
+  margin-top: 44px;
+}
+
+/* Mobile: smaller banner = smaller offset */
+@media (max-width: 768px) {
+  body.offline-active .navbar {
+    top: 30px;
+  }
+
+  body.offline-active .main-content {
+    margin-top: 30px;
+  }
+
+  body.offline-active .events-toggle,
+  body.offline-active .notice-toggle,
+  body.offline-active .classroom-toggle,
+  body.offline-active .note-toggle {
+    margin-top: 30px;
+  }
 }
 
 
