@@ -152,13 +152,15 @@ body.dark-mode .description-link:hover {
 }
 
 .task-card-inner {
-    display: flex;
-    gap: var(--spacing-md);
+    display: block;
+    position: relative;
 }
 
 .task-checkbox-wrapper {
-    flex-shrink: 0;
-    padding-top: 2px;
+    position: absolute;
+    top: 2px;
+    left: 0;
+    z-index: 11;
 }
 
 .task-checkbox {
@@ -708,9 +710,10 @@ body.dark-mode .description-link:hover {
 
 }
 
-/* Prevent task title from extending under the type badge */
+/* Prevent task title from extending under the type badge and checkbox */
 .task-header>div:first-child {
     padding-right: 110px;
+    padding-left: 38px;
     word-break: break-word;
 }
 

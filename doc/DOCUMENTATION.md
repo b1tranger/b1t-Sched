@@ -38,7 +38,7 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **Event Calendar** - Track upcoming academic events with basic markdown, clickable links, collapsible descriptions (2-line truncation), and department scope badge (ALL/CSE/etc.)
 - **Event Editing** - Admins can edit all events; CRs can edit/delete their own events
 - **Resource Links** - Quick access to department-specific resources with built-in PDF viewer (desktop: Google Docs Viewer in modal; mobile: opens in new tab)
-- **Google Classroom Integration** - View all assignments and announcements from enrolled courses in a unified interface with OAuth authentication and session persistence (auto-refresh tokens). Includes a one-click **Sync to Tasks** feature for Admins/CRs to automatically add Classroom assignments to the main Tasks list (avoids duplicates). The initialization process is synchronized with the app's loading screen to hide the Google Identity Services (GIS) silent refresh flicker.
+- **Google Classroom Integration** - View all assignments and announcements from enrolled courses in a unified interface with OAuth authentication and session persistence (auto-refresh tokens). Includes a one-click **Sync to Tasks** feature for Admins/CRs to automatically add Classroom assignments to the main Tasks list (avoids duplicates). Initial silent token refresh is deferred until the user explicitly opens the Classroom panel to prevent any brief Google Sign-In flash on page load.
 - **Session Security** - Automatic logout after 1 hour of inactivity (unless "Stay logged in" is checked), with activity-based timer reset for enhanced security
 - **Stay Logged In** - Optional "Trust this device" checkbox on login to persist session indefinitely on safe devices
 - **Role Badges** - Visual indicators for CR and Faculty contributors in task cards and contribution lists
@@ -661,7 +661,7 @@ NoteManager.UPLOAD_TIMEOUT = 20000         // 20-second timeout per upload provi
 - **Auto-save:** Saves note content automatically with 500ms debounce.
 - **Robust File Uploads:** Tries Catbox (up to 200MB) followed by Tmpfiles (up to 100MB), racing against a 20-second timeout per provider.
 - **Upload Fallback:** If all automatic uploads fail, shows a helper message suggesting manual upload to file.io.
-- **Immediate Downloads:** Clicking a file link triggers an immediate download using a temporary anchor tag, showing a helper message if browser block occurs.
+- **Immediate Downloads:** Clicking a file link in the preview triggers a direct `window.open()` call. If a direct download is blocked or fails (e.g., cross-origin), a helper message appears with platform-specific instructions (Mobile: "press and hold → Open in new tab"; Desktop: "right-click → Save link as...").
 - **"Shorten" Automation:** Allows users to convert their entire text note into a hosted `.md` file to save space and simplify sharing.
 - **Markdown Links:** Inserts `[filename](url)` at cursor position after upload.
 - **Persistent Storage:** Notes stored in Firestore user document (max 1MB).
@@ -809,7 +809,7 @@ During signup, Firebase triggers `onAuthStateChanged` immediately when the user 
 **Authentication Flow:**
 - Uses **Google Identity Services (GIS)** for OAuth 2.0.
 - Implements a promise-based initialization (`init()`) that allows the main application to synchronize the loading screen with the authentication check.
-- **Silent Refresh:** Attempts to restore session via `prompt: 'none'` if previously connected. This process is hidden behind the app's initial "Loading..." screen to prevent pop-up flicker.
+- **Deferred Silent Refresh:** Attempts to restore session via `prompt: 'none'` if previously connected. To prevent any Sign-In iframe/popup flash during page load, the actual refresh request is deferred until the user explicitly clicks the Classroom navigation button or toggle.
 - **Timeout:** Includes a 5-second safety timeout to ensure the app proceeds to load even if the Google API is slow or blocked.
 
 **Properties:**
@@ -1642,8 +1642,8 @@ Router.onRouteChange((routeName) => {
 
 ---
 
-*Documentation last updated: February 25, 2026*
-*Version: 2.39.0*
+*Documentation last updated: March 3, 2026*
+*Version: 2.40.0*
 
 
 ---
@@ -2239,7 +2239,16 @@ You can use basic markdown formatting in task and event descriptions:
 
 ## Version History
 
-### v2.39.0 (Current)
+### v2.40.0 (Latest)
+- **Fix**: **Google Classroom Login Flash** — Defer silent token refresh logic until user interaction (clicking navigation button or toggle) to prevent a brief Google Sign-In interface flash on initial page load. Added `needsSilentRefresh` flag and loading state during deferred reconnection.
+- **Fix**: **Task Card Layout Optimization** — Expanded description and deadline width to fill the empty space below checkboxes. Switched checkbox to absolute positioning and adjusted header padding (`padding-left: 38px`).
+- **Fix**: **Offline Banner Mobile Layout** — Reduced height/padding of the offline banner on mobile screens. Improved layout logic to push the entire page content (including fixed-position sidebar toggles like Events and Classroom) downward when the banner is active using `body.offline-active`.
+- **Fix**: **Note Link Download Reliability** — Rewrote link click handler to use `window.open()` and implemented platform-specific fallback instructions (Mobile: long-press; Desktop: right-click) via the download helper.
+- **Fix**: **Title Wrap for Recent/Old Items** — Fixed a bug where long titles in "Old Tasks", "Old Events", and "Old Notices" were truncated with ellipsis. Now uses `word-break: break-word` for full visibility.
+- **Fix**: **Task Title Overlap** — Added significant right padding to the task header title area to prevent overlapping with the task type badge and action buttons.
+- **Enhancement**: **Unified Close Buttons** — Replaced legacy `<span>×</span>` close buttons in the Activity Timeline modal and details popup with standard, accessible `<button class="btn btn-icon">` elements.
+
+### v2.39.0 (Stable)
 - **Fix**: **Urgent Deadline Visibility** — Updated Dark Mode styling for urgent deadlines to use high-contrast dark red (`#8b0000`) text, improving readability over the warning background.
 - **Fix**: **Application Preloader Logic** — Resolved issue where the footer and user counter were visible prematurely during initial load; visibility is now synchronized with data completion.
 - **Enhancement**: **Enhanced Loading Screen** — Increased preloader `z-index` to `10005` and implemented body scroll locking while the loading screen is active.
