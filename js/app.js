@@ -964,7 +964,7 @@ const App = {
       const user = Auth.getCurrentUser();
       if (user && !user.emailVerified) {
         UI.showLoading(false);
-        UI.showMessage('auth-message', 'Please verify your email before logging in. Check your inbox for the verification link.', 'error');
+        UI.showMessage('auth-message', 'Please verify your email before logging in. Check your inbox (or spam folder) for the verification link.', 'error');
         await Auth.logout();
         return;
       }
@@ -1074,7 +1074,7 @@ const App = {
   async handleAuthenticatedUser(user) {
     // Check if email is verified
     if (!user.emailVerified) {
-      UI.showMessage('auth-message', 'Please verify your email before logging in. Check your inbox for the verification link.', 'error');
+      UI.showMessage('auth-message', 'Please verify your email before logging in. Check your inbox (or spam folder) for the verification link.', 'error');
       await Auth.logout();
       UI.showLoading(false);
       return;
