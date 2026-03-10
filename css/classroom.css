@@ -473,6 +473,78 @@ body.dark-mode .classroom-modal-header {
 }
 
 /* =========================================
+   Expired Session Banner
+   ========================================= */
+.classroom-expired-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 16px;
+    background-color: #fff8e1;
+    border-bottom: 1px solid #ffe082;
+    font-size: 0.85rem;
+    color: #6d4c00;
+    flex-wrap: wrap;
+}
+
+.expired-banner-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+}
+
+.expired-banner-content i {
+    color: #f9a825;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.expired-banner-btn {
+    background-color: var(--classroom-green);
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.expired-banner-btn:hover {
+    background-color: var(--classroom-green-hover);
+}
+
+/* Dark mode banner */
+body.dark-mode .classroom-expired-banner {
+    background-color: #2a2510;
+    border-bottom-color: #4a3f1a;
+    color: #e8d99a;
+}
+
+body.dark-mode .expired-banner-content i {
+    color: #d4a017;
+}
+
+/* Gray mode banner */
+body.gray-mode .classroom-expired-banner {
+    background-color: #2b2520;
+    border-bottom-color: #4a3a2a;
+    color: #e8d9c8;
+}
+
+body.gray-mode .expired-banner-content i {
+    color: #d4a060;
+}
+
+/* =========================================
    Back Button (Inner View)
    ========================================= */
 .classroom-back-btn {

@@ -19,8 +19,8 @@ const Classroom = {
     currentView: 'todo', // 'todo' or 'notifications'
     refreshTimer: null,
     _authResolve: null, // Promise resolver for session check
-    _authReject: null,  // Promise rejecter for session check
     _sessionCheckTimeout: null,
+    hasExpiredSession: false, // Flag for showing cached data with re-sign-in prompt
 
     // Cache
     cache: {},
@@ -130,16 +130,16 @@ const Classroom = {
                 }
             }
 
-            // If no valid token but was connected, defer silent refresh to when user opens Classroom
-            // This avoids the Google Sign-In iframe/popup flash during page load
+            // If no valid token but was connected, mark as expired session
+            // so we can show cached data with a re-sign-in prompt when user opens Classroom
             if (isConnected) {
-                console.log('Session expired — deferring silent refresh to user interaction');
-                this.needsSilentRefresh = true;
-                this._cleanupAuthPromise(false);
-            } else {
-                // No session to restore
-                this._cleanupAuthPromise(false);
+                console.log('Session expired — will show cached data with re-sign-in prompt');
+                this.hasExpiredSession = true;
+                localStorage.removeItem('classroom_connected');
+                localStorage.removeItem('classroom_token');
+                localStorage.removeItem('classroom_token_expiry');
             }
+            this._cleanupAuthPromise(false);
         });
     },
 
@@ -155,11 +155,13 @@ const Classroom = {
     },
 
     _handleAuthError(error) {
-        if (error === 'immediate_failed') {
-            console.log('Silent refresh failed (immediate_failed)');
-        } else {
-            this.renderError('Failed to authenticate with Google.');
-        }
+        console.log('Auth error:', error);
+        // Clean up any stale session state
+        localStorage.removeItem('classroom_connected');
+        localStorage.removeItem('classroom_token');
+        localStorage.removeItem('classroom_token_expiry');
+        // Show login state so user can sign in fresh
+        this.renderLoginState();
         this._cleanupAuthPromise(false);
     },
 
@@ -231,19 +233,11 @@ const Classroom = {
             this.toggleModal(true);
         }
 
-        // If we deferred a silent refresh from page load, attempt it now
-        if (this.needsSilentRefresh && !this.accessToken) {
-            this.needsSilentRefresh = false;
-            console.log('Attempting deferred silent refresh...');
-            this.renderLoading('Reconnecting to Google Classroom...');
-            if (this.tokenClient) {
-                try {
-                    this.tokenClient.requestAccessToken({ prompt: 'none' });
-                } catch (e) {
-                    console.error('Deferred silent refresh failed:', e);
-                    this.logout(); // Clean up invalid state
-                }
-            }
+        // If session expired, try to show cached data with a re-sign-in banner
+        if (this.hasExpiredSession && !this.accessToken) {
+            this.hasExpiredSession = false;
+            console.log('Session expired — attempting to show cached data');
+            this.showCachedDataWithBanner();
             return;
         }
 
@@ -728,6 +722,69 @@ const Classroom = {
                 `;
             }
         });
+    },
+
+    // Show cached classroom data with an expired session banner
+    async showCachedDataWithBanner() {
+        this.initCacheManager();
+
+        if (!this.cacheManager) {
+            // No cache manager available, fall back to login screen
+            this.renderLoginState();
+            return;
+        }
+
+        // Try to load cached data for the current view
+        const type = this.currentView === 'notifications' ? 'announcements' : 'assignments';
+        const cachedData = await this.cacheManager.getCachedClassroomData(type);
+
+        if (cachedData && cachedData.data && cachedData.data.length > 0) {
+            console.log(`[Classroom] Showing cached ${type} with expired session banner`);
+
+            // Calculate how long ago the data was cached
+            const cachedAgo = Date.now() - cachedData.timestamp;
+            const hoursAgo = Math.floor(cachedAgo / (1000 * 60 * 60));
+            const minsAgo = Math.floor(cachedAgo / (1000 * 60));
+            let timeLabel;
+            if (hoursAgo >= 24) {
+                const daysAgo = Math.floor(hoursAgo / 24);
+                timeLabel = `${daysAgo} day${daysAgo > 1 ? 's' : ''} ago`;
+            } else if (hoursAgo >= 1) {
+                timeLabel = `${hoursAgo} hour${hoursAgo > 1 ? 's' : ''} ago`;
+            } else {
+                timeLabel = `${minsAgo} minute${minsAgo > 1 ? 's' : ''} ago`;
+            }
+
+            // Render the cached items with a banner
+            this.renderAllItems(cachedData.data, this.currentView);
+
+            // Prepend the expired session banner to all containers
+            const bannerHtml = this.renderExpiredSessionBanner(timeLabel);
+            const containers = this.getContainers();
+            containers.forEach(container => {
+                if (container) {
+                    container.insertAdjacentHTML('afterbegin', bannerHtml);
+                }
+            });
+        } else {
+            // No cached data available, show login screen
+            console.log('[Classroom] No cached data available, showing login screen');
+            this.renderLoginState();
+        }
+    },
+
+    renderExpiredSessionBanner(timeLabel) {
+        return `
+            <div class="classroom-expired-banner">
+                <div class="expired-banner-content">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Session expired · Last updated ${timeLabel}</span>
+                </div>
+                <button class="expired-banner-btn" onclick="Classroom.login()">
+                    <i class="fas fa-sign-in-alt"></i> Sign in
+                </button>
+            </div>
+        `;
     },
 
     renderCourseList() {
