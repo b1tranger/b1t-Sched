@@ -965,6 +965,8 @@ Classroom.DATE_FILTER_MONTHS = 6  // Only show items from last 6 months
 - **Session Persistence:** Automatically restores session on page reload using `localStorage` and silent token refresh
 - **Auto-Refresh:** Proactively refreshes access tokens 5 minutes before expiry to prevent session timeouts
 - **Retry Logic:** Automatically retries initialization if Google Identity Services isn't loaded yet
+- **Cache Fallback:** If the session is expired, shows cached assignments/announcements with an amber expiry banner instead of a broken login UI flash.
+- **Manual Refresh:** Adds a dedicated refresh button (🔄) to manually clear cache and fetch fresh Classroom data.
 
 **Date Filter Configuration:**
 
@@ -1833,6 +1835,7 @@ NoteManager.currentUserId = null           // Current authenticated user
 - **Persistent Storage:** Notes stored in Firestore user document (max 1MB)
 - **Upload Progress:** Shows spinner and provider name during upload
 - **Error Handling:** Validates file size and handles upload failures gracefully
+- **PDF Export:** Generates PDF locally with `html2pdf.js` featuring reliable rendering for dark and gray themes via delayed capture techniques.
 
 **Upload Flow:** 
 1. Click "Upload Files" → Select file
@@ -2238,6 +2241,11 @@ You can use basic markdown formatting in task and event descriptions:
 *Last Updated: February 23, 2026 (v2.37.0)*
 
 ## Version History
+
+### v2.41.0
+- **Fix**: **Google Classroom Refresh Issue** — Removed the broken silent token refresh mechanism (`prompt: 'none'`). Now, when a session expires, the app falls back to displaying cached data (if available) with an amber "Session expired · Last updated X ago" banner. If no cache exists, it defaults to the sign-in screen.
+- **Enhancement**: **Classroom Drop-in Refresh** — Added a manual refresh button (🔄) next to the Home button in the "All Courses" header that clears the Cache API and re-fetches fresh assignments and announcements.
+- **Fix**: **Note PDF Export Blank Font** — Fixed an issue where PDF exports generated via `html2pdf.js` would render with invisible text in dark themes. Added a delay (`requestAnimationFrame` + `setTimeout`) to ensure the browser repaints the forced black text before capturing, and fortified the CSS override with a white background and transparent borders.
 
 ### v2.40.0 (Latest)
 - **Fix**: **Google Classroom Login Flash** — Defer silent token refresh logic until user interaction (clicking navigation button or toggle) to prevent a brief Google Sign-In interface flash on initial page load. Added `needsSilentRefresh` flag and loading state during deferred reconnection.
