@@ -788,6 +788,12 @@ const Classroom = {
     },
 
     renderCourseList() {
+        // If session is expired, show the cached data view instead
+        if (this.hasExpiredSession) {
+            this.showCachedDataWithBanner();
+            return;
+        }
+
         if (this.courses.length === 0) {
             const containers = this.getContainers();
             containers.forEach(container => {
@@ -1061,11 +1067,25 @@ const Classroom = {
     openCourse(courseId) {
         this.currentCourseId = courseId;
         this.currentView = 'todo'; // Default view
+        
+        // If session is expired, simply re-render the cached data
+        if (this.hasExpiredSession) {
+            this.showCachedDataWithBanner();
+            return;
+        }
+
         this.fetchCourseWork(courseId);
     },
 
     switchView(view) {
         this.currentView = view;
+        
+        // If session is expired, simply re-render the cached data for the new view
+        if (this.hasExpiredSession) {
+            this.showCachedDataWithBanner();
+            return;
+        }
+
         if (this.currentCourseId) {
             // If viewing a specific course, fetch only for that course
             if (view === 'todo') {
