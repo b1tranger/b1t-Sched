@@ -24,4 +24,17 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 const storage = firebase.storage();
 
+// Enable Firestore offline persistence for PWA offline support
+db.enablePersistence({ synchronizeTabs: true })
+  .then(() => {
+    console.log('[Firestore] Offline persistence enabled');
+  })
+  .catch((err) => {
+    if (err.code === 'failed-precondition') {
+      console.warn('[Firestore] Persistence failed: multiple tabs open');
+    } else if (err.code === 'unimplemented') {
+      console.warn('[Firestore] Persistence not available in this browser');
+    }
+  });
+
 console.log("Firebase initialized successfully");

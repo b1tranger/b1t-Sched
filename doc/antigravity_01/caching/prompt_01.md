@@ -132,3 +132,49 @@ Previously, the caching logic only applied to the very first load, but when you 
 I've updated the switchView, openCourse, and renderCourseList methods. Now, if your session is expired (hasExpiredSession is true), interacting with any of these views will safely re-render the cached data (if available) rather than making a failing API call.
 
 Please go ahead and deploy these changes to Netlify to verify! Let me know if you run into any other issues.
+
+---
+
+> User
+
+we need to check the offline mode for the website. It should be a PWA feature. But the caching is not working properly
+
+#issue:
+
+- starting the web app without internet connectivity shows "Set You Details" page at <!-- Set Details View (First-time login) --> section, instead of showing the pending tasks (home page). And we shouldn't be able to set our details after first login. I think the app doesn't remember the user login information.
+
+> AI
+
+I've identified the root cause and written an implementation plan. The core issues are:
+
+Firestore offline persistence is not enabled in firebase-config.js — this means Firebase Auth can't resolve cached credentials when offline, so onAuthStateChanged fires null
+No fallback to cached data — the app saves userProfile to localStorage but never uses it when Firestore is unavailable offline
+The fix involves 3 layers: enabling Firestore persistence (primary), adding localStorage fallbacks in handleAuthenticatedUser and handleUnauthenticatedUser (safety net), and bumping the service worker version.
+
+All changes are implemented. Here's a summary of what was changed across 3 files:
+
+firebase-config.js — Enabled Firestore offline persistence (db.enablePersistence()) so Firebase Auth and Firestore queries work with cached data when offline
+app.js — Added two safety-net fallbacks:
+handleAuthenticatedUser() now falls back to localStorage when DB.getUserProfile() / DB.getUserRoles() fail offline
+handleUnauthenticatedUser() checks navigator.onLine — if offline with a cached profile, it loads the dashboard instead of redirecting to login
+sw.js — Bumped cache version to v2.42.0
+To verify: deploy, log in once, then enable offline mode in DevTools and refresh — the app should show the dashboard, not "Set Details".
+
+---
+
+> User
+
+do I need to update the firebase rules?
+
+> AI
+
+No, you don't need to update Firestore rules.
+
+The db.enablePersistence() change is purely client-side — it tells the Firestore SDK to cache documents locally in IndexedDB. It doesn't change how reads/writes are authorized on the server.
+
+Your existing Firestore rules already allow authenticated users to read their own profile (users/{userId}), and that's all that matters. When offline, the SDK simply serves cached copies of documents that were already fetched (and authorized) while the user was online. No new server-side permissions are needed.
+
+TL;DR: Firestore offline persistence works within the same security model — it only caches data the user already had permission to access. Your
+
+firestore.rules
+file stays as-is.

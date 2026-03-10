@@ -1083,17 +1083,36 @@ const App = {
     // Check if user has profile
     const profileResult = await DB.getUserProfile(user.uid);
 
-    if (profileResult.success) {
+    // Fallback to localStorage if Firestore is unavailable (offline)
+    let profileData = profileResult.success ? profileResult.data : null;
+    if (!profileData) {
+      const cachedProfile = Utils.storage.get('userProfile');
+      if (cachedProfile) {
+        console.log('[App] Using cached profile from localStorage (offline fallback)');
+        profileData = cachedProfile;
+      }
+    }
+
+    if (profileData) {
       // User has profile, load dashboard
-      this.userProfile = profileResult.data;
+      this.userProfile = profileData;
 
       // Check if user is admin, CR, Faculty, or blocked
       const rolesResult = await DB.getUserRoles(user.uid);
 
-      this.isAdmin = rolesResult.isAdmin;
-      this.isCR = rolesResult.isCR;
-      this.isFaculty = rolesResult.isFaculty;
-      this.isBlocked = rolesResult.isBlocked;
+      // Use Firestore roles if available, otherwise fallback to localStorage
+      if (rolesResult.success) {
+        this.isAdmin = rolesResult.isAdmin;
+        this.isCR = rolesResult.isCR;
+        this.isFaculty = rolesResult.isFaculty;
+        this.isBlocked = rolesResult.isBlocked;
+      } else {
+        console.log('[App] Using cached roles from localStorage (offline fallback)');
+        this.isAdmin = Utils.storage.get('isAdmin') || false;
+        this.isCR = Utils.storage.get('isCR') || false;
+        this.isFaculty = Utils.storage.get('isFaculty') || false;
+        this.isBlocked = Utils.storage.get('isBlocked') || false;
+      }
 
       // Update UI based on roles
       UI.toggleAdminControls(this.isAdmin, this.isCR, this.isFaculty);
@@ -1187,6 +1206,33 @@ const App = {
   },
 
   handleUnauthenticatedUser() {
+    // If offline, check for cached profile before navigating to login
+    if (!navigator.onLine) {
+      const cachedProfile = Utils.storage.get('userProfile');
+      if (cachedProfile) {
+        console.log('[App] Offline with cached profile — loading dashboard from cache');
+        this.userProfile = cachedProfile;
+        this.isAdmin = Utils.storage.get('isAdmin') || false;
+        this.isCR = Utils.storage.get('isCR') || false;
+        this.isFaculty = Utils.storage.get('isFaculty') || false;
+        this.isBlocked = Utils.storage.get('isBlocked') || false;
+
+        // Update UI and navigate to dashboard
+        UI.toggleAdminControls(this.isAdmin, this.isCR, this.isFaculty);
+        UI.toggleBlockedUserMode(this.isBlocked);
+        UI.updateUserDetailsCard(
+          this.userProfile.email,
+          this.userProfile.department,
+          this.userProfile.semester,
+          this.userProfile.section
+        );
+        Router.navigate('dashboard');
+        this.loadDashboardData();
+        UI.showLoading(false);
+        return;
+      }
+    }
+
     Router.navigate('login');
     UI.showLoading(false);
     this.userProfile = null;
