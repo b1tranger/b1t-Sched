@@ -89,3 +89,46 @@ css/note.css — Made the .printing-pdf override more robust:
 Container gets background-color: #ffffff (white backdrop for capture)
 All children get border-color: transparent and text-shadow: none to prevent dark-mode artifacts
 Deploy and test to confirm PDFs now have visible black text.
+
+---
+
+> User
+
+the cache for Google Classroom window works but clicking on the toggle removes it and shows "No assignments found" and "No announcements found" again. Then I have to refresh the tasks again to load the classrom content again. I want the caching to work across all pages within the Classroom integration.
+
+> AI
+
+1
+Looking at classroom.js to see why the cache disappears when toggling between To-Do and Notices
+
+2
+Checking the logic inside switchView and showCachedDataWithBanner to fix data persistence
+
+3
+Locating the switchView method and showCachedDataWithBanner method to find the bug
+
+4
+Updating task priorities, fixing switchView to handle hasExpiredSession
+
+5
+Modifying switchView to support hasExpiredSession check
+
+6
+Validating cache fallback in openCourse to see if individual courses break cache too
+
+7
+Updating openCourse and renderCourseList to support hasExpiredSession check
+
+8
+Fixing openCourse and renderCourseList to handle expired cache state
+
+9
+Updating the walkthrough document and marking task as done.
+
+I've fixed the issue with the Classroom cache!
+
+Previously, the caching logic only applied to the very first load, but when you interacted with the UI (like toggling between To-Do and Notices, or clicking "Back to Classes"), the app was trying to fetch fresh data without an access token, which resulted in the "No assignments found" message.
+
+I've updated the switchView, openCourse, and renderCourseList methods. Now, if your session is expired (hasExpiredSession is true), interacting with any of these views will safely re-render the cached data (if available) rather than making a failing API call.
+
+Please go ahead and deploy these changes to Netlify to verify! Let me know if you run into any other issues.
