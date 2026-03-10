@@ -931,6 +931,27 @@ const Classroom = {
         }
     },
 
+    async refreshData() {
+        if (!this.accessToken) {
+            console.log('[Classroom] Cannot refresh without access token, showing login');
+            this.renderLoginState();
+            return;
+        }
+
+        // Clear cached data so we get fresh results
+        this.initCacheManager();
+        if (this.cacheManager) {
+            const cache = await caches.open(this.cacheManager.CACHE_NAME);
+            await cache.delete(this.cacheManager.KEYS.CLASSROOM_ASSIGNMENTS);
+            await cache.delete(this.cacheManager.KEYS.CLASSROOM_ANNOUNCEMENTS);
+            console.log('[Classroom] Cleared cached classroom data for refresh');
+        }
+
+        // Re-fetch courses and reload
+        this.courses = [];
+        await this.fetchCoursesAndLoadAll();
+    },
+
     renderAllItems(items, viewType) {
         // Header with Toggle
         const headerHtml = `
@@ -943,6 +964,9 @@ const Classroom = {
                         <span style="font-weight: 500; font-size: 1.1rem;">
                             All Courses
                         </span>
+                        <button class="classroom-back-btn" onclick="Classroom.refreshData()" title="Refresh" style="margin-left: 4px;">
+                            <i class="fas fa-redo-alt"></i>
+                        </button>
                     </div>
                     ${(viewType === 'todo' && typeof App !== 'undefined' && (App.isAdmin || App.isCR)) ? `
                     <button id="sync-classroom-tasks-btn" class="btn btn-sm btn-primary" onclick="Classroom.syncAssignmentsToTasks()" title="Sync Assignments to Tasks">
