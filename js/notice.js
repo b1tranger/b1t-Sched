@@ -157,6 +157,14 @@ const NoticeViewer = {
             const url = forceRefresh ? `${this.API_BASE}/api/notices?refresh=true` : `${this.API_BASE}/api/notices`;
             const response = await fetch(url);
 
+            // Handle 503 waking up specifically
+            if (response.status === 503) {
+                const errorData = await response.json();
+                if (errorData.error === 'waking_up') {
+                    throw new Error(errorData.message);
+                }
+            }
+
             if (!response.ok) {
                 throw new Error(`Server returned ${response.status}`);
             }
