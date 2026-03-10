@@ -142,11 +142,18 @@
     border-color: var(--accent-maroon);
 }
 
-/* Force black text for PDF printing */
-.note-preview-content.printing-pdf,
+/* Force black text on white background for PDF printing */
+.note-preview-content.printing-pdf {
+    color: #000000 !important;
+    background-color: #ffffff !important;
+    border-color: transparent !important;
+}
+
 .note-preview-content.printing-pdf * {
     color: #000000 !important;
     background-color: transparent !important;
+    border-color: transparent !important;
+    text-shadow: none !important;
 }
 
 .note-textarea::placeholder {

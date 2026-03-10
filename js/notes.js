@@ -380,8 +380,9 @@ const NoteManager = {
   async uploadWithFallback(file) {
     const providers = [
       // { name: 'Firebase Storage', method: () => this.uploadToFirebaseStorage(file), maxSize: 10 * 1024 * 1024 }, // Disabled
-      { name: 'Tmpfiles', method: () => this.uploadToTmpfiles(file), maxSize: 100 * 1024 * 1024 },
+      
       { name: 'Catbox', method: () => this.uploadToCatbox(file), maxSize: 200 * 1024 * 1024 },
+      { name: 'Tmpfiles', method: () => this.uploadToTmpfiles(file), maxSize: 100 * 1024 * 1024 },
       { name: 'File.io', method: () => this.uploadToFileIO(file), maxSize: 100 * 1024 * 1024 }
     ];
 
@@ -806,16 +807,21 @@ const NoteManager = {
         // Apply printing-pdf class to force black text via CSS
         previewContent.classList.add('printing-pdf');
 
-        window.html2pdf().set(opt).from(previewContent).save()
-          .then(() => {
-            previewContent.classList.remove('printing-pdf');
-            this.showMessage('PDF Exported Successfully!', 'success');
-          })
-          .catch(err => {
-            previewContent.classList.remove('printing-pdf');
-            console.error('PDF Export Error:', err);
-            this.showMessage('Failed to generate PDF.', 'error');
-          });
+        // Wait for the browser to repaint with the forced black text
+        // before html2canvas starts capturing the element
+        await new Promise(resolve => {
+          requestAnimationFrame(() => setTimeout(resolve, 100));
+        });
+
+        try {
+          await window.html2pdf().set(opt).from(previewContent).save();
+          this.showMessage('PDF Exported Successfully!', 'success');
+        } catch (err) {
+          console.error('PDF Export Error:', err);
+          this.showMessage('Failed to generate PDF.', 'error');
+        } finally {
+          previewContent.classList.remove('printing-pdf');
+        }
       } else {
         this.showMessage('PDF library is not loaded. Please try again.', 'error');
       }
