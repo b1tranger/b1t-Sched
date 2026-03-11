@@ -32,10 +32,10 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **Firebase Authentication** - Secure email/password login system with email verification and password reset
 - **User Profiles** - Student ID, department, semester, and section
 - **Personalized Dashboard** - Content filtered by user's academic details
-- **Task Management** - View pending assignments and exams with deadlines (or "No official Time limit"), with basic markdown (`**bold**`, `*italic*`, `` `code` ``, `[link](url)`), and clickable links, collapsible descriptions (2-line truncation). "Set Deadline" is now the default option when adding tasks.
+- **Task Management** - View pending assignments and exams with deadlines (or "No official Time limit"), with enhanced markdown support (**bold**, *italic*, fenced code blocks, inline code, links), HTML entity rendering (e.g., &ast;, &times;), `<pre>` tag support for preserved formatting, clickable links, and collapsible descriptions (2-line truncation). "Set Deadline" is now the default option when adding tasks.
 - **Task Completion** - Checkboxes to mark tasks complete, persistent per-user
 - **Task Editing** - Users can edit their own tasks; admins can edit all tasks; Course is required field
-- **Event Calendar** - Track upcoming academic events with basic markdown, clickable links, collapsible descriptions (2-line truncation), and department scope badge (ALL/CSE/etc.)
+- **Event Calendar** - Track upcoming academic events with enhanced markdown support (HTML entities, code blocks, `<pre>` tags), clickable links, collapsible descriptions (2-line truncation), and department scope badge (ALL/CSE/etc.)
 - **Event Editing** - Admins can edit all events; CRs can edit/delete their own events
 - **Resource Links** - Quick access to department-specific resources with built-in PDF viewer (desktop: Google Docs Viewer in modal; mobile: opens in new tab)
 - **Google Classroom Integration** - View all assignments and announcements from enrolled courses in a unified interface with OAuth authentication and session persistence (auto-refresh tokens). Includes a one-click **Sync to Tasks** feature for Admins/CRs to automatically add Classroom assignments to the main Tasks list (avoids duplicates). Initial silent token refresh is deferred until the user explicitly opens the Classroom panel to prevent any brief Google Sign-In flash on page load.
@@ -57,7 +57,7 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **Profile Change Cooldown** - Users can only change profile once per 30 days (anti-spam)
 - **Two-Column Layout** - Events sidebar on desktop, slide-out panel (40vw) on mobile
 - **Notice Viewer** - View UCAM university notices with PDF preview (desktop modal with split-pane layout; mobile slide-out sidebar), powered by Vercel serverless backend with local caching
-- **Note Taking** - Personal note-taking feature with markdown support, auto-save, and PDF export. Supports file attachments via temporary link sharing (Catbox/Tmpfiles) and a "Shorten" feature that exports notes as a local `.md` file for manual sharing. PDF export is optimized for both light and dark themes with forced visibility.
+- **Note Taking** - Personal note-taking feature with enhanced markdown support (including fenced code blocks and HTML entities), auto-save, and PDF export. Supports file attachments via temporary link sharing (Catbox/Tmpfiles) and a "Shorten" feature that exports notes as a local `.md` file for manual sharing. PDF export is optimized for both light and dark themes with forced visibility.
 - **Task Filtering** - Filter pending tasks by type (Assignment, Homework, Exam, Project, Presentation, Other)
 - **Global Contributions** - View a leaderboard of top contributors (group-specific or global across all departments)
 - **User Counter** - Live count of total registered users displayed on the dashboard and footer.
@@ -684,8 +684,8 @@ NoteManager.UPLOAD_TIMEOUT = 20000         // 20-second timeout per upload provi
 | `getSectionGroup(section)` | string | string | Get section group letter (A1 → A) |
 | `getSectionsInGroup(section)` | string | array | Get all sections in group (A1 → [A1, A2]) |
 | `linkify(text)` | string | string | Convert URLs in text to clickable anchor tags |
-| `applyBasicMarkdown(text)` | string | string | Apply basic markdown: `**bold**`, `*italic*`, `` `code` `` |
-| `escapeAndLinkify(text)` | string | string | Escape HTML, apply markdown, linkify URLs, convert line breaks (XSS-safe) |
+| `applyBasicMarkdown(text)` | string | string | Legacy helper (unused): applies bold, italic, and inline code. Use `escapeAndLinkify` for full support. |
+| `escapeAndLinkify(text)` | string | string | Robust rendering pipeline: extracts `<pre>` and code blocks, escapes HTML (XSS-safe), decodes safe HTML entities (math/Greek), applies markdown/linkification, and restores blocks. |
 
 **Storage Helpers (`Utils.storage`):**
 
@@ -1499,7 +1499,7 @@ service cloud.firestore {
   - How b1t-Sched works (shared tasks, individual checkboxes)
   - User roles (Admin, CR, Faculty, Blocked) and their permissions
   - Profile settings and 30-day change cooldown disclaimer
-- **Note Taking** - Personal note modal with markdown support, auto-save, file upload via tmpfiles.org API with direct download support, and live preview
+- **Note Taking** - Personal note modal with enhanced markdown support (code blocks, HTML entities), auto-save, file upload via Catbox/Tmpfiles/file.io with direct download support, and live preview with theme-optimized PDF export.
 - **Modals:**
   - Add Task Modal - Task creation form with Course as required field and two deadline options: "No official Time limit" or a specific date/time
   - Old Tasks Modal - List of tasks past 12h grace period (with completion status)
@@ -1630,6 +1630,9 @@ Router.onRouteChange((routeName) => {
 | 2.37.0 | Feb 2026 | **Theming & UX Overhaul**: 1. **Gray Mode Theme**: Added a new monochromatic theme; set as the default for system dark mode preferences. 2. **Overdue Task Styling**: Redesigned overdue backgrounds for dark/gray modes to ensure clarity without excessive brightness (`rgba(220, 53, 69, 0.15)`). 3. **Classroom UI Theming**: Full theme integration for Google Classroom components in Gray Mode. 4. **FOUC Prevention**: Enhanced inline script to handle Gray Mode initialization. |
 | 2.38.0 | Feb 2026 | **Bug Fixes & UI Enhancements**: (1) Notice Refresh: Added "Refresh Notices" button to UI that passes `?refresh=true` to backend to bypass server-side caching. (2) Mobile Zoom & Canvas Coordinate Fix: Applied dynamic JS-based 95% zoom (`document.body.style.zoom`) for screens <= 768px, with specific resets in `timeline-ui.js` to preserve `Chart.js` canvas coordinate integrity when modal is active. (3) Empty states: Added `"No upcoming events"` fallback for mobile Events sidebar. (4) Notes Modals: Fixed Note Preview infinitely growing by enforcing `max-height: 48vh;` internal scrolling. (5) Section Guides: Added hoverable/clickable tooltips (`<i class="fas fa-info-circle">`) to main feature headers explaining their purpose for new users. |
 | 2.39.0 | Feb 2026 | **Note Section Overhaul**: (1) **PDF Export**: Integrated `html2pdf.js` for one-click note-to-PDF generation. (2) **Automatic ZIP Fallback**: Integrated `JSZip` to client-side compress unsupported file types (e.g., `.sh`, `.exe`) into `.zip` blobs before upload. (3) **Layout Optimization**: Removed fixed `max-height` constraints in `css/note.css` to enable full flexbox expansion, eliminating whitespace gaps in the note modal editor. (4) **CORS Fix**: Re-prioritized `file.io` as the lead upload provider to bypass `catbox.moe` CORS restrictions on certain domains. |
+| 2.40.0 | Mar 2026 | PWA Offline Improvements: Resolved view loading issues in offline mode; fixed Google Classroom caching persistence across views; implemented Vercel Blob storage for backend file serving. |
+| 2.41.0 | Mar 11 2026 | Enhanced Markdown Support: Rewrote rendering pipeline to support fenced code blocks (```), <pre> tags, and safe HTML entities (math/Greek symbols) globally across tasks, events, notices, and notes. Improved CSS for code block visibility. |
+
 
 ---
 
@@ -1644,8 +1647,8 @@ Router.onRouteChange((routeName) => {
 
 ---
 
-*Documentation last updated: March 3, 2026*
-*Version: 2.40.0*
+*Documentation last updated: March 11, 2026*
+*Version: 2.41.0*
 
 
 ---

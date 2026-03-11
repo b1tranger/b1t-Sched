@@ -420,6 +420,30 @@ body.dark-mode .form-input::placeholder {
   font-size: 0.9em;
 }
 
+.task-description pre,
+.event-description pre {
+  background-color: var(--bg-dark);
+  color: var(--text-dark);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 0.9em;
+  overflow-x: auto;
+  margin-top: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+  border: 1px solid var(--border-medium);
+}
+
+.task-description pre .inline-code,
+.event-description pre .inline-code {
+  background-color: transparent;
+  padding: 0;
+  border-radius: 0;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
 .task-footer {
   display: flex;
   justify-content: space-between;

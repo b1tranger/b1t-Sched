@@ -163,15 +163,65 @@ const Utils = {
   escapeAndLinkify(text) {
     if (!text) return '';
 
-    // Extract markdown links first and replace with placeholders
-    const markdownLinks = [];
-    let result = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, linkText, url) => {
-      const placeholder = `__MD_LINK_${markdownLinks.length}__`;
-      markdownLinks.push({ text: linkText, url: url });
-      return placeholder;
+    const placeholders = [];
+
+    // Helper to save text and return a placeholder
+    const savePlaceholder = (content, keepFormatting = false) => {
+      const id = `__MD_PLACEHOLDER_${placeholders.length}__`;
+      placeholders.push({ id, content, keepFormatting });
+      return id;
+    };
+
+    // 1. Extract <pre>...</pre> blocks
+    let result = text.replace(/<pre>([\s\S]*?)<\/pre>/gi, (match, content) => {
+      // Escape HTML inside <pre>, but don't apply other formatting
+      const escapedPre = content
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+      return savePlaceholder(`<pre>${escapedPre}</pre>`);
     });
 
-    // Escape HTML special characters
+    // 2. Extract fenced code blocks (``` ... ```)
+    result = result.replace(/```([\s\S]*?)```/g, (match, content) => {
+      const escapedCode = content
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+      return savePlaceholder(`<pre><code class="inline-code">${escapedCode}</code></pre>`);
+    });
+
+    // 3. Extract markdown links [text](url)
+    result = result.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, linkText, url) => {
+      const escapedText = linkText
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+      
+      const isFileIOLink = url.includes('file.io/');
+      const downloadAttr = isFileIOLink ? ' download' : '';
+      
+      return savePlaceholder(
+        `<a href="${url}" target="_blank" rel="noopener noreferrer" class="description-link"${downloadAttr}>${escapedText}</a>`
+      );
+    });
+
+    // 4. Extract inline code `...`
+    result = result.replace(/`([^`]+)`/g, (match, content) => {
+      const escapedInline = content
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+      return savePlaceholder(`<code class="inline-code">${escapedInline}</code>`);
+    });
+
+    // 5. Escape remaining HTML
     result = result
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
@@ -179,34 +229,41 @@ const Utils = {
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
 
-    // Apply basic markdown formatting (bold, italic, code - not links)
+    // 6. Decode safe HTML entities
+    const safeEntities = [
+      'ast', 'times', 'divide', 'plusmn', 'minus', 'le', 'ge', 'ne', 
+      'amp', 'lt', 'gt', 'nbsp', 'mdash', 'ndash', 'laquo', 'raquo', 
+      'deg', 'infin', 'sum', 'prod', 'radic', 
+      'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta',
+      'iota', 'kappa', 'lambda', 'mu', 'nu', 'xi', 'omicron', 'pi', 'rho',
+      'sigma', 'tau', 'upsilon', 'phi', 'chi', 'psi', 'omega',
+      'Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon', 'Zeta', 'Eta', 'Theta',
+      'Iota', 'Kappa', 'Lambda', 'Mu', 'Nu', 'Xi', 'Omicron', 'Pi', 'Rho',
+      'Sigma', 'Tau', 'Upsilon', 'Phi', 'Chi', 'Psi', 'Omega'
+    ];
+    
+    // Pattern matches &amp;entity;
+    const entityPattern = new RegExp(`&amp;(${safeEntities.join('|')});`, 'g');
+    result = result.replace(entityPattern, '&$1;');
+
+    // 7. Apply basic markdown (bold, italic)
     result = result
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*([^*]+)\*/g, '<em>$1</em>')
-      .replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
+      .replace(/\*([^*]+)\*/g, '<em>$1</em>');
 
-    // Convert plain URLs to clickable links
+    // 8. Linkify URLs
     result = this.linkify(result);
 
-    // Restore markdown links as anchor tags
-    markdownLinks.forEach((link, index) => {
-      const escapedText = link.text
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
+    // 9. Convert line breaks (excluding placeholders)
+    result = result.replace(/\n/g, '<br>');
 
-      // Check if it's a file.io download link (always add download attribute)
-      const isFileIOLink = link.url.includes('file.io/');
-      const downloadAttr = isFileIOLink ? ' download' : '';
-
-      result = result.replace(
-        `__MD_LINK_${index}__`,
-        `<a href="${link.url}" target="_blank" rel="noopener noreferrer" class="description-link"${downloadAttr}>${escapedText}</a>`
-      );
+    // 10. Restore placeholders
+    placeholders.forEach(placeholder => {
+      // For some placeholders, we don't want <br> conversions if they contained newlines originally.
+      // But since we did the <br> conversion *after* removing the placeholder, it shouldn't affect the placeholder token itself.
+      result = result.replace(placeholder.id, placeholder.content);
     });
 
-    // Convert line breaks to <br>
-    result = result.replace(/\n/g, '<br>');
     return result;
   }
 };

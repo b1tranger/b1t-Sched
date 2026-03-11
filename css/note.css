@@ -219,6 +219,27 @@
     font-size: 0.9em;
 }
 
+.note-preview-content pre {
+    background-color: var(--bg-dark);
+    color: var(--text-dark);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    overflow-x: auto;
+    margin-top: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+    border: 1px solid var(--border-medium);
+}
+
+.note-preview-content pre code.inline-code {
+    background-color: transparent;
+    padding: 0;
+    border-radius: 0;
+    font-family: inherit;
+    font-size: inherit;
+}
+
 /* ─── Upload Sites Section ────────────────────────── */
 .note-upload-section {
     display: flex;
