@@ -109,8 +109,8 @@ const Profile = {
         } else {
           // system default
           if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            document.body.classList.add('gray-mode');
-            document.body.classList.remove('dark-mode');
+            document.body.classList.add('dark-mode');
+            document.body.classList.remove('gray-mode');
           } else {
             document.body.classList.remove('dark-mode');
             document.body.classList.remove('gray-mode');
