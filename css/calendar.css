@@ -251,8 +251,8 @@
   border: 1px solid var(--border-light);
   border-radius: var(--radius-sm);
   padding: var(--spacing-xs);
-  min-height: 70px;
-  height: 70px;
+  min-height: 65px;
+  /* height: 70px; */
   display: flex;
   flex-direction: column;
   position: relative;
@@ -513,8 +513,8 @@
 
   /* Slightly larger cells for desktop but still compact */
   .calendar-cell {
-    min-height: 150px;
-    height: 150px;
+    min-height: 100px;
+    /* height: 150px; */
     padding: var(--spacing-xs);
   }
 

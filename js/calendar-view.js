@@ -867,7 +867,7 @@ class CalendarView {
       // Otherwise, show the grid.
       if (tasks.length === 0) {
         emptyState.style.display = 'flex';
-        gridContainerElement.style.display = 'none';
+        gridContainerElement.style.display = 'block'; // Keep grid visible
       } else {
         emptyState.style.display = 'none';
         gridContainerElement.style.display = 'block';

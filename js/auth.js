@@ -71,9 +71,9 @@ const Auth = {
 
       // Send verification email
       await this.currentUser.sendEmailVerification();
-      console.log('User signed up, verification email sent:', this.currentUser.uid);
+      console.log('User signed up, verification email sent:', this.currentUser.uid, ' (Please check spam)');
 
-      return { success: true, user: this.currentUser, message: 'Verification email sent! Please check your inbox.' };
+      return { success: true, user: this.currentUser, message: 'Verification email sent! Please check your inbox (or spam folder).' };
     } catch (error) {
       console.error('Signup error:', error);
       return { success: false, error: this.getErrorMessage(error.code) };
