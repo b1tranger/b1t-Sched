@@ -4,6 +4,7 @@
   "description": "Firebase security rules tests for CR permissions",
   "type": "module",
   "scripts": {
+    "build": "node inject-env.js",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch"
   },
