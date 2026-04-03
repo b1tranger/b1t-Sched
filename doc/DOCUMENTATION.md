@@ -142,6 +142,7 @@ This section provides a comprehensive breakdown of every library, framework, ser
 | Tool                         | Purpose                                                              |
 | ---------------------------- | -------------------------------------------------------------------- |
 | **Firestore Security Rules** | Server-side access control (role-based: Admin, CR, Blocked, Regular) |
+| **Domain Restrictions**      | HTTP Referrers restricted to `https://b1tsched.netlify.app/*` via Google Cloud Console to protect the Firebase API Key from unauthorized usage |
 | **Git**                      | Version control                                                      |
 
 ---
@@ -319,13 +320,16 @@ b1t-Sched/
 ```javascript
 // Configuration object
 const firebaseConfig = {
-  apiKey: "...",
-  authDomain: "...",
-  projectId: "...",
-  storageBucket: "...",
-  messagingSenderId: "...",
-  appId: "...",
+  apiKey: process.env.FIREBASE_API_KEY,
+  authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.FIREBASE_PROJECT_ID,
+  storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.FIREBASE_APP_ID,
+  measurementId: process.env.FIREBASE_MEASUREMENT_ID
 };
+
+> **Important**: This setup requires a build step/bundler (like Vite, Webpack, or Netlify snippet injection) to replace the `process.env` references with actual variables during deployment, as native browsers do not support `.env` files directly.
 
 // Exposed globals
 firebase.initializeApp(firebaseConfig);
@@ -2334,9 +2338,15 @@ You can use basic markdown formatting in task and event descriptions:
 
 ---
 
-_Last Updated: February 23, 2026 (v2.37.0)_
+_Last Updated: April 4, 2026 (v2.41.2)_
 
 ## Version History
+
+### v2.41.2
+
+- **Security & Config**: Migrated standard Firebase API keys inside `firebase-config.js` to environment variables (`process.env.*`) and updated the documentation with bundler requirements.
+- **Documentation**: Documented strict Google Cloud Console HTTP Referrers setup (`https://b1tsched.netlify.app/*`) for securing the raw Firebase API Keys.
+
 
 ### v2.41.1
 
