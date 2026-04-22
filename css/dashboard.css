@@ -509,6 +509,249 @@ body.dark-mode .description-link:hover {
 }
 
 /* ============================================
+   ADD / EDIT TASK MODAL - Enhanced Styles
+   ============================================ */
+
+/* --- Compact Modal Header --- */
+#add-task-modal .modal-header,
+#edit-task-modal .modal-header {
+    padding: var(--spacing-sm) var(--spacing-lg);
+}
+
+#add-task-modal .modal-title,
+#edit-task-modal .modal-title {
+    font-size: var(--font-lg);
+}
+
+/* --- Compact Modal Body & Form Groups --- */
+#add-task-modal .modal-body,
+#edit-task-modal .modal-body {
+    padding: var(--spacing-md) var(--spacing-lg);
+}
+
+#add-task-modal .form-group,
+#edit-task-modal .form-group {
+    margin-bottom: var(--spacing-md);
+}
+
+#add-task-modal .form-group label,
+#edit-task-modal .form-group label {
+    margin-bottom: var(--spacing-xs);
+    font-size: var(--font-sm);
+}
+
+#add-task-modal .form-input,
+#add-task-modal .form-select,
+#edit-task-modal .form-input,
+#edit-task-modal .form-select {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--font-sm);
+}
+
+#add-task-modal .form-textarea,
+#edit-task-modal .form-textarea {
+    min-height: 60px;
+}
+
+/* --- Compact Modal Footer --- */
+#add-task-modal .modal-footer,
+#edit-task-modal .modal-footer {
+    padding: var(--spacing-sm) var(--spacing-lg);
+}
+
+/* --- Custom Scrollbar (matching modal background) --- */
+#add-task-modal .modal-body,
+#edit-task-modal .modal-body {
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-maroon) var(--bg-lighter);
+}
+
+#add-task-modal .modal-body::-webkit-scrollbar,
+#edit-task-modal .modal-body::-webkit-scrollbar {
+    display: block;
+    width: 6px;
+}
+
+#add-task-modal .modal-body::-webkit-scrollbar-track,
+#edit-task-modal .modal-body::-webkit-scrollbar-track {
+    background: var(--bg-lighter);
+    border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+}
+
+#add-task-modal .modal-body::-webkit-scrollbar-thumb,
+#edit-task-modal .modal-body::-webkit-scrollbar-thumb {
+    background-color: var(--primary-maroon);
+    border-radius: 3px;
+}
+
+#add-task-modal .modal-body::-webkit-scrollbar-thumb:hover,
+#edit-task-modal .modal-body::-webkit-scrollbar-thumb:hover {
+    background-color: var(--maroon-hover);
+}
+
+/* --- Deadline Section - Highlighted & Separated --- */
+#add-task-modal .form-group:has(.deadline-options),
+#edit-task-modal .form-group:has(.deadline-options),
+#add-cr-notice-modal .form-group:has(.deadline-options) {
+    background-color: var(--bg-lighter);
+    border: 1px solid var(--border-medium);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-sm) var(--spacing-md);
+}
+
+#add-task-modal .form-group:has(.deadline-options) > label,
+#edit-task-modal .form-group:has(.deadline-options) > label,
+#add-cr-notice-modal .form-group:has(.deadline-options) > label {
+    font-weight: var(--font-semibold);
+    color: var(--primary-maroon);
+    border-bottom: 1px solid var(--border-medium) !important;
+    padding-bottom: var(--spacing-xs);
+    margin-bottom: var(--spacing-sm);
+}
+
+/* --- Deadline Options Layout --- */
+.deadline-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm) var(--spacing-md) !important;
+    align-items: center !important;
+}
+
+/* --- Square Radio Buttons (checkbox-like) --- */
+.deadline-options input[type="radio"] {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    border: 2px solid var(--border-dark);
+    border-radius: var(--radius-sm);
+    background-color: var(--bg-white);
+    cursor: pointer;
+    position: relative;
+    margin: 0;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.deadline-options input[type="radio"]:checked {
+    background-color: var(--primary-maroon);
+    border-color: var(--primary-maroon);
+}
+
+.deadline-options input[type="radio"]:checked::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 5px;
+    width: 5px;
+    height: 9px;
+    border: solid var(--text-white);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.deadline-options input[type="radio"]:hover {
+    border-color: var(--primary-maroon);
+    box-shadow: 0 0 0 2px rgba(128, 0, 0, 0.1);
+}
+
+/* --- Radio Labels Inline with Buttons --- */
+.deadline-options label {
+    display: inline-flex;
+    align-items: center;
+    margin: 0 !important;
+    font-size: var(--font-sm);
+    white-space: nowrap;
+    cursor: pointer;
+    line-height: 1;
+}
+
+/* --- Smaller Calendar/Datetime Input --- */
+.deadline-options input[type="datetime-local"] {
+    padding: var(--spacing-xs) var(--spacing-sm) !important;
+    font-size: var(--font-sm) !important;
+    max-width: 200px;
+    min-width: 160px !important;
+    border: 2px solid var(--border-medium) !important;
+    border-radius: var(--radius-sm) !important;
+    background-color: var(--bg-white);
+    color: var(--text-dark);
+    flex: 0 1 auto !important;
+}
+
+.deadline-options input[type="datetime-local"]:focus {
+    border-color: var(--primary-maroon) !important;
+    box-shadow: 0 0 0 2px rgba(128, 0, 0, 0.15);
+    outline: none;
+}
+
+/* --- Dark Mode Overrides --- */
+body.dark-mode #add-task-modal .form-group:has(.deadline-options),
+body.dark-mode #edit-task-modal .form-group:has(.deadline-options),
+body.dark-mode #add-cr-notice-modal .form-group:has(.deadline-options) {
+    background-color: var(--bg-light);
+    border-color: var(--border-dark);
+}
+
+body.dark-mode .deadline-options input[type="radio"] {
+    background-color: var(--bg-lighter);
+    border-color: var(--border-dark);
+}
+
+body.dark-mode .deadline-options input[type="radio"]:checked {
+    background-color: var(--primary-maroon);
+    border-color: var(--primary-maroon);
+}
+
+body.dark-mode .deadline-options input[type="radio"]:checked::after {
+    border-color: var(--text-white);
+}
+
+body.dark-mode .deadline-options input[type="datetime-local"] {
+    background-color: var(--bg-lighter) !important;
+    color: var(--text-dark) !important;
+    border-color: var(--border-dark) !important;
+}
+
+body.dark-mode .deadline-options input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.8);
+}
+
+/* --- Gray Mode Overrides --- */
+body.gray-mode #add-task-modal .form-group:has(.deadline-options),
+body.gray-mode #edit-task-modal .form-group:has(.deadline-options),
+body.gray-mode #add-cr-notice-modal .form-group:has(.deadline-options) {
+    background-color: var(--bg-light);
+    border-color: var(--border-dark);
+}
+
+body.gray-mode .deadline-options input[type="radio"] {
+    background-color: var(--bg-lighter);
+    border-color: var(--border-dark);
+}
+
+body.gray-mode .deadline-options input[type="radio"]:checked {
+    background-color: var(--primary-maroon);
+    border-color: var(--primary-maroon);
+}
+
+body.gray-mode .deadline-options input[type="radio"]:checked::after {
+    border-color: #ffffff;
+}
+
+body.gray-mode .deadline-options input[type="datetime-local"] {
+    background-color: var(--bg-lighter) !important;
+    color: var(--text-dark) !important;
+    border-color: var(--border-dark) !important;
+}
+
+body.gray-mode .deadline-options input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.8);
+}
+
+/* ============================================
    OLD TASKS LIST (Compact)
    ============================================ */
 
