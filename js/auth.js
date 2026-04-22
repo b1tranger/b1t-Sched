@@ -69,8 +69,13 @@ const Auth = {
       const userCredential = await auth.createUserWithEmailAndPassword(email, password);
       this.currentUser = userCredential.user;
 
-      // Send verification email
-      await this.currentUser.sendEmailVerification();
+      // Send verification email with continueUrl so the link redirects back to the app
+      // This prevents Firebase's generic "expired" page from appearing
+      const actionCodeSettings = {
+        url: `${window.location.origin}${window.location.pathname}`,
+        handleCodeInApp: false
+      };
+      await this.currentUser.sendEmailVerification(actionCodeSettings);
       console.log('User signed up, verification email sent:', this.currentUser.uid, ' (Please check spam)');
 
       return { success: true, user: this.currentUser, message: 'Verification email sent! Please check your inbox (or spam folder).' };
@@ -233,7 +238,11 @@ const Auth = {
     try {
       const user = this.getCurrentUser();
       if (user && !user.emailVerified) {
-        await user.sendEmailVerification();
+        const actionCodeSettings = {
+          url: `${window.location.origin}${window.location.pathname}`,
+          handleCodeInApp: false
+        };
+        await user.sendEmailVerification(actionCodeSettings);
         return { success: true, message: 'Verification email sent!' };
       }
       return { success: false, error: 'No user or already verified.' };

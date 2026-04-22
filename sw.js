@@ -3,7 +3,7 @@
  * Handles caching strategies, offline functionality, and background sync
  */
 
-const CACHE_VERSION = 'v2.42.1';
+const CACHE_VERSION = 'v2.42.2';
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `dynamic-${CACHE_VERSION}`;
 const API_CACHE = `api-${CACHE_VERSION}`;
@@ -116,6 +116,17 @@ self.addEventListener('fetch', (event) => {
 
   // Skip chrome-extension and other non-http(s) requests
   if (!url.protocol.startsWith('http')) {
+    return;
+  }
+
+  // ✅ Skip Firebase Auth action URLs (email verification, password reset, etc.)
+  // These contain one-time tokens that must NEVER be cached or intercepted.
+  if (url.pathname.startsWith('/__/auth/')) {
+    return;
+  }
+
+  // ✅ Skip any URL containing Firebase OOB (out-of-band) action code params
+  if (url.searchParams.has('oobCode') || url.searchParams.has('apiKey')) {
     return;
   }
 
