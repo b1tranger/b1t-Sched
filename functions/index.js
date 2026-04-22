@@ -1,6 +1,5 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
-const cors = require('cors')({ origin: true });
 
 // Initialize Firebase Admin
 admin.initializeApp();
@@ -9,11 +8,26 @@ admin.initializeApp();
 const { sendPasswordReset } = require('./admin/sendPasswordReset');
 const { deleteUser } = require('./admin/deleteUser');
 
-// Export Cloud Functions
-exports.sendPasswordReset = functions.https.onRequest((req, res) => {
-  cors(req, res, () => sendPasswordReset(req, res));
-});
+/**
+ * Wraps a handler with CORS headers that work for any origin.
+ * Handles the OPTIONS preflight request explicitly so browsers
+ * can call this function from any domain (e.g. Netlify).
+ */
+function withCors(handler) {
+  return (req, res) => {
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
-exports.deleteUser = functions.https.onRequest((req, res) => {
-  cors(req, res, () => deleteUser(req, res));
-});
+    // Respond to preflight immediately
+    if (req.method === 'OPTIONS') {
+      return res.status(204).send('');
+    }
+
+    return handler(req, res);
+  };
+}
+
+// Export Cloud Functions
+exports.sendPasswordReset = functions.https.onRequest(withCors(sendPasswordReset));
+exports.deleteUser = functions.https.onRequest(withCors(deleteUser));

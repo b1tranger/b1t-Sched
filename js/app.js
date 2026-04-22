@@ -2429,8 +2429,8 @@ const App = {
       // Re-render user list
       this.renderUserList(this.allUsers);
 
-      // Show success notification
-      UI.showNotification('success', result.message || 'User deleted successfully');
+      // Show success message
+      UI.showMessage('user-management-message', result.message || 'User deleted successfully', 'success');
     } catch (error) {
       console.error('Delete user error:', error);
 
@@ -2438,11 +2438,11 @@ const App = {
       this.deleteUserDialog.close();
 
       if (error.message.includes('network')) {
-        UI.showNotification('error', 'Network error. Please check your connection.');
+        UI.showMessage('user-management-message', 'Network error. Please check your connection.', 'error');
       } else if (error.message.includes('permission')) {
-        UI.showNotification('error', 'You do not have permission to perform this action.');
+        UI.showMessage('user-management-message', 'You do not have permission to perform this action.', 'error');
       } else {
-        UI.showNotification('error', error.message || 'Failed to delete user');
+        UI.showMessage('user-management-message', error.message || 'Failed to delete user', 'error');
       }
     } finally {
       UI.showLoading(false);
