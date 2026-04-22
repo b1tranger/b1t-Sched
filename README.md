@@ -580,7 +580,7 @@ from [@foxxie911](https://github.com/foxxie911)
 Thanks to these individuals who helped with testing, suggestions and support.
 
 Faculties
-- @S. M. Zafrul Islam (zafrul.islam@uits.edu.bd)
+- [S. M. Zafrul Islam (zafrul.islam@uits.edu.bd)](https://github.com/zafrul097)
 
 Seniors
 - [Md Kamruzzaman Shishir (1814355002)](https://github.com/MuhammadShishir)
