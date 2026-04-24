@@ -43,14 +43,21 @@ A single-page application (SPA) that helps students manage academic tasks, assig
 ## Screenshots
 <div align=center>
    
-<img width="300" height="2000" alt="1" src="https://github.com/user-attachments/assets/0984e07f-04cf-446a-9044-9dd13c47bfe2" />
+<!-- <img width="300" height="2000" alt="1" src="https://github.com/user-attachments/assets/0984e07f-04cf-446a-9044-9dd13c47bfe2" />
+
 <img width="300" height="2000" alt="2" src="https://github.com/user-attachments/assets/2406add8-a7de-458b-a7c2-f4468f21dbc6" />
+
 <img width="300" height="2000" alt="3" src="https://github.com/user-attachments/assets/0e4ece71-5106-4d86-a772-eea68037c9b0" />
+
 <img width="300" height="2000" alt="4" src="https://github.com/user-attachments/assets/6e059928-8484-4fe3-82bf-43e3385c2aca" />
+
 <img width="300" height="2000" alt="5" src="https://github.com/user-attachments/assets/91fe0f09-79f2-4d1c-b0d8-df2e32e289f5" />
+
 <img width="300" height="2000" alt="6" src="https://github.com/user-attachments/assets/8927eb52-0d49-4d36-8511-06812861aee9" />
+
 <img width="300" height="2000" alt="7" src="https://github.com/user-attachments/assets/4d2a5c94-bef9-46d1-bfbe-9065a6e26aa2" />
-<img width="300" height="2000" alt="8" src="https://github.com/user-attachments/assets/53d8d429-966b-49f6-910d-b6923ad142b9" />
+
+<img width="300" height="2000" alt="8" src="https://github.com/user-attachments/assets/53d8d429-966b-49f6-910d-b6923ad142b9" /> -->
 
 
 </div>
