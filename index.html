@@ -38,6 +38,12 @@
 
     <!-- Theme Initialization Script to prevent FOUC -->
     <script>
+        // Redirect loopback IP addresses to localhost for Firebase Auth compatibility
+        const loopbackIPs = ['127.0.0.1', '[::1]', '::1'];
+        if (loopbackIPs.includes(window.location.hostname)) {
+            window.location.hostname = 'localhost';
+        }
+
         (function () {
             try {
                 const storedProfile = localStorage.getItem('userProfile');
@@ -1143,8 +1149,7 @@
                                 <input type="radio" name="cr-notice-deadline-option" id="cr-notice-deadline-date"
                                     value="date">
                                 <label for="cr-notice-deadline-date">Set Deadline</label>
-                                <input type="datetime-local" id="cr-notice-deadline" class="form-input"
-                                    disabled>
+                                <input type="datetime-local" id="cr-notice-deadline" class="form-input" disabled>
                             </div>
                         </div>
                     </form>
