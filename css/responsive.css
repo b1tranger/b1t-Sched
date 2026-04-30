@@ -78,6 +78,11 @@
     padding-top: 60px;
   }
 
+  .auth-container,
+  .set-details-container {
+    margin-top: -60px;
+  }
+
   .auth-card,
   .set-details-card,
   .profile-settings-card {
@@ -177,6 +182,7 @@
 
 /* Very small mobile */
 @media (max-width: 480px) {
+
 
   .auth-container,
   .set-details-container {
