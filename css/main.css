@@ -97,22 +97,22 @@ body.dark-mode {
 
 /* Auth Container (Login/Signup) */
 .auth-container {
+  margin-top: -80px;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
   padding: var(--spacing-lg);
-  background: linear-gradient(135deg, var(--bg-lighter) 0%, var(--bg-light) 100%);
+  background: var(--bg-white);
 }
 
 .auth-card {
-  background: var(--bg-white);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  padding: var(--spacing-xxl);
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  padding: var(--spacing-xxl) 0;
   width: 100%;
-  max-width: 450px;
+  max-width: 400px;
 }
 
 .auth-logo {
