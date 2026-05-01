@@ -347,6 +347,7 @@
     flex-direction: column;
     border-right: 1px solid var(--border-light);
     background-color: var(--bg-body);
+    min-height: 0;
 }
 
 .notice-column:last-child {
@@ -375,6 +376,7 @@
     flex: 1;
     overflow-y: auto;
     padding: 1rem;
+    min-height: 0;
 }
 
 /* ─── University Notice List ──────────────────────── */
