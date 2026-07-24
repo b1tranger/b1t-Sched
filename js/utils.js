@@ -265,5 +265,55 @@ const Utils = {
     });
 
     return result;
+  },
+
+  // Get current semester cycle tag ("YYYY-01" for Jan-Jun, "YYYY-07" for Jul-Dec)
+  getSemesterCycle(date = new Date()) {
+    const d = date instanceof Date ? date : new Date(date);
+    const year = d.getFullYear();
+    const month = d.getMonth(); // 0 = Jan, 6 = Jul
+    return month >= 6 ? `${year}-07` : `${year}-01`;
+  },
+
+  // Calculate elapsed semester transitions between two cycles
+  getElapsedSemesterCycles(lastCycle, currentCycle) {
+    if (!lastCycle || !currentCycle) return 0;
+    const [lYear, lMonth] = lastCycle.split('-').map(Number);
+    const [cYear, cMonth] = currentCycle.split('-').map(Number);
+
+    const yearDiff = cYear - lYear;
+    const monthDiff = (cMonth === 7 ? 1 : 0) - (lMonth === 7 ? 1 : 0);
+
+    const elapsed = yearDiff * 2 + monthDiff;
+    return elapsed > 0 ? elapsed : 0;
+  },
+
+  // Increment semester string by `steps`
+  // 1st -> 2nd -> 3rd -> 4th -> 5th -> 6th -> 7th -> 8th -> alumni / special
+  incrementSemester(currentSem, steps = 1) {
+    const SEMESTERS = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
+    const ALUMNI = 'alumni / special';
+
+    if (!currentSem || currentSem === ALUMNI) return ALUMNI;
+
+    const norm = String(currentSem).trim().toLowerCase();
+    let index = SEMESTERS.findIndex(s => s.toLowerCase() === norm);
+
+    if (index === -1) {
+      const num = parseInt(norm, 10);
+      if (!isNaN(num) && num >= 1 && num <= 8) {
+        index = num - 1;
+      }
+    }
+
+    if (index === -1) {
+      return currentSem;
+    }
+
+    const newIndex = index + steps;
+    if (newIndex >= SEMESTERS.length) {
+      return ALUMNI;
+    }
+    return SEMESTERS[newIndex];
   }
 };

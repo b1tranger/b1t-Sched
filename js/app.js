@@ -1127,6 +1127,9 @@ const App = {
         NoteManager.loadNote(user.uid);
       }
 
+      // Auto-update semester if new semester cycle has started
+      this.userProfile = await this.checkAndUpdateUserSemester(user.uid, this.userProfile);
+
       // Save to localStorage
       Utils.storage.set('userProfile', this.userProfile);
       Utils.storage.set('isAdmin', this.isAdmin);
@@ -1338,11 +1341,82 @@ const App = {
         setTimeout(() => {
           Router.navigate('dashboard');
           this.loadDashboardData();
-        }, 1000);
+        }, 1500);
       }
     } else {
-      UI.showMessage('set-details-message', result.error, 'error');
-      UI.showLoading(false);
+      UI.showMessage('set-details-message', `Error: ${result.error}`, 'error');
+    }
+  },
+
+  // Check and automatically update user semester if a new semester cycle has started
+  async checkAndUpdateUserSemester(userId, profileData) {
+    if (!profileData || this.isFaculty || profileData.role === 'Faculty' || !profileData.semester || profileData.semester === 'alumni / special') {
+      return profileData;
+    }
+
+    try {
+      const currentCycle = Utils.getSemesterCycle();
+      const lastCycle = profileData.lastSemesterCycle;
+
+      if (!lastCycle) {
+        // If lastSemesterCycle was never set, initialize it to current cycle
+        profileData.lastSemesterCycle = currentCycle;
+        await DB.updateUserProfile(userId, { lastSemesterCycle: currentCycle });
+        return profileData;
+      }
+
+      const elapsed = Utils.getElapsedSemesterCycles(lastCycle, currentCycle);
+      if (elapsed > 0) {
+        const oldSem = profileData.semester;
+        const newSem = Utils.incrementSemester(oldSem, elapsed);
+        if (newSem !== oldSem) {
+          console.log(`[Semester Auto-Update] Advancing semester from ${oldSem} to ${newSem} for cycle ${currentCycle}`);
+          profileData.semester = newSem;
+          profileData.lastSemesterCycle = currentCycle;
+          await DB.updateUserProfile(userId, {
+            semester: newSem,
+            lastSemesterCycle: currentCycle
+          });
+          Utils.storage.set('userProfile', profileData);
+
+          // Show auto-update popup instruction modal
+          setTimeout(() => {
+            this.showSemesterAutoUpdateModal(oldSem, newSem);
+          }, 800);
+        }
+      }
+    } catch (err) {
+      console.error('[Semester Auto-Update] Error checking user semester update:', err);
+    }
+    return profileData;
+  },
+
+  // Display popup modal instructing user about automatic semester update
+  showSemesterAutoUpdateModal(oldSem, newSem) {
+    const modal = document.getElementById('semester-update-modal');
+    if (!modal) return;
+
+    const oldEl = document.getElementById('semester-old-val');
+    const newEl = document.getElementById('semester-new-val');
+    if (oldEl) oldEl.textContent = oldSem;
+    if (newEl) newEl.textContent = newSem;
+
+    modal.style.display = 'flex';
+
+    const checkBtn = document.getElementById('semester-modal-check-btn');
+    const closeBtn = document.getElementById('semester-modal-close-btn');
+
+    if (checkBtn) {
+      checkBtn.onclick = () => {
+        modal.style.display = 'none';
+        Router.navigate('profile-settings');
+      };
+    }
+
+    if (closeBtn) {
+      closeBtn.onclick = () => {
+        modal.style.display = 'none';
+      };
     }
   },
 

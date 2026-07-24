@@ -12,6 +12,7 @@ const DB = {
         department: data.department,
         semester: data.semester,
         section: data.section,
+        lastSemesterCycle: typeof Utils !== 'undefined' ? Utils.getSemesterCycle() : '2026-07',
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       });
@@ -416,10 +417,14 @@ const DB = {
   async getSemesters() {
     try {
       const doc = await db.collection('metadata').doc('semesters').get();
-      if (doc.exists) {
-        return { success: true, data: doc.data().list || [] };
+      let list = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', 'alumni / special'];
+      if (doc.exists && doc.data().list) {
+        list = [...doc.data().list];
+        if (!list.includes('alumni / special')) {
+          list.push('alumni / special');
+        }
       }
-      return { success: true, data: ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'] };
+      return { success: true, data: list };
     } catch (error) {
       console.error('Error getting semesters:', error);
       return { success: false, error: error.message };

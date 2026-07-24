@@ -1237,6 +1237,12 @@
                                         rel="noopener noreferrer">t.me/oUITS_res</a>
                                 </p>
                                 <p id="profile-cooldown-message" class="cooldown-message" style="display: none;"></p>
+                                <div id="semester-notice-card" class="semester-notice-card" style="margin-top: 15px; padding: 12px 16px; background: rgba(59, 130, 246, 0.1); border-left: 4px solid #3b82f6; border-radius: 8px;">
+                                    <p style="margin: 0; color: var(--text-color, #1e293b); font-size: 0.88rem; line-height: 1.5;">
+                                        <i class="fas fa-info-circle" style="color: #3b82f6; margin-right: 6px;"></i>
+                                        <strong>Semester Auto-Update Notice:</strong> Semesters automatically update after each semester ends (every July and January). Please check that your current semester and section values are correct.
+                                    </p>
+                                </div>
                             </div>
 
                             <div class="form-group">
@@ -1833,6 +1839,7 @@
     <script src="js/utils.js"></script>
     <!-- Migration Scripts (Temporary) -->
     <script src="js/migrate-activity-logs.js"></script>
+    <script src="js/update-user-semesters.js"></script>
 
     <script src="js/cr-notice.js"></script>
     <script src="js/notice.js"></script>
@@ -1877,6 +1884,29 @@
             <div class="install-actions">
                 <button id="install-btn" class="btn btn-primary">Install</button>
                 <button id="dismiss-install-btn" class="btn btn-text">Not now</button>
+            </div>
+        </div>
+    </div>
+    <!-- Semester Auto-Update Popup Modal -->
+    <div id="semester-update-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-icon">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <h2>Semester Auto-Updated!</h2>
+            </div>
+            <div class="modal-body">
+                <p>A new semester cycle has started. Your semester has been automatically updated from <strong id="semester-old-val">1st</strong> to <strong id="semester-new-val">2nd</strong>.</p>
+                <p class="modal-subtext">Please review your Profile Settings to verify that your updated semester and section values are correct.</p>
+            </div>
+            <div class="modal-actions">
+                <button id="semester-modal-check-btn" class="btn btn-primary">
+                    <i class="fas fa-user-edit"></i> Check Profile Settings
+                </button>
+                <button id="semester-modal-close-btn" class="btn btn-secondary">
+                    Got it
+                </button>
             </div>
         </div>
     </div>

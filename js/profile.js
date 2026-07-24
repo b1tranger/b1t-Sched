@@ -197,6 +197,13 @@ const Profile = {
           await UI.populateDropdown('profile-semester', semResult.data, this.currentProfile.semester);
         }
 
+        // If user is alumni / special, make semester dropdown disabled/readonly so it cannot be changed further
+        const semesterSelect = document.getElementById('profile-semester');
+        if (semesterSelect && this.currentProfile.semester === 'alumni / special') {
+          semesterSelect.disabled = true;
+          semesterSelect.title = 'Alumni / Special semester status cannot be changed further.';
+        }
+
         // Load sections
         await this.updateSectionDropdown('profile-section', this.currentProfile.department, this.currentProfile.semester, this.currentProfile.section);
       }
