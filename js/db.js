@@ -30,11 +30,11 @@ const DB = {
       if (doc.exists) {
         return { success: true, data: doc.data() };
       } else {
-        return { success: false, error: 'User profile not found' };
+        return { success: false, isNotFound: true, error: 'User profile not found' };
       }
     } catch (error) {
       console.error('Error getting user profile:', error);
-      return { success: false, error: error.message };
+      return { success: false, isNotFound: false, error: error.message };
     }
   },
 

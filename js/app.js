@@ -1192,10 +1192,17 @@ const App = {
         // Ensure data is loaded before we hide the loading screen
         await this.loadDashboardData(false);
       }
-    } else {
+    } else if (profileResult.isNotFound) {
       // First-time login, show set details
       Router.navigate('set-details');
       await this.loadSetDetailsForm();
+    } else {
+      // Permission error or network failure
+      console.error('[App] Failed to load user profile due to permission or network error:', profileResult.error);
+      if (typeof UI !== 'undefined' && UI.showMessage) {
+        UI.showMessage('auth-message', `Firebase error: ${profileResult.error || 'Permission denied'}. Please check authorized domains & rules in Firebase console.`, 'error');
+      }
+      Router.navigate('login');
     }
 
     // Wait for Google Classroom initialization (silent refresh) to complete
