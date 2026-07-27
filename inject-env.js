@@ -34,14 +34,28 @@ try {
   // Read the file
   let content = fs.readFileSync(configPath, 'utf8');
 
-  // Replace placeholders with actual Netlify/Environment variables
-  content = content.replace('__FIREBASE_API_KEY__', process.env.FIREBASE_API_KEY || '');
-  content = content.replace('__FIREBASE_AUTH_DOMAIN__', process.env.FIREBASE_AUTH_DOMAIN || '');
-  content = content.replace('__FIREBASE_PROJECT_ID__', process.env.FIREBASE_PROJECT_ID || '');
-  content = content.replace('__FIREBASE_STORAGE_BUCKET__', process.env.FIREBASE_STORAGE_BUCKET || '');
-  content = content.replace('__FIREBASE_MESSAGING_SENDER_ID__', process.env.FIREBASE_MESSAGING_SENDER_ID || '');
-  content = content.replace('__FIREBASE_APP_ID__', process.env.FIREBASE_APP_ID || '');
-  content = content.replace('__FIREBASE_MEASUREMENT_ID__', process.env.FIREBASE_MEASUREMENT_ID || '');
+  // Replace placeholders or existing values with actual environment variables
+  if (process.env.FIREBASE_API_KEY) {
+    content = content.replace(/(apiKey:\s*["']).*?(["'])/, `$1${process.env.FIREBASE_API_KEY}$2`);
+  }
+  if (process.env.FIREBASE_AUTH_DOMAIN) {
+    content = content.replace(/(authDomain:\s*["']).*?(["'])/, `$1${process.env.FIREBASE_AUTH_DOMAIN}$2`);
+  }
+  if (process.env.FIREBASE_PROJECT_ID) {
+    content = content.replace(/(projectId:\s*["']).*?(["'])/, `$1${process.env.FIREBASE_PROJECT_ID}$2`);
+  }
+  if (process.env.FIREBASE_STORAGE_BUCKET) {
+    content = content.replace(/(storageBucket:\s*["']).*?(["'])/, `$1${process.env.FIREBASE_STORAGE_BUCKET}$2`);
+  }
+  if (process.env.FIREBASE_MESSAGING_SENDER_ID) {
+    content = content.replace(/(messagingSenderId:\s*["']).*?(["'])/, `$1${process.env.FIREBASE_MESSAGING_SENDER_ID}$2`);
+  }
+  if (process.env.FIREBASE_APP_ID) {
+    content = content.replace(/(appId:\s*["']).*?(["'])/, `$1${process.env.FIREBASE_APP_ID}$2`);
+  }
+  if (process.env.FIREBASE_MEASUREMENT_ID) {
+    content = content.replace(/(measurementId:\s*["']).*?(["'])/, `$1${process.env.FIREBASE_MEASUREMENT_ID}$2`);
+  }
 
   // Write changes back
   fs.writeFileSync(configPath, content);

@@ -28,7 +28,7 @@ if (fs.existsSync(envPath)) {
 }
 
 const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'b1t-sched';
-const API_KEY = process.env.FIREBASE_API_KEY || 'AIzaSyAMc_2g2zK8DYbugsaf4JEYWCYftoxIdkE';
+const API_KEY = process.env.FIREBASE_API_KEY || 'AIzaSyCfrEkk6W-0wbyR91dPS7ObP8nmfpr3XTY';
 const CURRENT_CYCLE = '2026-07';
 
 const adminEmail = process.argv[2] || process.env.ADMIN_EMAIL || '';
