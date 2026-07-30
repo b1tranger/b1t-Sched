@@ -8,6 +8,8 @@ import { put, head } from '@vercel/blob';
 // Configuration
 const BLOB_FILENAME = 'notices.json';
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours cache validity
+const DEFAULT_SEED_ID = 753;
+const PROBE_RANGE = 10;
 
 export default async function handler(req, res) {
   // Set CORS headers
@@ -52,20 +54,52 @@ export default async function handler(req, res) {
       }
     }
 
-    // Step 2: Fetch fresh notices from UCAM Portal Scraper
-    const freshNotices = await scrapeUCAMNotices();
+    // Step 2: Fetch fresh notices from UCAM Portal Scraper (probing from seed ID 753)
+    const freshNotices = await scrapeUCAMNotices(DEFAULT_SEED_ID, PROBE_RANGE);
 
-    if (!freshNotices || freshNotices.length === 0) {
-      throw new Error('No notices could be scraped from UCAM portal.');
+    // Step 2.5: Merge fresh notices with existing stored notices in Blob to keep old loaded notices
+    let combinedNotices = Array.isArray(freshNotices) ? [...freshNotices] : [];
+    try {
+      const blobDetails = await head(BLOB_FILENAME).catch(() => null);
+      if (blobDetails && blobDetails.url) {
+        const blobRes = await fetch(blobDetails.url);
+        if (blobRes.ok) {
+          const storedData = await blobRes.json();
+          if (Array.isArray(storedData.notices)) {
+            const noticeMap = new Map();
+            // Store existing notices first
+            storedData.notices.forEach(n => {
+              if (n && n.id !== undefined && n.id !== null) {
+                noticeMap.set(String(n.id), n);
+              }
+            });
+            // Merge fresh notices (overwriting or appending)
+            freshNotices.forEach(n => {
+              if (n && n.id !== undefined && n.id !== null) {
+                noticeMap.set(String(n.id), n);
+              }
+            });
+            combinedNotices = Array.from(noticeMap.values());
+            combinedNotices.sort((a, b) => (parseInt(b.id, 10) || 0) - (parseInt(a.id, 10) || 0));
+          }
+        }
+      }
+    } catch (mergeErr) {
+      console.warn('[Vercel Blob] Could not merge with existing notices, using fresh notices:', mergeErr);
+    }
+
+    if (!combinedNotices || combinedNotices.length === 0) {
+      throw new Error('No notices could be scraped or loaded.');
     }
 
     const payload = {
       updatedAt: new Date().toISOString(),
-      notices: freshNotices,
-      total: freshNotices.length
+      seedId: DEFAULT_SEED_ID,
+      notices: combinedNotices,
+      total: combinedNotices.length
     };
 
-    // Step 3: Save / Overwrite fresh payload to Vercel Blob
+    // Step 3: Save merged payload to Vercel Blob
     try {
       const blobResult = await put(BLOB_FILENAME, JSON.stringify(payload), {
         access: 'public',
@@ -110,7 +144,8 @@ export default async function handler(req, res) {
 }
 
 // Scraper placeholder — replace with your UCAM login / scraping logic
-async function scrapeUCAMNotices() {
-  // Scraper returns array of notices: [{ id, title, date, url, pdfUrl }, ...]
+async function scrapeUCAMNotices(startSeedId = DEFAULT_SEED_ID, range = PROBE_RANGE) {
+  // Scraper returns array of notices starting from base seed ID probing up to range IDs ahead
+  // Example: [{ id, title, date, url, pdfUrl }, ...]
   return [];
 }

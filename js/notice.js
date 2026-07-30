@@ -129,9 +129,24 @@ const NoticeViewer = {
 
     saveToCache(notices) {
         try {
+            let noticesToSave = Array.isArray(notices) ? [...notices] : [];
+            const cachedStr = localStorage.getItem(this.CACHE_KEY);
+            if (cachedStr) {
+                const cachedData = JSON.parse(cachedStr);
+                if (Array.isArray(cachedData.notices)) {
+                    const noticeMap = new Map();
+                    cachedData.notices.forEach(n => {
+                        if (n && n.id !== undefined && n.id !== null) noticeMap.set(String(n.id), n);
+                    });
+                    noticesToSave.forEach(n => {
+                        if (n && n.id !== undefined && n.id !== null) noticeMap.set(String(n.id), n);
+                    });
+                    noticesToSave = Array.from(noticeMap.values()).sort((a, b) => (parseInt(b.id, 10) || 0) - (parseInt(a.id, 10) || 0));
+                }
+            }
             const data = {
                 timestamp: Date.now(),
-                notices: notices
+                notices: noticesToSave
             };
             localStorage.setItem(this.CACHE_KEY, JSON.stringify(data));
         } catch (e) {
@@ -176,11 +191,20 @@ const NoticeViewer = {
                 return;
             }
 
-            this.notices = data.notices;
+            // Merge new notices with existing notices state so old notices are kept
+            const noticeMap = new Map();
+            (this.notices || []).forEach(n => {
+                if (n && n.id !== undefined && n.id !== null) noticeMap.set(String(n.id), n);
+            });
+            data.notices.forEach(n => {
+                if (n && n.id !== undefined && n.id !== null) noticeMap.set(String(n.id), n);
+            });
+
+            this.notices = Array.from(noticeMap.values()).sort((a, b) => (parseInt(b.id, 10) || 0) - (parseInt(a.id, 10) || 0));
             this.noticesLoaded = true;
 
             if (data.source) {
-                console.log(`[NoticeViewer] Notices loaded via ${data.source} (${data.cached ? 'cached' : 'fresh'}, total: ${data.notices.length})`);
+                console.log(`[NoticeViewer] Notices loaded via ${data.source} (${data.cached ? 'cached' : 'fresh'}, total: ${this.notices.length})`);
             }
 
             // Save to localStorage
@@ -244,8 +268,8 @@ const NoticeViewer = {
         if (refreshBtnDesktop) refreshBtnDesktop.style.display = 'block';
         if (refreshBtnMobile) refreshBtnMobile.style.display = 'block';
 
-        if (listDesktop) listDesktop.style.display = 'block';
-        if (listMobile) listMobile.style.display = 'flex';
+        if (listDesktop) listDesktop.style.display = 'grid';
+        if (listMobile) listMobile.style.display = 'grid';
 
         // Render desktop list
         this.renderNoticeList('notice-list-desktop');
