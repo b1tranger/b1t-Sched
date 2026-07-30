@@ -6,7 +6,9 @@ const Auth = {
   currentUser: null,
   cacheManager: null,
   sessionTimer: null,
+  lastSessionResetTime: 0,
   SESSION_TIMEOUT: 60 * 60 * 1000, // 1 hour in milliseconds
+  SESSION_RESET_THROTTLE: 5 * 60 * 1000, // Throttle resets to max once per 5 minutes
 
   // Initialize cache manager
   initCacheManager() {
@@ -44,7 +46,7 @@ const Auth = {
       }
     }, this.SESSION_TIMEOUT);
 
-    console.log('[Auth] Session timer started (1 hour)');
+    this.lastSessionResetTime = Date.now();
   },
 
   // Clear session timeout timer
@@ -52,13 +54,14 @@ const Auth = {
     if (this.sessionTimer) {
       clearTimeout(this.sessionTimer);
       this.sessionTimer = null;
-      console.log('[Auth] Session timer cleared');
     }
   },
 
-  // Reset session timer on user activity
+  // Reset session timer on user activity (throttled for resource efficiency)
   resetSessionTimer() {
-    if (this.currentUser) {
+    if (!this.currentUser) return;
+    const now = Date.now();
+    if (!this.lastSessionResetTime || (now - this.lastSessionResetTime) >= this.SESSION_RESET_THROTTLE) {
       this.startSessionTimer();
     }
   },

@@ -8,8 +8,8 @@ import { put, head } from '@vercel/blob';
 // Configuration
 const BLOB_FILENAME = 'notices.json';
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours cache validity
-const DEFAULT_SEED_ID = 753;
-const PROBE_RANGE = 10;
+const DEFAULT_SEED_ID = 760;
+const PROBE_RANGE = 20;
 
 export default async function handler(req, res) {
   // Set CORS headers
@@ -54,7 +54,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // Step 2: Fetch fresh notices from UCAM Portal Scraper (probing from seed ID 753)
+    // Step 2: Fetch fresh notices from UCAM Portal Scraper (probing from seed ID 760, range 20)
     const freshNotices = await scrapeUCAMNotices(DEFAULT_SEED_ID, PROBE_RANGE);
 
     // Step 2.5: Merge fresh notices with existing stored notices in Blob to keep old loaded notices
@@ -135,7 +135,7 @@ export default async function handler(req, res) {
           });
         }
       }
-    } catch (_) {}
+    } catch (_) { }
 
     return res.status(500).json({
       error: error.message || 'Internal Server Error'

@@ -51,6 +51,72 @@ const UI = {
     }
   },
 
+  // Show floating toast notification
+  showToast(message, type = 'info', duration = 4000) {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'toast-container';
+      container.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 10000;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        max-width: 380px;
+        pointer-events: none;
+      `;
+      document.body.appendChild(container);
+    }
+
+    const toast = document.createElement('div');
+    const bgColors = {
+      success: '#2e7d32',
+      error: '#d32f2f',
+      warning: '#ed6c02',
+      info: '#0288d1'
+    };
+    const bgColor = bgColors[type] || bgColors.info;
+
+    toast.style.cssText = `
+      background-color: ${bgColor};
+      color: #ffffff;
+      padding: 12px 16px;
+      border-radius: 8px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+      font-size: 14px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      pointer-events: auto;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      opacity: 0;
+      transform: translateY(-10px);
+    `;
+
+    const iconClass = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle';
+    toast.innerHTML = `<i class="fas ${iconClass}" style="font-size: 16px;"></i><span>${message}</span>`;
+
+    container.appendChild(toast);
+
+    // Trigger reflow & animate in
+    requestAnimationFrame(() => {
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateY(0)';
+    });
+
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(-10px)';
+      setTimeout(() => {
+        if (toast.parentNode) toast.parentNode.removeChild(toast);
+      }, 300);
+    }, duration);
+  },
+
   // Update user details card
   updateUserDetailsCard(email, department, semester, section) {
     document.getElementById('user-email').textContent = email;

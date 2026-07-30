@@ -7,10 +7,13 @@ const NoticeViewer = {
     API_BASE: 'https://b1t-acad-backend.vercel.app',
     CACHE_KEY: 'b1tSched_notices',
     CACHE_TTL: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+    REFRESH_COOLDOWN_MS: 60 * 1000, // 60 seconds cooldown between manual refreshes
 
     // State
     noticesLoaded: false,
     notices: [],
+    lastRefreshTime: 0,
+    isRefreshing: false,
 
     // ──────────────────────────────────────────────
     // INITIALIZATION
@@ -165,8 +168,32 @@ const NoticeViewer = {
             return;
         }
 
+        const now = Date.now();
+
+        // If force refresh requested, enforce cooldown & prevent duplicate requests
+        if (forceRefresh) {
+            if (this.isRefreshing) {
+                if (typeof UI !== 'undefined' && UI.showToast) {
+                    UI.showToast('Notice refresh is already in progress. Please wait...', 'warning');
+                }
+                return;
+            }
+
+            if (this.lastRefreshTime > 0 && (now - this.lastRefreshTime) < this.REFRESH_COOLDOWN_MS) {
+                const remainingSec = Math.ceil((this.REFRESH_COOLDOWN_MS - (now - this.lastRefreshTime)) / 1000);
+                const cooldownMsg = `Please wait ${remainingSec}s before refreshing notices again.`;
+                if (typeof UI !== 'undefined' && UI.showToast) {
+                    UI.showToast(cooldownMsg, 'error');
+                } else {
+                    this.showErrorState(cooldownMsg);
+                }
+                return;
+            }
+        }
+
         // Show loading state
         this.showLoadingState();
+        if (forceRefresh) this.isRefreshing = true;
 
         try {
             const url = forceRefresh ? `${this.API_BASE}/api/notices?refresh=true` : `${this.API_BASE}/api/notices`;
@@ -202,6 +229,15 @@ const NoticeViewer = {
 
             this.notices = Array.from(noticeMap.values()).sort((a, b) => (parseInt(b.id, 10) || 0) - (parseInt(a.id, 10) || 0));
             this.noticesLoaded = true;
+
+            if (forceRefresh) {
+                this.lastRefreshTime = Date.now();
+                const totalLoaded = this.notices.length;
+                const successMsg = `Notices updated successfully! ${totalLoaded} notice(s) available.`;
+                if (typeof UI !== 'undefined' && UI.showToast) {
+                    UI.showToast(successMsg, 'success');
+                }
+            }
 
             if (data.source) {
                 console.log(`[NoticeViewer] Notices loaded via ${data.source} (${data.cached ? 'cached' : 'fresh'}, total: ${this.notices.length})`);
@@ -240,6 +276,8 @@ const NoticeViewer = {
             } else {
                 this.showErrorState(`Failed to load notices: ${error.message}. Please try again later.`);
             }
+        } finally {
+            if (forceRefresh) this.isRefreshing = false;
         }
     },
 
