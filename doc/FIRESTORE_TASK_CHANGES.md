@@ -6,6 +6,27 @@ This document describes the Firestore database schema changes required to suppor
 - User task completion tracking
 - User-added tasks
 - Old/completed tasks viewing
+- Semester Auto-Promotion cycle tracking & System metadata
+
+---
+
+## Semester Auto-Promotion & System Metadata
+
+### 1. User Semester Tracking Fields (`users` collection)
+- `lastSemesterCycle`: string (e.g. `"2026-07"`) — tracks the cycle in which the user's semester was last advanced.
+- `lastProfileChange`: Timestamp — tracks manual profile edit for 30-day cooldown pause protection.
+
+### 2. Admin Bulk Update Metadata Document
+```
+metadata/semesterConfig
+```
+```javascript
+{
+  lastBulkUpdate: Timestamp,  // Server timestamp when admin ran bulk update
+  lastCycle: string,          // e.g. "2026-07"
+  updatedBy: string           // Admin user ID
+}
+```
 
 ---
 

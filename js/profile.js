@@ -254,11 +254,13 @@ const Profile = {
 
   updateCooldownMessage() {
     const cooldownMsg = document.getElementById('profile-cooldown-message');
+    const pausedNote = document.getElementById('semester-cooldown-paused-note');
     if (!cooldownMsg || !this.currentProfile) return;
 
     // Admins bypass cooldown
     if (App.isAdmin) {
       cooldownMsg.style.display = 'none';
+      if (pausedNote) pausedNote.style.display = 'none';
       return;
     }
 
@@ -273,11 +275,14 @@ const Profile = {
       if (daysRemaining > 0) {
         cooldownMsg.innerHTML = `<i class="fas fa-clock"></i> You last changed your profile ${daysSinceChange} day${daysSinceChange !== 1 ? 's' : ''} ago. You can change again in <strong>${daysRemaining} day${daysRemaining !== 1 ? 's' : ''}</strong>.`;
         cooldownMsg.style.display = 'block';
+        if (pausedNote) pausedNote.style.display = 'block';
       } else {
         cooldownMsg.style.display = 'none';
+        if (pausedNote) pausedNote.style.display = 'none';
       }
     } else {
       cooldownMsg.style.display = 'none';
+      if (pausedNote) pausedNote.style.display = 'none';
     }
   },
 

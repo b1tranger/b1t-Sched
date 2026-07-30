@@ -64,6 +64,19 @@ async function updateAllUserSemesters() {
                     continue;
                 }
 
+                // Skip users who manually updated their profile within the last 30 days
+                if (userData.lastProfileChange) {
+                    const lastChange = userData.lastProfileChange.toDate ? userData.lastProfileChange.toDate() : new Date(userData.lastProfileChange);
+                    if (!isNaN(lastChange.getTime())) {
+                        const daysSinceChange = (new Date() - lastChange) / (1000 * 60 * 60 * 24);
+                        if (daysSinceChange < 30) {
+                            console.log(`[Migration] Skipping user ${userData.email || userId}: Profile updated manually ${Math.floor(daysSinceChange)} days ago (30-day cooldown active).`);
+                            totalSkipped++;
+                            continue;
+                        }
+                    }
+                }
+
                 const currentSem = userData.semester;
                 const newSem = incSem(currentSem);
 

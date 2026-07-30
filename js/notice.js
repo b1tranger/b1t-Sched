@@ -179,6 +179,10 @@ const NoticeViewer = {
             this.notices = data.notices;
             this.noticesLoaded = true;
 
+            if (data.source) {
+                console.log(`[NoticeViewer] Notices loaded via ${data.source} (${data.cached ? 'cached' : 'fresh'}, total: ${data.notices.length})`);
+            }
+
             // Save to localStorage
             this.saveToCache(this.notices);
 

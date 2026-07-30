@@ -50,15 +50,18 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **Gray Mode Theme** - A sleek monochromatic alternative theme. Modern system dark mode preferences now default to "Gray Mode" for a premium, low-strain experience. Includes full UI integration for Classroom, Timeline, and Dashboards.
 - **Improved Initial Preloader** - A synchronized loading screen that persists until all dashboard data is fully fetched. Features a high `z-index` overlay (10005) and body scroll locking to prevent premature element visibility.
 - **Admin Features** - Task reset, task/event delete, event creation, user management with password reset and deletion
-- **Admin User Management** - View all users, manage roles (CR/Faculty/Blocked), edit user profiles, send password resets (via Client SDK), delete users
+- **Admin User Management** - View all users, search by email/ID/dept/sem/sec (`#user-search-input`), manage roles (CR/Faculty/Blocked), edit user profiles, send password resets (via Client SDK), delete users
+- **Student Search Bar** - Real-time search in User Management view (`#user-search-input`) with instant filtering and clear search button.
 - **Password Reset Enhancements** - "Forgot Password" link on login failure, "Reset Password" button in Profile Settings, and robust Admin reset functionality bypassing CORS issues
 - **CR Role** - Class Representatives can reset and delete tasks for their section, create events for their semester, and edit/delete their own events
 - **Faculty Role** - Faculty members can view department-wide tasks (no semester/section filtering), create events for their department, and edit/delete their own events
 - **Blocked Users** - Restricted accounts in read-only mode (cannot add/edit/delete tasks or change profile)
 - **CR Info Message** - Non-CR users see instructions to contact admin for CR role
+- **Semester Auto-Promotion** - Student semesters automatically advance every July and January on sign-in based on `lastSemesterCycle`. If a student modified their profile within the last 30 days, auto-promotion is paused and an amber notice is shown in Profile Settings. Includes an interactive homepage notice banner directing students to check Profile Settings.
+- **Admin Fail-Safe Bulk Semester Update** - Dedicated button in User Management view allowing admins to run bulk semester auto-updates. Features a 30-second read-only verification countdown timer upon opening the modal, an amber verification notice, and a 6-month ($180\text{ days}$) execution cooldown recorded in `/metadata/semesterConfig`.
 - **Profile Change Cooldown** - Users can only change profile once per 30 days (anti-spam)
 - **Two-Column Layout** - Events sidebar on desktop, slide-out panel (40vw) on mobile
-- **Notice Viewer** - View UCAM university notices with PDF preview (desktop modal with split-pane layout; mobile slide-out sidebar), powered by Vercel serverless backend with local caching
+- **Notice Viewer** - View UCAM university notices with PDF preview (desktop modal with split-pane layout; mobile slide-out sidebar), powered by Vercel serverless backend (`/api/notices`) with global Vercel Blob Edge CDN caching (`@vercel/blob`) and emergency stale fallbacks.
 - **Note Taking** - Personal note-taking feature with enhanced markdown support (including fenced code blocks and HTML entities), auto-save, and PDF export. Supports file attachments via temporary link sharing (Catbox/Tmpfiles) and a "Shorten" feature that exports notes as a local `.md` file for manual sharing. PDF export is optimized for both light and dark themes with forced visibility.
 - **Task Filtering** - Filter pending tasks by type (Assignment, Homework, Exam, Project, Presentation, Other)
 - **Global Contributions** - View a leaderboard of top contributors (group-specific or global across all departments)
@@ -2417,6 +2420,15 @@ _Last Updated: April 4, 2026 (v2.41.2)_
 - **Enhancement**: Firestore rules updated with `hasValidDeadline()` helper for CR Notice deadline validation.
 - **Enhancement**: Deadline form labels styled with bottom border for visual separation.
 - **Enhancement**: Deadline radio button labels updated to "No official Time limit" (from "No Deadline") for consistency.
+
+### v2.33.0
+
+- **New Feature**: Student Search Bar — Real-time search in User Management view (`#user-search-input`) by email, student ID, department, semester, or section with clear button.
+- **New Feature**: Vercel Blob Notice Caching — Serverless backend (`api/notices.js`) uses `@vercel/blob` (`notices.json`) for global Edge CDN notice caching with 6-hour TTL, force refresh (`?refresh=true`), and emergency stale fallbacks.
+- **New Feature**: Semester Auto-Promotion — Student semesters automatically advance every July and January on user login based on `lastSemesterCycle`.
+- **New Feature**: Homepage Semester Auto-Promotion Notice Banner (`#home-semester-notice-card`) with a direct button link to Profile Settings.
+- **New Feature**: 30-Day Manual Profile Cooldown Protection — Auto-promotion is paused if a student manually modified their profile within 30 days, displaying an amber notice in Profile Settings.
+- **New Feature**: Admin Fail-Safe Bulk Semester Update — Dedicated button in User Management view with a 30-second read-only verification countdown timer, fail-safe verification prompt, and a 6-month ($180\text{ days}$) execution cooldown saved to `/metadata/semesterConfig`.
 
 ### v2.32.0
 

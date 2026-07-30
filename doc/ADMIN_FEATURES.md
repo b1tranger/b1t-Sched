@@ -15,10 +15,13 @@ To make a user an admin, manually add the `isAdmin: true` field to their user do
 
 ## Admin Capabilities
 
-### Task Management
+### User Management & System Operations
 
 | Feature | Description |
 |---------|-------------|
+| **Manage Users** | Access User Management view to filter, assign roles, edit profiles, send password resets, or delete users |
+| **Student Search Bar** | Real-time search by email, student ID, department, semester, or section with instant filtering and clear button |
+| **Bulk Semester Auto-Update** | Fail-safe action to bulk advance all eligible student semesters ($1\text{st} \rightarrow 2\text{nd}, \dots, 8\text{th} \rightarrow \text{alumni}$) for a new term cycle |
 | **Reset Tasks** | Deletes all tasks past 12h grace period for the current department/semester/section |
 | **Delete Task** | Remove individual tasks with click of a trash icon |
 
@@ -59,6 +62,13 @@ To make a user an admin, manually add the `isAdmin: true` field to their user do
   createdBy: "userId",
   createdAt: Timestamp
 }
+```javascript
+// Document: /metadata/semesterConfig
+{
+  lastBulkUpdate: Timestamp,  // Server timestamp of last admin bulk update execution
+  lastCycle: "2026-07",       // Semester cycle tag ("YYYY-01" or "YYYY-07")
+  updatedBy: "adminUserId"    // User ID of the admin who executed the update
+}
 ```
 
 ## Security Rules (Recommended)
@@ -96,13 +106,14 @@ service cloud.firestore {
       allow create, delete: if isAdmin();
     }
     
-    // Resource links and metadata - read only for authenticated users
+    // Resource links and metadata - read for signed-in users; write for admins
     match /resourceLinks/{department} {
       allow read: if request.auth != null;
     }
     
-    match /metadata/{document} {
+    match /metadata/{document=**} {
       allow read: if request.auth != null;
+      allow write: if isAdmin();
     }
   }
 }
@@ -113,6 +124,7 @@ service cloud.firestore {
 ### Admin-Only Buttons
 
 - **Manage Users** - Appears in Profile Settings (opens User Management view)
+- **Auto-Update Semesters** - Appears in User Management view header. Fail-safe bulk update tool with a 30-second read-only verification countdown and a 6-month ($180\text{ days}$) execution cooldown.
 - **Firebase Dashboard** - Appears in Profile Settings (link to Firebase Console)
 - **Reset Tasks** - Appears in tasks section (danger button)
 - **Add Event** - Appears in events sidebar (desktop and mobile)

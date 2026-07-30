@@ -25,6 +25,7 @@ A single-page application (SPA) that helps students manage academic tasks, assig
 - 📊 **Activity Timeline** - Visual heatmap and bar chart tracking user activity (logins, tasks, events) for productivity insights
 - 🔔 **Push Notifications** - Real-time browser notifications for new tasks and events (mobile-compatible)
 - 🏆 **Contributions** - Leaderboard of top contributors (group-specific or global across all departments)
+- 🎓 **Semester Auto-Promotion** - Automatic semester advancement every July and January on user login with 30-day manual profile protection and an Admin fail-safe bulk update tool (with 30s verification countdown & 6-month cooldown)
 - ⚙️ **Profile Settings** - Update your details anytime (30-day cooldown)
 - ❓ **FAQ Section** - Collapsible accordion explaining how the site works, user roles, and profile settings
 - 🎨 **Maroon Theme** - Professional dark maroon and off-white color scheme

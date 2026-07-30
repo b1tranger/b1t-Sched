@@ -776,5 +776,34 @@ const DB = {
       console.error('Error getting cached user count:', error);
       return { success: false, error: error.message };
     }
+  },
+
+  // Get semester config (last bulk update timestamp, etc.)
+  async getSemesterConfig() {
+    try {
+      const doc = await db.collection('metadata').doc('semesterConfig').get();
+      if (doc.exists) {
+        return { success: true, data: doc.data() };
+      }
+      return { success: true, data: null };
+    } catch (error) {
+      console.error('Error fetching semester config:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Record admin bulk semester update timestamp
+  async recordAdminBulkSemesterUpdate(cycle) {
+    try {
+      await db.collection('metadata').doc('semesterConfig').set({
+        lastBulkUpdate: firebase.firestore.FieldValue.serverTimestamp(),
+        lastCycle: cycle,
+        updatedBy: firebase.auth().currentUser ? firebase.auth().currentUser.uid : 'admin'
+      }, { merge: true });
+      return { success: true };
+    } catch (error) {
+      console.error('Error recording bulk semester update:', error);
+      return { success: false, error: error.message };
+    }
   }
 };

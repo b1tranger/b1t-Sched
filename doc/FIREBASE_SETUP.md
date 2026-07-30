@@ -106,6 +106,8 @@ const firebaseConfig = {
      department: "CSE" (string)
      semester: "1st" (string)
      section: "A1" (string)
+     lastSemesterCycle: "2026-07" (string)
+     lastProfileChange: [timestamp: optional for 30-day cooldown]
      createdAt: [Click "timestamp" and select "timestamp"]
      updatedAt: [Click "timestamp" and select "timestamp"]
      ```

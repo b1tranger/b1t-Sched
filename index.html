@@ -327,6 +327,28 @@
                     </div>
                 </div>
 
+                <!-- Semester Auto-Promotion Notice Banner -->
+                <div id="home-semester-notice-card" class="home-semester-notice-card" style="display: none;">
+                    <div class="home-semester-notice-icon">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <div class="home-semester-notice-body">
+                        <p class="home-semester-notice-title">
+                            <strong>Semester Auto-Promotion Active</strong>
+                        </p>
+                        <p class="home-semester-notice-text">
+                            Semesters automatically advance every <strong>July</strong> and <strong>January</strong>.
+                            Please verify that your current semester and section are correct.
+                        </p>
+                    </div>
+                    <button id="home-semester-notice-check-btn" class="btn btn-primary btn-sm home-semester-notice-action">
+                        <i class="fas fa-user-cog"></i> Check Profile
+                    </button>
+                    <button id="home-semester-notice-dismiss-btn" class="btn btn-icon home-semester-notice-dismiss" title="Dismiss">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
                 <div class="dashboard-container dashboard-grid">
                     <!-- Left Column: Resources + Tasks -->
                     <div class="dashboard-main">
@@ -1242,6 +1264,10 @@
                                         <i class="fas fa-info-circle" style="color: #3b82f6; margin-right: 6px;"></i>
                                         <strong>Semester Auto-Update Notice:</strong> Semesters automatically update after each semester ends (every July and January). Please check that your current semester and section values are correct.
                                     </p>
+                                    <p id="semester-cooldown-paused-note" style="margin-top: 8px; margin-bottom: 0; font-size: 0.82rem; color: #b45309; line-height: 1.45; display: none;">
+                                        <i class="fas fa-pause-circle" style="color: #d97706; margin-right: 5px;"></i>
+                                        <strong>Auto-Update Paused:</strong> You changed your profile details within the last 30 days. Automatic semester promotion is paused while your 30-day cooldown is active. If a new semester has started, please manually check or update your semester once your cooldown ends.
+                                    </p>
                                 </div>
                             </div>
 
@@ -1340,11 +1366,22 @@
                         <!-- Feedback Message -->
                         <div id="user-management-message" class="message" style="display: none;"></div>
 
-                        <!-- Filters Section -->
-                        <div class="filter-controls">
+                        <!-- Filters & Search Section -->
+                        <div class="filter-controls" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 20px;">
+                            <div class="user-search-box">
+                                <i class="fas fa-search search-icon"></i>
+                                <input type="text" id="user-search-input" class="form-input user-search-input" placeholder="Search by email, ID, dept, sem...">
+                                <button id="clear-user-search-btn" class="btn btn-icon clear-search-btn" style="display: none;" title="Clear search">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
                             <button id="add-filter-btn" class="btn btn-secondary">
                                 <i class="fas fa-filter"></i> Add Filter
                                 <span id="filter-badge" class="filter-badge" style="display: none;">0</span>
+                            </button>
+                            <!-- Admin Bulk Semester Update Button -->
+                            <button id="admin-bulk-semester-btn" class="btn btn-admin-semester" title="Bulk update all student semesters to next semester">
+                                <i class="fas fa-level-up-alt"></i> Auto-Update Semesters
                             </button>
                         </div>
 
@@ -1358,6 +1395,72 @@
                                 <!-- User cards will be rendered here -->
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Bulk Semester Update Confirmation Modal -->
+            <div id="admin-bulk-semester-modal" class="modal" style="display: none;">
+                <div class="modal-content modal-content-sm admin-bulk-semester-modal-content">
+                    <div class="modal-header">
+                        <h2 class="modal-title">
+                            <i class="fas fa-level-up-alt" style="color: #7c3aed; margin-right: 8px;"></i>
+                            Bulk Semester Auto-Update
+                        </h2>
+                        <button id="close-admin-bulk-semester-modal" class="btn btn-icon">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="admin-semester-modal-info">
+                            <p>This will <strong>increment the semester</strong> of all eligible student accounts by one step, based on the current semester cycle:</p>
+                            <div class="admin-semester-progression">
+                                <span class="sem-step">1st</span><i class="fas fa-arrow-right sem-arrow"></i>
+                                <span class="sem-step">2nd</span><i class="fas fa-arrow-right sem-arrow"></i>
+                                <span class="sem-step">3rd</span><i class="fas fa-arrow-right sem-arrow"></i>
+                                <span class="sem-step sem-step-faded">…</span><i class="fas fa-arrow-right sem-arrow sem-step-faded"></i>
+                                <span class="sem-step">7th</span><i class="fas fa-arrow-right sem-arrow"></i>
+                                <span class="sem-step">8th</span><i class="fas fa-arrow-right sem-arrow"></i>
+                                <span class="sem-step sem-alumni">Alumni</span>
+                            </div>
+                            <div class="admin-semester-verify-notice" style="display: flex; align-items: flex-start; gap: 8px; padding: 12px 14px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 10px; color: var(--text-color, #1e293b); font-size: 0.85rem; margin-bottom: 12px; line-height: 1.5;">
+                                <i class="fas fa-user-check" style="color: #3b82f6; margin-top: 2px; flex-shrink: 0;"></i>
+                                <span>
+                                    <strong>Fail-Safe Verification Check:</strong> Automatic semester promotion is the primary default behavior and runs on student login.
+                                    Please <strong>verify the user list</strong> to check if student semesters have already auto-updated before executing a manual bulk update.
+                                </span>
+                            </div>
+                            <div class="admin-semester-skip-note">
+                                <i class="fas fa-info-circle" style="color: #3b82f6;"></i>
+                                <span>
+                                    Faculty accounts and users already marked as <em>alumni / special</em> will be <strong>skipped</strong>.
+                                    Users who updated their profile within the last 30 days or were already updated in the current cycle will also be skipped.
+                                </span>
+                            </div>
+                        </div>
+                        <div id="admin-semester-cooldown-alert" class="admin-semester-cooldown-alert" style="display: none; align-items: flex-start; gap: 8px; padding: 12px 14px; background: rgba(234, 179, 8, 0.12); border: 1px solid rgba(234, 179, 8, 0.35); border-radius: 10px; color: var(--text-color, #1e293b); font-size: 0.84rem; margin-bottom: 14px; line-height: 1.5;">
+                            <i class="fas fa-clock" style="color: #b45309; margin-top: 2px; flex-shrink: 0;"></i>
+                            <span id="admin-semester-cooldown-alert-text"></span>
+                        </div>
+                        <div class="admin-semester-modal-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span><strong>Caution:</strong> This action updates Firestore for all eligible users and cannot be automatically reversed. Run only at the start of a new semester (July or January).</span>
+                        </div>
+                        <!-- Progress/Result Area (hidden until running) -->
+                        <div id="admin-bulk-semester-status" class="admin-bulk-semester-status" style="display: none;">
+                            <div id="admin-bulk-semester-progress" class="admin-semester-progress-bar-wrap" style="display: none;">
+                                <div class="admin-semester-progress-bar-label">
+                                    <i class="fas fa-spinner fa-spin"></i> Updating users...
+                                </div>
+                            </div>
+                            <div id="admin-bulk-semester-result" class="admin-bulk-semester-result" style="display: none;"></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button id="cancel-admin-bulk-semester" class="btn btn-secondary">Cancel</button>
+                        <button id="confirm-admin-bulk-semester" class="btn btn-admin-semester-confirm">
+                            <i class="fas fa-bolt"></i> Confirm &amp; Update
+                        </button>
                     </div>
                 </div>
             </div>

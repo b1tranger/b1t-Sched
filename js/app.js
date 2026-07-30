@@ -1191,6 +1191,8 @@ const App = {
         Router.navigate('dashboard');
         // Ensure data is loaded before we hide the loading screen
         await this.loadDashboardData(false);
+        // Show semester auto-promotion notice if needed
+        this.initHomeSemesterNotice();
       }
     } else if (profileResult.isNotFound) {
       // First-time login, show set details
@@ -1361,6 +1363,20 @@ const App = {
       return profileData;
     }
 
+    // Skip auto-update if student updated profile manually within the last 30 days (cooldown active)
+    if (!this.isAdmin && profileData.lastProfileChange) {
+      const lastChange = profileData.lastProfileChange.toDate ?
+        profileData.lastProfileChange.toDate() :
+        new Date(profileData.lastProfileChange);
+      if (!isNaN(lastChange.getTime())) {
+        const daysSinceChange = (new Date() - lastChange) / (1000 * 60 * 60 * 24);
+        if (daysSinceChange < 30) {
+          console.log(`[Semester Auto-Update] Skipping auto-promotion for ${userId}: profile was updated manually ${Math.floor(daysSinceChange)} days ago (30-day cooldown active).`);
+          return profileData;
+        }
+      }
+    }
+
     try {
       const currentCycle = Utils.getSemesterCycle();
       const lastCycle = profileData.lastSemesterCycle;
@@ -1424,6 +1440,199 @@ const App = {
       closeBtn.onclick = () => {
         modal.style.display = 'none';
       };
+    }
+  },
+
+  // Initialize homepage semester auto-promotion notice banner
+  initHomeSemesterNotice() {
+    // Only show for non-faculty, non-admin, non-blocked students
+    if (this.isFaculty || !this.userProfile) return;
+
+    const card = document.getElementById('home-semester-notice-card');
+    if (!card) return;
+
+    // Show if not dismissed in this session
+    const dismissed = sessionStorage.getItem('semesterNoticeDismissed');
+    if (!dismissed) {
+      card.style.display = 'flex';
+    }
+
+    // "Check Profile" button navigates to Profile Settings
+    const checkBtn = document.getElementById('home-semester-notice-check-btn');
+    if (checkBtn) {
+      checkBtn.onclick = () => {
+        Router.navigate('profile-settings');
+      };
+    }
+
+    // Dismiss button hides banner for this session
+    const dismissBtn = document.getElementById('home-semester-notice-dismiss-btn');
+    if (dismissBtn) {
+      dismissBtn.onclick = () => {
+        card.style.animation = 'semesterNoticeSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) reverse both';
+        setTimeout(() => {
+          card.style.display = 'none';
+          sessionStorage.setItem('semesterNoticeDismissed', '1');
+        }, 230);
+      };
+    }
+  },
+
+  // Open admin bulk semester update confirmation modal
+  async openAdminBulkSemesterModal() {
+    const modal = document.getElementById('admin-bulk-semester-modal');
+    if (!modal) return;
+
+    // Reset status & clear any running 30s timer
+    if (this.adminModalTimer) {
+      clearInterval(this.adminModalTimer);
+      this.adminModalTimer = null;
+    }
+
+    const statusArea = document.getElementById('admin-bulk-semester-status');
+    const progressEl = document.getElementById('admin-bulk-semester-progress');
+    const resultEl = document.getElementById('admin-bulk-semester-result');
+    const confirmBtn = document.getElementById('confirm-admin-bulk-semester');
+    const cancelBtn = document.getElementById('cancel-admin-bulk-semester');
+    const closeBtn = document.getElementById('close-admin-bulk-semester-modal');
+    const cooldownAlert = document.getElementById('admin-semester-cooldown-alert');
+    const cooldownText = document.getElementById('admin-semester-cooldown-alert-text');
+
+    if (statusArea) statusArea.style.display = 'none';
+    if (progressEl) progressEl.style.display = 'none';
+    if (resultEl) { resultEl.style.display = 'none'; resultEl.textContent = ''; resultEl.className = 'admin-bulk-semester-result'; }
+    if (cancelBtn) { cancelBtn.disabled = false; cancelBtn.textContent = 'Cancel'; }
+    if (closeBtn) closeBtn.disabled = false;
+
+    // Check 6-month cooldown for admin bulk update (180 days)
+    let isCooldownActive = false;
+    let daysRemaining = 0;
+    let daysSinceUpdate = 0;
+    const SIX_MONTHS_MS = 180 * 24 * 60 * 60 * 1000;
+
+    try {
+      const configRes = await DB.getSemesterConfig();
+      if (configRes.success && configRes.data && configRes.data.lastBulkUpdate) {
+        const lastUpdate = configRes.data.lastBulkUpdate.toDate ?
+          configRes.data.lastBulkUpdate.toDate() :
+          new Date(configRes.data.lastBulkUpdate);
+        if (!isNaN(lastUpdate.getTime())) {
+          const diffMs = new Date() - lastUpdate;
+          if (diffMs < SIX_MONTHS_MS) {
+            isCooldownActive = true;
+            daysSinceUpdate = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            daysRemaining = Math.ceil((SIX_MONTHS_MS - diffMs) / (1000 * 60 * 60 * 24));
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('[Admin Bulk Semester] Could not check cooldown from DB:', err);
+    }
+
+    if (isCooldownActive) {
+      if (cooldownAlert && cooldownText) {
+        cooldownText.innerHTML = `<strong>6-Month Cooldown Active:</strong> Bulk semester auto-update was executed ${daysSinceUpdate} day${daysSinceUpdate !== 1 ? 's' : ''} ago. Cooldown expires in <strong>${daysRemaining} day${daysRemaining !== 1 ? 's' : ''}</strong>.`;
+        cooldownAlert.style.display = 'flex';
+      }
+      if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = `<i class="fas fa-lock"></i> Cooldown Active (${daysRemaining}d)`;
+      }
+    } else {
+      if (cooldownAlert) cooldownAlert.style.display = 'none';
+
+      // 30-second read-only verification delay for fail-safe check
+      let timerSeconds = 30;
+      if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = `<i class="fas fa-clock"></i> Verify auto-updates first (${timerSeconds}s)`;
+      }
+
+      this.adminModalTimer = setInterval(() => {
+        timerSeconds--;
+        if (timerSeconds > 0) {
+          if (confirmBtn) {
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = `<i class="fas fa-clock"></i> Verify auto-updates first (${timerSeconds}s)`;
+          }
+        } else {
+          clearInterval(this.adminModalTimer);
+          this.adminModalTimer = null;
+          if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = '<i class="fas fa-bolt"></i> Confirm &amp; Update';
+          }
+        }
+      }, 1000);
+    }
+
+    modal.style.display = 'flex';
+  },
+
+  // Execute admin bulk semester update
+  async handleAdminBulkSemesterUpdate() {
+    if (!this.isAdmin) return;
+
+    const modal = document.getElementById('admin-bulk-semester-modal');
+    const statusArea = document.getElementById('admin-bulk-semester-status');
+    const progressEl = document.getElementById('admin-bulk-semester-progress');
+    const resultEl = document.getElementById('admin-bulk-semester-result');
+    const confirmBtn = document.getElementById('confirm-admin-bulk-semester');
+    const cancelBtn = document.getElementById('cancel-admin-bulk-semester');
+    const closeBtn = document.getElementById('close-admin-bulk-semester-modal');
+
+    // Lock UI
+    if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...'; }
+    if (cancelBtn) cancelBtn.disabled = true;
+    if (closeBtn) closeBtn.disabled = true;
+    if (statusArea) statusArea.style.display = 'block';
+    if (progressEl) progressEl.style.display = 'flex';
+    if (resultEl) { resultEl.style.display = 'none'; }
+
+    try {
+      // updateAllUserSemesters is defined in js/update-user-semesters.js
+      if (typeof window.updateAllUserSemesters !== 'function') {
+        throw new Error('Migration script not loaded. Please refresh and try again.');
+      }
+
+      const result = await window.updateAllUserSemesters();
+
+      if (progressEl) progressEl.style.display = 'none';
+
+      if (result && result.success) {
+        // Record bulk update timestamp in Firestore for 6-month cooldown
+        await DB.recordAdminBulkSemesterUpdate(Utils.getSemesterCycle());
+
+        if (resultEl) {
+          resultEl.innerHTML = `
+            <i class="fas fa-check-circle" style="color: #059669; margin-right: 6px;"></i>
+            <strong>Update Complete!</strong><br>
+            <span style="font-size:0.84rem;">
+              Updated: <strong>${result.totalUpdated}</strong> users &nbsp;|&nbsp;
+              Skipped: <strong>${result.totalSkipped}</strong> &nbsp;|&nbsp;
+              Total: <strong>${result.totalProcessed}</strong>
+            </span>`;
+          resultEl.className = 'admin-bulk-semester-result success';
+          resultEl.style.display = 'block';
+        }
+        // Refresh user list in the background
+        setTimeout(() => this.loadUserManagement(), 1200);
+      } else {
+        throw new Error(result && result.error ? result.error : 'Unknown error during update.');
+      }
+    } catch (err) {
+      console.error('[Admin Bulk Semester Update] Error:', err);
+      if (progressEl) progressEl.style.display = 'none';
+      if (resultEl) {
+        resultEl.innerHTML = `<i class="fas fa-exclamation-triangle" style="color: #dc2626; margin-right: 6px;"></i>
+          <strong>Error:</strong> ${err.message}`;
+        resultEl.className = 'admin-bulk-semester-result error';
+        resultEl.style.display = 'block';
+      }
+    } finally {
+      // Re-enable close buttons but keep confirm locked if success
+      if (cancelBtn) { cancelBtn.disabled = false; cancelBtn.textContent = 'Close'; }
+      if (closeBtn) closeBtn.disabled = false;
     }
   },
 
@@ -2099,6 +2308,61 @@ const App = {
       });
     }
 
+    // Admin Bulk Semester Update button
+    const adminBulkSemBtn = document.getElementById('admin-bulk-semester-btn');
+    if (adminBulkSemBtn) {
+      adminBulkSemBtn.addEventListener('click', () => {
+        this.openAdminBulkSemesterModal();
+      });
+    }
+
+    // Admin Bulk Semester modal — close/cancel
+    const closeAdminBulkModal = document.getElementById('close-admin-bulk-semester-modal');
+    const cancelAdminBulkSem = document.getElementById('cancel-admin-bulk-semester');
+    [closeAdminBulkModal, cancelAdminBulkSem].forEach(btn => {
+      if (btn) {
+        btn.addEventListener('click', () => {
+          if (this.adminModalTimer) {
+            clearInterval(this.adminModalTimer);
+            this.adminModalTimer = null;
+          }
+          const modal = document.getElementById('admin-bulk-semester-modal');
+          if (modal) modal.style.display = 'none';
+        });
+      }
+    });
+
+    // Admin Bulk Semester modal — confirm
+    const confirmAdminBulkSem = document.getElementById('confirm-admin-bulk-semester');
+    if (confirmAdminBulkSem) {
+      confirmAdminBulkSem.addEventListener('click', () => {
+        this.handleAdminBulkSemesterUpdate();
+      });
+    }
+
+    // User Search input & clear button
+    const userSearchInput = document.getElementById('user-search-input');
+    const clearUserSearchBtn = document.getElementById('clear-user-search-btn');
+
+    if (userSearchInput) {
+      userSearchInput.addEventListener('input', () => {
+        if (clearUserSearchBtn) {
+          clearUserSearchBtn.style.display = userSearchInput.value.trim() ? 'flex' : 'none';
+        }
+        this.filterUsers();
+      });
+    }
+
+    if (clearUserSearchBtn) {
+      clearUserSearchBtn.addEventListener('click', () => {
+        if (userSearchInput) {
+          userSearchInput.value = '';
+        }
+        clearUserSearchBtn.style.display = 'none';
+        this.filterUsers();
+      });
+    }
+
     // User filter inputs
     const filterInputs = ['filter-department', 'filter-semester', 'filter-section', 'filter-role'];
     filterInputs.forEach(inputId => {
@@ -2388,8 +2652,25 @@ const App = {
     const semester = document.getElementById('filter-semester')?.value || 'All';
     const section = document.getElementById('filter-section')?.value || 'All';
     const role = document.getElementById('filter-role')?.value || 'All';
+    const searchQuery = (document.getElementById('user-search-input')?.value || '').trim().toLowerCase();
 
     let filtered = [...this.allUsers];
+
+    // Filter by text search query (email, student ID, department, semester, section)
+    if (searchQuery) {
+      filtered = filtered.filter(u => {
+        const email = (u.email || '').toLowerCase();
+        const studentId = (u.studentId || '').toLowerCase();
+        const dept = (u.department || '').toLowerCase();
+        const sem = (u.semester || '').toLowerCase();
+        const sec = (u.section || '').toLowerCase();
+        return email.includes(searchQuery) ||
+               studentId.includes(searchQuery) ||
+               dept.includes(searchQuery) ||
+               sem.includes(searchQuery) ||
+               sec.includes(searchQuery);
+      });
+    }
 
     if (department !== 'All') {
       filtered = filtered.filter(u => u.department === department);
@@ -2443,11 +2724,15 @@ const App = {
     const filterSem = document.getElementById('filter-semester');
     const filterSection = document.getElementById('filter-section');
     const filterRole = document.getElementById('filter-role');
+    const userSearchInput = document.getElementById('user-search-input');
+    const clearUserSearchBtn = document.getElementById('clear-user-search-btn');
 
     if (filterDept) filterDept.value = 'All';
     if (filterSem) filterSem.value = 'All';
     if (filterSection) filterSection.value = 'All';
     if (filterRole) filterRole.value = 'All';
+    if (userSearchInput) userSearchInput.value = '';
+    if (clearUserSearchBtn) clearUserSearchBtn.style.display = 'none';
 
     this.renderUserList(this.allUsers);
   },

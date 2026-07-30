@@ -10,9 +10,29 @@ This document provides instructions for setting up two new Firestore collections
 
 1. [CR Notices Collection](#cr-notices-collection)
 2. [Activity Timeline Collection](#activity-timeline-collection)
-3. [Updated Firestore Security Rules](#updated-firestore-security-rules)
-4. [Firestore Indexes](#firestore-indexes)
-5. [Data Migration](#data-migration)
+3. [Semester Config & User Metadata](#semester-config--user-metadata)
+4. [Updated Firestore Security Rules](#updated-firestore-security-rules)
+5. [Firestore Indexes](#firestore-indexes)
+6. [Data Migration](#data-migration)
+
+---
+
+## Semester Config & User Metadata
+
+### Collection Name: `metadata`
+- **Document Path:** `/metadata/semesterConfig`
+
+```javascript
+{
+  lastBulkUpdate: Timestamp,  // Server timestamp of last admin bulk semester update
+  lastCycle: string,          // e.g. "2026-07"
+  updatedBy: string           // User ID of executing admin
+}
+```
+
+### User Profile Semester Fields (`users` Collection)
+- `lastSemesterCycle`: string (e.g., `"2026-07"`, updated on auto/manual promotion)
+- `lastProfileChange`: Timestamp (tracked for 30-day manual profile cooldown)
 
 ---
 
