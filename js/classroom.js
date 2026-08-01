@@ -1347,7 +1347,33 @@ const Classroom = {
         const item = btn.closest('.classroom-item');
         if (!item) return;
 
-        const isExpanded = item.classList.toggle('expanded');
+        const isCurrentlyExpanded = item.classList.contains('expanded');
+
+        // Auto-contract all other expanded items in the container
+        const container = item.closest('.classroom-list-container') || item.parentElement;
+        if (container) {
+            const otherExpandedItems = container.querySelectorAll('.classroom-item.expanded');
+            otherExpandedItems.forEach(otherItem => {
+                if (otherItem !== item) {
+                    otherItem.classList.remove('expanded');
+                    const otherTruncated = otherItem.querySelector('.snippet-truncated');
+                    const otherFull = otherItem.querySelector('.snippet-full');
+                    const otherBtn = otherItem.querySelector('.classroom-item-expand-btn');
+                    if (otherTruncated && otherFull) {
+                        otherTruncated.style.display = 'inline';
+                        otherFull.style.display = 'none';
+                    }
+                    if (otherBtn) {
+                        const icon = otherBtn.querySelector('i');
+                        if (icon) icon.className = 'fas fa-chevron-down';
+                        otherBtn.title = 'Show details';
+                    }
+                }
+            });
+        }
+
+        // Toggle target item
+        const isExpanded = item.classList.toggle('expanded', !isCurrentlyExpanded);
         const truncated = item.querySelector('.snippet-truncated');
         const full = item.querySelector('.snippet-full');
         const icon = btn.querySelector('i');

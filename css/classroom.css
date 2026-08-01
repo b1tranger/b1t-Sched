@@ -401,7 +401,9 @@ body.dark-mode .classroom-modal-header {
     border-bottom: 1px solid var(--classroom-border);
     display: flex;
     gap: 16px;
-    transition: background-color 0.1s;
+    transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1), 
+                box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1), 
+                border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     text-decoration: none;
     color: inherit;
     cursor: pointer;
@@ -409,6 +411,16 @@ body.dark-mode .classroom-modal-header {
 
 .classroom-item:hover {
     background-color: var(--classroom-bg-secondary);
+}
+
+.classroom-item.expanded {
+    background-color: var(--classroom-bg-secondary);
+    box-shadow: inset 3px 0 0 var(--classroom-green);
+}
+
+.snippet-truncated,
+.snippet-full {
+    transition: opacity 0.25s ease-in-out;
 }
 
 .item-icon {
@@ -421,6 +433,11 @@ body.dark-mode .classroom-modal-header {
     align-items: center;
     color: white;
     flex-shrink: 0;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.classroom-item:hover .item-icon {
+    transform: scale(1.05);
 }
 
 .item-content {
@@ -439,6 +456,7 @@ body.dark-mode .classroom-modal-header {
     border-radius: 12px;
     margin-bottom: 4px;
     border: 1px solid var(--classroom-border);
+    transition: all 0.2s ease;
 }
 
 .item-title {
@@ -446,6 +464,7 @@ body.dark-mode .classroom-modal-header {
     color: var(--classroom-text);
     margin: 0 0 4px 0;
     font-size: 1rem;
+    transition: color 0.2s ease;
 }
 
 .item-meta {
@@ -467,6 +486,7 @@ body.dark-mode .classroom-modal-header {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    transition: all 0.25s ease-in-out;
 }
 
 /* Specific item types */
@@ -487,7 +507,11 @@ body.dark-mode .classroom-modal-header {
     padding: 6px 14px;
     font-size: 0.85rem;
     font-weight: 500;
-    transition: all 0.2s;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.show-archived-btn:hover {
+    transform: scale(1.03);
 }
 
 .classroom-item-actions {
@@ -496,7 +520,7 @@ body.dark-mode .classroom-modal-header {
     gap: 6px;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.2s ease, visibility 0.2s ease;
+    transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     flex-shrink: 0;
     align-self: flex-start;
     margin-top: 2px;
@@ -521,13 +545,25 @@ body.dark-mode .classroom-modal-header {
     justify-content: center;
     cursor: pointer;
     font-size: 0.82rem;
-    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+    transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .classroom-item-action-btn:hover {
     background-color: var(--classroom-green);
     color: white;
     border-color: var(--classroom-green);
+    transform: scale(1.08);
+}
+
+.classroom-item-action-btn:active {
+    transform: scale(0.95);
+}
+
+.classroom-item-action-btn i {
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s ease;
 }
 
 .classroom-attachment-link {
