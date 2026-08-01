@@ -1451,28 +1451,38 @@ const App = {
     const card = document.getElementById('home-semester-notice-card');
     if (!card) return;
 
-    // Show if not dismissed in this session
-    const dismissed = sessionStorage.getItem('semesterNoticeDismissed');
-    if (!dismissed) {
+    const currentCycle = typeof Utils !== 'undefined' && typeof Utils.getSemesterCycle === 'function' ?
+      Utils.getSemesterCycle() : null;
+
+    if (!currentCycle) return;
+
+    // Show if not dismissed for the current semester cycle (every July and January)
+    const dismissedCycle = localStorage.getItem('semesterNoticeDismissedCycle');
+    if (dismissedCycle !== currentCycle) {
       card.style.display = 'flex';
+    } else {
+      card.style.display = 'none';
+      return;
     }
 
-    // "Check Profile" button navigates to Profile Settings
+    // "Check Profile" button navigates to Profile Settings and dismisses notice for current cycle
     const checkBtn = document.getElementById('home-semester-notice-check-btn');
     if (checkBtn) {
       checkBtn.onclick = () => {
+        localStorage.setItem('semesterNoticeDismissedCycle', currentCycle);
+        card.style.display = 'none';
         Router.navigate('profile-settings');
       };
     }
 
-    // Dismiss button hides banner for this session
+    // Dismiss button hides banner for current semester cycle
     const dismissBtn = document.getElementById('home-semester-notice-dismiss-btn');
     if (dismissBtn) {
       dismissBtn.onclick = () => {
         card.style.animation = 'semesterNoticeSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) reverse both';
         setTimeout(() => {
           card.style.display = 'none';
-          sessionStorage.setItem('semesterNoticeDismissed', '1');
+          localStorage.setItem('semesterNoticeDismissedCycle', currentCycle);
         }, 230);
       };
     }

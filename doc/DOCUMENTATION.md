@@ -40,7 +40,7 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **Event Calendar** - Track upcoming academic events with enhanced markdown support (HTML entities, code blocks, `<pre>` tags), clickable links, collapsible descriptions (2-line truncation), and department scope badge (ALL/CSE/etc.)
 - **Event Editing** - Admins can edit all events; CRs can edit/delete their own events
 - **Resource Links** - Quick access to department-specific resources with built-in PDF viewer (desktop: Google Docs Viewer in modal; mobile: opens in new tab)
-- **Google Classroom Integration** - View all assignments and announcements from enrolled courses in a unified interface with OAuth authentication and session persistence (auto-refresh tokens). Includes a one-click **Sync to Tasks** feature for Admins/CRs to automatically add Classroom assignments to the main Tasks list (avoids duplicates). Initial silent token refresh is deferred until the user explicitly opens the Classroom panel to prevent any brief Google Sign-In flash on page load.
+- **Google Classroom Integration** - View all assignments and announcements from enrolled courses in a unified interface with OAuth authentication and session persistence (auto-refresh tokens & cached fallback mode). Includes a unified pill-styled Sign Out button in window title headers, and a one-click **Sync to Tasks** feature for Admins/CRs to automatically add Classroom assignments to the main Tasks list (avoids duplicates).
 - **Session Security** - Automatic logout after 1 hour of inactivity (unless "Stay logged in" is checked), with activity-based timer reset for enhanced security
 - **Stay Logged In** - Optional "Trust this device" checkbox on login to persist session indefinitely on safe devices
 - **Role Badges** - Visual indicators for CR and Faculty contributors in task cards and contribution lists
@@ -57,7 +57,7 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **Faculty Role** - Faculty members can view department-wide tasks (no semester/section filtering), create events for their department, and edit/delete their own events
 - **Blocked Users** - Restricted accounts in read-only mode (cannot add/edit/delete tasks or change profile)
 - **CR Info Message** - Non-CR users see instructions to contact admin for CR role
-- **Semester Auto-Promotion** - Student semesters automatically advance every July and January on sign-in based on `lastSemesterCycle`. If a student modified their profile within the last 30 days, auto-promotion is paused and an amber notice is shown in Profile Settings. Includes an interactive homepage notice banner directing students to check Profile Settings.
+- **Semester Auto-Promotion** - Student semesters automatically advance every July and January on sign-in based on `lastSemesterCycle`. If a student modified their profile within the last 30 days, auto-promotion is paused and an amber notice is shown in Profile Settings. Includes an interactive homepage notice banner directing students to check Profile Settings, which persists dismissal across sessions per semester cycle (`localStorage.setItem('semesterNoticeDismissedCycle', currentCycle)`).
 - **Admin Fail-Safe Bulk Semester Update** - Dedicated button in User Management view allowing admins to run bulk semester auto-updates. Features a 30-second read-only verification countdown timer upon opening the modal, an amber verification notice, and a 6-month ($180\text{ days}$) execution cooldown recorded in `/metadata/semesterConfig`.
 - **Profile Change Cooldown** - Users can only change profile once per 30 days (anti-spam)
 - **Two-Column Layout** - Events sidebar on desktop, slide-out panel (40vw) on mobile
@@ -829,28 +829,30 @@ During signup, Firebase triggers `onAuthStateChanged` immediately when the user 
 
 **Purpose:** Google Classroom API integration for fetching courses, assignments, and announcements.
 
-**Authentication Flow:**
+**Authentication & Session Persistence:**
 
 - Uses **Google Identity Services (GIS)** for OAuth 2.0.
-- Implements a promise-based initialization (`init()`) that allows the main application to synchronize the loading screen with the authentication check.
-- **Deferred Silent Refresh:** Attempts to restore session via `prompt: 'none'` if previously connected. To prevent any Sign-In iframe/popup flash during page load, the actual refresh request is deferred until the user explicitly clicks the Classroom navigation button or toggle.
-- **Timeout:** Includes a 5-second safety timeout to ensure the app proceeds to load even if the Google API is slow or blocked.
+- Implements a promise-based initialization (`init()`) synchronized with the main application loading screen.
+- **Persistent Connection**: The `classroom_connected` flag remains intact across access token expirations ($1\text{ hour}$). The application attempts silent token renewal (`prompt: 'none'`) and falls back to serving cached assignments/announcements from `CacheManager` with a 1-click **Reconnect** banner if silent auth is blocked by browser 3rd-party cookie policies.
+- **Unified Sign Out Button**: A single pill-styled Sign Out button (`.classroom-header-logout-btn`, `border-radius: 20px`) is embedded in top window title headers (`#classroom-sidebar` mobile and `#classroom-modal` desktop) beside the title text. Explicit logout revokes the OAuth token, clears local storage connection flags, and resets the view to the login prompt.
 
 **Properties:**
 
 - `accessToken`: Current OAuth 2.0 access token.
 - `courses`: Cached list of enrolled courses.
+- `hasExpiredSession`: Flag indicating cached display mode with re-connect banner.
 - `_authResolve`: Internal resolver to signal authentication completion to the main app.
 
-| Method                           | Parameters                                                                                                                                                   | Returns | Description                                                  |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
-| `init()`                         | -                                                                                                                                                            | Promise | Initialize GIS client and check for persisted session.       |
-| `checkPersistedSession()`        | -                                                                                                                                                            | Promise | Check storage for valid token or attempt silent refresh.     |
-| `login()`                        | -                                                                                                                                                            | void    | Trigger manual OAuth login popup.                            |
-| `handleAuthSuccess(response)`    | object                                                                                                                                                       | void    | Handle successful token acquisition and start data fetching. |
-| `fetchCoursesAndLoadAll()`       | -                                                                                                                                                            | void    | Batch load courses and their associated work/announcements.  |
-| `syncClassroomToTasks(courseId)` | string                                                                                                                                                       | void    | (Admin/CR only) Sync assignments to the main task list.      |
-| `logout()`                       | -                                                                                                                                                            | void    | Clear tokens and reset connection status.                    |
+| Method                           | Parameters | Returns | Description                                                                                        |
+| -------------------------------- | ---------- | ------- | -------------------------------------------------------------------------------------------------- |
+| `init()`                         | -          | Promise | Initialize GIS client and check for persisted session.                                             |
+| `checkPersistedSession()`        | -          | Promise | Check storage for valid token or attempt silent refresh without clearing connection state.          |
+| `login()`                        | -          | void    | Trigger manual OAuth login popup.                                                                  |
+| `handleAuthSuccess(response)`    | object     | void    | Handle successful token acquisition and start data fetching.                                       |
+| `fetchCoursesAndLoadAll()`       | -          | void    | Batch load courses and their associated work/announcements.                                        |
+| `syncAssignmentsToTasks()`       | -          | void    | (Admin/CR only) Sync assignments to the main task list.                                            |
+| `logout()`                       | -          | void    | Explicitly revoke OAuth token, clear local storage connection flags, clear cache, and reset state. |
+| `cleanupSession()`               | -          | void    | Reset module memory state and render initial login screen.                                         |
 | `close()`                        | Close the calendar modal.                                                                                                                                    |
 | `renderCalendar()`               | Main render function; delegates to `generateCalendarGrid` (desktop), `renderMonthlyViewMobile` or `renderWeeklyView` (mobile, based on `currentMobileView`). |
 | `renderMonthlyViewMobile()`      | Renders the compact monthly grid for mobile with toggle, day headers, date cells, dot indicators, and task list panel.                                       |
@@ -2343,9 +2345,15 @@ You can use basic markdown formatting in task and event descriptions:
 
 ---
 
-_Last Updated: April 4, 2026 (v2.41.2)_
+_Last Updated: August 1, 2026 (v2.43.0)_
 
 ## Version History
+
+### v2.43.0 (Latest)
+
+- **Fix**: **Google Classroom Session Persistence** — `classroom_connected` flag is preserved across 1-hour access token expirations instead of prematurely logging out the user. The app attempts silent token renewal (`prompt: 'none'`) and falls back to serving cached assignments/announcements from `CacheManager` with a 1-click **Reconnect** banner if 3rd-party cookie policies block silent auth.
+- **Enhancement**: **Google Classroom Unified Sign Out Button** — Single pill-styled (`border-radius: 20px`) Sign Out button (`.classroom-header-logout-btn`) added to top window title headers (`#classroom-sidebar` mobile and `#classroom-modal` desktop) beside title text. Redundant inner view Sign Out buttons were removed.
+- **Enhancement**: **Semester Auto-Promotion Notice Banner Dismissal Persistence** — Dismissing the homepage banner (`#home-semester-notice-card`) via either "Check Profile" or "Dismiss" (`X`) now persists across browser sessions using semester cycle tracking (`localStorage.setItem('semesterNoticeDismissedCycle', currentCycle)`). The banner remains hidden until the next semester auto-promotion cycle starts in July or January.
 
 ### v2.41.2
 
@@ -2366,7 +2374,7 @@ _Last Updated: April 4, 2026 (v2.41.2)_
 - **Enhancement**: **Classroom Drop-in Refresh** — Added a manual refresh button (🔄) next to the Home button in the "All Courses" header that clears the Cache API and re-fetches fresh assignments and announcements.
 - **Fix**: **Note PDF Export Blank Font** — Fixed an issue where PDF exports generated via `html2pdf.js` would render with invisible text in dark themes. Added a delay (`requestAnimationFrame` + `setTimeout`) to ensure the browser repaints the forced black text before capturing, and fortified the CSS override with a white background and transparent borders.
 
-### v2.40.0 (Latest)
+### v2.40.0
 
 - **Fix**: **Google Classroom Login Flash** — Defer silent token refresh logic until user interaction (clicking navigation button or toggle) to prevent a brief Google Sign-In interface flash on initial page load. Added `needsSilentRefresh` flag and loading state during deferred reconnection.
 - **Fix**: **Task Card Layout Optimization** — Expanded description and deadline width to fill the empty space below checkboxes. Switched checkbox to absolute positioning and adjusted header padding (`padding-left: 38px`).
