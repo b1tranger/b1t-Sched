@@ -1246,8 +1246,37 @@ const Classroom = {
         });
     },
 
+    toggleItemExpand(event, btn) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        const item = btn.closest('.classroom-item');
+        if (!item) return;
+
+        const isExpanded = item.classList.toggle('expanded');
+        const truncated = item.querySelector('.snippet-truncated');
+        const full = item.querySelector('.snippet-full');
+        const icon = btn.querySelector('i');
+
+        if (truncated && full) {
+            if (isExpanded) {
+                truncated.style.display = 'none';
+                full.style.display = 'block';
+            } else {
+                truncated.style.display = 'inline';
+                full.style.display = 'none';
+            }
+        }
+
+        if (icon) {
+            icon.className = isExpanded ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
+        }
+        btn.title = isExpanded ? 'Collapse details' : 'Show details';
+    },
+
     renderUnifiedListItem(item, type) {
-        let title, date, link, icon, snippet, courseName;
+        let title, date, link, icon, snippet, fullText, courseName;
 
         courseName = item.courseName || 'Unknown Course';
 
@@ -1262,22 +1291,28 @@ const Classroom = {
             }
             link = item.alternateLink;
             icon = 'clipboard-list';
-            snippet = item.description ? Utils.truncate(item.description, 60) : '';
+            fullText = item.description || '';
+            snippet = fullText ? Utils.truncate(fullText, 60) : '';
         } else if (type === 'materials') {
             title = item.title || 'Posted Material';
             date = item.updateTime ? Utils.formatDateShort(new Date(item.updateTime)) : (item.creationTime ? Utils.formatDateShort(new Date(item.creationTime)) : '');
             link = item.alternateLink;
             icon = 'folder-open';
-            snippet = item.description ? Utils.truncate(item.description, 80) : 'No description';
+            fullText = item.description || '';
+            snippet = fullText ? Utils.truncate(fullText, 80) : 'No description';
         } else {
-            title = 'Announcement';
+            // Notice (Announcements): remove redundant "Announcement" title heading
+            title = '';
             date = Utils.formatDateShort(new Date(item.updateTime));
             link = item.alternateLink;
             icon = 'bullhorn';
-            snippet = item.text ? Utils.truncate(item.text, 80) : 'No content';
+            fullText = item.text || '';
+            snippet = fullText ? Utils.truncate(fullText, 80) : 'No content';
         }
 
         const iconClass = type === 'todo' ? 'assignment' : (type === 'materials' ? 'material' : 'announcement');
+        const hasMoreText = fullText && (fullText.length > snippet.length || fullText.includes('\n'));
+        const formattedFullText = fullText ? Utils.escapeAndLinkify(fullText) : '';
 
         return `
             <a href="${link}" target="_blank" class="classroom-item">
@@ -1286,12 +1321,22 @@ const Classroom = {
                 </div>
                 <div class="item-content">
                     <div class="item-course-badge">${courseName}</div>
-                    <h4 class="item-title">${title}</h4>
+                    ${title ? `<h4 class="item-title">${title}</h4>` : ''}
                     <div class="item-meta">
                         <span class="item-date">${date}</span>
                     </div>
-                    ${snippet ? `<div class="item-snippet">${snippet}</div>` : ''}
+                    ${snippet ? `
+                        <div class="item-snippet">
+                            <span class="snippet-truncated">${snippet}</span>
+                            ${hasMoreText ? `<div class="snippet-full" style="display: none; white-space: pre-wrap; word-break: break-word; margin-top: 6px;">${formattedFullText}</div>` : ''}
+                        </div>
+                    ` : ''}
                 </div>
+                ${hasMoreText ? `
+                    <button class="classroom-item-expand-btn" onclick="Classroom.toggleItemExpand(event, this)" title="Show details">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                ` : ''}
             </a>
         `;
     },
@@ -1394,7 +1439,7 @@ const Classroom = {
     },
 
     renderListItem(item, type, courseLink) {
-        let title, date, link, icon, snippet;
+        let title, date, link, icon, snippet, fullText;
 
         if (type === 'todo') {
             title = item.title;
@@ -1407,22 +1452,28 @@ const Classroom = {
             }
             link = item.alternateLink;
             icon = 'clipboard-list';
-            snippet = item.description ? Utils.truncate(item.description, 60) : '';
+            fullText = item.description || '';
+            snippet = fullText ? Utils.truncate(fullText, 60) : '';
         } else if (type === 'materials') {
             title = item.title || 'Posted Material';
             date = item.updateTime ? Utils.formatDateShort(new Date(item.updateTime)) : (item.creationTime ? Utils.formatDateShort(new Date(item.creationTime)) : '');
             link = item.alternateLink;
             icon = 'folder-open';
-            snippet = item.description ? Utils.truncate(item.description, 80) : 'No description';
+            fullText = item.description || '';
+            snippet = fullText ? Utils.truncate(fullText, 80) : 'No description';
         } else {
-            title = 'Announcement'; // Announcements often don't have titles, just text
+            // Notice (Announcements): remove redundant "Announcement" title heading
+            title = '';
             date = Utils.formatDateShort(new Date(item.updateTime));
             link = item.alternateLink;
             icon = 'bullhorn';
-            snippet = item.text ? Utils.truncate(item.text, 80) : 'No content';
+            fullText = item.text || '';
+            snippet = fullText ? Utils.truncate(fullText, 80) : 'No content';
         }
 
         const iconClass = type === 'todo' ? 'assignment' : (type === 'materials' ? 'material' : 'announcement');
+        const hasMoreText = fullText && (fullText.length > snippet.length || fullText.includes('\n'));
+        const formattedFullText = fullText ? Utils.escapeAndLinkify(fullText) : '';
 
         return `
             <a href="${link}" target="_blank" class="classroom-item">
@@ -1430,12 +1481,22 @@ const Classroom = {
                     <i class="fas fa-${icon}"></i>
                 </div>
                 <div class="item-content">
-                    <h4 class="item-title">${title}</h4>
+                    ${title ? `<h4 class="item-title">${title}</h4>` : ''}
                     <div class="item-meta">
                         <span class="item-date">${date}</span>
                     </div>
-                    ${snippet ? `<div class="item-snippet">${snippet}</div>` : ''}
+                    ${snippet ? `
+                        <div class="item-snippet">
+                            <span class="snippet-truncated">${snippet}</span>
+                            ${hasMoreText ? `<div class="snippet-full" style="display: none; white-space: pre-wrap; word-break: break-word; margin-top: 6px;">${formattedFullText}</div>` : ''}
+                        </div>
+                    ` : ''}
                 </div>
+                ${hasMoreText ? `
+                    <button class="classroom-item-expand-btn" onclick="Classroom.toggleItemExpand(event, this)" title="Show details">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                ` : ''}
             </a>
         `;
     }

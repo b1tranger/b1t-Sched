@@ -490,6 +490,45 @@ body.dark-mode .classroom-modal-header {
     transition: all 0.2s;
 }
 
+.classroom-item-expand-btn {
+    background: var(--classroom-bg-secondary);
+    border: 1px solid var(--classroom-border);
+    color: var(--classroom-text-secondary);
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.85rem;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease, background-color 0.2s, color 0.2s;
+    flex-shrink: 0;
+    align-self: center;
+    margin-left: 8px;
+}
+
+.classroom-item:hover .classroom-item-expand-btn,
+.classroom-item.expanded .classroom-item-expand-btn {
+    opacity: 1;
+    visibility: visible;
+}
+
+.classroom-item-expand-btn:hover {
+    background-color: var(--classroom-green);
+    color: white;
+    border-color: var(--classroom-green);
+}
+
+@media (max-width: 768px) {
+    .classroom-item-expand-btn {
+        opacity: 0.85;
+        visibility: visible;
+    }
+}
+
 /* =========================================
    Loading / Empty States
    ========================================= */
