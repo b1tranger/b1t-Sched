@@ -146,32 +146,34 @@ body.dark-mode .classroom-close-btn {
 }
 
 .classroom-header-logout-btn {
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.35);
     color: white;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 500;
     cursor: pointer;
-    padding: 4px 10px;
-    border-radius: 4px;
+    padding: 4px 12px;
+    border-radius: 20px;
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    margin-left: 8px;
+    vertical-align: middle;
     transition: background-color 0.2s, transform 0.1s;
 }
 
 .classroom-header-logout-btn:hover {
-    background: rgba(255, 255, 255, 0.28);
+    background: rgba(255, 255, 255, 0.32);
 }
 
 body.dark-mode .classroom-header-logout-btn {
-    background: rgba(26, 28, 13, 0.2);
-    border-color: rgba(26, 28, 13, 0.4);
+    background: rgba(26, 28, 13, 0.25);
+    border-color: rgba(26, 28, 13, 0.45);
     color: #1a1c0d;
 }
 
 body.dark-mode .classroom-header-logout-btn:hover {
-    background: rgba(26, 28, 13, 0.35);
+    background: rgba(26, 28, 13, 0.4);
 }
 
 .classroom-content {

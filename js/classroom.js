@@ -815,14 +815,9 @@ const Classroom = {
                     <i class="fas fa-info-circle"></i>
                     <span>Session expired · Last updated ${timeLabel}</span>
                 </div>
-                <div style="display: flex; gap: 8px; align-items: center;">
-                    <button class="expired-banner-btn" onclick="Classroom.login()">
-                        <i class="fas fa-sync-alt"></i> Reconnect
-                    </button>
-                    <button class="btn btn-sm btn-text" onclick="Classroom.logout()" style="color: var(--danger, #ff4d4f); padding: 4px 8px;" title="Sign Out of Classroom">
-                        Sign Out
-                    </button>
-                </div>
+                <button class="expired-banner-btn" onclick="Classroom.login()">
+                    <i class="fas fa-sync-alt"></i> Reconnect
+                </button>
             </div>
         `;
     },
@@ -853,7 +848,6 @@ const Classroom = {
         const html = `
             <div class="classroom-view-header">
                 <h3>My Classes</h3>
-                <button class="btn btn-sm btn-text" onclick="Classroom.logout()">Sign Out</button>
             </div>
             <div class="classroom-courses-container">
                 ${this.courses.map(course => `
@@ -1014,17 +1008,12 @@ const Classroom = {
                             <i class="fas fa-redo-alt"></i>
                         </button>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        ${(viewType === 'todo' && typeof App !== 'undefined' && (App.isAdmin || App.isCR)) ? `
-                        <button id="sync-classroom-tasks-btn" class="btn btn-sm btn-primary" onclick="Classroom.syncAssignmentsToTasks()" title="Sync Assignments to Tasks">
-                            <i class="fas fa-sync-alt"></i> Sync
-                        </button>
-                        `
+                    ${(viewType === 'todo' && typeof App !== 'undefined' && (App.isAdmin || App.isCR)) ? `
+                    <button id="sync-classroom-tasks-btn" class="btn btn-sm btn-primary" onclick="Classroom.syncAssignmentsToTasks()" title="Sync Assignments to Tasks">
+                        <i class="fas fa-sync-alt"></i> Sync
+                    </button>
+                    `
                 : ''}
-                        <button class="btn btn-sm btn-outline-danger" onclick="Classroom.logout()" title="Sign Out of Google Classroom" style="padding: 4px 10px; font-size: 0.8rem;">
-                            <i class="fas fa-sign-out-alt"></i> Sign Out
-                        </button>
-                    </div>
                 </div>
                 <div class="classroom-view-toggle">
                     <button class="view-toggle-btn ${viewType === 'todo' ? 'active' : ''}" onclick="Classroom.switchView('todo')">
@@ -1156,16 +1145,13 @@ const Classroom = {
                         ${course ? course.name : 'Course Details'}
                     </span>
                 </div>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <div class="classroom-view-toggle">
-                        <button class="view-toggle-btn ${viewType === 'todo' ? 'active' : ''}" onclick="Classroom.switchView('todo')">
-                            To-Do
-                        </button>
-                        <button class="view-toggle-btn ${viewType === 'notifications' ? 'active' : ''}" onclick="Classroom.switchView('notifications')">
-                            Notices
-                        </button>
-                    </div>
-                    <button class="btn btn-sm btn-text" onclick="Classroom.logout()" style="color: var(--danger, #ff4d4f); padding: 4px 8px;" title="Sign Out">Sign Out</button>
+                <div class="classroom-view-toggle">
+                    <button class="view-toggle-btn ${viewType === 'todo' ? 'active' : ''}" onclick="Classroom.switchView('todo')">
+                        To-Do
+                    </button>
+                    <button class="view-toggle-btn ${viewType === 'notifications' ? 'active' : ''}" onclick="Classroom.switchView('notifications')">
+                        Notices
+                    </button>
                 </div>
             </div>
         `;
