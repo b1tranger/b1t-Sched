@@ -12,7 +12,8 @@ class CacheManager {
     this.KEYS = {
       AUTH_STATE: 'auth-state',
       CLASSROOM_ASSIGNMENTS: 'classroom-assignments',
-      CLASSROOM_ANNOUNCEMENTS: 'classroom-announcements'
+      CLASSROOM_ANNOUNCEMENTS: 'classroom-announcements',
+      CLASSROOM_MATERIALS: 'classroom-materials'
     };
     
     // Cache expiration times (in milliseconds)
@@ -81,17 +82,22 @@ class CacheManager {
     }
   }
 
+  _getClassroomKey(type) {
+    if (type === 'assignments') return this.KEYS.CLASSROOM_ASSIGNMENTS;
+    if (type === 'announcements') return this.KEYS.CLASSROOM_ANNOUNCEMENTS;
+    if (type === 'materials') return this.KEYS.CLASSROOM_MATERIALS;
+    return this.KEYS.CLASSROOM_ASSIGNMENTS;
+  }
+
   /**
    * Caches Google Classroom data
-   * @param {string} type - 'assignments' or 'announcements'
+   * @param {string} type - 'assignments', 'announcements', or 'materials'
    * @param {array} data - Classroom data
    * @returns {Promise<boolean>}
    */
   async cacheClassroomData(type, data) {
     try {
-      const key = type === 'assignments' 
-        ? this.KEYS.CLASSROOM_ASSIGNMENTS 
-        : this.KEYS.CLASSROOM_ANNOUNCEMENTS;
+      const key = this._getClassroomKey(type);
       
       const cacheEntry = {
         key,
@@ -117,9 +123,7 @@ class CacheManager {
         // Retry once after pruning
         try {
           const cache = await caches.open(this.CACHE_NAME);
-          const key = type === 'assignments' 
-            ? this.KEYS.CLASSROOM_ASSIGNMENTS 
-            : this.KEYS.CLASSROOM_ANNOUNCEMENTS;
+          const key = this._getClassroomKey(type);
           const cacheEntry = {
             key,
             data,
@@ -141,14 +145,12 @@ class CacheManager {
 
   /**
    * Retrieves cached Classroom data
-   * @param {string} type - 'assignments' or 'announcements'
+   * @param {string} type - 'assignments', 'announcements', or 'materials'
    * @returns {Promise<{data: array, timestamp: number, fresh: boolean}|null>}
    */
   async getCachedClassroomData(type) {
     try {
-      const key = type === 'assignments' 
-        ? this.KEYS.CLASSROOM_ASSIGNMENTS 
-        : this.KEYS.CLASSROOM_ANNOUNCEMENTS;
+      const key = this._getClassroomKey(type);
       
       const cache = await caches.open(this.CACHE_NAME);
       const response = await cache.match(key);
@@ -196,7 +198,8 @@ class CacheManager {
       await Promise.all([
         cache.delete(this.KEYS.AUTH_STATE),
         cache.delete(this.KEYS.CLASSROOM_ASSIGNMENTS),
-        cache.delete(this.KEYS.CLASSROOM_ANNOUNCEMENTS)
+        cache.delete(this.KEYS.CLASSROOM_ANNOUNCEMENTS),
+        cache.delete(this.KEYS.CLASSROOM_MATERIALS)
       ]);
       
       console.log('[Cache Manager] User caches cleared');
@@ -253,6 +256,7 @@ class CacheManager {
         // Clear classroom data (non-critical)
         await cache.delete(this.KEYS.CLASSROOM_ASSIGNMENTS);
         await cache.delete(this.KEYS.CLASSROOM_ANNOUNCEMENTS);
+        await cache.delete(this.KEYS.CLASSROOM_MATERIALS);
         
         console.log('[Cache Manager] Cleared non-critical caches');
       }

@@ -40,7 +40,7 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **Event Calendar** - Track upcoming academic events with enhanced markdown support (HTML entities, code blocks, `<pre>` tags), clickable links, collapsible descriptions (2-line truncation), and department scope badge (ALL/CSE/etc.)
 - **Event Editing** - Admins can edit all events; CRs can edit/delete their own events
 - **Resource Links** - Quick access to department-specific resources with built-in PDF viewer (desktop: Google Docs Viewer in modal; mobile: opens in new tab)
-- **Google Classroom Integration** - View all assignments and announcements from enrolled courses in a unified interface with OAuth authentication and session persistence (auto-refresh tokens & cached fallback mode). Includes a unified pill-styled Sign Out button in window title headers, and a one-click **Sync to Tasks** feature for Admins/CRs to automatically add Classroom assignments to the main Tasks list (avoids duplicates).
+- **Google Classroom Integration** - View all assignments, announcements, and posted course materials from enrolled courses in a unified interface with OAuth authentication and session persistence (auto-refresh tokens & cached fallback mode). Features three view toggle tabs (**To-Do**, **Notices**, **Materials**), default hiding of Archived Classrooms with an interactive toggle button, a unified pill-styled Sign Out button dynamically shown when logged in, and a one-click **Sync to Tasks** feature for Admins/CRs to automatically add Classroom assignments to the main Tasks list (avoids duplicates).
 - **Session Security** - Automatic logout after 1 hour of inactivity (unless "Stay logged in" is checked), with activity-based timer reset for enhanced security
 - **Stay Logged In** - Optional "Trust this device" checkbox on login to persist session indefinitely on safe devices
 - **Role Badges** - Visual indicators for CR and Faculty contributors in task cards and contribution lists
@@ -827,19 +827,22 @@ During signup, Firebase triggers `onAuthStateChanged` immediately when the user 
 
 ### 12. Classroom (classroom.js)
 
-**Purpose:** Google Classroom API integration for fetching courses, assignments, and announcements.
+**Purpose:** Google Classroom API integration for fetching courses, assignments, announcements, and posted course materials.
 
 **Authentication & Session Persistence:**
 
-- Uses **Google Identity Services (GIS)** for OAuth 2.0.
+- Uses **Google Identity Services (GIS)** for OAuth 2.0 with scopes for courses, coursework, announcements, and coursework materials (`https://www.googleapis.com/auth/classroom.courseworkmaterials.readonly`).
 - Implements a promise-based initialization (`init()`) synchronized with the main application loading screen.
-- **Persistent Connection**: The `classroom_connected` flag remains intact across access token expirations ($1\text{ hour}$). The application attempts silent token renewal (`prompt: 'none'`) and falls back to serving cached assignments/announcements from `CacheManager` with a 1-click **Reconnect** banner if silent auth is blocked by browser 3rd-party cookie policies.
-- **Unified Sign Out Button**: A single pill-styled Sign Out button (`.classroom-header-logout-btn`, `border-radius: 20px`) is embedded in top window title headers (`#classroom-sidebar` mobile and `#classroom-modal` desktop) beside the title text. Explicit logout revokes the OAuth token, clears local storage connection flags, and resets the view to the login prompt.
+- **Persistent Connection**: The `classroom_connected` flag remains intact across access token expirations ($1\text{ hour}$). The application attempts silent token renewal (`prompt: 'none'`) and falls back to serving cached assignments/announcements/materials from `CacheManager` with a 1-click **Reconnect** banner if silent auth is blocked by browser 3rd-party cookie policies.
+- **Unified Sign Out Button**: A single pill-styled Sign Out button (`.classroom-header-logout-btn`, `border-radius: 20px`) is embedded in top window title headers (`#classroom-sidebar` mobile and `#classroom-modal` desktop). The button is dynamically displayed only when logged in / connected. Explicit logout revokes the OAuth token, clears local storage connection flags, clears cache, and resets the view to the login prompt.
+- **Archived Classrooms Management**: Fetches both active and archived courses (`courseStates=ACTIVE&courseStates=ARCHIVED`). Archived classrooms are hidden by default in the "My Classes" view, with a toggle button to expand/hide them. Unified feeds (**To-Do**, **Notices**, **Materials**) strictly filter out content from archived courses.
 
 **Properties:**
 
 - `accessToken`: Current OAuth 2.0 access token.
-- `courses`: Cached list of enrolled courses.
+- `courses`: Cached list of enrolled active and archived courses.
+- `currentView`: Active view mode (`'todo'`, `'notifications'`, or `'materials'`).
+- `showArchivedCourses`: Flag for toggling archived course card visibility in "My Classes".
 - `hasExpiredSession`: Flag indicating cached display mode with re-connect banner.
 - `_authResolve`: Internal resolver to signal authentication completion to the main app.
 
@@ -849,7 +852,11 @@ During signup, Firebase triggers `onAuthStateChanged` immediately when the user 
 | `checkPersistedSession()`        | -          | Promise | Check storage for valid token or attempt silent refresh without clearing connection state.          |
 | `login()`                        | -          | void    | Trigger manual OAuth login popup.                                                                  |
 | `handleAuthSuccess(response)`    | object     | void    | Handle successful token acquisition and start data fetching.                                       |
-| `fetchCoursesAndLoadAll()`       | -          | void    | Batch load courses and their associated work/announcements.                                        |
+| `fetchCoursesAndLoadAll()`       | -          | void    | Batch load active/archived courses and load unified items based on `currentView`.                  |
+| `loadAllMaterials()`             | -          | Promise | Fetch posted materials across all active courses within the date cutoff and render.                |
+| `fetchCourseMaterials(courseId)` | string     | Promise | Fetch posted materials for a specific course ID.                                                   |
+| `toggleArchivedCourses()`        | -          | void    | Toggle visibility of archived classroom cards in the "My Classes" view.                            |
+| `updateLogoutButtonVisibility()` | -          | void    | Dynamically show or hide header Sign Out buttons based on connection state.                        |
 | `syncAssignmentsToTasks()`       | -          | void    | (Admin/CR only) Sync assignments to the main task list.                                            |
 | `logout()`                       | -          | void    | Explicitly revoke OAuth token, clear local storage connection flags, clear cache, and reset state. |
 | `cleanupSession()`               | -          | void    | Reset module memory state and render initial login screen.                                         |
@@ -2345,11 +2352,17 @@ You can use basic markdown formatting in task and event descriptions:
 
 ---
 
-_Last Updated: August 1, 2026 (v2.43.0)_
+_Last Updated: August 1, 2026 (v2.44.0)_
 
 ## Version History
 
-### v2.43.0 (Latest)
+### v2.44.0 (Latest)
+
+- **New Feature**: **Google Classroom Materials Tab** — Added a third view toggle tab (**Materials**) alongside To-Do and Notices to view all posted course materials across active courses (or within a specific course), powered by Google Classroom `/courseWorkMaterials` REST API and cached via `CacheManager`.
+- **Enhancement**: **Archived Classrooms Management** — Updated Google Classroom course fetching to include archived courses while hiding them by default in "My Classes". Added a **"Show archived classrooms"** toggle button at the bottom of the course list, and ensured unified feeds strictly filter out content from archived classrooms.
+- **Fix**: **Header Sign Out Button Visibility** — Header Sign Out buttons (`#logout-classroom-sidebar` and `#logout-classroom-modal`) start hidden when unauthenticated and are dynamically shown only when an active/connected Google Classroom session exists.
+
+### v2.43.0
 
 - **Fix**: **Google Classroom Session Persistence** — `classroom_connected` flag is preserved across 1-hour access token expirations instead of prematurely logging out the user. The app attempts silent token renewal (`prompt: 'none'`) and falls back to serving cached assignments/announcements from `CacheManager` with a 1-click **Reconnect** banner if 3rd-party cookie policies block silent auth.
 - **Enhancement**: **Google Classroom Unified Sign Out Button** — Single pill-styled (`border-radius: 20px`) Sign Out button (`.classroom-header-logout-btn`) added to top window title headers (`#classroom-sidebar` mobile and `#classroom-modal` desktop) beside title text. Redundant inner view Sign Out buttons were removed.

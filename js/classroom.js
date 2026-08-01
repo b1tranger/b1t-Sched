@@ -5,7 +5,7 @@
 const Classroom = {
     // Configuration
     CLIENT_ID: '142195418679-0ripc2dn76otvkvfnk6kdk2aitdd29rm.apps.googleusercontent.com',
-    SCOPES: 'https://www.googleapis.com/auth/classroom.courses.readonly https://www.googleapis.com/auth/classroom.coursework.me.readonly https://www.googleapis.com/auth/classroom.announcements.readonly',
+    SCOPES: 'https://www.googleapis.com/auth/classroom.courses.readonly https://www.googleapis.com/auth/classroom.coursework.me.readonly https://www.googleapis.com/auth/classroom.announcements.readonly https://www.googleapis.com/auth/classroom.courseworkmaterials.readonly',
 
     // Date filter configuration (in months)
     DATE_FILTER_MONTHS: 6, // Only show items from the last 6 months
@@ -16,7 +16,8 @@ const Classroom = {
     isInitialized: false,
     courses: [],
     currentCourseId: null,
-    currentView: 'todo', // 'todo' or 'notifications'
+    currentView: 'todo', // 'todo', 'notifications', or 'materials'
+    showArchivedCourses: false, // Flag for toggling archived course cards
     refreshTimer: null,
     _authResolve: null, // Promise resolver for session check
     _sessionCheckTimeout: null,
@@ -25,6 +26,15 @@ const Classroom = {
     // Cache
     cache: {},
     cacheManager: null,
+
+    updateLogoutButtonVisibility() {
+        const isConnected = localStorage.getItem('classroom_connected') === 'true';
+        const isLoggedIn = Boolean(this.accessToken || isConnected);
+        const sidebarLogout = document.getElementById('logout-classroom-sidebar');
+        const modalLogout = document.getElementById('logout-classroom-modal');
+        if (sidebarLogout) sidebarLogout.style.display = isLoggedIn ? 'inline-flex' : 'none';
+        if (modalLogout) modalLogout.style.display = isLoggedIn ? 'inline-flex' : 'none';
+    },
 
     // Initialize cache manager
     initCacheManager() {
@@ -123,6 +133,7 @@ const Classroom = {
                     }, timeUntilRefresh);
 
                     this.fetchCoursesAndLoadAll();
+                    this.updateLogoutButtonVisibility();
                     this._cleanupAuthPromise(true);
                     return;
                 } else {
@@ -147,6 +158,7 @@ const Classroom = {
                     }
                 }
             }
+            this.updateLogoutButtonVisibility();
             this._cleanupAuthPromise(false);
         });
     },
@@ -246,6 +258,8 @@ const Classroom = {
     // =========================================
 
     openClassroomParams() {
+        this.updateLogoutButtonVisibility();
+
         if (window.innerWidth <= 768) {
             this.toggleSidebar(true);
         } else {
@@ -354,8 +368,9 @@ const Classroom = {
             localStorage.setItem('classroom_token_expiry', expiryTime.toString());
         }
 
-        // Fetch courses and load all assignments/notices
+        // Fetch courses and load all assignments/notices/materials
         this.fetchCoursesAndLoadAll();
+        this.updateLogoutButtonVisibility();
 
         // Resolve the init promise if it was waiting
         this._cleanupAuthPromise(true);
@@ -390,6 +405,7 @@ const Classroom = {
         }
 
         this.renderLoginState();
+        this.updateLogoutButtonVisibility();
         localStorage.removeItem('classroom_connected');
         localStorage.removeItem('classroom_token');
         localStorage.removeItem('classroom_token_expiry');
@@ -408,7 +424,7 @@ const Classroom = {
         this.renderLoading('Loading courses...');
 
         try {
-            const response = await fetch('https://classroom.googleapis.com/v1/courses?courseStates=ACTIVE', {
+            const response = await fetch('https://classroom.googleapis.com/v1/courses?courseStates=ACTIVE&courseStates=ARCHIVED', {
                 headers: {
                     'Authorization': `Bearer ${this.accessToken}`
                 }
@@ -432,7 +448,7 @@ const Classroom = {
         this.renderLoading('Loading courses...');
 
         try {
-            const response = await fetch('https://classroom.googleapis.com/v1/courses?courseStates=ACTIVE', {
+            const response = await fetch('https://classroom.googleapis.com/v1/courses?courseStates=ACTIVE&courseStates=ARCHIVED', {
                 headers: {
                     'Authorization': `Bearer ${this.accessToken}`
                 }
@@ -449,8 +465,10 @@ const Classroom = {
             // After loading courses, load all items based on current view
             if (this.currentView === 'todo') {
                 await this.loadAllAssignments();
-            } else {
+            } else if (this.currentView === 'notifications') {
                 await this.loadAllAnnouncements();
+            } else if (this.currentView === 'materials') {
+                await this.loadAllMaterials();
             }
 
         } catch (error) {
@@ -650,6 +668,94 @@ const Classroom = {
         }
     },
 
+    async loadAllMaterials() {
+        this.currentView = 'materials';
+
+        // Initialize cache manager
+        this.initCacheManager();
+
+        // Check for cached data first
+        if (this.cacheManager) {
+            const cachedData = await this.cacheManager.getCachedClassroomData('materials');
+            if (cachedData && cachedData.fresh) {
+                console.log('[Classroom] Using cached materials data');
+                this.renderAllItems(cachedData.data, 'materials');
+                return;
+            }
+        }
+
+        this.renderLoading('Loading materials from all courses...');
+
+        try {
+            const allMaterials = [];
+
+            // Set cutoff date based on configuration
+            const cutoffDate = new Date();
+            cutoffDate.setMonth(cutoffDate.getMonth() - this.DATE_FILTER_MONTHS);
+            console.log(`Filtering materials from the last ${this.DATE_FILTER_MONTHS} months (since ${cutoffDate.toLocaleDateString()})`);
+
+            // Fetch materials from all ACTIVE courses only
+            for (const course of this.courses) {
+                // Skip if course is not ACTIVE
+                if (course.courseState !== 'ACTIVE') {
+                    console.log(`Skipping non-active course: ${course.name} (${course.courseState})`);
+                    continue;
+                }
+
+                try {
+                    const response = await fetch(`https://classroom.googleapis.com/v1/courses/${course.id}/courseWorkMaterials`, {
+                        headers: {
+                            'Authorization': `Bearer ${this.accessToken}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        const materialsList = data.courseWorkMaterial || [];
+
+                        // Filter by date and add course info to each material item
+                        materialsList.forEach(mat => {
+                            if (mat.updateTime) {
+                                const updateDate = new Date(mat.updateTime);
+                                if (updateDate < cutoffDate) return;
+                            } else if (mat.creationTime) {
+                                const creationDate = new Date(mat.creationTime);
+                                if (creationDate < cutoffDate) return;
+                            }
+
+                            mat.courseName = course.name;
+                            mat.courseId = course.id;
+                            mat.courseState = course.courseState;
+                            allMaterials.push(mat);
+                        });
+                    }
+                } catch (err) {
+                    console.warn(`Failed to load materials for course ${course.name}:`, err);
+                }
+            }
+
+            // Sort by updateTime / creationTime descending
+            allMaterials.sort((a, b) => {
+                const timeA = new Date(a.updateTime || a.creationTime || 0);
+                const timeB = new Date(b.updateTime || b.creationTime || 0);
+                return timeB - timeA;
+            });
+
+            console.log(`Loaded ${allMaterials.length} materials from ${this.courses.filter(c => c.courseState === 'ACTIVE').length} active courses`);
+
+            // Cache the data
+            if (this.cacheManager) {
+                await this.cacheManager.cacheClassroomData('materials', allMaterials);
+            }
+
+            this.renderAllItems(allMaterials, 'materials');
+
+        } catch (error) {
+            console.error(error);
+            this.renderError('Failed to load materials.');
+        }
+    },
+
     async fetchCourseWork(courseId) {
         this.renderLoading('Loading assignments...');
 
@@ -696,6 +802,36 @@ const Classroom = {
         }
     },
 
+    async fetchCourseMaterials(courseId) {
+        this.renderLoading('Loading materials...');
+
+        try {
+            const response = await fetch(`https://classroom.googleapis.com/v1/courses/${courseId}/courseWorkMaterials`, {
+                headers: {
+                    'Authorization': `Bearer ${this.accessToken}`
+                }
+            });
+
+            if (!response.ok) throw new Error('Failed to fetch materials');
+
+            const data = await response.json();
+            const materialsList = data.courseWorkMaterial || [];
+
+            // Sort by updateTime or creationTime desc
+            materialsList.sort((a, b) => {
+                const timeA = new Date(a.updateTime || a.creationTime || 0);
+                const timeB = new Date(b.updateTime || b.creationTime || 0);
+                return timeB - timeA;
+            });
+
+            this.renderCourseDetails(courseId, materialsList, 'materials');
+
+        } catch (error) {
+            console.error(error);
+            this.renderError('Failed to load materials.');
+        }
+    },
+
     // =========================================
     // RENDERING
     // =========================================
@@ -709,6 +845,7 @@ const Classroom = {
     },
 
     renderInitialState() {
+        this.updateLogoutButtonVisibility();
         const containers = this.getContainers();
         containers.forEach(container => {
             if (container) {
@@ -770,7 +907,7 @@ const Classroom = {
         }
 
         // Try to load cached data for the current view
-        const type = this.currentView === 'notifications' ? 'announcements' : 'assignments';
+        const type = this.currentView === 'notifications' ? 'announcements' : (this.currentView === 'materials' ? 'materials' : 'assignments');
         const cachedData = await this.cacheManager.getCachedClassroomData(type);
 
         if (cachedData && cachedData.data && cachedData.data.length > 0) {
@@ -822,6 +959,11 @@ const Classroom = {
         `;
     },
 
+    toggleArchivedCourses() {
+        this.showArchivedCourses = !this.showArchivedCourses;
+        this.renderCourseList();
+    },
+
     renderCourseList() {
         // If session is expired, show the cached data view instead
         if (this.hasExpiredSession) {
@@ -836,7 +978,7 @@ const Classroom = {
                     container.innerHTML = `
                         <div class="classroom-empty">
                             <i class="fas fa-chalkboard"></i>
-                            <p>No active courses found.</p>
+                            <p>No courses found.</p>
                             <button class="btn btn-text" onclick="Classroom.logout()">Switch Account</button>
                         </div>
                     `;
@@ -845,24 +987,62 @@ const Classroom = {
             return;
         }
 
+        const activeCourses = this.courses.filter(c => c.courseState === 'ACTIVE' || !c.courseState);
+        const archivedCourses = this.courses.filter(c => c.courseState === 'ARCHIVED');
+
+        const renderCard = (course) => `
+            <div class="course-card ${course.courseState === 'ARCHIVED' ? 'archived-card' : ''}" onclick="Classroom.openCourse('${course.id}')">
+                <div class="course-header" style="background-color: ${course.courseState === 'ARCHIVED' ? 'var(--classroom-text-secondary, #5f6368)' : 'var(--classroom-green)'};">
+                    <div class="course-title">${course.name}${course.courseState === 'ARCHIVED' ? ' (Archived)' : ''}</div>
+                    <div class="course-section">${course.section || ''}</div>
+                </div>
+                <div class="course-body">
+                    <div class="course-work-preview">
+                        ${course.descriptionHeading || 'Tap to view assignments and notices'}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        let activeCoursesHtml = activeCourses.map(renderCard).join('');
+        if (activeCourses.length === 0) {
+            activeCoursesHtml = '<p style="color: var(--classroom-text-secondary); padding: 10px 0;">No active courses.</p>';
+        }
+
+        let archivedCoursesHtml = '';
+        if (archivedCourses.length > 0) {
+            if (this.showArchivedCourses) {
+                archivedCoursesHtml = `
+                    <div class="archived-courses-section" style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed var(--classroom-border);">
+                        <h4 style="margin-bottom: 12px; color: var(--classroom-text-secondary); font-weight: 500; font-size: 0.95rem;">
+                            Archived Classrooms (${archivedCourses.length})
+                        </h4>
+                        ${archivedCourses.map(renderCard).join('')}
+                    </div>
+                    <div style="text-align: center; margin-top: 16px; margin-bottom: 20px;">
+                        <button class="btn btn-secondary btn-sm show-archived-btn" onclick="Classroom.toggleArchivedCourses()">
+                            <i class="fas fa-eye-slash"></i> Hide archived classrooms
+                        </button>
+                    </div>
+                `;
+            } else {
+                archivedCoursesHtml = `
+                    <div style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
+                        <button class="btn btn-secondary btn-sm show-archived-btn" onclick="Classroom.toggleArchivedCourses()">
+                            <i class="fas fa-archive"></i> Show archived classrooms (${archivedCourses.length})
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
         const html = `
             <div class="classroom-view-header">
                 <h3>My Classes</h3>
             </div>
             <div class="classroom-courses-container">
-                ${this.courses.map(course => `
-                    <div class="course-card" onclick="Classroom.openCourse('${course.id}')">
-                        <div class="course-header" style="background-color: var(--classroom-green);">
-                            <div class="course-title">${course.name}</div>
-                            <div class="course-section">${course.section || ''}</div>
-                        </div>
-                        <div class="course-body">
-                            <div class="course-work-preview">
-                                ${course.descriptionHeading || 'Tap to view assignments and notices'}
-                            </div>
-                        </div>
-                    </div>
-                `).join('')}
+                ${activeCoursesHtml}
+                ${archivedCoursesHtml}
             </div>
         `;
 
@@ -984,6 +1164,7 @@ const Classroom = {
             const cache = await caches.open(this.cacheManager.CACHE_NAME);
             await cache.delete(this.cacheManager.KEYS.CLASSROOM_ASSIGNMENTS);
             await cache.delete(this.cacheManager.KEYS.CLASSROOM_ANNOUNCEMENTS);
+            await cache.delete(this.cacheManager.KEYS.CLASSROOM_MATERIALS);
             console.log('[Classroom] Cleared cached classroom data for refresh');
         }
 
@@ -1022,16 +1203,21 @@ const Classroom = {
                     <button class="view-toggle-btn ${viewType === 'notifications' ? 'active' : ''}" onclick="Classroom.switchView('notifications')">
                         Notices
                     </button>
+                    <button class="view-toggle-btn ${viewType === 'materials' ? 'active' : ''}" onclick="Classroom.switchView('materials')">
+                        Materials
+                    </button>
                 </div>
             </div>
         `;
 
         let listHtml = '';
         if (items.length === 0) {
+            const emptyIcon = viewType === 'todo' ? 'clipboard-check' : (viewType === 'materials' ? 'folder-open' : 'bullhorn');
+            const emptyText = viewType === 'todo' ? 'assignments' : (viewType === 'materials' ? 'materials' : 'announcements');
             listHtml = `
                 <div class="classroom-empty">
-                    <i class="fas fa-${viewType === 'todo' ? 'clipboard-check' : 'bullhorn'}"></i>
-                    <p>No ${viewType === 'todo' ? 'assignments' : 'announcements'} found.</p>
+                    <i class="fas fa-${emptyIcon}"></i>
+                    <p>No ${emptyText} found.</p>
                 </div>
             `;
         } else {
@@ -1067,6 +1253,12 @@ const Classroom = {
             link = item.alternateLink;
             icon = 'clipboard-list';
             snippet = item.description ? Utils.truncate(item.description, 60) : '';
+        } else if (type === 'materials') {
+            title = item.title || 'Posted Material';
+            date = item.updateTime ? Utils.formatDateShort(new Date(item.updateTime)) : (item.creationTime ? Utils.formatDateShort(new Date(item.creationTime)) : '');
+            link = item.alternateLink;
+            icon = 'folder-open';
+            snippet = item.description ? Utils.truncate(item.description, 80) : 'No description';
         } else {
             title = 'Announcement';
             date = Utils.formatDateShort(new Date(item.updateTime));
@@ -1075,9 +1267,11 @@ const Classroom = {
             snippet = item.text ? Utils.truncate(item.text, 80) : 'No content';
         }
 
+        const iconClass = type === 'todo' ? 'assignment' : (type === 'materials' ? 'material' : 'announcement');
+
         return `
             <a href="${link}" target="_blank" class="classroom-item">
-                <div class="item-icon ${type === 'todo' ? 'assignment' : 'announcement'}">
+                <div class="item-icon ${iconClass}">
                     <i class="fas fa-${icon}"></i>
                 </div>
                 <div class="item-content">
@@ -1118,15 +1312,19 @@ const Classroom = {
             // If viewing a specific course, fetch only for that course
             if (view === 'todo') {
                 this.fetchCourseWork(this.currentCourseId);
-            } else {
+            } else if (view === 'notifications') {
                 this.fetchAnnouncements(this.currentCourseId);
+            } else if (view === 'materials') {
+                this.fetchCourseMaterials(this.currentCourseId);
             }
         } else {
             // Otherwise load all courses
             if (view === 'todo') {
                 this.loadAllAssignments();
-            } else {
+            } else if (view === 'notifications') {
                 this.loadAllAnnouncements();
+            } else if (view === 'materials') {
+                this.loadAllMaterials();
             }
         }
     },
@@ -1152,16 +1350,21 @@ const Classroom = {
                     <button class="view-toggle-btn ${viewType === 'notifications' ? 'active' : ''}" onclick="Classroom.switchView('notifications')">
                         Notices
                     </button>
+                    <button class="view-toggle-btn ${viewType === 'materials' ? 'active' : ''}" onclick="Classroom.switchView('materials')">
+                        Materials
+                    </button>
                 </div>
             </div>
         `;
 
         let listHtml = '';
         if (items.length === 0) {
+            const emptyIcon = viewType === 'todo' ? 'clipboard-check' : (viewType === 'materials' ? 'folder-open' : 'bullhorn');
+            const emptyText = viewType === 'todo' ? 'assignments' : (viewType === 'materials' ? 'materials' : 'announcements');
             listHtml = `
                 <div class="classroom-empty">
-                    <i class="fas fa-${viewType === 'todo' ? 'clipboard-check' : 'bullhorn'}"></i>
-                    <p>No ${viewType === 'todo' ? 'assignments' : 'announcements'} found.</p>
+                    <i class="fas fa-${emptyIcon}"></i>
+                    <p>No ${emptyText} found.</p>
                 </div>
             `;
         } else {
@@ -1195,6 +1398,12 @@ const Classroom = {
             link = item.alternateLink;
             icon = 'clipboard-list';
             snippet = item.description ? Utils.truncate(item.description, 60) : '';
+        } else if (type === 'materials') {
+            title = item.title || 'Posted Material';
+            date = item.updateTime ? Utils.formatDateShort(new Date(item.updateTime)) : (item.creationTime ? Utils.formatDateShort(new Date(item.creationTime)) : '');
+            link = item.alternateLink;
+            icon = 'folder-open';
+            snippet = item.description ? Utils.truncate(item.description, 80) : 'No description';
         } else {
             title = 'Announcement'; // Announcements often don't have titles, just text
             date = Utils.formatDateShort(new Date(item.updateTime));
@@ -1203,9 +1412,11 @@ const Classroom = {
             snippet = item.text ? Utils.truncate(item.text, 80) : 'No content';
         }
 
+        const iconClass = type === 'todo' ? 'assignment' : (type === 'materials' ? 'material' : 'announcement');
+
         return `
             <a href="${link}" target="_blank" class="classroom-item">
-                <div class="item-icon ${type === 'todo' ? 'assignment' : 'announcement'}">
+                <div class="item-icon ${iconClass}">
                     <i class="fas fa-${icon}"></i>
                 </div>
                 <div class="item-content">
