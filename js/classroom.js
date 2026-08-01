@@ -964,6 +964,11 @@ const Classroom = {
         this.renderCourseList();
     },
 
+    openUnifiedView() {
+        this.currentCourseId = null;
+        this.switchView(this.currentView || 'todo');
+    },
+
     renderCourseList() {
         // If session is expired, show the cached data view instead
         if (this.hasExpiredSession) {
@@ -1038,7 +1043,12 @@ const Classroom = {
 
         const html = `
             <div class="classroom-view-header">
-                <h3>My Classes</h3>
+                <div style="display: flex; align-items: center;">
+                    <button class="classroom-back-btn" onclick="Classroom.openUnifiedView()" title="Unified View (All Courses)" style="margin-right: 8px;">
+                        <i class="fa-solid fa-list-check"></i>
+                    </button>
+                    <span style="font-weight: 500; font-size: 1.1rem;">My Classes</span>
+                </div>
             </div>
             <div class="classroom-courses-container">
                 ${activeCoursesHtml}
