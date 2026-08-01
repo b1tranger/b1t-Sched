@@ -26,6 +26,7 @@ const Classroom = {
     // Cache
     cache: {},
     cacheManager: null,
+    JSON_CACHE_KEY: 'classroom_cached_json',
 
     updateLogoutButtonVisibility() {
         const isConnected = localStorage.getItem('classroom_connected') === 'true';
@@ -42,6 +43,94 @@ const Classroom = {
             this.cacheManager = new CacheManager();
             console.log('[Classroom] Cache manager initialized');
         }
+    },
+
+    // Save user's Classroom data as a structured JSON template cache
+    saveJsonCache(dataType, data) {
+        try {
+            let jsonCache = this.getJsonCache() || {
+                version: '1.0',
+                timestamp: Date.now(),
+                courses: [],
+                assignments: [],
+                announcements: [],
+                materials: []
+            };
+
+            jsonCache.timestamp = Date.now();
+            if (this.courses && this.courses.length > 0) {
+                jsonCache.courses = this.courses;
+            }
+
+            if (dataType === 'assignments') {
+                jsonCache.assignments = data || [];
+            } else if (dataType === 'announcements') {
+                jsonCache.announcements = data || [];
+            } else if (dataType === 'materials') {
+                jsonCache.materials = data || [];
+            }
+
+            const jsonString = JSON.stringify(jsonCache);
+            localStorage.setItem(this.JSON_CACHE_KEY, jsonString);
+            sessionStorage.setItem(this.JSON_CACHE_KEY, jsonString);
+            console.log(`[Classroom] Saved JSON cache template for ${dataType}`);
+        } catch (e) {
+            console.warn('[Classroom] Error saving JSON cache:', e);
+        }
+    },
+
+    // Retrieve parsed JSON template cache
+    getJsonCache() {
+        try {
+            const localData = localStorage.getItem(this.JSON_CACHE_KEY);
+            const sessionData = sessionStorage.getItem(this.JSON_CACHE_KEY);
+            const raw = localData || sessionData;
+            if (raw) {
+                return JSON.parse(raw);
+            }
+        } catch (e) {
+            console.warn('[Classroom] Error parsing JSON cache:', e);
+        }
+        return null;
+    },
+
+    // Clear JSON template cache
+    clearJsonCache() {
+        try {
+            localStorage.removeItem(this.JSON_CACHE_KEY);
+            sessionStorage.removeItem(this.JSON_CACHE_KEY);
+            console.log('[Classroom] Cleared JSON cache');
+        } catch (e) {
+            console.warn('[Classroom] Error clearing JSON cache:', e);
+        }
+    },
+
+    // Toggle and render persistent bottom cached content footer
+    updateBottomCachedFooter(show, timeLabel = '') {
+        const footers = [
+            document.getElementById('classroom-footer-mobile'),
+            document.getElementById('classroom-footer-desktop')
+        ];
+
+        footers.forEach(footer => {
+            if (footer) {
+                if (show) {
+                    footer.style.display = 'flex';
+                    footer.innerHTML = `
+                        <div class="classroom-bottom-banner-text">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Cached Content, login again to see new data${timeLabel ? ` (${timeLabel})` : ''}</span>
+                        </div>
+                        <button class="classroom-reconnect-btn" onclick="Classroom.login()">
+                            <i class="fas fa-sync-alt"></i> Reconnect Classroom
+                        </button>
+                    `;
+                } else {
+                    footer.style.display = 'none';
+                    footer.innerHTML = '';
+                }
+            }
+        });
     },
 
     init() {
@@ -355,6 +444,7 @@ const Classroom = {
         }
 
         // Fetch courses and load all assignments/notices/materials
+        this.updateBottomCachedFooter(false);
         this.fetchCoursesAndLoadAll();
         this.updateLogoutButtonVisibility();
 
@@ -389,6 +479,9 @@ const Classroom = {
         if (this.cacheManager) {
             this.cacheManager.clearUserCaches();
         }
+
+        this.clearJsonCache();
+        this.updateBottomCachedFooter(false);
 
         this.renderLoginState();
         this.updateLogoutButtonVisibility();
@@ -552,6 +645,10 @@ const Classroom = {
             if (this.cacheManager) {
                 await this.cacheManager.cacheClassroomData('assignments', allAssignments);
             }
+            this.saveJsonCache('assignments', allAssignments);
+            if (this.accessToken) {
+                this.updateBottomCachedFooter(false);
+            }
 
             this.renderAllItems(allAssignments, 'todo');
 
@@ -645,6 +742,10 @@ const Classroom = {
             if (this.cacheManager) {
                 await this.cacheManager.cacheClassroomData('announcements', allAnnouncements);
             }
+            this.saveJsonCache('announcements', allAnnouncements);
+            if (this.accessToken) {
+                this.updateBottomCachedFooter(false);
+            }
 
             this.renderAllItems(allAnnouncements, 'notifications');
 
@@ -732,6 +833,10 @@ const Classroom = {
             // Cache the data
             if (this.cacheManager) {
                 await this.cacheManager.cacheClassroomData('materials', allMaterials);
+            }
+            this.saveJsonCache('materials', allMaterials);
+            if (this.accessToken) {
+                this.updateBottomCachedFooter(false);
             }
 
             this.renderAllItems(allMaterials, 'materials');
@@ -832,6 +937,7 @@ const Classroom = {
 
     renderInitialState() {
         this.updateLogoutButtonVisibility();
+        this.updateBottomCachedFooter(false);
         const containers = this.getContainers();
         containers.forEach(container => {
             if (container) {
@@ -882,25 +988,43 @@ const Classroom = {
         });
     },
 
-    // Show cached classroom data with an expired session banner
+    // Show cached classroom data with a persistent bottom banner and reconnect button
     async showCachedDataWithBanner() {
         this.initCacheManager();
 
-        if (!this.cacheManager) {
-            // No cache manager available, fall back to login screen
-            this.renderLoginState();
-            return;
+        let cachedItems = null;
+        let timestamp = Date.now();
+        const type = this.currentView === 'notifications' ? 'announcements' : (this.currentView === 'materials' ? 'materials' : 'assignments');
+
+        // 1. Try to load from CacheManager
+        if (this.cacheManager) {
+            const cachedData = await this.cacheManager.getCachedClassroomData(type);
+            if (cachedData && cachedData.data && cachedData.data.length > 0) {
+                cachedItems = cachedData.data;
+                timestamp = cachedData.timestamp;
+            }
         }
 
-        // Try to load cached data for the current view
-        const type = this.currentView === 'notifications' ? 'announcements' : (this.currentView === 'materials' ? 'materials' : 'assignments');
-        const cachedData = await this.cacheManager.getCachedClassroomData(type);
+        // 2. Fall back to JSON template cache if CacheManager has no items
+        if (!cachedItems || cachedItems.length === 0) {
+            const jsonCache = this.getJsonCache();
+            if (jsonCache) {
+                timestamp = jsonCache.timestamp || Date.now();
+                if (type === 'announcements') {
+                    cachedItems = jsonCache.announcements;
+                } else if (type === 'materials') {
+                    cachedItems = jsonCache.materials;
+                } else {
+                    cachedItems = jsonCache.assignments;
+                }
+            }
+        }
 
-        if (cachedData && cachedData.data && cachedData.data.length > 0) {
-            console.log(`[Classroom] Showing cached ${type} with expired session banner`);
+        if (cachedItems && cachedItems.length > 0) {
+            console.log(`[Classroom] Showing cached ${type} with persistent bottom Reconnect banner`);
 
             // Calculate how long ago the data was cached
-            const cachedAgo = Date.now() - cachedData.timestamp;
+            const cachedAgo = Date.now() - timestamp;
             const hoursAgo = Math.floor(cachedAgo / (1000 * 60 * 60));
             const minsAgo = Math.floor(cachedAgo / (1000 * 60));
             let timeLabel;
@@ -913,20 +1037,15 @@ const Classroom = {
                 timeLabel = `${minsAgo} minute${minsAgo > 1 ? 's' : ''} ago`;
             }
 
-            // Render the cached items with a banner
-            this.renderAllItems(cachedData.data, this.currentView);
+            // Render the cached items
+            this.renderAllItems(cachedItems, this.currentView);
 
-            // Prepend the expired session banner to all containers
-            const bannerHtml = this.renderExpiredSessionBanner(timeLabel);
-            const containers = this.getContainers();
-            containers.forEach(container => {
-                if (container) {
-                    container.insertAdjacentHTML('afterbegin', bannerHtml);
-                }
-            });
+            // Activate persistent bottom footer banner & Reconnect button
+            this.updateBottomCachedFooter(true, timeLabel);
         } else {
             // No cached data available, show login screen
             console.log('[Classroom] No cached data available, showing login screen');
+            this.updateBottomCachedFooter(false);
             this.renderLoginState();
         }
     },

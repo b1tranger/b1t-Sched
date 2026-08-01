@@ -839,6 +839,7 @@ During signup, Firebase triggers `onAuthStateChanged` immediately when the user 
 - **Mobile Header Responsiveness**: On mobile screen sizes (`@media (max-width: 768px)` and mobile sidebar drawer), `.classroom-view-header` flexes vertically into a stacked 2-line layout. Line 1 displays the back button and full course title; line 2 displays full-width view toggle buttons (**To-Do**, **Notices**, **Materials**), eliminating horizontal title truncation and button crowding.
 - **Unified Sign Out Button**: A single pill-styled Sign Out button (`.classroom-header-logout-btn`, `border-radius: 20px`) is embedded in top window title headers (`#classroom-sidebar` mobile and `#classroom-modal` desktop). The button is dynamically displayed only when logged in / connected. Explicit logout revokes the OAuth token, clears local storage connection flags, clears cache, and resets the view to the login prompt.
 - **Archived Classrooms Management**: Fetches both active and archived courses (`courseStates=ACTIVE&courseStates=ARCHIVED`). Archived classrooms are hidden by default in the "My Classes" view, with a toggle button to expand/hide them. Unified feeds (**To-Do**, **Notices**, **Materials**) strictly filter out content from archived courses.
+- **Client JSON Template Caching & Persistent Reconnect Footer**: Serializes user courses, assignments, notices, and materials into a structured JSON template (`classroom_cached_json`) saved to `localStorage` (mirrored in `sessionStorage`) for persistent offline access across browser tab closures and token expirations. When cached content is displayed due to an expired session, a sticky bottom footer bar (`#classroom-footer-mobile` and `#classroom-footer-desktop`) is rendered with a narrow banner (`"Cached Content, login again to see new data"`) and a persistent `"Reconnect Classroom"` button (`Classroom.login()`).
 
 **Properties:**
 
@@ -847,6 +848,7 @@ During signup, Firebase triggers `onAuthStateChanged` immediately when the user 
 - `currentView`: Active view mode (`'todo'`, `'notifications'`, or `'materials'`).
 - `showArchivedCourses`: Flag for toggling archived course card visibility in "My Classes".
 - `hasExpiredSession`: Flag indicating cached display mode with re-connect banner.
+- `JSON_CACHE_KEY`: Storage key for the JSON snapshot (`'classroom_cached_json'`).
 - `_authResolve`: Internal resolver to signal authentication completion to the main app.
 
 | Method                           | Parameters | Returns | Description                                                                                        |
@@ -858,6 +860,10 @@ During signup, Firebase triggers `onAuthStateChanged` immediately when the user 
 | `fetchCoursesAndLoadAll()`       | -          | void    | Batch load active/archived courses and load unified items based on `currentView`.                  |
 | `loadAllMaterials()`             | -          | Promise | Fetch posted materials across all active courses within the date cutoff and render.                |
 | `fetchCourseMaterials(courseId)` | string     | Promise | Fetch posted materials for a specific course ID.                                                   |
+| `saveJsonCache(dataType, data)`  | string, arr| void    | Serialize structured Classroom state into local/session JSON cache.                                |
+| `getJsonCache()`                 | -          | obj|null | Retrieve and parse the cached JSON snapshot from storage.                                          |
+| `clearJsonCache()`               | -          | void    | Clear local and session JSON template cache entries.                                               |
+| `updateBottomCachedFooter(show, timeLabel)` | bool, str | void | Toggle and render the persistent bottom cached content banner and Reconnect button.               |
 | `openUnifiedView()`              | -          | void    | Reset `currentCourseId` to `null` and return to the default unified view feed.                     |
 | `toggleArchivedCourses()`        | -          | void    | Toggle visibility of archived classroom cards in the "My Classes" view.                            |
 | `toggleItemExpand(event, btn)`   | Event, Elem| void    | Toggle inline expansion of truncated description/text details for a Classroom list item.           |
@@ -2376,6 +2382,11 @@ _Last Updated: August 1, 2026 (v2.44.0)_
 - **UI Clean-up**: **Notice Window Announcement Title Removal** — Removed the repetitive hardcoded `"Announcement"` title heading from all notice list items in the Notices view to display announcement content cleanly.
 - **Enhancement**: **Archived Classrooms Management** — Updated Google Classroom course fetching to include archived courses while hiding them by default in "My Classes". Added a **"Show archived classrooms"** toggle button at the bottom of the course list, and ensured unified feeds strictly filter out content from archived classrooms.
 - **Fix**: **Header Sign Out Button Visibility** — Header Sign Out buttons (`#logout-classroom-sidebar` and `#logout-classroom-modal`) start hidden when unauthenticated and are dynamically shown only when an active/connected Google Classroom session exists.
+
+### v2.44.0
+
+- **New Feature**: **Google Classroom Client JSON Template Caching** — Serializes user courses, assignments, notices, and materials into a structured JSON template (`classroom_cached_json`) saved to `localStorage` (mirrored in `sessionStorage`) for persistent offline access across browser tab closures and token expirations.
+- **New Feature**: **Persistent Bottom Reconnect Banner & Button** — Pinned sticky bottom footer bar (`#classroom-footer-mobile` and `#classroom-footer-desktop`) displaying a narrow warning banner (`"Cached Content, login again to see new data"`) and a persistent `"Reconnect Classroom"` button (`Classroom.login()`) whenever cached content is rendered due to token expiry.
 
 ### v2.43.0
 

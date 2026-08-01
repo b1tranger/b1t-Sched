@@ -780,3 +780,76 @@ body.gray-mode .expired-banner-content i {
     background-color: rgba(0, 0, 0, 0.05);
     color: var(--classroom-text);
 }
+
+/* =========================================
+   Persistent Cached Content Bottom Footer
+   ========================================= */
+.classroom-bottom-cached-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background-color: var(--classroom-card-bg, #ffffff);
+    border-top: 1px solid var(--classroom-border, #e0e0e0);
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.06);
+    z-index: 10;
+    box-sizing: border-box;
+}
+
+.classroom-bottom-banner-text {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: #856404;
+    background-color: #fff3cd;
+    border: 1px solid #ffeeba;
+    padding: 6px 12px;
+    border-radius: 6px;
+    width: 100%;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    box-sizing: border-box;
+}
+
+.classroom-reconnect-btn {
+    background-color: var(--classroom-green, #0f9d58);
+    color: #ffffff;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.2s, transform 0.1s, box-shadow 0.2s;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+    width: 100%;
+    max-width: 280px;
+    justify-content: center;
+}
+
+.classroom-reconnect-btn:hover {
+    background-color: var(--classroom-green-hover, #0b8043);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+body.dark-mode .classroom-bottom-cached-footer {
+    background-color: var(--classroom-card-bg, #1e1e1e);
+    border-top-color: var(--classroom-border, #333333);
+}
+
+body.dark-mode .classroom-bottom-banner-text {
+    background-color: #2a2510;
+    border-color: #4a3f1a;
+    color: #e8d99a;
+}
+
+body.dark-mode .classroom-reconnect-btn {
+    color: #1a1c0d;
+}
