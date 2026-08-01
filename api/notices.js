@@ -104,6 +104,7 @@ export default async function handler(req, res) {
       const blobResult = await put(BLOB_FILENAME, JSON.stringify(payload), {
         access: 'public',
         addRandomSuffix: false, // Keeps static filename URL notices.json
+        allowExisting: true,   // Allows overwriting existing notices.json
         contentType: 'application/json'
       });
       payload.blobUrl = blobResult.url;

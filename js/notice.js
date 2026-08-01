@@ -14,6 +14,9 @@ const NoticeViewer = {
     notices: [],
     lastRefreshTime: 0,
     isRefreshing: false,
+    autoRetryTimer: null,
+    retryCountdownInterval: null,
+    retrySecondsRemaining: 0,
 
     // ──────────────────────────────────────────────
     // INITIALIZATION
@@ -164,7 +167,59 @@ const NoticeViewer = {
     // FETCH NOTICES
     // ──────────────────────────────────────────────
 
+    clearAutoRetryTimers() {
+        if (this.autoRetryTimer) {
+            clearTimeout(this.autoRetryTimer);
+            this.autoRetryTimer = null;
+        }
+        if (this.retryCountdownInterval) {
+            clearInterval(this.retryCountdownInterval);
+            this.retryCountdownInterval = null;
+        }
+        this.retrySecondsRemaining = 0;
+    },
+
+    scheduleAutoRetry(seconds = 60) {
+        this.clearAutoRetryTimers();
+        this.retrySecondsRemaining = seconds;
+        this.updateErrorCountdownUI();
+
+        this.retryCountdownInterval = setInterval(() => {
+            this.retrySecondsRemaining--;
+            if (this.retrySecondsRemaining > 0) {
+                this.updateErrorCountdownUI();
+            } else {
+                this.clearAutoRetryTimers();
+            }
+        }, 1000);
+
+        this.autoRetryTimer = setTimeout(() => {
+            console.log('[NoticeViewer] 1-minute cooldown elapsed, auto-retrying notice fetch...');
+            this.clearAutoRetryTimers();
+            this.loadNotices(false);
+        }, seconds * 1000);
+    },
+
+    manualRetry() {
+        this.clearAutoRetryTimers();
+        this.loadNotices(false);
+    },
+
+    updateErrorCountdownUI() {
+        const countdownElemDesktop = document.getElementById('notice-retry-countdown-desktop');
+        const countdownElemMobile = document.getElementById('notice-retry-countdown-mobile');
+
+        const text = this.retrySecondsRemaining > 0
+            ? `<div style="margin-top: 8px; font-size: 13px; color: #856404;"><i class="fas fa-clock"></i> Server is starting up. Retrying automatically in <strong>${this.retrySecondsRemaining}s</strong>...</div>`
+            : '';
+
+        if (countdownElemDesktop) countdownElemDesktop.innerHTML = text;
+        if (countdownElemMobile) countdownElemMobile.innerHTML = text;
+    },
+
     async loadNotices(forceRefresh = false) {
+        this.clearAutoRetryTimers();
+
         // If already loaded in this session, just render
         if (!forceRefresh && this.noticesLoaded && this.notices.length > 0) {
             this.renderAllNotices();
@@ -279,7 +334,8 @@ const NoticeViewer = {
                     }
                 });
             } else {
-                this.showErrorState(`Failed to load notices: ${error.message}. Please try again later.`);
+                this.scheduleAutoRetry(60);
+                this.showErrorState(`Server unavailable (${error.message}). The server may be starting up.`);
             }
         } finally {
             if (forceRefresh) this.isRefreshing = false;
@@ -420,12 +476,32 @@ const NoticeViewer = {
     },
 
     showErrorState(message) {
+        const countdownHTML = this.retrySecondsRemaining > 0
+            ? `<div id="notice-retry-countdown-desktop" style="margin-top: 8px; font-size: 13px; color: #856404;"><i class="fas fa-clock"></i> Server is starting up. Retrying automatically in <strong>${this.retrySecondsRemaining}s</strong>...</div>`
+            : '<div id="notice-retry-countdown-desktop"></div>';
+
+        const countdownHTMLMobile = this.retrySecondsRemaining > 0
+            ? `<div id="notice-retry-countdown-mobile" style="margin-top: 8px; font-size: 13px; color: #856404;"><i class="fas fa-clock"></i> Server is starting up. Retrying automatically in <strong>${this.retrySecondsRemaining}s</strong>...</div>`
+            : '<div id="notice-retry-countdown-mobile"></div>';
+
         const errorHTML = `
             <div class="notice-status">
                 <i class="fas fa-exclamation-triangle"></i>
                 <span>${message}</span>
-                <button class="notice-retry-btn" onclick="NoticeViewer.loadNotices()">
-                    <i class="fas fa-redo"></i> Retry
+                ${countdownHTML}
+                <button class="notice-retry-btn" onclick="NoticeViewer.manualRetry()" style="margin-top: 8px;">
+                    <i class="fas fa-redo"></i> Retry Now
+                </button>
+            </div>
+        `;
+
+        const errorHTMLMobile = `
+            <div class="notice-status">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>${message}</span>
+                ${countdownHTMLMobile}
+                <button class="notice-retry-btn" onclick="NoticeViewer.manualRetry()" style="margin-top: 8px;">
+                    <i class="fas fa-redo"></i> Retry Now
                 </button>
             </div>
         `;
@@ -441,7 +517,7 @@ const NoticeViewer = {
         const loadPromptMobile = document.getElementById('notice-load-prompt-mobile');
         if (loadPromptMobile) {
             loadPromptMobile.style.display = 'flex';
-            loadPromptMobile.innerHTML = errorHTML;
+            loadPromptMobile.innerHTML = errorHTMLMobile;
             // Also ensure list is hidden so error is visible
             const listMobile = document.getElementById('notice-list-mobile');
             if (listMobile) listMobile.style.display = 'none';
