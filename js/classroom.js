@@ -1289,6 +1289,7 @@ const Classroom = {
 
         return `
             <div class="item-attachments" style="margin-top: 10px; display: flex; flex-direction: column; gap: 6px;">
+                <hr style="border: none; border-top: 1px dashed var(--classroom-border); margin: 6px 0 4px 0;">
                 <div style="font-weight: 500; font-size: 0.8rem; color: var(--classroom-text-secondary);">Attachments:</div>
                 <div style="display: flex; flex-wrap: wrap; gap: 8px;">
                     ${attachmentItems}
@@ -1313,7 +1314,7 @@ const Classroom = {
         if (truncated && full) {
             if (isExpanded) {
                 truncated.style.display = 'none';
-                full.style.display = 'block';
+                full.style.display = 'inline';
             } else {
                 truncated.style.display = 'inline';
                 full.style.display = 'none';
@@ -1362,9 +1363,10 @@ const Classroom = {
         }
 
         const iconClass = type === 'todo' ? 'assignment' : (type === 'materials' ? 'material' : 'announcement');
+        const rawText = (fullText || '').trim();
         const hasMaterials = Boolean(item.materials && item.materials.length > 0);
-        const hasMoreText = Boolean((fullText && (fullText.length > snippet.length || fullText.includes('\n'))) || hasMaterials);
-        const formattedFullText = fullText ? Utils.escapeAndLinkify(fullText) : '';
+        const hasMoreText = Boolean((rawText && (rawText.length > snippet.length || rawText.includes('\n'))) || hasMaterials);
+        const formattedFullText = rawText ? Utils.escapeAndLinkify(rawText) : '';
         const attachmentsHtml = hasMaterials ? this.renderItemAttachments(item.materials) : '';
 
         return `
@@ -1382,10 +1384,7 @@ const Classroom = {
                         <div class="item-snippet">
                             <span class="snippet-truncated">${snippet}</span>
                             ${hasMoreText ? `
-                                <div class="snippet-full" style="display: none; white-space: pre-wrap; word-break: break-word; margin-top: 6px;">
-                                    ${formattedFullText}
-                                    ${attachmentsHtml}
-                                </div>
+                                <span class="snippet-full" style="display: none; white-space: pre-wrap; word-break: break-word;">${formattedFullText}${attachmentsHtml}</span>
                             ` : ''}
                         </div>
                     ` : ''}
@@ -1530,9 +1529,10 @@ const Classroom = {
         }
 
         const iconClass = type === 'todo' ? 'assignment' : (type === 'materials' ? 'material' : 'announcement');
+        const rawText = (fullText || '').trim();
         const hasMaterials = Boolean(item.materials && item.materials.length > 0);
-        const hasMoreText = Boolean((fullText && (fullText.length > snippet.length || fullText.includes('\n'))) || hasMaterials);
-        const formattedFullText = fullText ? Utils.escapeAndLinkify(fullText) : '';
+        const hasMoreText = Boolean((rawText && (rawText.length > snippet.length || rawText.includes('\n'))) || hasMaterials);
+        const formattedFullText = rawText ? Utils.escapeAndLinkify(rawText) : '';
         const attachmentsHtml = hasMaterials ? this.renderItemAttachments(item.materials) : '';
 
         return `
@@ -1549,10 +1549,7 @@ const Classroom = {
                         <div class="item-snippet">
                             <span class="snippet-truncated">${snippet}</span>
                             ${hasMoreText ? `
-                                <div class="snippet-full" style="display: none; white-space: pre-wrap; word-break: break-word; margin-top: 6px;">
-                                    ${formattedFullText}
-                                    ${attachmentsHtml}
-                                </div>
+                                <span class="snippet-full" style="display: none; white-space: pre-wrap; word-break: break-word;">${formattedFullText}${attachmentsHtml}</span>
                             ` : ''}
                         </div>
                     ` : ''}
