@@ -86,5 +86,15 @@ const FacultyClassroom = {
    */
   getFacultyUserId() {
     return this.facultyUserId;
+  },
+
+  /**
+   * Log out of Classroom (delegates to main Classroom module)
+   */
+  logout() {
+    console.log('[FacultyClassroom] Logging out of Classroom...');
+    if (typeof Classroom !== 'undefined' && typeof Classroom.logout === 'function') {
+      Classroom.logout();
+    }
   }
 };

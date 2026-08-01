@@ -126,18 +126,26 @@ const Classroom = {
                     this._cleanupAuthPromise(true);
                     return;
                 } else {
-                    console.log('Stored token expired');
+                    console.log('Stored token expired — keeping connection state intact');
                 }
             }
 
-            // If no valid token but was connected, mark as expired session
-            // so we can show cached data with a re-sign-in prompt when user opens Classroom
+            // If no valid token but was connected, keep user connected
+            // and mark as expired session to show cached data with reconnect option
             if (isConnected) {
-                console.log('Session expired — will show cached data with re-sign-in prompt');
+                console.log('Classroom is connected, but token is expired. Preserving session state for cached access.');
                 this.hasExpiredSession = true;
-                localStorage.removeItem('classroom_connected');
                 localStorage.removeItem('classroom_token');
                 localStorage.removeItem('classroom_token_expiry');
+
+                // Attempt a silent token refresh if token client is ready
+                if (this.tokenClient) {
+                    try {
+                        this.tokenClient.requestAccessToken({ prompt: 'none' });
+                    } catch (e) {
+                        console.log('Silent token refresh attempt during session check:', e);
+                    }
+                }
             }
             this._cleanupAuthPromise(false);
         });
@@ -156,11 +164,22 @@ const Classroom = {
 
     _handleAuthError(error) {
         console.log('Auth error:', error);
-        // Clean up any stale session state
+        const errObj = error || {};
+        const errType = typeof errObj === 'string' ? errObj : (errObj.error || errObj.error_subtype || '');
+
+        // If error is silent refresh requiring interaction, preserve connection and use cached session mode
+        if (errType === 'interaction_required' || errType === 'access_denied') {
+            console.log('[Classroom] Silent refresh requires interaction, keeping user connected with cached data');
+            this.hasExpiredSession = true;
+            this._cleanupAuthPromise(false);
+            return;
+        }
+
+        // Hard failure or explicit rejection - clean up session state
         localStorage.removeItem('classroom_connected');
         localStorage.removeItem('classroom_token');
         localStorage.removeItem('classroom_token_expiry');
-        // Show login state so user can sign in fresh
+        this.accessToken = null;
         this.renderLoginState();
         this._cleanupAuthPromise(false);
     },
@@ -233,16 +252,27 @@ const Classroom = {
             this.toggleModal(true);
         }
 
+        const isConnected = localStorage.getItem('classroom_connected') === 'true';
+
+        // If connected but no token, try silent refresh in background
+        if (isConnected && !this.accessToken && this.tokenClient) {
+            console.log('[Classroom] User is connected; requesting silent token refresh...');
+            try {
+                this.tokenClient.requestAccessToken({ prompt: 'none' });
+            } catch (e) {
+                console.warn('[Classroom] Silent refresh error on open:', e);
+            }
+        }
+
         // If session expired, try to show cached data with a re-sign-in banner
         if (this.hasExpiredSession && !this.accessToken) {
-            this.hasExpiredSession = false;
             console.log('Session expired — attempting to show cached data');
             this.showCachedDataWithBanner();
             return;
         }
 
-        // If not authenticated, show login button
-        if (!this.accessToken) {
+        // If not authenticated and not connected, show login button
+        if (!this.accessToken && !isConnected) {
             this.renderLoginState();
         } else {
             // Load all assignments from all courses
@@ -292,6 +322,7 @@ const Classroom = {
     handleAuthSuccess(tokenResponse) {
         // Auth successful, save state
         this.accessToken = tokenResponse.access_token;
+        this.hasExpiredSession = false;
         localStorage.setItem('classroom_connected', 'true');
 
         // Save token to storage for persistence
@@ -331,22 +362,26 @@ const Classroom = {
     },
 
     logout() {
-        if (this.accessToken) {
+        console.log('[Classroom] Explicit logout requested by user');
+        if (this.accessToken && typeof google !== 'undefined' && google.accounts && google.accounts.oauth2) {
             const token = this.accessToken;
-            // Revoke token with Google
-            google.accounts.oauth2.revoke(token, () => {
-                console.log('Access token revoked');
-                this.cleanupSession();
-            });
-        } else {
-            this.cleanupSession();
+            try {
+                google.accounts.oauth2.revoke(token, () => {
+                    console.log('[Classroom] Access token revoked');
+                });
+            } catch (e) {
+                console.warn('[Classroom] Error revoking token:', e);
+            }
         }
+        this.cleanupSession();
     },
 
     cleanupSession() {
+        console.log('[Classroom] Cleaning up session state and caches');
         this.accessToken = null;
         this.courses = [];
         this.currentCourseId = null;
+        this.hasExpiredSession = false;
 
         // Clear cached classroom data
         this.initCacheManager();
@@ -780,9 +815,14 @@ const Classroom = {
                     <i class="fas fa-info-circle"></i>
                     <span>Session expired · Last updated ${timeLabel}</span>
                 </div>
-                <button class="expired-banner-btn" onclick="Classroom.login()">
-                    <i class="fas fa-sign-in-alt"></i> Sign in
-                </button>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button class="expired-banner-btn" onclick="Classroom.login()">
+                        <i class="fas fa-sync-alt"></i> Reconnect
+                    </button>
+                    <button class="btn btn-sm btn-text" onclick="Classroom.logout()" style="color: var(--danger, #ff4d4f); padding: 4px 8px;" title="Sign Out of Classroom">
+                        Sign Out
+                    </button>
+                </div>
             </div>
         `;
     },
@@ -974,18 +1014,17 @@ const Classroom = {
                             <i class="fas fa-redo-alt"></i>
                         </button>
                     </div>
-                    ${(viewType === 'todo' && typeof App !== 'undefined' && (App.isAdmin || App.isCR)) ? `
-                    <button id="sync-classroom-tasks-btn" class="btn btn-sm btn-primary" onclick="Classroom.syncAssignmentsToTasks()" title="Sync Assignments to Tasks">
-                        <i class="fas fa-sync-alt"></i> Sync
-                    </button>
-                    `
-                :
-                `
-                    <button title="Sync button placeholder" style="background-color: transparent;border-color: transparent;padding: var(--spacing-sm) var(--spacing-lg);">
-                        &nbsp;
-                    </button>
-                    `
-            }
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        ${(viewType === 'todo' && typeof App !== 'undefined' && (App.isAdmin || App.isCR)) ? `
+                        <button id="sync-classroom-tasks-btn" class="btn btn-sm btn-primary" onclick="Classroom.syncAssignmentsToTasks()" title="Sync Assignments to Tasks">
+                            <i class="fas fa-sync-alt"></i> Sync
+                        </button>
+                        `
+                : ''}
+                        <button class="btn btn-sm btn-outline-danger" onclick="Classroom.logout()" title="Sign Out of Google Classroom" style="padding: 4px 10px; font-size: 0.8rem;">
+                            <i class="fas fa-sign-out-alt"></i> Sign Out
+                        </button>
+                    </div>
                 </div>
                 <div class="classroom-view-toggle">
                     <button class="view-toggle-btn ${viewType === 'todo' ? 'active' : ''}" onclick="Classroom.switchView('todo')">
@@ -1117,13 +1156,16 @@ const Classroom = {
                         ${course ? course.name : 'Course Details'}
                     </span>
                 </div>
-                <div class="classroom-view-toggle">
-                    <button class="view-toggle-btn ${viewType === 'todo' ? 'active' : ''}" onclick="Classroom.switchView('todo')">
-                        To-Do
-                    </button>
-                    <button class="view-toggle-btn ${viewType === 'notifications' ? 'active' : ''}" onclick="Classroom.switchView('notifications')">
-                        Notices
-                    </button>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div class="classroom-view-toggle">
+                        <button class="view-toggle-btn ${viewType === 'todo' ? 'active' : ''}" onclick="Classroom.switchView('todo')">
+                            To-Do
+                        </button>
+                        <button class="view-toggle-btn ${viewType === 'notifications' ? 'active' : ''}" onclick="Classroom.switchView('notifications')">
+                            Notices
+                        </button>
+                    </div>
+                    <button class="btn btn-sm btn-text" onclick="Classroom.logout()" style="color: var(--danger, #ff4d4f); padding: 4px 8px;" title="Sign Out">Sign Out</button>
                 </div>
             </div>
         `;

@@ -145,6 +145,35 @@ body.dark-mode .classroom-close-btn {
     transform: rotate(90deg);
 }
 
+.classroom-header-logout-btn {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 4px 10px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.classroom-header-logout-btn:hover {
+    background: rgba(255, 255, 255, 0.28);
+}
+
+body.dark-mode .classroom-header-logout-btn {
+    background: rgba(26, 28, 13, 0.2);
+    border-color: rgba(26, 28, 13, 0.4);
+    color: #1a1c0d;
+}
+
+body.dark-mode .classroom-header-logout-btn:hover {
+    background: rgba(26, 28, 13, 0.35);
+}
+
 .classroom-content {
     flex: 1;
     overflow-y: auto;

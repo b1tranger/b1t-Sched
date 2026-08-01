@@ -635,9 +635,14 @@
                                 <i class="fas fa-info-circle"></i>
                             </span>
                         </h3>
-                        <button id="close-classroom-sidebar" class="classroom-close-btn">
-                            <i class="fas fa-times"></i>
-                        </button>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <button id="logout-classroom-sidebar" class="classroom-header-logout-btn" onclick="Classroom.logout()" title="Sign Out of Google Classroom">
+                                <i class="fas fa-sign-out-alt"></i>
+                            </button>
+                            <button id="close-classroom-sidebar" class="classroom-close-btn">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
                     </div>
                     <div id="classroom-content-mobile" class="classroom-content">
                         <!-- Content loaded dynamically -->
@@ -661,9 +666,14 @@
                                 <i class="fas fa-info-circle"></i>
                             </span>
                         </h2>
-                        <button id="close-classroom-modal" class="btn btn-icon" style="color: white;">
-                            <i class="fas fa-times"></i>
-                        </button>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <button id="logout-classroom-modal" class="classroom-header-logout-btn" onclick="Classroom.logout()" title="Sign Out of Google Classroom">
+                                <i class="fas fa-sign-out-alt"></i> Sign Out
+                            </button>
+                            <button id="close-classroom-modal" class="btn btn-icon" style="color: white;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
                     </div>
                     <div id="classroom-content-desktop" class="classroom-modal-body">
                         <!-- Content loaded dynamically -->
