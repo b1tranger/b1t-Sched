@@ -264,10 +264,98 @@ body.dark-mode .form-input::placeholder {
 }
 
 .resource-link-card .resource-icon {
-  font-size: 3rem;
-  text-shadow: 0 0 10px rgba(0, 0, 0, 0.315);
-  /* margin-bottom: var(--spacing-md); */
+  font-size: 2.8rem;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.12);
+  margin-bottom: var(--spacing-sm);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
+.resource-link-card .resource-icon i {
+  color: var(--primary-maroon);
+  transition: color var(--transition-fast), transform var(--transition-fast);
+}
+
+.resource-link-card:hover .resource-icon i {
+  transform: scale(1.12);
+}
+
+/* Font Awesome 5 / 6 / 7 Style Compatibility */
+.fa-regular, .far {
+  font-weight: 400;
+}
+.fa-solid, .fas {
+  font-weight: 900;
+}
+
+/* Icon specific theme color mappings */
+.resource-link-card .resource-icon .fa-file-pdf {
+  color: #e74c3c;
+}
+.resource-link-card .resource-icon .fa-folder-open,
+.resource-link-card .resource-icon .fa-folder {
+  color: #f39c12;
+}
+.resource-link-card .resource-icon .fa-laptop-code,
+.resource-link-card .resource-icon .fa-desktop {
+  color: #3498db;
+}
+.resource-link-card .resource-icon .fa-graduation-cap,
+.resource-link-card .resource-icon .fa-school {
+  color: #9b59b6;
+}
+.resource-link-card .resource-icon .fa-calendar-alt,
+.resource-link-card .resource-icon .fa-calendar-check,
+.resource-link-card .resource-icon .fa-calendar-days,
+.resource-link-card .resource-icon .fa-calendar,
+.resource-link-card .resource-icon .fa-book-open,
+.resource-link-card .resource-icon .fa-book {
+  color: var(--primary-maroon);
+}
+.resource-link-card .resource-icon .fa-globe,
+.resource-link-card .resource-icon .fa-link,
+.resource-link-card .resource-icon .fa-external-link-alt,
+.resource-link-card .resource-icon .fa-arrow-up-right-from-square {
+  color: var(--primary-maroon);
+}
+
+/* Dark mode theme icon overrides */
+body.dark-mode .resource-link-card .resource-icon i {
+  color: var(--primary-maroon);
+}
+body.dark-mode .resource-link-card .resource-icon .fa-file-pdf {
+  color: #ff6b6b;
+}
+body.dark-mode .resource-link-card .resource-icon .fa-folder-open,
+body.dark-mode .resource-link-card .resource-icon .fa-folder {
+  color: #f1c40f;
+}
+body.dark-mode .resource-link-card .resource-icon .fa-laptop-code,
+body.dark-mode .resource-link-card .resource-icon .fa-desktop {
+  color: #54a0ff;
+}
+body.dark-mode .resource-link-card .resource-icon .fa-graduation-cap {
+  color: #be2edd;
+}
+
+/* Gray mode theme icon overrides */
+body.gray-mode .resource-link-card .resource-icon i {
+  color: var(--primary-maroon);
+}
+body.gray-mode .resource-link-card .resource-icon .fa-file-pdf {
+  color: #ff6360;
+}
+body.gray-mode .resource-link-card .resource-icon .fa-folder-open,
+body.gray-mode .resource-link-card .resource-icon .fa-folder {
+  color: #ff8222;
+}
+body.gray-mode .resource-link-card .resource-icon .fa-laptop-code,
+body.gray-mode .resource-link-card .resource-icon .fa-desktop {
+  color: #64b5f6;
+}
+body.gray-mode .resource-link-card .resource-icon .fa-graduation-cap {
+  color: #ba68c8;
 }
 
 .resource-link-card h3 {

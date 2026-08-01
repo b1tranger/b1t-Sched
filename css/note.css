@@ -245,7 +245,8 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-sm);
-    margin-bottom: var(--spacing-sm);
+    margin-bottom: var(--spacing-xs);
+    width: 100%;
 }
 
 .note-upload-actions {
@@ -271,6 +272,25 @@
     color: var(--info);
     margin-top: 2px;
     flex-shrink: 0;
+}
+
+/* ─── Fixed Footer Container ───────────────────────── */
+#note-modal .modal-footer {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-top: 1px solid var(--border-light);
+    background-color: var(--bg-white);
+    flex-shrink: 0;
+}
+
+.note-footer-buttons {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: var(--spacing-md);
+    width: 100%;
 }
 
 /* ─── Fallback & Helpers ──────────────────────────── */
@@ -358,16 +378,23 @@
 
     /* Responsive Footer for Note Modal */
     #note-modal .modal-footer {
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: var(--spacing-sm);
-        padding: var(--spacing-md);
+        flex-direction: column;
+        gap: var(--spacing-xs);
+        padding: var(--spacing-sm) var(--spacing-md);
     }
 
-    #note-modal .modal-footer .btn {
+    .note-footer-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: var(--spacing-xs);
+        width: 100%;
+    }
+
+    .note-footer-buttons .btn {
         flex: 1 1 40%;
         /* Allow buttons to take ~half width and wrap */
-        min-width: 100px;
+        min-width: 80px;
         padding: var(--spacing-sm);
         font-size: var(--font-sm);
     }

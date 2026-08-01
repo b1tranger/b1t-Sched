@@ -33,8 +33,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <!-- Font Awesome for icons (Latest 6.7.2) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
 
     <!-- Theme Initialization Script to prevent FOUC -->
     <script>
@@ -354,29 +354,6 @@
                 <div class="dashboard-container dashboard-grid">
                     <!-- Left Column: Resources + Tasks -->
                     <div class="dashboard-main">
-                        <!-- Resource Links Section -->
-                        <section class="resource-links-section">
-                            <!-- Mobile-only header -->
-                            <div class="section-header mobile-only resources-header">
-                                <h2><i class="fas fa-link"></i> Quick Links</h2>
-                            </div>
-                            <div id="resource-links-container" class="resource-links-container">
-                                <!-- Resource link cards will be dynamically loaded -->
-                            </div>
-                            <!-- Mobile-only external resources link -->
-                            <div style="display: flex;justify-content: center;"><a
-                                    href="https://b1tacad.netlify.app/departments" target="_blank"
-                                    rel="noopener noreferrer"
-                                    class="resource-link-card external-resources-link mobile-only">
-                                    <!-- <div class="resource-icon" style="margin: auto;">
-                                    <i class="fas fa-external-link-alt"></i>
-                                </div> -->
-                                    <h3 style="text-align: center;">All Resources</h3>
-                                    <!-- <p>Browse all academic resources department-wise</p> -->
-                                </a>
-                            </div>
-                        </section>
-
                         <!-- Pending Tasks Section -->
                         <section class="tasks-section">
 
@@ -398,6 +375,24 @@
                                         <span>Calendar View</span>
                                     </button>
 
+                                    <!-- Quick Links Dropdown (Beside Calendar View) -->
+                                    <div class="resources-dropdown-wrapper">
+                                        <button id="quick-links-dropdown-btn" class="btn btn-text-icon" title="Quick Links"
+                                            aria-label="Toggle Quick Links Dropdown">
+                                            <i class="fas fa-link"></i>
+                                            <span>Quick Links</span>
+                                            <i class="fas fa-chevron-down" style="font-size: 0.75rem; margin-left: 2px;"></i>
+                                        </button>
+                                        <div id="resource-links-dropdown" class="resource-links-dropdown-menu" style="display: none;">
+                                            <div id="resource-links-container" class="resource-links-list">
+                                                <!-- Resource links dynamically loaded without icons -->
+                                            </div>
+                                            <a href="https://b1tacad.netlify.app/departments" target="_blank"
+                                                rel="noopener noreferrer" class="dropdown-item all-resources-item">
+                                                All Resources <i class="fas fa-arrow-up-right-from-square" style="font-size: 0.75rem; margin-left: 4px;"></i>
+                                            </a>
+                                        </div>
+                                    </div>
                                 </h2>
                             </div>
                             <!-- Task Action Buttons -->
@@ -738,8 +733,10 @@
                                     rows="12"></textarea>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Upload Section -->
+                    <div class="modal-footer note-modal-footer">
+                        <!-- Upload Instructions & Fallback (Fixed in Footer) -->
                         <div class="note-upload-section">
                             <p class="upload-instruction">
                                 <i class="fas fa-info-circle"></i>
@@ -747,13 +744,6 @@
                                     (Temporary).
                                     Back up important content.</span>
                             </p>
-                            <div class="note-upload-actions">
-                                <button id="upload-files-btn" class="btn btn-secondary" type="button">
-                                    <i class="fas fa-upload"></i> Upload Files
-                                </button>
-                                <input type="file" id="note-file-input" style="display: none;"
-                                    title="Choose a file to upload">
-                            </div>
                             <!-- file.io fallback (hidden by default, shown after all providers fail) -->
                             <div id="note-fileio-fallback" class="note-fileio-fallback" style="display: none;">
                                 <i class="fas fa-exclamation-triangle"></i>
@@ -761,31 +751,36 @@
                                     <a href="https://file.io" target="_blank" rel="noopener noreferrer">file.io</a>
                                     and paste the share link into your note.</span>
                             </div>
+                            <!-- Download helper (shown when a file link is clicked) -->
+                            <div id="note-download-helper" class="note-download-helper" style="display: none;">
+                                <i class="fas fa-info-circle"></i>
+                                <span class="download-helper-text">File opened in a new tab. <a
+                                        id="note-download-fallback-link" href="#" target="_blank"
+                                        rel="noopener noreferrer">Click here</a> if it didn't open.</span>
+                            </div>
                         </div>
 
-                        <!-- Download helper (shown when a file link is clicked) -->
-                        <div id="note-download-helper" class="note-download-helper" style="display: none;">
-                            <i class="fas fa-info-circle"></i>
-                            <span class="download-helper-text">File opened in a new tab. <a
-                                    id="note-download-fallback-link" href="#" target="_blank"
-                                    rel="noopener noreferrer">Click here</a> if it didn't open.</span>
+                        <!-- Action Buttons Row -->
+                        <div class="note-footer-buttons">
+                            <button id="clear-note-btn" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> Clear
+                            </button>
+                            <button id="upload-files-btn" class="btn btn-secondary" type="button">
+                                <i class="fas fa-upload"></i> Upload Files
+                            </button>
+                            <input type="file" id="note-file-input" style="display: none;"
+                                title="Choose a file to upload">
+                            <button id="export-pdf-btn" class="btn btn-secondary" title="Export note as a PDF document">
+                                <i class="fas fa-file-pdf"></i> PDF
+                            </button>
+                            <button id="shorten-note-btn" class="btn btn-secondary"
+                                title="Convert note text to a downloadable .md file link">
+                                <i class="fas fa-compress-alt"></i> Shorten
+                            </button>
+                            <button id="save-note-btn" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save
+                            </button>
                         </div>
-                    </div>
-
-                    <div class="modal-footer">
-                        <button id="clear-note-btn" class="btn btn-danger">
-                            <i class="fas fa-trash"></i> Clear
-                        </button>
-                        <button id="export-pdf-btn" class="btn btn-secondary" title="Export note as a PDF document">
-                            <i class="fas fa-file-pdf"></i> PDF
-                        </button>
-                        <button id="shorten-note-btn" class="btn btn-secondary"
-                            title="Convert note text to a downloadable .md file link">
-                            <i class="fas fa-compress-alt"></i> Shorten
-                        </button>
-                        <button id="save-note-btn" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Save
-                        </button>
                     </div>
                 </div>
             </div>

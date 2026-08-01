@@ -123,13 +123,87 @@ const UI = {
     document.getElementById('user-department').textContent = `${department} • ${semester} • ${section}`;
   },
 
-  // Render resource links
+  getResourceIcon(iconStr, url, title) {
+    if (iconStr && (iconStr.includes('<i ') || iconStr.includes('<svg'))) {
+      return iconStr;
+    }
+
+    const lowerTitle = (title || '').toLowerCase();
+    const isPdf = /\.pdf(\?.*)?$/i.test(url);
+
+    // Emoji to Font Awesome 6 (Latest) icon map
+    const emojiMap = {
+      '📚': 'fa-solid fa-book-open',
+      '📖': 'fa-solid fa-book',
+      '📑': 'fa-solid fa-file-lines',
+      '📄': 'fa-solid fa-file-lines',
+      '📜': 'fa-solid fa-scroll',
+      '📝': 'fa-solid fa-pen-to-square',
+      '📁': 'fa-solid fa-folder',
+      '📂': 'fa-solid fa-folder-open',
+      '🎓': 'fa-solid fa-graduation-cap',
+      '🏫': 'fa-solid fa-school',
+      '💻': 'fa-solid fa-laptop-code',
+      '🖥️': 'fa-solid fa-desktop',
+      '🔗': 'fa-solid fa-link',
+      '🌐': 'fa-solid fa-globe',
+      '📌': 'fa-solid fa-thumbtack',
+      '🎥': 'fa-solid fa-video',
+      '🎬': 'fa-solid fa-film',
+      '📊': 'fa-solid fa-chart-column',
+      '🗓️': 'fa-solid fa-calendar-days',
+      '📅': 'fa-regular fa-calendar',
+      '💡': 'fa-solid fa-lightbulb',
+      '📢': 'fa-solid fa-bullhorn',
+      '⭐': 'fa-solid fa-star',
+      '🚀': 'fa-solid fa-rocket',
+      '⚙️': 'fa-solid fa-gear',
+      '🔧': 'fa-solid fa-wrench',
+      '❓': 'fa-solid fa-circle-question'
+    };
+
+    const trimmedIcon = (iconStr || '').trim();
+    if (trimmedIcon && emojiMap[trimmedIcon]) {
+      return `<i class="${emojiMap[trimmedIcon]}"></i>`;
+    }
+
+    // Contextual fallbacks
+    if (isPdf) return '<i class="fa-solid fa-file-pdf"></i>';
+    if (lowerTitle.includes('routine') || lowerTitle.includes('schedule') || lowerTitle.includes('calendar')) return '<i class="fa-solid fa-calendar-days"></i>';
+    if (lowerTitle.includes('syllabus') || lowerTitle.includes('curriculum') || lowerTitle.includes('book')) return '<i class="fa-solid fa-book-open"></i>';
+    if (lowerTitle.includes('result') || lowerTitle.includes('grade')) return '<i class="fa-solid fa-square-poll-vertical"></i>';
+    if (lowerTitle.includes('drive') || lowerTitle.includes('folder')) return '<i class="fa-solid fa-folder-open"></i>';
+    if (lowerTitle.includes('notice') || lowerTitle.includes('announcement')) return '<i class="fa-solid fa-bullhorn"></i>';
+
+    return '<i class="fa-solid fa-arrow-up-right-from-square"></i>';
+  },
+
+  // Init Quick Links Dropdown toggle and click outside listener
+  initQuickLinksDropdown() {
+    const btn = document.getElementById('quick-links-dropdown-btn');
+    const menu = document.getElementById('resource-links-dropdown');
+    if (!btn || !menu) return;
+
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = menu.style.display === 'block';
+      menu.style.display = isOpen ? 'none' : 'block';
+    });
+
+    document.addEventListener('click', (e) => {
+      if (menu.style.display === 'block' && !menu.contains(e.target) && !btn.contains(e.target)) {
+        menu.style.display = 'none';
+      }
+    });
+  },
+
+  // Render resource links as clean dropdown items without icons
   renderResourceLinks(links) {
     const container = document.getElementById('resource-links-container');
     if (!container) return;
 
-    if (links.length === 0) {
-      container.innerHTML = '<p class="no-data-message">No resource links available for your department.</p>';
+    if (!links || links.length === 0) {
+      container.innerHTML = '<p class="no-data-message" style="padding: 10px 16px; margin: 0; font-size: var(--font-xs);">No resource links available.</p>';
       return;
     }
 
@@ -137,28 +211,30 @@ const UI = {
       const isPdf = /\.pdf(\?.*)?$/i.test(link.url);
       if (isPdf) {
         return `
-      <a href="${link.url}" class="resource-link-card" data-pdf-url="${link.url}" data-pdf-title="${link.title}">
-        <div class="resource-icon">${link.icon}</div>
-        <h3>${link.title}</h3>
-        <p>${link.description}</p>
+      <a href="${link.url}" class="resource-dropdown-item" data-pdf-url="${link.url}" data-pdf-title="${link.title}">
+        <span class="resource-item-title">${link.title}</span>
+        ${link.description ? `<span class="resource-item-desc">${link.description}</span>` : ''}
       </a>
     `;
       }
       return `
-      <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="resource-link-card">
-        <div class="resource-icon">${link.icon}</div>
-        <h3>${link.title}</h3>
-        <p>${link.description}</p>
+      <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="resource-dropdown-item">
+        <span class="resource-item-title">${link.title}</span>
+        ${link.description ? `<span class="resource-item-desc">${link.description}</span>` : ''}
       </a>
     `;
     }).join('');
 
     // Intercept PDF link clicks
-    container.querySelectorAll('.resource-link-card[data-pdf-url]').forEach(card => {
+    container.querySelectorAll('.resource-dropdown-item[data-pdf-url]').forEach(card => {
       card.addEventListener('click', (e) => {
         e.preventDefault();
         const pdfUrl = card.dataset.pdfUrl;
         const pdfTitle = card.dataset.pdfTitle || 'PDF Viewer';
+
+        // Close dropdown menu
+        const menu = document.getElementById('resource-links-dropdown');
+        if (menu) menu.style.display = 'none';
 
         // Mobile: open via Google Docs Viewer in new tab
         if (window.innerWidth <= 768) {

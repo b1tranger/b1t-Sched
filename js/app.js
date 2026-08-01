@@ -198,6 +198,7 @@ const App = {
     NoticeViewer.init();
     CRNoticeViewer.init();
     UI.initPdfViewer();
+    UI.initQuickLinksDropdown();
     this.setupAdminEventListeners();
     this.setupUserManagementListeners();
 
