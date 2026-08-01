@@ -506,7 +506,8 @@ body.dark-mode .classroom-modal-header {
     visibility: hidden;
     transition: opacity 0.2s ease, visibility 0.2s ease, background-color 0.2s, color 0.2s;
     flex-shrink: 0;
-    align-self: center;
+    align-self: flex-start;
+    margin-top: 2px;
     margin-left: 8px;
 }
 
@@ -520,6 +521,33 @@ body.dark-mode .classroom-modal-header {
     background-color: var(--classroom-green);
     color: white;
     border-color: var(--classroom-green);
+}
+
+.classroom-attachment-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background-color: var(--classroom-bg-secondary);
+    border: 1px solid var(--classroom-border);
+    border-radius: 16px;
+    color: var(--classroom-green);
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background-color 0.2s, border-color 0.2s;
+    max-width: 100%;
+}
+
+.classroom-attachment-link:hover {
+    background-color: var(--classroom-border);
+    color: var(--classroom-green);
+}
+
+.classroom-attachment-link span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 @media (max-width: 768px) {

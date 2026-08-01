@@ -1246,6 +1246,57 @@ const Classroom = {
         });
     },
 
+    handleItemClick(event, link) {
+        if (event.target.closest('a, button, input, textarea')) return;
+        if (link && link !== '#') {
+            window.open(link, '_blank');
+        }
+    },
+
+    renderItemAttachments(materials) {
+        if (!materials || !Array.isArray(materials) || materials.length === 0) return '';
+
+        const attachmentItems = materials.map(mat => {
+            let title = 'Attachment';
+            let url = '#';
+            let icon = 'fa-paperclip';
+
+            if (mat.driveFile && mat.driveFile.driveFile) {
+                title = mat.driveFile.driveFile.title || 'Google Drive File';
+                url = mat.driveFile.driveFile.alternateLink || '#';
+                icon = 'fa-file';
+            } else if (mat.youtubeVideo) {
+                title = mat.youtubeVideo.title || 'YouTube Video';
+                url = mat.youtubeVideo.alternateLink || `https://www.youtube.com/watch?v=${mat.youtubeVideo.id}`;
+                icon = 'fa-video';
+            } else if (mat.link) {
+                title = mat.link.title || mat.link.url || 'Web Link';
+                url = mat.link.url || '#';
+                icon = 'fa-link';
+            } else if (mat.form) {
+                title = mat.form.title || 'Google Form';
+                url = mat.form.formUrl || '#';
+                icon = 'fa-file-signature';
+            }
+
+            return `
+                <a href="${url}" target="_blank" rel="noopener noreferrer" class="classroom-attachment-link" onclick="event.stopPropagation();">
+                    <i class="fas ${icon}"></i>
+                    <span>${title}</span>
+                </a>
+            `;
+        }).join('');
+
+        return `
+            <div class="item-attachments" style="margin-top: 10px; display: flex; flex-direction: column; gap: 6px;">
+                <div style="font-weight: 500; font-size: 0.8rem; color: var(--classroom-text-secondary);">Attachments:</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    ${attachmentItems}
+                </div>
+            </div>
+        `;
+    },
+
     toggleItemExpand(event, btn) {
         if (event) {
             event.preventDefault();
@@ -1311,11 +1362,13 @@ const Classroom = {
         }
 
         const iconClass = type === 'todo' ? 'assignment' : (type === 'materials' ? 'material' : 'announcement');
-        const hasMoreText = fullText && (fullText.length > snippet.length || fullText.includes('\n'));
+        const hasMaterials = Boolean(item.materials && item.materials.length > 0);
+        const hasMoreText = Boolean((fullText && (fullText.length > snippet.length || fullText.includes('\n'))) || hasMaterials);
         const formattedFullText = fullText ? Utils.escapeAndLinkify(fullText) : '';
+        const attachmentsHtml = hasMaterials ? this.renderItemAttachments(item.materials) : '';
 
         return `
-            <a href="${link}" target="_blank" class="classroom-item">
+            <div class="classroom-item" onclick="Classroom.handleItemClick(event, '${link}')">
                 <div class="item-icon ${iconClass}">
                     <i class="fas fa-${icon}"></i>
                 </div>
@@ -1325,10 +1378,15 @@ const Classroom = {
                     <div class="item-meta">
                         <span class="item-date">${date}</span>
                     </div>
-                    ${snippet ? `
+                    ${(snippet || hasMaterials) ? `
                         <div class="item-snippet">
                             <span class="snippet-truncated">${snippet}</span>
-                            ${hasMoreText ? `<div class="snippet-full" style="display: none; white-space: pre-wrap; word-break: break-word; margin-top: 6px;">${formattedFullText}</div>` : ''}
+                            ${hasMoreText ? `
+                                <div class="snippet-full" style="display: none; white-space: pre-wrap; word-break: break-word; margin-top: 6px;">
+                                    ${formattedFullText}
+                                    ${attachmentsHtml}
+                                </div>
+                            ` : ''}
                         </div>
                     ` : ''}
                 </div>
@@ -1337,7 +1395,7 @@ const Classroom = {
                         <i class="fas fa-chevron-down"></i>
                     </button>
                 ` : ''}
-            </a>
+            </div>
         `;
     },
 
@@ -1472,11 +1530,13 @@ const Classroom = {
         }
 
         const iconClass = type === 'todo' ? 'assignment' : (type === 'materials' ? 'material' : 'announcement');
-        const hasMoreText = fullText && (fullText.length > snippet.length || fullText.includes('\n'));
+        const hasMaterials = Boolean(item.materials && item.materials.length > 0);
+        const hasMoreText = Boolean((fullText && (fullText.length > snippet.length || fullText.includes('\n'))) || hasMaterials);
         const formattedFullText = fullText ? Utils.escapeAndLinkify(fullText) : '';
+        const attachmentsHtml = hasMaterials ? this.renderItemAttachments(item.materials) : '';
 
         return `
-            <a href="${link}" target="_blank" class="classroom-item">
+            <div class="classroom-item" onclick="Classroom.handleItemClick(event, '${link}')">
                 <div class="item-icon ${iconClass}">
                     <i class="fas fa-${icon}"></i>
                 </div>
@@ -1485,10 +1545,15 @@ const Classroom = {
                     <div class="item-meta">
                         <span class="item-date">${date}</span>
                     </div>
-                    ${snippet ? `
+                    ${(snippet || hasMaterials) ? `
                         <div class="item-snippet">
                             <span class="snippet-truncated">${snippet}</span>
-                            ${hasMoreText ? `<div class="snippet-full" style="display: none; white-space: pre-wrap; word-break: break-word; margin-top: 6px;">${formattedFullText}</div>` : ''}
+                            ${hasMoreText ? `
+                                <div class="snippet-full" style="display: none; white-space: pre-wrap; word-break: break-word; margin-top: 6px;">
+                                    ${formattedFullText}
+                                    ${attachmentsHtml}
+                                </div>
+                            ` : ''}
                         </div>
                     ` : ''}
                 </div>
@@ -1497,7 +1562,7 @@ const Classroom = {
                         <i class="fas fa-chevron-down"></i>
                     </button>
                 ` : ''}
-            </a>
+            </div>
         `;
     }
 };
