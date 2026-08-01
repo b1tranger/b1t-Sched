@@ -1298,6 +1298,47 @@ const Classroom = {
         `;
     },
 
+    async copyItemText(event, btn) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        const item = btn.closest('.classroom-item');
+        if (!item) return;
+
+        const textToCopy = item.getAttribute('data-copy-text') || '';
+        if (!textToCopy) return;
+
+        try {
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(textToCopy);
+            } else {
+                const textArea = document.createElement('textarea');
+                textArea.value = textToCopy;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-9999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+            }
+
+            const icon = btn.querySelector('i');
+            if (icon) {
+                const originalClass = icon.className;
+                icon.className = 'fas fa-check';
+                btn.style.color = 'var(--classroom-green, #0f9d58)';
+                setTimeout(() => {
+                    icon.className = originalClass;
+                    btn.style.color = '';
+                }, 1800);
+            }
+        } catch (err) {
+            console.error('Failed to copy text:', err);
+        }
+    },
+
     toggleItemExpand(event, btn) {
         if (event) {
             event.preventDefault();
@@ -1369,8 +1410,11 @@ const Classroom = {
         const formattedFullText = rawText ? Utils.escapeAndLinkify(rawText) : '';
         const attachmentsHtml = hasMaterials ? this.renderItemAttachments(item.materials) : '';
 
+        const copyText = title ? (rawText ? `${title}\n\n${rawText}` : title) : rawText;
+        const escapedCopyText = copyText.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#039;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
         return `
-            <div class="classroom-item" onclick="Classroom.handleItemClick(event, '${link}')">
+            <div class="classroom-item" onclick="Classroom.handleItemClick(event, '${link}')" data-copy-text="${escapedCopyText}">
                 <div class="item-icon ${iconClass}">
                     <i class="fas fa-${icon}"></i>
                 </div>
@@ -1389,11 +1433,18 @@ const Classroom = {
                         </div>
                     ` : ''}
                 </div>
-                ${hasMoreText ? `
-                    <button class="classroom-item-expand-btn" onclick="Classroom.toggleItemExpand(event, this)" title="Show details">
-                        <i class="fas fa-chevron-down"></i>
-                    </button>
-                ` : ''}
+                <div class="classroom-item-actions">
+                    ${copyText ? `
+                        <button class="classroom-item-action-btn classroom-item-copy-btn" onclick="Classroom.copyItemText(event, this)" title="Copy text">
+                            <i class="far fa-copy"></i>
+                        </button>
+                    ` : ''}
+                    ${hasMoreText ? `
+                        <button class="classroom-item-action-btn classroom-item-expand-btn" onclick="Classroom.toggleItemExpand(event, this)" title="Show details">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                    ` : ''}
+                </div>
             </div>
         `;
     },
@@ -1535,8 +1586,11 @@ const Classroom = {
         const formattedFullText = rawText ? Utils.escapeAndLinkify(rawText) : '';
         const attachmentsHtml = hasMaterials ? this.renderItemAttachments(item.materials) : '';
 
+        const copyText = title ? (rawText ? `${title}\n\n${rawText}` : title) : rawText;
+        const escapedCopyText = copyText.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#039;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
         return `
-            <div class="classroom-item" onclick="Classroom.handleItemClick(event, '${link}')">
+            <div class="classroom-item" onclick="Classroom.handleItemClick(event, '${link}')" data-copy-text="${escapedCopyText}">
                 <div class="item-icon ${iconClass}">
                     <i class="fas fa-${icon}"></i>
                 </div>
@@ -1554,11 +1608,18 @@ const Classroom = {
                         </div>
                     ` : ''}
                 </div>
-                ${hasMoreText ? `
-                    <button class="classroom-item-expand-btn" onclick="Classroom.toggleItemExpand(event, this)" title="Show details">
-                        <i class="fas fa-chevron-down"></i>
-                    </button>
-                ` : ''}
+                <div class="classroom-item-actions">
+                    ${copyText ? `
+                        <button class="classroom-item-action-btn classroom-item-copy-btn" onclick="Classroom.copyItemText(event, this)" title="Copy text">
+                            <i class="far fa-copy"></i>
+                        </button>
+                    ` : ''}
+                    ${hasMoreText ? `
+                        <button class="classroom-item-action-btn classroom-item-expand-btn" onclick="Classroom.toggleItemExpand(event, this)" title="Show details">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                    ` : ''}
+                </div>
             </div>
         `;
     }
