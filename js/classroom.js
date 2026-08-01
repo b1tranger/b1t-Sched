@@ -148,15 +148,9 @@ const Classroom = {
                 this.hasExpiredSession = true;
                 localStorage.removeItem('classroom_token');
                 localStorage.removeItem('classroom_token_expiry');
-
-                // Attempt a silent token refresh if token client is ready
-                if (this.tokenClient) {
-                    try {
-                        this.tokenClient.requestAccessToken({ prompt: 'none' });
-                    } catch (e) {
-                        console.log('Silent token refresh attempt during session check:', e);
-                    }
-                }
+                this.showCachedDataWithBanner();
+            } else {
+                this.renderLoginState();
             }
             this.updateLogoutButtonVisibility();
             this._cleanupAuthPromise(false);
@@ -180,9 +174,10 @@ const Classroom = {
         const errType = typeof errObj === 'string' ? errObj : (errObj.error || errObj.error_subtype || '');
 
         // If error is silent refresh requiring interaction, preserve connection and use cached session mode
-        if (errType === 'interaction_required' || errType === 'access_denied') {
+        if (errType === 'interaction_required' || errType === 'access_denied' || errType === 'user_closed_popup') {
             console.log('[Classroom] Silent refresh requires interaction, keeping user connected with cached data');
             this.hasExpiredSession = true;
+            this.showCachedDataWithBanner();
             this._cleanupAuthPromise(false);
             return;
         }
@@ -268,35 +263,26 @@ const Classroom = {
 
         const isConnected = localStorage.getItem('classroom_connected') === 'true';
 
-        // If connected but no token, try silent refresh in background
-        if (isConnected && !this.accessToken && this.tokenClient) {
-            console.log('[Classroom] User is connected; requesting silent token refresh...');
-            try {
-                this.tokenClient.requestAccessToken({ prompt: 'none' });
-            } catch (e) {
-                console.warn('[Classroom] Silent refresh error on open:', e);
+        // 1. Valid token present -> fetch/load live courses
+        if (this.accessToken) {
+            if (this.courses.length === 0) {
+                this.fetchCoursesAndLoadAll();
+            } else {
+                this.loadAllAssignments();
             }
+            return;
         }
 
-        // If session expired, try to show cached data with a re-sign-in banner
-        if (this.hasExpiredSession && !this.accessToken) {
-            console.log('Session expired — attempting to show cached data');
+        // 2. Connected but token expired -> show cached data with Reconnect banner
+        if (isConnected) {
+            console.log('[Classroom] Session expired or no valid token — showing cached data with Reconnect banner');
+            this.hasExpiredSession = true;
             this.showCachedDataWithBanner();
             return;
         }
 
-        // If not authenticated and not connected, show login button
-        if (!this.accessToken && !isConnected) {
-            this.renderLoginState();
-        } else {
-            // Load all assignments from all courses
-            if (this.courses.length === 0) {
-                this.fetchCoursesAndLoadAll();
-            } else {
-                // Already have courses, load all assignments
-                this.loadAllAssignments();
-            }
-        }
+        // 3. Not connected -> show sign in prompt
+        this.renderLoginState();
     },
 
     toggleSidebar(open) {

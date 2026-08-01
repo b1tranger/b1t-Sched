@@ -99,8 +99,11 @@ const NoticeViewer = {
             });
         }
 
-        // Check for cached notices on init
+        // Check for cached notices on init; if none cached, auto-load from Vercel Blob storage
         this.checkCache();
+        if (!this.noticesLoaded || this.notices.length === 0) {
+            this.loadNotices(false);
+        }
     },
 
     // ──────────────────────────────────────────────
@@ -192,7 +195,7 @@ const NoticeViewer = {
         }
 
         // Show loading state
-        this.showLoadingState();
+        this.showLoadingState(forceRefresh);
         if (forceRefresh) this.isRefreshing = true;
 
         try {
@@ -233,10 +236,12 @@ const NoticeViewer = {
             if (forceRefresh) {
                 this.lastRefreshTime = Date.now();
                 const totalLoaded = this.notices.length;
-                const successMsg = `Notices updated successfully! ${totalLoaded} notice(s) available.`;
+                const successMsg = `Notices updated from backend server! ${totalLoaded} notice(s) available.`;
                 if (typeof UI !== 'undefined' && UI.showToast) {
                     UI.showToast(successMsg, 'success');
                 }
+            } else {
+                console.log(`[NoticeViewer] Loaded ${this.notices.length} notices from Vercel Blob storage`);
             }
 
             if (data.source) {
@@ -391,21 +396,27 @@ const NoticeViewer = {
     // LOADING & ERROR STATES
     // ──────────────────────────────────────────────
 
-    showLoadingState() {
+    showLoadingState(isCheckUpdates = false) {
         const loadingHTML = `
             <div class="notice-status">
                 <div class="notice-spinner"></div>
-                <span>Loading notices...</span>
+                <span>${isCheckUpdates ? 'Checking for new notices from server...' : 'Loading notices from Vercel Blob storage...'}</span>
             </div>
         `;
 
         // Desktop
         const loadPromptDesktop = document.getElementById('notice-load-prompt-desktop');
-        if (loadPromptDesktop) loadPromptDesktop.innerHTML = loadingHTML;
+        if (loadPromptDesktop) {
+            loadPromptDesktop.style.display = 'flex';
+            loadPromptDesktop.innerHTML = loadingHTML;
+        }
 
         // Mobile
         const loadPromptMobile = document.getElementById('notice-load-prompt-mobile');
-        if (loadPromptMobile) loadPromptMobile.innerHTML = loadingHTML;
+        if (loadPromptMobile) {
+            loadPromptMobile.style.display = 'flex';
+            loadPromptMobile.innerHTML = loadingHTML;
+        }
     },
 
     showErrorState(message) {
@@ -452,6 +463,10 @@ const NoticeViewer = {
                 overlay.classList.add('active');
                 if (toggle) toggle.style.display = 'none'; // Hide toggle when open
                 document.body.style.overflow = 'hidden';
+
+                if (!this.noticesLoaded || this.notices.length === 0) {
+                    this.loadNotices(false);
+                }
             } else {
                 sidebar.classList.remove('open');
                 overlay.classList.remove('active');
@@ -463,6 +478,9 @@ const NoticeViewer = {
 
     openNoticeModal() {
         UI.showModal('notice-modal');
+        if (!this.noticesLoaded || this.notices.length === 0) {
+            this.loadNotices(false);
+        }
     },
 
     closeNoticeModal() {
