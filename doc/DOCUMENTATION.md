@@ -857,6 +857,10 @@ During signup, Firebase triggers `onAuthStateChanged` immediately when the user 
 | `fetchCourseMaterials(courseId)` | string     | Promise | Fetch posted materials for a specific course ID.                                                   |
 | `openUnifiedView()`              | -          | void    | Reset `currentCourseId` to `null` and return to the default unified view feed.                     |
 | `toggleArchivedCourses()`        | -          | void    | Toggle visibility of archived classroom cards in the "My Classes" view.                            |
+| `toggleItemExpand(event, btn)`   | Event, Elem| void    | Toggle inline expansion of truncated description/text details for a Classroom list item.           |
+| `copyItemText(event, btn)`       | Event, Elem| Promise | Copy item title/caption text to system clipboard with temporary checkmark visual feedback.           |
+| `handleItemClick(event, link)`   | Event, Link| void    | Delegate row clicks to open the item URL while ignoring clicks on nested buttons and links.        |
+| `renderItemAttachments(materials)`| Array     | string  | Render Google Drive files, YouTube videos, web links, and forms as clickable attachment pills.     |
 | `updateLogoutButtonVisibility()` | -          | void    | Dynamically show or hide header Sign Out buttons based on connection state.                        |
 | `syncAssignmentsToTasks()`       | -          | void    | (Admin/CR only) Sync assignments to the main task list.                                            |
 | `logout()`                       | -          | void    | Explicitly revoke OAuth token, clear local storage connection flags, clear cache, and reset state. |
@@ -2360,6 +2364,13 @@ _Last Updated: August 1, 2026 (v2.44.0)_
 ### v2.44.0 (Latest)
 
 - **New Feature**: **Google Classroom Materials Tab** — Added a third view toggle tab (**Materials**) alongside To-Do and Notices to view all posted course materials across active courses (or within a specific course), powered by Google Classroom `/courseWorkMaterials` REST API and cached via `CacheManager`.
+- **Enhancement**: **Auto-Collapse Accordion Logic** — Updated `Classroom.toggleItemExpand()` to automatically contract any previously expanded row when a user clicks to expand a new item, maintaining a clean single-expanded-row accordion view.
+- **Enhancement**: **Seamless CSS Micro-Animations** — Added smooth `cubic-bezier(0.4, 0, 0.2, 1)` transition effects across classroom items, action buttons (`.classroom-item-action-btn`), icons, course cards, and view toggle tabs.
+- **Enhancement**: **Copy Row Caption Button** — Added a row action Copy button (`copyItemText`) beside the expand chevron on each item row in Unified and Course views to easily copy full notice text, material descriptions, or assignment titles to the system clipboard with instant checkmark visual feedback (`fa-check`).
+- **Enhancement**: **Hover Expand Dropdown & Attachment Support** — Added an interactive hover dropdown button (`.classroom-item-expand-btn`) to list item rows across Unified and Course detail views to expand truncated text inline. Expanded views automatically render Google Drive files, YouTube videos, forms, and web links (`renderItemAttachments`) as clickable pills separated by a horizontal line.
+- **Fix**: **DOM Layout Card Breakdown Fix** — Converted item card containers from `<a class="classroom-item">` to `<div class="classroom-item" onclick="Classroom.handleItemClick(event, link)">` to prevent nested linkified URLs (`<a>` tags) in announcement bodies from breaking the browser HTML parser into 3 split rows.
+- **Fix**: **Expand Button Top Alignment** — Updated `.classroom-item-expand-btn` in `classroom.css` with `align-self: flex-start; margin-top: 2px;` so the dropdown chevron button stays pinned to the top right of the row when expanded instead of floating down to the vertical center.
+- **UI Clean-up**: **Notice Window Announcement Title Removal** — Removed the repetitive hardcoded `"Announcement"` title heading from all notice list items in the Notices view to display announcement content cleanly.
 - **Enhancement**: **Archived Classrooms Management** — Updated Google Classroom course fetching to include archived courses while hiding them by default in "My Classes". Added a **"Show archived classrooms"** toggle button at the bottom of the course list, and ensured unified feeds strictly filter out content from archived classrooms.
 - **Fix**: **Header Sign Out Button Visibility** — Header Sign Out buttons (`#logout-classroom-sidebar` and `#logout-classroom-modal`) start hidden when unauthenticated and are dynamically shown only when an active/connected Google Classroom session exists.
 
