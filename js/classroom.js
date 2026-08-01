@@ -1524,11 +1524,11 @@ const Classroom = {
         // Header with Back button and Toggle
         const headerHtml = `
             <div class="classroom-view-header">
-                <div style="display: flex; align-items: center;">
+                <div class="classroom-view-header-title">
                     <button class="classroom-back-btn" onclick="Classroom.renderCourseList()">
                         <i class="fas fa-arrow-left"></i>
                     </button>
-                    <span style="font-weight: 500; font-size: 1.1rem; max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    <span class="classroom-course-title-text">
                         ${course ? course.name : 'Course Details'}
                     </span>
                 </div>
