@@ -855,6 +855,7 @@ During signup, Firebase triggers `onAuthStateChanged` immediately when the user 
 | `fetchCoursesAndLoadAll()`       | -          | void    | Batch load active/archived courses and load unified items based on `currentView`.                  |
 | `loadAllMaterials()`             | -          | Promise | Fetch posted materials across all active courses within the date cutoff and render.                |
 | `fetchCourseMaterials(courseId)` | string     | Promise | Fetch posted materials for a specific course ID.                                                   |
+| `openUnifiedView()`              | -          | void    | Reset `currentCourseId` to `null` and return to the default unified view feed.                     |
 | `toggleArchivedCourses()`        | -          | void    | Toggle visibility of archived classroom cards in the "My Classes" view.                            |
 | `updateLogoutButtonVisibility()` | -          | void    | Dynamically show or hide header Sign Out buttons based on connection state.                        |
 | `syncAssignmentsToTasks()`       | -          | void    | (Admin/CR only) Sync assignments to the main task list.                                            |
