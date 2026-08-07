@@ -25,6 +25,11 @@ const Classroom = {
 
     // Cache
     cache: {},
+    inMemoryCache: {
+        assignments: null,
+        announcements: null,
+        materials: null
+    },
     cacheManager: null,
     JSON_CACHE_KEY: 'classroom_cached_json',
 
@@ -62,7 +67,9 @@ const Classroom = {
                 jsonCache.courses = this.courses;
             }
 
-            if (dataType === 'assignments') {
+            if (dataType === 'courses') {
+                jsonCache.courses = data || [];
+            } else if (dataType === 'assignments') {
                 jsonCache.assignments = data || [];
             } else if (dataType === 'announcements') {
                 jsonCache.announcements = data || [];
@@ -103,6 +110,84 @@ const Classroom = {
         } catch (e) {
             console.warn('[Classroom] Error clearing JSON cache:', e);
         }
+    },
+
+    // Merge newly fetched API items with existing cache, skipping unchanged items
+    mergeAndSkipUnchanged(dataType, freshItems) {
+        if (!freshItems || !Array.isArray(freshItems)) return [];
+
+        let existingItems = [];
+        if (this.inMemoryCache && this.inMemoryCache[dataType]) {
+            existingItems = this.inMemoryCache[dataType];
+        } else {
+            const jsonCache = this.getJsonCache();
+            if (jsonCache && jsonCache[dataType]) {
+                existingItems = jsonCache[dataType];
+            }
+        }
+
+        const existingMap = new Map();
+        existingItems.forEach(item => {
+            if (item && item.id) {
+                existingMap.set(item.id, item);
+            }
+        });
+
+        let skippedCount = 0;
+        let updatedCount = 0;
+        let newCount = 0;
+
+        const mergedItems = freshItems.map(item => {
+            if (!item || !item.id) return item;
+            const existing = existingMap.get(item.id);
+            if (existing) {
+                const freshTime = item.updateTime || item.creationTime || (item.dueDate ? `${item.dueDate.year}-${item.dueDate.month}-${item.dueDate.day}` : '');
+                const existingTime = existing.updateTime || existing.creationTime || (existing.dueDate ? `${existing.dueDate.year}-${existing.dueDate.month}-${existing.dueDate.day}` : '');
+
+                if (freshTime && existingTime && freshTime === existingTime) {
+                    skippedCount++;
+                    return existing; // Skip updating, retain existing loaded object
+                } else {
+                    updatedCount++;
+                    return item;
+                }
+            } else {
+                newCount++;
+                return item;
+            }
+        });
+
+        console.log(`[Classroom] Sync stats for ${dataType}: ${freshItems.length} items fetched (${skippedCount} unchanged/skipped, ${updatedCount} updated, ${newCount} new)`);
+
+        if (!this.inMemoryCache) this.inMemoryCache = {};
+        this.inMemoryCache[dataType] = mergedItems;
+        return mergedItems;
+    },
+
+    // Helper to retrieve data from in-memory cache, CacheManager, or JSON template cache
+    async getOrFetchData(type) {
+        if (this.inMemoryCache && this.inMemoryCache[type] && this.inMemoryCache[type].length > 0) {
+            return this.inMemoryCache[type];
+        }
+
+        this.initCacheManager();
+        if (this.cacheManager) {
+            const cached = await this.cacheManager.getCachedClassroomData(type);
+            if (cached && cached.data && cached.data.length > 0) {
+                if (!this.inMemoryCache) this.inMemoryCache = {};
+                this.inMemoryCache[type] = cached.data;
+                return cached.data;
+            }
+        }
+
+        const jsonCache = this.getJsonCache();
+        if (jsonCache && jsonCache[type]) {
+            if (!this.inMemoryCache) this.inMemoryCache = {};
+            this.inMemoryCache[type] = jsonCache[type];
+            return jsonCache[type];
+        }
+
+        return [];
     },
 
     // Toggle and render persistent bottom cached content footer
@@ -524,7 +609,7 @@ const Classroom = {
     },
 
     async fetchCoursesAndLoadAll() {
-        this.renderLoading('Loading courses...');
+        this.renderLoading('Loading courses and contents...');
 
         try {
             const response = await fetch('https://classroom.googleapis.com/v1/courses?courseStates=ACTIVE&courseStates=ARCHIVED', {
@@ -537,86 +622,64 @@ const Classroom = {
 
             const data = await response.json();
             this.courses = data.courses || [];
+            this.saveJsonCache('courses', this.courses);
 
-            // Reset current course when loading all
-            this.currentCourseId = null;
+            // Fetch assignments, announcements, and materials in parallel
+            await this.fetchAllContentData();
 
-            // After loading courses, load all items based on current view
-            if (this.currentView === 'todo') {
-                await this.loadAllAssignments();
-            } else if (this.currentView === 'notifications') {
-                await this.loadAllAnnouncements();
-            } else if (this.currentView === 'materials') {
-                await this.loadAllMaterials();
-            }
+            // Render current view or course details
+            await this.renderCurrentView();
 
         } catch (error) {
             console.error(error);
-            this.renderError('Failed to load courses. Please try logging in again.');
-            this.accessToken = null; // Reset token on failure
+            if (this.getJsonCache()) {
+                console.log('[Classroom] Network error fetching live data, falling back to cached content');
+                this.hasExpiredSession = true;
+                await this.showCachedDataWithBanner();
+            } else {
+                this.renderError('Failed to load courses. Please try logging in again.');
+                this.accessToken = null; // Reset token on failure
+            }
         }
     },
 
-    async loadAllAssignments() {
-        this.currentView = 'todo';
-
-        // Initialize cache manager
+    async fetchAllContentData() {
         this.initCacheManager();
+        console.log('[Classroom] Batch pre-fetching assignments, announcements, and materials...');
+        const results = await Promise.allSettled([
+            this.fetchAssignmentsData(),
+            this.fetchAnnouncementsData(),
+            this.fetchMaterialsData()
+        ]);
+        console.log('[Classroom] All classroom contents pre-fetched and cached together');
+        return results;
+    },
 
-        // Check for cached data first
-        if (this.cacheManager) {
-            const cachedData = await this.cacheManager.getCachedClassroomData('assignments');
-            if (cachedData && cachedData.fresh) {
-                console.log('[Classroom] Using cached assignments data');
-                this.renderAllItems(cachedData.data, 'todo');
-                return;
-            }
-        }
-
-        this.renderLoading('Loading assignments from all courses...');
-
+    async fetchAssignmentsData() {
         try {
             const allAssignments = [];
-
-            // Set cutoff date based on configuration
             const cutoffDate = new Date();
             cutoffDate.setMonth(cutoffDate.getMonth() - this.DATE_FILTER_MONTHS);
-            console.log(`Filtering assignments from the last ${this.DATE_FILTER_MONTHS} months (since ${cutoffDate.toLocaleDateString()})`);
 
-            // Fetch assignments from all ACTIVE courses only
             for (const course of this.courses) {
-                // Skip if course is not ACTIVE
-                if (course.courseState !== 'ACTIVE') {
-                    console.log(`Skipping non-active course: ${course.name} (${course.courseState})`);
-                    continue;
-                }
+                if (course.courseState !== 'ACTIVE') continue;
 
                 try {
                     const response = await fetch(`https://classroom.googleapis.com/v1/courses/${course.id}/courseWork?orderBy=dueDate desc`, {
-                        headers: {
-                            'Authorization': `Bearer ${this.accessToken}`
-                        }
+                        headers: { 'Authorization': `Bearer ${this.accessToken}` }
                     });
 
                     if (response.ok) {
                         const data = await response.json();
                         const courseWork = data.courseWork || [];
 
-                        // Filter by date and add course info to each assignment
                         courseWork.forEach(work => {
-                            // Check if assignment has a due date
                             if (work.dueDate) {
                                 const dueDate = new Date(work.dueDate.year, work.dueDate.month - 1, work.dueDate.day);
-                                // Skip assignments older than cutoff date
-                                if (dueDate < cutoffDate) {
-                                    return;
-                                }
+                                if (dueDate < cutoffDate) return;
                             } else if (work.creationTime) {
-                                // If no due date, check creation time
                                 const creationDate = new Date(work.creationTime);
-                                if (creationDate < cutoffDate) {
-                                    return;
-                                }
+                                if (creationDate < cutoffDate) return;
                             }
 
                             work.courseName = course.name;
@@ -630,7 +693,6 @@ const Classroom = {
                 }
             }
 
-            // Sort by due date (most recent first)
             allAssignments.sort((a, b) => {
                 if (!a.dueDate) return 1;
                 if (!b.dueDate) return -1;
@@ -639,85 +701,46 @@ const Classroom = {
                 return dateA - dateB;
             });
 
-            console.log(`Loaded ${allAssignments.length} assignments from ${this.courses.filter(c => c.courseState === 'ACTIVE').length} active courses`);
+            // Incremental sync & merge
+            const mergedAssignments = this.mergeAndSkipUnchanged('assignments', allAssignments);
 
-            // Cache the data
             if (this.cacheManager) {
-                await this.cacheManager.cacheClassroomData('assignments', allAssignments);
+                await this.cacheManager.cacheClassroomData('assignments', mergedAssignments);
             }
-            this.saveJsonCache('assignments', allAssignments);
-            if (this.accessToken) {
-                this.updateBottomCachedFooter(false);
-            }
-
-            this.renderAllItems(allAssignments, 'todo');
+            this.saveJsonCache('assignments', mergedAssignments);
+            return mergedAssignments;
 
         } catch (error) {
-            console.error(error);
-            this.renderError('Failed to load assignments.');
+            console.error('[Classroom] Error fetching assignments data:', error);
+            return [];
         }
     },
 
-    async loadAllAnnouncements() {
-        this.currentView = 'notifications';
-
-        // Initialize cache manager
-        this.initCacheManager();
-
-        // Check for cached data first
-        if (this.cacheManager) {
-            const cachedData = await this.cacheManager.getCachedClassroomData('announcements');
-            if (cachedData && cachedData.fresh) {
-                console.log('[Classroom] Using cached announcements data');
-                this.renderAllItems(cachedData.data, 'notifications');
-                return;
-            }
-        }
-
-        this.renderLoading('Loading announcements from all courses...');
-
+    async fetchAnnouncementsData() {
         try {
             const allAnnouncements = [];
-
-            // Set cutoff date based on configuration
             const cutoffDate = new Date();
             cutoffDate.setMonth(cutoffDate.getMonth() - this.DATE_FILTER_MONTHS);
-            console.log(`Filtering announcements from the last ${this.DATE_FILTER_MONTHS} months (since ${cutoffDate.toLocaleDateString()})`);
 
-            // Fetch announcements from all ACTIVE courses only
             for (const course of this.courses) {
-                // Skip if course is not ACTIVE
-                if (course.courseState !== 'ACTIVE') {
-                    console.log(`Skipping non-active course: ${course.name} (${course.courseState})`);
-                    continue;
-                }
+                if (course.courseState !== 'ACTIVE') continue;
 
                 try {
                     const response = await fetch(`https://classroom.googleapis.com/v1/courses/${course.id}/announcements?orderBy=updateTime desc`, {
-                        headers: {
-                            'Authorization': `Bearer ${this.accessToken}`
-                        }
+                        headers: { 'Authorization': `Bearer ${this.accessToken}` }
                     });
 
                     if (response.ok) {
                         const data = await response.json();
                         const announcements = data.announcements || [];
 
-                        // Filter by date and add course info to each announcement
                         announcements.forEach(announcement => {
-                            // Check update time
                             if (announcement.updateTime) {
                                 const updateDate = new Date(announcement.updateTime);
-                                // Skip announcements older than cutoff date
-                                if (updateDate < cutoffDate) {
-                                    return;
-                                }
+                                if (updateDate < cutoffDate) return;
                             } else if (announcement.creationTime) {
-                                // Fallback to creation time
                                 const creationDate = new Date(announcement.creationTime);
-                                if (creationDate < cutoffDate) {
-                                    return;
-                                }
+                                if (creationDate < cutoffDate) return;
                             }
 
                             announcement.courseName = course.name;
@@ -731,76 +754,43 @@ const Classroom = {
                 }
             }
 
-            // Sort by update time (most recent first)
             allAnnouncements.sort((a, b) => {
                 return new Date(b.updateTime) - new Date(a.updateTime);
             });
 
-            console.log(`Loaded ${allAnnouncements.length} announcements from ${this.courses.filter(c => c.courseState === 'ACTIVE').length} active courses`);
+            // Incremental sync & merge
+            const mergedAnnouncements = this.mergeAndSkipUnchanged('announcements', allAnnouncements);
 
-            // Cache the data
             if (this.cacheManager) {
-                await this.cacheManager.cacheClassroomData('announcements', allAnnouncements);
+                await this.cacheManager.cacheClassroomData('announcements', mergedAnnouncements);
             }
-            this.saveJsonCache('announcements', allAnnouncements);
-            if (this.accessToken) {
-                this.updateBottomCachedFooter(false);
-            }
-
-            this.renderAllItems(allAnnouncements, 'notifications');
+            this.saveJsonCache('announcements', mergedAnnouncements);
+            return mergedAnnouncements;
 
         } catch (error) {
-            console.error(error);
-            this.renderError('Failed to load announcements.');
+            console.error('[Classroom] Error fetching announcements data:', error);
+            return [];
         }
     },
 
-    async loadAllMaterials() {
-        this.currentView = 'materials';
-
-        // Initialize cache manager
-        this.initCacheManager();
-
-        // Check for cached data first
-        if (this.cacheManager) {
-            const cachedData = await this.cacheManager.getCachedClassroomData('materials');
-            if (cachedData && cachedData.fresh) {
-                console.log('[Classroom] Using cached materials data');
-                this.renderAllItems(cachedData.data, 'materials');
-                return;
-            }
-        }
-
-        this.renderLoading('Loading materials from all courses...');
-
+    async fetchMaterialsData() {
         try {
             const allMaterials = [];
-
-            // Set cutoff date based on configuration
             const cutoffDate = new Date();
             cutoffDate.setMonth(cutoffDate.getMonth() - this.DATE_FILTER_MONTHS);
-            console.log(`Filtering materials from the last ${this.DATE_FILTER_MONTHS} months (since ${cutoffDate.toLocaleDateString()})`);
 
-            // Fetch materials from all ACTIVE courses only
             for (const course of this.courses) {
-                // Skip if course is not ACTIVE
-                if (course.courseState !== 'ACTIVE') {
-                    console.log(`Skipping non-active course: ${course.name} (${course.courseState})`);
-                    continue;
-                }
+                if (course.courseState !== 'ACTIVE') continue;
 
                 try {
                     const response = await fetch(`https://classroom.googleapis.com/v1/courses/${course.id}/courseWorkMaterials`, {
-                        headers: {
-                            'Authorization': `Bearer ${this.accessToken}`
-                        }
+                        headers: { 'Authorization': `Bearer ${this.accessToken}` }
                     });
 
                     if (response.ok) {
                         const data = await response.json();
                         const materialsList = data.courseWorkMaterial || [];
 
-                        // Filter by date and add course info to each material item
                         materialsList.forEach(mat => {
                             if (mat.updateTime) {
                                 const updateDate = new Date(mat.updateTime);
@@ -821,106 +811,74 @@ const Classroom = {
                 }
             }
 
-            // Sort by updateTime / creationTime descending
             allMaterials.sort((a, b) => {
                 const timeA = new Date(a.updateTime || a.creationTime || 0);
                 const timeB = new Date(b.updateTime || b.creationTime || 0);
                 return timeB - timeA;
             });
 
-            console.log(`Loaded ${allMaterials.length} materials from ${this.courses.filter(c => c.courseState === 'ACTIVE').length} active courses`);
+            // Incremental sync & merge
+            const mergedMaterials = this.mergeAndSkipUnchanged('materials', allMaterials);
 
-            // Cache the data
             if (this.cacheManager) {
-                await this.cacheManager.cacheClassroomData('materials', allMaterials);
+                await this.cacheManager.cacheClassroomData('materials', mergedMaterials);
             }
-            this.saveJsonCache('materials', allMaterials);
-            if (this.accessToken) {
-                this.updateBottomCachedFooter(false);
-            }
-
-            this.renderAllItems(allMaterials, 'materials');
+            this.saveJsonCache('materials', mergedMaterials);
+            return mergedMaterials;
 
         } catch (error) {
-            console.error(error);
-            this.renderError('Failed to load materials.');
+            console.error('[Classroom] Error fetching materials data:', error);
+            return [];
         }
+    },
+
+    async renderCurrentView() {
+        const type = this.currentView === 'notifications' ? 'announcements' : (this.currentView === 'materials' ? 'materials' : 'assignments');
+        const items = await this.getOrFetchData(type);
+
+        if (this.accessToken && !this.hasExpiredSession) {
+            this.updateBottomCachedFooter(false);
+        }
+
+        if (this.currentCourseId) {
+            const courseItems = items.filter(item => item.courseId === this.currentCourseId);
+            this.renderCourseDetails(this.currentCourseId, courseItems, this.currentView);
+        } else {
+            this.renderAllItems(items, this.currentView);
+        }
+    },
+
+    async loadAllAssignments() {
+        this.currentView = 'todo';
+        await this.renderCurrentView();
+    },
+
+    async loadAllAnnouncements() {
+        this.currentView = 'notifications';
+        await this.renderCurrentView();
+    },
+
+    async loadAllMaterials() {
+        this.currentView = 'materials';
+        await this.renderCurrentView();
     },
 
     async fetchCourseWork(courseId) {
-        this.renderLoading('Loading assignments...');
-
-        try {
-            const response = await fetch(`https://classroom.googleapis.com/v1/courses/${courseId}/courseWork?orderBy=dueDate desc`, {
-                headers: {
-                    'Authorization': `Bearer ${this.accessToken}`
-                }
-            });
-
-            if (!response.ok) throw new Error('Failed to fetch course work');
-
-            const data = await response.json();
-            const courseWork = data.courseWork || [];
-
-            this.renderCourseDetails(courseId, courseWork, 'todo');
-
-        } catch (error) {
-            console.error(error);
-            this.renderError('Failed to load assignments.');
-        }
+        this.currentCourseId = courseId;
+        this.currentView = 'todo';
+        await this.renderCurrentView();
     },
 
     async fetchAnnouncements(courseId) {
-        this.renderLoading('Loading announcements...');
-
-        try {
-            const response = await fetch(`https://classroom.googleapis.com/v1/courses/${courseId}/announcements?orderBy=updateTime desc`, {
-                headers: {
-                    'Authorization': `Bearer ${this.accessToken}`
-                }
-            });
-
-            if (!response.ok) throw new Error('Failed to fetch announcements');
-
-            const data = await response.json();
-            const announcements = data.announcements || [];
-
-            this.renderCourseDetails(courseId, announcements, 'notifications');
-
-        } catch (error) {
-            console.error(error);
-            this.renderError('Failed to load announcements.');
-        }
+        this.currentCourseId = courseId;
+        this.currentView = 'notifications';
+        await this.renderCurrentView();
     },
 
     async fetchCourseMaterials(courseId) {
-        this.renderLoading('Loading materials...');
-
-        try {
-            const response = await fetch(`https://classroom.googleapis.com/v1/courses/${courseId}/courseWorkMaterials`, {
-                headers: {
-                    'Authorization': `Bearer ${this.accessToken}`
-                }
-            });
-
-            if (!response.ok) throw new Error('Failed to fetch materials');
-
-            const data = await response.json();
-            const materialsList = data.courseWorkMaterial || [];
-
-            // Sort by updateTime or creationTime desc
-            materialsList.sort((a, b) => {
-                const timeA = new Date(a.updateTime || a.creationTime || 0);
-                const timeB = new Date(b.updateTime || b.creationTime || 0);
-                return timeB - timeA;
-            });
-
-            this.renderCourseDetails(courseId, materialsList, 'materials');
-
-        } catch (error) {
-            console.error(error);
-            this.renderError('Failed to load materials.');
-        }
+        this.currentCourseId = courseId;
+        this.currentView = 'materials';
+        await this.renderCurrentView();
     },
 
     // =========================================
@@ -1037,8 +995,13 @@ const Classroom = {
                 timeLabel = `${minsAgo} minute${minsAgo > 1 ? 's' : ''} ago`;
             }
 
-            // Render the cached items
-            this.renderAllItems(cachedItems, this.currentView);
+            // Render cached items for current course or unified view
+            if (this.currentCourseId) {
+                const courseItems = cachedItems.filter(item => item.courseId === this.currentCourseId);
+                this.renderCourseDetails(this.currentCourseId, courseItems, this.currentView);
+            } else {
+                this.renderAllItems(cachedItems, this.currentView);
+            }
 
             // Activate persistent bottom footer banner & Reconnect button
             this.updateBottomCachedFooter(true, timeLabel);
@@ -1075,10 +1038,29 @@ const Classroom = {
     },
 
     renderCourseList() {
-        // If session is expired, show the cached data view instead
+        if (this.courses.length === 0) {
+            const jsonCache = this.getJsonCache();
+            if (jsonCache && jsonCache.courses && jsonCache.courses.length > 0) {
+                this.courses = jsonCache.courses;
+            }
+        }
+
         if (this.hasExpiredSession) {
-            this.showCachedDataWithBanner();
-            return;
+            const jsonCache = this.getJsonCache();
+            let timeLabel = '';
+            if (jsonCache && jsonCache.timestamp) {
+                const hoursAgo = Math.floor((Date.now() - jsonCache.timestamp) / (1000 * 60 * 60));
+                const minsAgo = Math.floor((Date.now() - jsonCache.timestamp) / (1000 * 60));
+                if (hoursAgo >= 24) {
+                    const daysAgo = Math.floor(hoursAgo / 24);
+                    timeLabel = `${daysAgo} day${daysAgo > 1 ? 's' : ''} ago`;
+                } else if (hoursAgo >= 1) {
+                    timeLabel = `${hoursAgo} hour${hoursAgo > 1 ? 's' : ''} ago`;
+                } else {
+                    timeLabel = `${minsAgo} minute${minsAgo > 1 ? 's' : ''} ago`;
+                }
+            }
+            this.updateBottomCachedFooter(true, timeLabel);
         }
 
         if (this.courses.length === 0) {
@@ -1273,7 +1255,8 @@ const Classroom = {
             return;
         }
 
-        // Clear cached data so we get fresh results
+        // Clear in-memory cache and CacheManager entries for a fresh sync
+        this.inMemoryCache = { assignments: null, announcements: null, materials: null };
         this.initCacheManager();
         if (this.cacheManager) {
             const cache = await caches.open(this.cacheManager.CACHE_NAME);
@@ -1283,7 +1266,7 @@ const Classroom = {
             console.log('[Classroom] Cleared cached classroom data for refresh');
         }
 
-        // Re-fetch courses and reload
+        // Re-fetch courses and reload all
         this.courses = [];
         await this.fetchCoursesAndLoadAll();
     },
@@ -1580,47 +1563,27 @@ const Classroom = {
         `;
     },
 
-    openCourse(courseId) {
+    async openCourse(courseId) {
         this.currentCourseId = courseId;
         this.currentView = 'todo'; // Default view
-        
-        // If session is expired, simply re-render the cached data
-        if (this.hasExpiredSession) {
-            this.showCachedDataWithBanner();
+
+        if (this.hasExpiredSession || !this.accessToken) {
+            await this.showCachedDataWithBanner();
             return;
         }
 
-        this.fetchCourseWork(courseId);
+        await this.renderCurrentView();
     },
 
-    switchView(view) {
+    async switchView(view) {
         this.currentView = view;
-        
-        // If session is expired, simply re-render the cached data for the new view
-        if (this.hasExpiredSession) {
-            this.showCachedDataWithBanner();
+
+        if (this.hasExpiredSession || !this.accessToken) {
+            await this.showCachedDataWithBanner();
             return;
         }
 
-        if (this.currentCourseId) {
-            // If viewing a specific course, fetch only for that course
-            if (view === 'todo') {
-                this.fetchCourseWork(this.currentCourseId);
-            } else if (view === 'notifications') {
-                this.fetchAnnouncements(this.currentCourseId);
-            } else if (view === 'materials') {
-                this.fetchCourseMaterials(this.currentCourseId);
-            }
-        } else {
-            // Otherwise load all courses
-            if (view === 'todo') {
-                this.loadAllAssignments();
-            } else if (view === 'notifications') {
-                this.loadAllAnnouncements();
-            } else if (view === 'materials') {
-                this.loadAllMaterials();
-            }
-        }
+        await this.renderCurrentView();
     },
 
     renderCourseDetails(courseId, items, viewType) {
