@@ -505,11 +505,11 @@ The module automatically listens for user activity events (`mousedown`, `keydown
 
 #### Metadata Operations
 
-| Method                              | Parameters     | Returns                 | Description               |
-| ----------------------------------- | -------------- | ----------------------- | ------------------------- |
-| `getDepartments()`                  | -              | `{success, data/error}` | Get list of departments   |
-| `getSemesters()`                    | -              | `{success, data/error}` | Get list of semesters     |
-| `getSections(department, semester)` | string, string | `{success, data/error}` | Get sections for dept/sem |
+| Method                              | Parameters     | Returns                 | Description                                                                                                   |
+| ----------------------------------- | -------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `getDepartments()`                  | -              | `{success, data/error}` | Get list of departments (prioritizes fresh server fetch, multi-structure support, graceful fallback)          |
+| `getSemesters()`                    | -              | `{success, data/error}` | Get list of semesters (prioritizes fresh server fetch, multi-structure support, includes alumni / special)   |
+| `getSections(department, semester)` | string, string | `{success, data/error}` | Get sections for dept/sem (case-insensitive key matching with automatic default fallback)                    |
 
 ---
 
@@ -2370,7 +2370,17 @@ _Last Updated: August 1, 2026 (v2.44.0)_
 
 ## Version History
 
-### v2.44.0 (Latest)
+### v2.45.0 (Latest)
+
+- **Fix & Enhancement**: **Dynamic Department & Metadata Options Architecture** — Resolved issue where adding new department options in Firebase Firestore did not reflect in frontend dropdown selectors.
+  - **Server-Priority Fetching**: Configured `DB.getDepartments()`, `DB.getSemesters()`, and `DB.getSections()` to prioritize fetching fresh metadata directly from the Firestore server (`source: 'server'`), preventing stale cache issues caused by offline IndexedDB persistence.
+  - **Multi-Structure Document Support**: Added flexible parsing across various Firestore data formats (`list`, `departments`, `options`, `values`, `items`, `data`, comma-separated strings, numeric-keyed arrays, and key-value maps) and standalone `departments` collections.
+  - **Dynamic Event Department Selectors**: Replaced hardcoded department options in `event-department` and `edit-event-department` modals in `index.html` with dynamic populator `App.populateEventDepartmentDropdown()`, ensuring all configured departments are available when creating or editing events.
+  - **Comprehensive Faculty Filter**: Updated `App.setupFacultyDepartmentFilter()` to load all configured departments from Firestore metadata in addition to active tasks.
+  - **Dropdown State Preservation**: Enhanced `UI.populateDropdown()` to preserve user selections when dropdowns are re-populated dynamically.
+  - **Onboarding Route Listener**: Added explicit `set-details` route handling to `Router.onRouteChange` so onboarding department selectors load reliably on direct navigation and refreshes.
+
+### v2.44.0
 
 - **New Feature**: **Google Classroom Materials Tab** — Added a third view toggle tab (**Materials**) alongside To-Do and Notices to view all posted course materials across active courses (or within a specific course), powered by Google Classroom `/courseWorkMaterials` REST API and cached via `CacheManager`.
 - **Enhancement**: **Auto-Collapse Accordion Logic** — Updated `Classroom.toggleItemExpand()` to automatically contract any previously expanded row when a user clicks to expand a new item, maintaining a clean single-expanded-row accordion view.

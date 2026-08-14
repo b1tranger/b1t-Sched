@@ -238,6 +238,8 @@ const App = {
 
       if (route === 'profile-settings') {
         await Profile.loadProfile();
+      } else if (route === 'set-details') {
+        await this.loadSetDetailsForm();
       } else if (route === 'dashboard') {
         await this.loadDashboardData();
       } else if (route === 'user-management') {
@@ -799,13 +801,17 @@ const App = {
     document.getElementById('edit-event-title').value = event.title || '';
     document.getElementById('edit-event-description').value = event.description || '';
 
+    // Populate dynamic departments for event modal
+    await this.populateEventDepartmentDropdown('edit-event-department', event.department || 'ALL');
+
     // CR and Faculty can only edit events for their own department
     const deptSelect = document.getElementById('edit-event-department');
-    deptSelect.value = event.department || 'ALL';
     if ((this.isCR || this.isFaculty) && !this.isAdmin) {
-      deptSelect.value = this.userProfile.department;
-      deptSelect.disabled = true;
-    } else {
+      if (deptSelect) {
+        deptSelect.value = this.userProfile.department;
+        deptSelect.disabled = true;
+      }
+    } else if (deptSelect) {
       deptSelect.disabled = false;
     }
 
@@ -1937,7 +1943,7 @@ const App = {
     }
   },
 
-  setupFacultyDepartmentFilter() {
+  async setupFacultyDepartmentFilter() {
     const filterContainer = document.getElementById('faculty-department-filter');
     const filterSelect = document.getElementById('faculty-dept-filter');
 
@@ -1946,8 +1952,10 @@ const App = {
     // Show the filter for Faculty users
     filterContainer.style.display = 'flex';
 
-    // Populate department options from current tasks
-    const departments = new Set();
+    // Populate department options from metadata + current tasks
+    const deptResult = await DB.getDepartments();
+    const departments = new Set(deptResult.success ? deptResult.data : []);
+
     this.currentTasks.forEach(task => {
       if (task.addedByRole === 'Faculty' && task.department) {
         departments.add(task.department);
@@ -1966,9 +1974,9 @@ const App = {
     });
 
     // Add change event listener
-    filterSelect.addEventListener('change', (e) => {
+    filterSelect.onchange = (e) => {
       this.filterTasksByDepartment(e.target.value);
-    });
+    };
   },
 
   filterTasksByDepartment(department) {
@@ -2206,7 +2214,32 @@ const App = {
     }
   },
 
-  openAddEventModal() {
+  async populateEventDepartmentDropdown(selectId, selectedValue = 'ALL') {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+
+    const deptResult = await DB.getDepartments();
+    const depts = deptResult.success && deptResult.data.length > 0 ? deptResult.data : ['CSE', 'IT', 'CE', 'EEE', 'BBA'];
+
+    select.innerHTML = '<option value="ALL">All Departments</option>';
+    depts.forEach(dept => {
+      const option = document.createElement('option');
+      option.value = dept;
+      option.textContent = `${dept} Only`;
+      if (selectedValue && (selectedValue === dept || selectedValue === `${dept} Only`)) {
+        option.selected = true;
+      }
+      select.appendChild(option);
+    });
+
+    if (selectedValue === 'ALL') {
+      select.value = 'ALL';
+    } else if (selectedValue) {
+      select.value = selectedValue;
+    }
+  },
+
+  async openAddEventModal() {
     // Set minimum date to now
     const dateInput = document.getElementById('event-date');
     if (dateInput) {
@@ -2217,6 +2250,9 @@ const App = {
 
     // Clear form
     document.getElementById('add-event-form').reset();
+
+    // Populate dynamic departments
+    await this.populateEventDepartmentDropdown('event-department', 'ALL');
 
     // CR can only add events for their own department
     const deptSelect = document.getElementById('event-department');

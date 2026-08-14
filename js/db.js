@@ -402,48 +402,187 @@ const DB = {
 
   // Metadata operations
   async getDepartments() {
-    try {
-      const doc = await db.collection('metadata').doc('departments').get();
-      if (doc.exists) {
-        return { success: true, data: doc.data().list || [] };
+    const defaultDepartments = ['CSE', 'IT', 'CE', 'EEE', 'BBA'];
+
+    const parseDepartmentsFromData = (data) => {
+      if (!data) return [];
+
+      const arrayCandidates = [
+        data.list,
+        data.departments,
+        data.options,
+        data.values,
+        data.items,
+        data.data,
+        Array.isArray(data) ? data : null
+      ];
+
+      for (const candidate of arrayCandidates) {
+        if (Array.isArray(candidate) && candidate.length > 0) {
+          const parsed = candidate.map(item => {
+            if (typeof item === 'string') return item.trim();
+            if (item && typeof item === 'object') {
+              return (item.name || item.id || item.code || item.value || item.title || Object.values(item)[0] || '').toString().trim();
+            }
+            return String(item).trim();
+          }).filter(Boolean);
+          if (parsed.length > 0) return parsed;
+        } else if (typeof candidate === 'string' && candidate.trim()) {
+          const parsed = candidate.split(/[,;\n]+/).map(s => s.trim()).filter(Boolean);
+          if (parsed.length > 0) return parsed;
+        }
       }
-      return { success: true, data: ['CSE', 'IT', 'CE', 'EEE', 'BBA'] };
+
+      if (typeof data === 'object' && !Array.isArray(data)) {
+        const ignoreKeys = ['createdAt', 'updatedAt', 'updated_at', 'lastUpdated', 'timestamp', '_id'];
+        const keys = Object.keys(data).filter(k => !ignoreKeys.includes(k));
+
+        const isNumericKeys = keys.length > 0 && keys.every(k => !isNaN(Number(k)));
+        if (isNumericKeys) {
+          const values = keys.map(k => typeof data[k] === 'string' ? data[k].trim() : (data[k]?.name || data[k]?.id || String(data[k])).trim()).filter(Boolean);
+          if (values.length > 0) return values;
+        }
+
+        const stringValues = keys.map(k => data[k]).filter(v => typeof v === 'string' && v.trim() && v !== 'true' && v !== 'false');
+        if (stringValues.length > 0) {
+          return stringValues.map(s => s.trim());
+        }
+
+        if (keys.length > 0) {
+          return keys.map(k => k.trim()).filter(Boolean);
+        }
+      }
+
+      return [];
+    };
+
+    try {
+      let doc = null;
+      try {
+        doc = await db.collection('metadata').doc('departments').get({ source: 'server' });
+      } catch (serverErr) {
+        doc = await db.collection('metadata').doc('departments').get();
+      }
+
+      if (doc && doc.exists) {
+        const depts = parseDepartmentsFromData(doc.data());
+        if (depts.length > 0) {
+          return { success: true, data: depts };
+        }
+      }
+
+      // Check if departments are stored as documents in a 'departments' collection
+      try {
+        const colSnap = await db.collection('departments').get();
+        if (!colSnap.empty) {
+          const colDepts = [];
+          colSnap.forEach(d => {
+            const data = d.data();
+            const name = data.name || data.title || data.id || data.code || d.id;
+            if (name) colDepts.push(String(name).trim());
+          });
+          if (colDepts.length > 0) {
+            return { success: true, data: colDepts };
+          }
+        }
+      } catch (colErr) {
+        // Ignore collection check error
+      }
+
+      return { success: true, data: defaultDepartments };
     } catch (error) {
       console.error('Error getting departments:', error);
-      return { success: false, error: error.message };
+      return { success: true, data: defaultDepartments };
     }
   },
 
   async getSemesters() {
-    try {
-      const doc = await db.collection('metadata').doc('semesters').get();
-      let list = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', 'alumni / special'];
-      if (doc.exists && doc.data().list) {
-        list = [...doc.data().list];
-        if (!list.includes('alumni / special')) {
-          list.push('alumni / special');
+    const defaultSemesters = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', 'alumni / special'];
+
+    const parseSemestersFromData = (data) => {
+      if (!data) return [];
+      const arrayCandidates = [
+        data.list,
+        data.semesters,
+        data.options,
+        data.values,
+        data.items,
+        data.data,
+        Array.isArray(data) ? data : null
+      ];
+      for (const candidate of arrayCandidates) {
+        if (Array.isArray(candidate) && candidate.length > 0) {
+          const parsed = candidate.map(item => typeof item === 'string' ? item.trim() : (item?.name || item?.id || String(item)).trim()).filter(Boolean);
+          if (parsed.length > 0) return parsed;
+        } else if (typeof candidate === 'string' && candidate.trim()) {
+          const parsed = candidate.split(/[,;\n]+/).map(s => s.trim()).filter(Boolean);
+          if (parsed.length > 0) return parsed;
         }
+      }
+      return [];
+    };
+
+    try {
+      let doc = null;
+      try {
+        doc = await db.collection('metadata').doc('semesters').get({ source: 'server' });
+      } catch (serverErr) {
+        doc = await db.collection('metadata').doc('semesters').get();
+      }
+
+      let list = [...defaultSemesters];
+      if (doc && doc.exists) {
+        const parsed = parseSemestersFromData(doc.data());
+        if (parsed.length > 0) {
+          list = parsed;
+        }
+      }
+      if (!list.includes('alumni / special')) {
+        list.push('alumni / special');
       }
       return { success: true, data: list };
     } catch (error) {
       console.error('Error getting semesters:', error);
-      return { success: false, error: error.message };
+      return { success: true, data: defaultSemesters };
     }
   },
 
   async getSections(department, semester) {
+    const defaultSections = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
     try {
-      const doc = await db.collection('metadata').doc('sections').get();
-      const defaultSections = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
-      if (doc.exists) {
+      let doc = null;
+      try {
+        doc = await db.collection('metadata').doc('sections').get({ source: 'server' });
+      } catch (serverErr) {
+        doc = await db.collection('metadata').doc('sections').get();
+      }
+
+      if (doc && doc.exists) {
         const sections = doc.data();
-        const key = `${department}-${semester}`;
-        return { success: true, data: sections[key] || defaultSections };
+        const exactKey = `${department}-${semester}`;
+        if (Array.isArray(sections[exactKey]) && sections[exactKey].length > 0) {
+          return { success: true, data: sections[exactKey] };
+        }
+        const lowerKey = exactKey.toLowerCase();
+        for (const [k, v] of Object.entries(sections)) {
+          if (k.toLowerCase() === lowerKey && Array.isArray(v) && v.length > 0) {
+            return { success: true, data: v };
+          }
+        }
+        if (Array.isArray(sections[department]) && sections[department].length > 0) {
+          return { success: true, data: sections[department] };
+        }
+        if (Array.isArray(sections.default) && sections.default.length > 0) {
+          return { success: true, data: sections.default };
+        }
+        if (Array.isArray(sections.list) && sections.list.length > 0) {
+          return { success: true, data: sections.list };
+        }
       }
       return { success: true, data: defaultSections };
     } catch (error) {
       console.error('Error getting sections:', error);
-      return { success: false, error: error.message };
+      return { success: true, data: defaultSections };
     }
   },
 

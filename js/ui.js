@@ -714,7 +714,7 @@ const UI = {
     const dropdown = document.getElementById(elementId);
     if (!dropdown) return;
 
-    // Keep placeholder option
+    // Keep placeholder option if any
     const placeholder = dropdown.querySelector('option[disabled]');
     dropdown.innerHTML = '';
 
@@ -722,7 +722,16 @@ const UI = {
       dropdown.appendChild(placeholder);
     }
 
-    items.forEach(item => {
+    if (!Array.isArray(items)) {
+      return;
+    }
+
+    const itemsToRender = [...items];
+    if (selectedValue && !itemsToRender.includes(selectedValue) && selectedValue !== 'All' && selectedValue !== 'all' && selectedValue !== '') {
+      itemsToRender.push(selectedValue);
+    }
+
+    itemsToRender.forEach(item => {
       const option = document.createElement('option');
       option.value = item;
       option.textContent = item;
@@ -731,6 +740,10 @@ const UI = {
       }
       dropdown.appendChild(option);
     });
+
+    if (selectedValue) {
+      dropdown.value = selectedValue;
+    }
   },
 
   // Show modal

@@ -213,13 +213,15 @@ b1t-Sched/
 
 ### Adding Departments
 
-Edit in Firebase Console → Firestore → `metadata` → `departments`:
+Edit in Firebase Console → Firestore → `metadata` → `departments` (or create individual docs in a `departments` collection):
 
 ```json
 {
   "list": ["CSE", "IT", "CE", "EEE", "BBA", "YOUR_NEW_DEPT"]
 }
 ```
+
+> **Note**: The application flexibly supports field names `list`, `departments`, `options`, `values`, `items`, `data`, key-value maps, or comma-separated strings. Newly added departments are dynamically loaded across registration onboarding, Profile Settings, Event creation/editing modals, Faculty task filters, and Admin User Management filters.
 
 ### Adding Semesters
 
@@ -239,9 +241,12 @@ Edit in Firebase Console → Firestore → `metadata` → `sections`:
 {
   "CSE-1st": ["A1", "A2"],
   "CSE-2nd": ["A1", "A2", "B1", "B2"],
-  "IT-1st": ["A1", "A2"]
+  "IT-1st": ["A1", "A2"],
+  "YOUR_NEW_DEPT-1st": ["A1", "A2"]
 }
 ```
+
+> If a department or semester does not have explicit section mappings configured in Firestore, the system automatically falls back to default sections (`A1`, `A2`, `B1`, `B2`, `C1`, `C2`).
 
 ### Adding Resource Links
 
