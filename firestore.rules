@@ -242,7 +242,7 @@ service cloud.firestore {
     }
     
     match /metadata/{document=**} {
-      allow read: if isSignedIn();
+      allow read: if true;
       allow write: if isAdmin();
     }
     
