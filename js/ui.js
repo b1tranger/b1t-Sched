@@ -806,10 +806,11 @@ const UI = {
     }
   },
 
-  // Update FAQ, Contribution, User Counter, and Note Button section visibility based on route
+  // Update FAQ, Contribution, Task Export, User Counter, and Note Button section visibility based on route
   updateSectionVisibility(routeName, forceAuthStatus = null) {
     const faqSection = document.getElementById('faq-section');
     const contribSection = document.getElementById('contributions-section');
+    const taskExportSection = document.getElementById('task-export-section');
     const userCounter = document.getElementById('total-user-counter');
     const noteToggleMobile = document.getElementById('note-toggle');
     const noteButtonDesktop = document.getElementById('note-button-desktop');
@@ -830,6 +831,7 @@ const UI = {
     if (routeName === 'dashboard') {
       if (faqSection) faqSection.style.display = 'block';
       if (contribSection) contribSection.style.display = 'block';
+      if (taskExportSection) taskExportSection.style.display = 'block';
       if (userCounter) userCounter.style.display = 'block';
 
       // Show footer and set year only on dashboard
@@ -864,6 +866,7 @@ const UI = {
     } else {
       if (faqSection) faqSection.style.display = 'none';
       if (contribSection) contribSection.style.display = 'none';
+      if (taskExportSection) taskExportSection.style.display = 'none';
       if (userCounter) userCounter.style.display = 'none';
       if (appFooter) appFooter.style.display = 'none';
 

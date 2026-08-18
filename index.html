@@ -89,10 +89,10 @@
         <!-- Navigation Bar (hidden on login screen) -->
         <nav id="navbar" class="navbar" style="display: none;">
             <div class="nav-container">
-                <div class="nav-left">
+                <a href="#/dashboard" class="nav-left" id="nav-logo-link" title="Dashboard">
                     <img src="Social-Preview.webp" alt="Logo" class="nav-logo">
                     <span class="nav-title">b1t-Sched</span>
-                </div>
+                </a>
                 <div class="nav-center">
                     <ul class="nav-links">
                         <li><a href="#/dashboard" class="nav-link active">Dashboard</a></li>
@@ -1640,6 +1640,76 @@
                 </div>
             </div>
 
+            <!-- Task Export Modal -->
+            <div id="task-export-modal" class="modal" style="display: none;">
+                <div class="modal-content modal-content-md task-export-modal-content">
+                    <div class="modal-header">
+                        <h2 class="modal-title">
+                            <i class="fas fa-file-export"></i> Export Tasks
+                        </h2>
+                        <button id="close-task-export-modal" class="btn btn-icon" aria-label="Close modal">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="export-modal-subtitle">Choose whether to export your current pending tasks or complete task history, and select your preferred file format.</p>
+
+                        <!-- Export Scope Buttons (Desktop: 2 horizontal buttons, Mobile: 2 vertical rows) -->
+                        <div class="export-scope-buttons-grid">
+                            <button type="button" id="export-current-tasks-btn" class="btn btn-primary export-scope-btn">
+                                <i class="fas fa-tasks"></i>
+                                <span>Export Current Tasks</span>
+                            </button>
+                            <button type="button" id="export-all-tasks-btn" class="btn btn-secondary export-scope-btn">
+                                <i class="fas fa-history"></i>
+                                <span>Export All Tasks</span>
+                            </button>
+                        </div>
+
+                        <!-- Format Selector Below the Buttons -->
+                        <div class="export-format-section">
+                            <label class="export-format-label">Select Format:</label>
+                            <div class="export-format-pills">
+                                <label class="export-format-pill">
+                                    <input type="radio" name="export-format" value="txt" checked>
+                                    <span class="pill-content">
+                                        <i class="fas fa-file-alt"></i> TXT
+                                    </span>
+                                </label>
+                                <label class="export-format-pill">
+                                    <input type="radio" name="export-format" value="md">
+                                    <span class="pill-content">
+                                        <i class="fab fa-markdown"></i> MD
+                                    </span>
+                                </label>
+                                <label class="export-format-pill">
+                                    <input type="radio" name="export-format" value="pdf">
+                                    <span class="pill-content">
+                                        <i class="fas fa-file-pdf"></i> PDF
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Status message container -->
+                        <div id="task-export-status" class="export-status-message" style="display: none;"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button id="cancel-task-export-btn" class="btn btn-secondary">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Task Export Button Section -->
+            <div id="task-export-section" class="task-export-section"
+                style="display: none; justify-content: center;">
+                <button id="open-task-export-btn" class="btn btn-secondary task-export-btn" style="gap: 0;">
+                    <i class="fas fa-file-export"></i> Export Tasks
+                </button>
+            </div>
+
             <!-- Contributions & Timeline Buttons -->
             <div id="contributions-section" class="contributions-section"
                 style="display: none; justify-content: center;">
@@ -1999,11 +2069,15 @@
     <!-- Note Enhancements (PDF + Zip) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <!-- Activity Timeline Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="js/timeline-data.js"></script>
     <script src="js/timeline-ui.js"></script>
+
+    <!-- Task Export Module -->
+    <script src="js/task-export.js"></script>
 
     <script src="js/app.js"></script>
     <script src="js/calendar-view.js"></script>

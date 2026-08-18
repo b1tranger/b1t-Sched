@@ -402,7 +402,7 @@ const DB = {
 
   // Metadata operations
   async getDepartments() {
-    const defaultDepartments = ['CSE', 'IT', 'CE', 'EEE', 'BBA'];
+    const defaultDepartments = ['CSE', 'IT', 'CE', 'EEE', 'BBA', 'Pharmacy', 'Law', 'English', 'Social Work'];
 
     const parseDepartmentsFromData = (data) => {
       if (!data) return [];

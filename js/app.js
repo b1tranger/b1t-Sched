@@ -213,6 +213,21 @@ const App = {
       TimelineUI.init();
     }
 
+    // Initialize Task Export
+    if (typeof TaskExport !== 'undefined') {
+      TaskExport.init();
+    }
+
+    // Logo click: scroll to top if on dashboard
+    const logoLink = document.getElementById('nav-logo-link');
+    if (logoLink) {
+      logoLink.addEventListener('click', () => {
+        if (Router.getCurrentRoute() === 'dashboard' || window.location.hash === '#/dashboard') {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      });
+    }
+
     // Initialize Calendar View
     console.log('Checking CalendarView:', typeof CalendarView);
     if (typeof CalendarView !== 'undefined') {
@@ -1264,10 +1279,12 @@ const App = {
     // Hide dashboard-specific elements when not logged in
     const appFooter = document.getElementById('app-footer');
     const contribSection = document.getElementById('contributions-section');
+    const taskExportSection = document.getElementById('task-export-section');
     const noteToggleMobile = document.getElementById('note-toggle');
     const noteButtonDesktop = document.getElementById('note-button-desktop');
     if (appFooter) appFooter.style.display = 'none';
     if (contribSection) contribSection.style.display = 'none';
+    if (taskExportSection) taskExportSection.style.display = 'none';
     if (noteToggleMobile) noteToggleMobile.style.setProperty('display', 'none', 'important');
     if (noteButtonDesktop) noteButtonDesktop.style.setProperty('display', 'none', 'important');
   },
@@ -2219,7 +2236,7 @@ const App = {
     if (!select) return;
 
     const deptResult = await DB.getDepartments();
-    const depts = deptResult.success && deptResult.data.length > 0 ? deptResult.data : ['CSE', 'IT', 'CE', 'EEE', 'BBA'];
+    const depts = deptResult.success && deptResult.data.length > 0 ? deptResult.data : ['CSE', 'IT', 'CE', 'EEE', 'BBA', 'Pharmacy', 'Law', 'English', 'Social Work'];
 
     select.innerHTML = '<option value="ALL">All Departments</option>';
     depts.forEach(dept => {

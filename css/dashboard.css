@@ -2579,4 +2579,217 @@ body.gray-mode .user-search-box .clear-search-btn:hover {
     color: #e2e8f0 !important;
     background: rgba(255, 255, 255, 0.12) !important;
 }
+
+/* ============================================
+   TASK EXPORT STYLES
+   ============================================ */
+
+.task-export-section {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto var(--spacing-sm);
+    padding: 0 var(--spacing-lg);
+}
+
+.task-export-btn {
+    border-radius: 5px;
+    width: fit-content;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: var(--font-sm);
+    padding: var(--spacing-sm) var(--spacing-lg);
+    transition: all var(--transition-fast);
+}
+
+.task-export-btn i {
+    margin-right: var(--spacing-xs);
+    color: var(--primary-maroon);
+}
+
+body.dark-mode .task-export-btn i,
+body.gray-mode .task-export-btn i {
+    color: var(--text-light);
+}
+
+.task-export-modal-content {
+    max-width: 520px;
+}
+
+.export-modal-subtitle {
+    color: var(--text-medium);
+    font-size: var(--font-sm);
+    margin-bottom: var(--spacing-lg);
+    line-height: 1.4;
+}
+
+/* Export Scope Buttons Grid - Desktop 2 columns, Mobile 1 column */
+.export-scope-buttons-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+@media (max-width: 600px) {
+    .export-scope-buttons-grid {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-sm);
+    }
+}
+
+.export-scope-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: 12px 16px;
+    border-radius: var(--radius-md);
+    font-weight: var(--font-semibold);
+    font-size: 0.92rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+}
+
+.export-scope-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.export-scope-btn:active {
+    transform: translateY(0);
+}
+
+.export-scope-btn i {
+    font-size: 1rem;
+}
+
+/* Format selection section */
+.export-format-section {
+    background: var(--bg-lighter, #f8f9fa);
+    border: 1px solid var(--border-light, #e2e8f0);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+}
+
+.export-format-label {
+    display: block;
+    font-size: var(--font-sm);
+    font-weight: var(--font-semibold);
+    color: var(--text-dark);
+    margin-bottom: var(--spacing-sm);
+    text-align: center;
+}
+
+.export-format-pills {
+    display: flex;
+    gap: var(--spacing-sm);
+    justify-content: center;
+}
+
+.export-format-pill {
+    flex: 1;
+    max-width: 120px;
+    cursor: pointer;
+    margin: 0;
+    position: relative;
+}
+
+.export-format-pill input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+.export-format-pill .pill-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: var(--bg-white, #ffffff);
+    border: 2px solid var(--border-light, #cbd5e1);
+    border-radius: var(--radius-md);
+    font-size: var(--font-sm);
+    font-weight: var(--font-semibold);
+    color: var(--text-dark);
+    transition: all var(--transition-fast);
+    user-select: none;
+}
+
+.export-format-pill input[type="radio"]:checked + .pill-content {
+    background: rgba(128, 0, 0, 0.08);
+    border-color: var(--primary-maroon, #800000);
+    color: var(--primary-maroon, #800000);
+    box-shadow: 0 0 0 1px var(--primary-maroon, #800000);
+}
+
+.export-format-pill:hover .pill-content {
+    border-color: var(--primary-maroon, #800000);
+}
+
+/* Status message */
+.export-status-message {
+    margin-top: var(--spacing-md);
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    font-size: var(--font-sm);
+    font-weight: var(--font-medium);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    animation: fadeIn 0.2s ease;
+}
+
+.export-status-message.info,
+.export-status-message.loading {
+    background: rgba(13, 110, 253, 0.1);
+    color: #0d6efd;
+    border: 1px solid rgba(13, 110, 253, 0.25);
+}
+
+.export-status-message.success {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+    border: 1px solid rgba(40, 167, 69, 0.25);
+}
+
+.export-status-message.error {
+    background: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+    border: 1px solid rgba(220, 53, 69, 0.25);
+}
+
+/* Dark mode and Gray mode overrides for Task Export */
+body.dark-mode .export-format-section,
+body.gray-mode .export-format-section {
+    background: var(--bg-lighter);
+    border-color: var(--border-medium);
+}
+
+body.dark-mode .export-format-label,
+body.gray-mode .export-format-label {
+    color: var(--text-light);
+}
+
+body.dark-mode .export-format-pill .pill-content,
+body.gray-mode .export-format-pill .pill-content {
+    background: var(--bg-dark);
+    border-color: var(--border-medium);
+    color: var(--text-light);
+}
+
+body.dark-mode .export-format-pill input[type="radio"]:checked + .pill-content,
+body.gray-mode .export-format-pill input[type="radio"]:checked + .pill-content {
+    background: rgba(186, 28, 28, 0.2);
+    border-color: #ef4444;
+    color: #fca5a5;
+    box-shadow: 0 0 0 1px #ef4444;
+}
+
 

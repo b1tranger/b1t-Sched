@@ -64,6 +64,8 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **Notice Viewer** - View UCAM university notices with PDF preview (desktop modal with split-pane layout; mobile slide-out sidebar), powered by Vercel serverless backend (`/api/notices`) with global Vercel Blob Edge CDN caching (`@vercel/blob`). Automatically loads notices from Vercel Blob cloud storage on open/init, with a **Check Updates** button to fetch new notices from the backend server on demand, a 60-second automatic retry timer with live countdown on cold start / 503 errors, and emergency stale fallbacks.
 - **Note Taking** - Personal note-taking feature with enhanced markdown support (including fenced code blocks and HTML entities), auto-save, and PDF export. Supports file attachments via temporary link sharing (Catbox/Tmpfiles) and a "Shorten" feature that exports notes as a local `.md` file for manual sharing. PDF export is optimized for both light and dark themes with forced visibility.
 - **Task Filtering** - Filter pending tasks by type (Assignment, Homework, Exam, Project, Presentation, Other)
+- **Task Export** - Export tasks to TXT, Markdown (.md), or vector PDF with pure black selectable fonts (`#000000`), embedded clickable links, 120% scale, straight line dividers, active type filter support (`Exam`, `Assignment`, etc.), and dedicated Old Tasks pagination.
+- **Navbar Logo Navigation** - Clickable brand logo and title navigating to `#/dashboard` from anywhere in the app with smooth scroll-to-top.
 - **Global Contributions** - View a leaderboard of top contributors (group-specific or global across all departments)
 - **User Counter** - Live count of total registered users displayed on the dashboard and footer.
 - **Mobile Calendar** - Monthly and weekly views for mobile with a toggle to switch between them. Monthly view features a compact date grid with maroon dot indicators for dates with tasks, today highlight, and a tappable task list panel showing course + title + deadline time. Weekly view provides vertical scrolling by week. Includes Month/Year dropdowns for quick navigation.
@@ -77,6 +79,7 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 | Frontend                  | HTML5, CSS3, Vanilla JavaScript          |
 | Backend (Database & Auth) | Firebase (Firestore, Authentication)     |
 | Backend (Notice API)      | Vercel Serverless Functions (Node.js)    |
+| PDF Generation            | jsPDF 2.5.1, html2pdf.js 0.10.1          |
 | Icons                     | Font Awesome 6.5                         |
 | Hosting                   | Netlify (frontend), Vercel (backend API) |
 
@@ -93,6 +96,9 @@ This section provides a comprehensive breakdown of every library, framework, ser
 | **HTML5**                     | —       | Page structure, semantic markup                                        | Native   |
 | **CSS3**                      | —       | Styling, layouts, responsive design, CSS custom properties (variables) | Native   |
 | **Vanilla JavaScript (ES6+)** | —       | Application logic, DOM manipulation, SPA routing                       | Native   |
+| **jsPDF**                     | 2.5.1   | Client-side vector PDF generation with native hyperlinks and selectable text | CDN (`cdnjs.cloudflare.com`) |
+| **html2pdf.js**               | 0.10.1  | DOM-to-PDF conversion for notes export                                 | CDN (`cdnjs.cloudflare.com`) |
+| **JSZip**                     | 3.10.1  | Client-side file zipping for note archive bundles                      | CDN (`cdnjs.cloudflare.com`) |
 
 ### Firebase SDK
 
@@ -1041,7 +1047,37 @@ DATE_FILTER_MONTHS: 6,  // Change to 3, 12, etc.
 
 **Desktop Flow:** Navbar "Classroom" button → Modal opens → Sign in with Google → View all assignments (default) → Toggle to Notices → Click item to open in Google Classroom
 
-**Mobile Flow:** Green "Classroom" toggle on right edge → Sidebar slides in → Sign in with Google → View all assignments (default) → Toggle to Notices → Click item to open in Google Classroom
+---
+
+### 14. TaskExport (task-export.js)
+
+**Purpose:** Comprehensive multi-format task schedule exporter supporting TXT, Markdown (.md), and pure vector PDF with selectable text and embedded clickable hyperlinks.
+
+#### Methods
+
+| Method | Parameters | Returns | Description |
+| --- | --- | --- | --- |
+| `init()` | - | void | Initialize task export module; attaches listeners to open/close buttons, format pills, and export scope buttons. |
+| `openModal()` | - | void | Opens export modal, highlights current format, and displays active filter status. |
+| `closeModal()` | - | void | Closes export modal dialog. |
+| `getActiveTaskFilter()` | - | string | Reads selected dashboard task filter radio (`'exam'`, `'assignment'`, `'homework'`, etc.) or returns `'all'`. |
+| `getTasksForExport(scope)` | string (`'current'` \| `'all'`) | Promise\<Object\> | Fetches tasks for user profile; tags archived tasks (`isOldTask`), applies active task filter, sorts by deadline, and computes metadata. |
+| `handleExport(scope)` | string | Promise\<void\> | Main orchestrator to trigger format generation and download for selected scope. |
+| `generateTxt(tasks, meta)` | Array, Object | string | Generates plain text export dividing tasks with `/////   /////   /////` and inserting `OLD TASKS` divider. |
+| `generateMd(tasks, meta)` | Array, Object | string | Generates Markdown export with metadata block, task dividers, and centered `# 📂 OLD TASKS` header. |
+| `ensureJsPdfLoaded()` | - | Promise\<Class\> | Resolves `jsPDF` constructor from global namespace or dynamically loads standalone CDN script. |
+| `parseRichTokens(text)` | string | Array\<Object\> | Parses text into plain text chunks and clickable link tokens (markdown `[Title](URL)` and raw URLs). |
+| `measureRichTextHeight(doc, text, ...)` | Object, string, ... | number | Accurately calculates wrapped text height for PDF page-break calculations. |
+| `renderRichTextWithLinks(doc, text, ...)` | Object, string, ... | number | Renders wrapped text in PDF with clickable blue hyperlinks (`doc.link()`). |
+| `generatePdf(tasks, meta, filename)` | Array, Object, string | Promise\<void\> | Generates pure vector PDF with 120% scale, pure black selectable text, straight line dividers, clickable header/footer links, active filter heading, and dedicated Old Tasks pagebreak. |
+| `downloadFile(filename, content, mime)` | string, string, string | void | Triggers browser download for generated text/markdown blobs. |
+
+**Key Features:**
+- **Vector PDF Output:** 100% selectable text in pure black `#000000` rendered directly with `jsPDF` (no blank canvas or rasterized screenshots).
+- **Clickable Links:** Embedded description links and attached links styled in blue and registered with native PDF link annotations. Header logo `b1t-Sched` and footer brand text link to `https://b1tsched.netlify.app/`.
+- **120% Scale Typography:** Proportioned font sizing and line spacing for readability.
+- **Conditional Task Filtering:** Automatically exports only the active task type (e.g. `Exam`, `Assignment`) if filtered on the dashboard, with a central heading indicating the filtered type.
+- **Old Tasks Separation:** "Export All Tasks" organizes active tasks first, followed by a page break and an **`OLD TASKS`** heading before listing past/archived tasks.
 
 ---
 

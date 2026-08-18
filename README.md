@@ -25,6 +25,8 @@ A single-page application (SPA) that helps students manage academic tasks, assig
 - 📊 **Activity Timeline** - Visual heatmap and bar chart tracking user activity (logins, tasks, events) for productivity insights
 - 🔔 **Push Notifications** - Real-time browser notifications for new tasks and events (mobile-compatible)
 - 🏆 **Contributions** - Leaderboard of top contributors (group-specific or global across all departments)
+- 📤 **Task Export** - Export tasks to TXT, Markdown (.md), or vector PDF with selectable black fonts, embedded clickable links, 120% scale, straight line dividers, active type filter support (`Exam`, `Assignment`, etc.), and dedicated Old Tasks pagination.
+- 🧭 **Quick Navbar Logo Navigation** - Clickable brand logo and title to instantly navigate to Dashboard view from anywhere on the site with smooth scroll-to-top.
 - 🎓 **Semester Auto-Promotion** - Automatic semester advancement every July and January on user login with 30-day manual profile protection and an Admin fail-safe bulk update tool (with 30s verification countdown & 6-month cooldown)
 - ⚙️ **Profile Settings** - Update your details anytime (30-day cooldown)
 - ❓ **FAQ Section** - Collapsible accordion explaining how the site works, user roles, and profile settings
@@ -545,7 +547,7 @@ For issues or questions:
 from @S. M. Zafrul Islam (zafrul.islam@uits.edu.bd)
    - [ ] task cards divided into smaller cards for each detail (deadline in a card, title in another card) to make it easier to get innone look
    - [ ] promote to 59 batch juniors
-   - [ ] click logo to go to home screen
+   - [x] click logo to go to home screen
 
 from [@Helal Udding Patwary (Shakil) (0432410005101086)](https://github.com/Binary-Eclipse)
    - [ ] short faq explaining each section
