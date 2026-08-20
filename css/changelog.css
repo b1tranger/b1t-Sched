@@ -1,0 +1,442 @@
+/* ============================================
+   CHANGELOG / WHAT'S NEW MODAL STYLING
+   ============================================ */
+
+.changelog-modal-content {
+  max-width: 640px;
+  width: 90%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-lg, 16px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border-light, #e0e0e0);
+  background: var(--bg-white, #ffffff);
+  overflow: hidden;
+  animation: changelogModalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes changelogModalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Header */
+.changelog-modal-header {
+  padding: var(--spacing-lg, 20px) var(--spacing-xl, 24px);
+  border-bottom: 1px solid var(--border-light, #e0e0e0);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, rgba(128, 0, 32, 0.05) 0%, rgba(128, 0, 32, 0.01) 100%);
+}
+
+.changelog-header-title {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.changelog-header-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--primary-maroon, #800020) 0%, #a31538 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  box-shadow: 0 4px 12px rgba(128, 0, 32, 0.25);
+  flex-shrink: 0;
+}
+
+.changelog-title-group h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-dark, #222222);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.changelog-subtitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.825rem;
+  color: var(--text-medium, #666666);
+  margin-top: 3px;
+}
+
+.changelog-version-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background-color: var(--primary-maroon, #800020);
+  color: #ffffff;
+}
+
+/* Modal Body */
+.changelog-modal-body {
+  padding: var(--spacing-lg, 20px) var(--spacing-xl, 24px);
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.changelog-modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.changelog-modal-body::-webkit-scrollbar-thumb {
+  background: rgba(128, 128, 128, 0.3);
+  border-radius: 4px;
+}
+
+/* Current Version Card */
+.changelog-version-section {
+  background: var(--bg-lighter, #f9f9fb);
+  border: 1px solid var(--border-light, #e4e4e9);
+  border-radius: var(--radius-md, 12px);
+  padding: 16px;
+  transition: all 0.2s ease;
+}
+
+.changelog-version-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-light, #e4e4e9);
+}
+
+.changelog-version-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-dark, #222222);
+}
+
+.changelog-date {
+  font-size: 0.8rem;
+  color: var(--text-light, #888888);
+  font-weight: 500;
+}
+
+/* Change Items */
+.changelog-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.changelog-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-left: 4px;
+}
+
+.changelog-item-title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.changelog-tag {
+  font-size: 0.725rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  line-height: 1.2;
+}
+
+.changelog-tag.new-feature,
+.changelog-tag.feature {
+  background-color: rgba(40, 167, 69, 0.15);
+  color: #1e7e34;
+  border: 1px solid rgba(40, 167, 69, 0.3);
+}
+
+.changelog-tag.fix,
+.changelog-tag.bugfix {
+  background-color: rgba(220, 53, 69, 0.15);
+  color: #b02a37;
+  border: 1px solid rgba(220, 53, 69, 0.3);
+}
+
+.changelog-tag.enhancement {
+  background-color: rgba(0, 123, 255, 0.15);
+  color: #0056b3;
+  border: 1px solid rgba(0, 123, 255, 0.3);
+}
+
+.changelog-tag.security {
+  background-color: rgba(255, 193, 7, 0.2);
+  color: #856404;
+  border: 1px solid rgba(255, 193, 7, 0.4);
+}
+
+.changelog-tag.major {
+  background-color: rgba(128, 0, 32, 0.15);
+  color: var(--primary-maroon, #800020);
+  border: 1px solid rgba(128, 0, 32, 0.3);
+}
+
+.changelog-item-title {
+  font-size: 0.925rem;
+  font-weight: 600;
+  color: var(--text-dark, #222222);
+}
+
+.changelog-item-desc {
+  font-size: 0.85rem;
+  color: var(--text-medium, #555555);
+  line-height: 1.5;
+  margin: 0;
+  padding-left: 2px;
+}
+
+/* History Accordion */
+.changelog-history-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10px 14px;
+  background: transparent;
+  border: 1px dashed var(--border-light, #cccccc);
+  border-radius: var(--radius-md, 8px);
+  color: var(--text-medium, #555555);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.changelog-history-toggle:hover {
+  background: var(--bg-lighter, #f5f5f5);
+  color: var(--primary-maroon, #800020);
+  border-color: var(--primary-maroon, #800020);
+}
+
+.changelog-history-toggle i {
+  transition: transform 0.2s ease;
+}
+
+.changelog-history-toggle.active i {
+  transform: rotate(180deg);
+}
+
+.changelog-history-list {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.changelog-history-list.open {
+  display: flex;
+}
+
+.changelog-history-item {
+  border: 1px solid var(--border-light, #e0e0e0);
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: var(--bg-white, #ffffff);
+}
+
+.changelog-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.changelog-history-version {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-dark, #333333);
+}
+
+/* Footer Hint & Actions */
+.changelog-modal-footer {
+  padding: var(--spacing-md, 16px) var(--spacing-xl, 24px);
+  border-top: 1px solid var(--border-light, #e0e0e0);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--bg-lighter, #f9f9fb);
+}
+
+.changelog-doc-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(128, 0, 32, 0.05);
+  border: 1px solid rgba(128, 0, 32, 0.15);
+  border-radius: 8px;
+  font-size: 0.825rem;
+  color: var(--text-medium, #444444);
+  line-height: 1.45;
+}
+
+.changelog-doc-hint i {
+  color: var(--primary-maroon, #800020);
+  font-size: 1rem;
+  margin-top: 1px;
+  flex-shrink: 0;
+}
+
+.changelog-doc-hint a {
+  color: var(--primary-maroon, #800020);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.15s ease;
+}
+
+.changelog-doc-hint a:hover {
+  color: #a31538;
+}
+
+.changelog-footer-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ============================================
+   DARK & GRAY MODE OVERRIDES
+   ============================================ */
+
+body.dark-mode .changelog-modal-content,
+body.gray-mode .changelog-modal-content {
+  background: var(--bg-card, #181818);
+  border-color: var(--border-dark, #2e2e2e);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+}
+
+body.dark-mode .changelog-modal-header,
+body.gray-mode .changelog-modal-header {
+  border-bottom-color: var(--border-dark, #2e2e2e);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%);
+}
+
+body.dark-mode .changelog-title-group h2,
+body.gray-mode .changelog-title-group h2,
+body.dark-mode .changelog-version-title,
+body.gray-mode .changelog-version-title,
+body.dark-mode .changelog-item-title,
+body.gray-mode .changelog-item-title,
+body.dark-mode .changelog-history-version,
+body.gray-mode .changelog-history-version {
+  color: var(--text-white, #f0f0f0);
+}
+
+body.dark-mode .changelog-subtitle,
+body.gray-mode .changelog-subtitle,
+body.dark-mode .changelog-item-desc,
+body.gray-mode .changelog-item-desc {
+  color: var(--text-medium, #a0a0a0);
+}
+
+body.dark-mode .changelog-version-section,
+body.gray-mode .changelog-version-section {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--border-dark, #2e2e2e);
+}
+
+body.dark-mode .changelog-version-header,
+body.gray-mode .changelog-version-header {
+  border-bottom-color: var(--border-dark, #2e2e2e);
+}
+
+body.dark-mode .changelog-history-item,
+body.gray-mode .changelog-history-item {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: var(--border-dark, #2e2e2e);
+}
+
+body.dark-mode .changelog-history-toggle,
+body.gray-mode .changelog-history-toggle {
+  border-color: var(--border-dark, #444444);
+  color: var(--text-medium, #a0a0a0);
+}
+
+body.dark-mode .changelog-history-toggle:hover,
+body.gray-mode .changelog-history-toggle:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-white, #ffffff);
+}
+
+body.dark-mode .changelog-modal-footer,
+body.gray-mode .changelog-modal-footer {
+  background: rgba(0, 0, 0, 0.2);
+  border-top-color: var(--border-dark, #2e2e2e);
+}
+
+body.dark-mode .changelog-doc-hint,
+body.gray-mode .changelog-doc-hint {
+  background: rgba(128, 0, 32, 0.2);
+  border-color: rgba(128, 0, 32, 0.35);
+  color: #dddddd;
+}
+
+body.dark-mode .changelog-doc-hint a,
+body.gray-mode .changelog-doc-hint a {
+  color: #ff6b8b;
+}
+
+/* ============================================
+   RESPONSIVE ADJUSTMENTS
+   ============================================ */
+
+@media (max-width: 600px) {
+  .changelog-modal-content {
+    width: 95%;
+    max-height: 90vh;
+    border-radius: 12px;
+  }
+
+  .changelog-modal-header {
+    padding: 14px 16px;
+  }
+
+  .changelog-header-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+
+  .changelog-title-group h2 {
+    font-size: 1.1rem;
+  }
+
+  .changelog-modal-body {
+    padding: 14px 16px;
+  }
+
+  .changelog-modal-footer {
+    padding: 12px 16px;
+  }
+}

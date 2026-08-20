@@ -1,0 +1,248 @@
+{
+  "currentVersion": "v2.45.0",
+  "lastUpdated": "August 20, 2026",
+  "documentationUrl": "https://b1tranger.netlify.app/render.html?file=https%3A%2F%2Fgithub.com%2Fb1tranger%2Fb1t-Sched%2Fblob%2Fmain%2Fdoc%2FDOCUMENTATION.md",
+  "history": [
+    {
+      "version": "v2.45.0",
+      "badge": "Latest",
+      "date": "August 2026",
+      "changes": [
+        {
+          "type": "New Feature",
+          "title": "Version Update & What's New Modal",
+          "description": "Interactive changelog modal that automatically notifies users whenever a new service worker version is deployed, loading update history directly from changes.json with direct links to full documentation."
+        },
+        {
+          "type": "Fix & Enhancement",
+          "title": "Persistent Task Type Filters & Re-clickable Controls",
+          "description": "Task list filters (Assignment, Homework, Exam, Project, Presentation, Other) remain strictly active when checking/unchecking tasks or deleting entries. Filter buttons are re-clickable to instantly refresh the filtered view."
+        },
+        {
+          "type": "Fix & Enhancement",
+          "title": "Dynamic Department & Metadata Options Architecture",
+          "description": "Resolved issue where new departments added in Firestore did not reflect on the frontend. Added server-priority fetching, multi-structure document support, dynamic event department selectors, and dropdown state preservation."
+        },
+        {
+          "type": "Enhancement",
+          "title": "Smaller Desktop Display Responsiveness (1366x768px)",
+          "description": "Added optimized typography, spacing, card dimensions, and UI scaling specifically tuned for compact desktop displays and standard 1366x768 laptop screens."
+        },
+        {
+          "type": "Enhancement",
+          "title": "Dedicated Semester Notice Dismissal Flag",
+          "description": "Semester auto-promotion notice dismissal is now persisted to the user profile in Firestore database (semesterNoticeDismissedCycle), keeping the banner dismissed across multiple logins until the next promotion cycle."
+        }
+      ]
+    },
+    {
+      "version": "v2.44.0",
+      "badge": "Stable",
+      "date": "August 2026",
+      "changes": [
+        {
+          "type": "New Feature",
+          "title": "Google Classroom Materials Tab",
+          "description": "Added Materials view toggle alongside To-Do and Notices to view all posted course materials across active courses, powered by Google Classroom courseWorkMaterials API."
+        },
+        {
+          "type": "New Feature",
+          "title": "Client JSON Template Caching & Incremental Sync",
+          "description": "Structured JSON template caching for offline access across token expirations, with fingerprinting to skip unchanged items during background sync."
+        },
+        {
+          "type": "Enhancement",
+          "title": "Hover Expand Dropdown & Attachment Pills",
+          "description": "Interactive hover expand button on Classroom list items rendering Google Drive files, YouTube videos, and forms as clickable pills."
+        },
+        {
+          "type": "Enhancement",
+          "title": "Quick Links Dropdown & Calendar View Prominence",
+          "description": "Replaced resource links grid with a compact Quick Links dropdown header button and elevated Calendar View button prominence on desktop."
+        },
+        {
+          "type": "Enhancement",
+          "title": "Font Awesome v5/v6/v7 Cross-Version Support",
+          "description": "Upgraded Font Awesome to v6.7.2 with full cross-version syntax support across all themes."
+        },
+        {
+          "type": "Fix",
+          "title": "DOM Layout Card Breakdown & Expand Button Alignment",
+          "description": "Prevented nested links in announcement bodies from splitting card layouts and pinned expand chevrons to top-right."
+        }
+      ]
+    },
+    {
+      "version": "v2.43.0",
+      "badge": "Stable",
+      "date": "August 2026",
+      "changes": [
+        {
+          "type": "Fix",
+          "title": "Google Classroom Session Persistence",
+          "description": "Preserves connected status across 1-hour access token expirations with silent token renewal and cached fallback."
+        },
+        {
+          "type": "Enhancement",
+          "title": "Unified Classroom Header Sign Out Button",
+          "description": "Single pill-styled Sign Out button added to top window title headers, removing duplicate buttons."
+        },
+        {
+          "type": "Enhancement",
+          "title": "Semester Auto-Promotion Cycle Tracking",
+          "description": "Banner dismissal tracked per semester cycle in July and January."
+        }
+      ]
+    },
+    {
+      "version": "v2.41.2",
+      "badge": "Security",
+      "date": "March 2026",
+      "changes": [
+        {
+          "type": "Security",
+          "title": "Environment Variable Migration",
+          "description": "Migrated standard Firebase API keys inside firebase-config.js to environment variables with strict HTTP referrers restriction."
+        }
+      ]
+    },
+    {
+      "version": "v2.41.0",
+      "badge": "Stable",
+      "date": "March 2026",
+      "changes": [
+        {
+          "type": "Enhancement",
+          "title": "Enhanced Markdown & Code Blocks",
+          "description": "Global support for fenced code blocks, preformatted tags, and safe HTML entities across tasks, events, notices, and notes."
+        },
+        {
+          "type": "Fix",
+          "title": "Note PDF Export Dark Mode Contrast",
+          "description": "Forced white background and black text repainting during PDF generation to ensure perfect readability in dark themes."
+        },
+        {
+          "type": "Enhancement",
+          "title": "Classroom Drop-in Refresh",
+          "description": "Manual refresh button to clear cached items and fetch fresh assignments and announcements on demand."
+        }
+      ]
+    },
+    {
+      "version": "v2.40.0",
+      "badge": "Stable",
+      "date": "March 2026",
+      "changes": [
+        {
+          "type": "Fix",
+          "title": "PWA Offline View Loading & Deferred Login",
+          "description": "Deferred Google Classroom silent auth to prevent login flash on startup. Improved offline banner mobile layout."
+        },
+        {
+          "type": "Fix",
+          "title": "Task Card Layout & Title Overlap Fix",
+          "description": "Optimized description width below checkboxes and fixed title wrap for long task headings."
+        }
+      ]
+    },
+    {
+      "version": "v2.39.0",
+      "badge": "Stable",
+      "date": "February 2026",
+      "changes": [
+        {
+          "type": "New Feature",
+          "title": "Note PDF Export & Client-Side ZIP Compression",
+          "description": "Integrated html2pdf.js for note exports and JSZip for automatic client-side compression of unsupported file types."
+        },
+        {
+          "type": "Fix",
+          "title": "Urgent Deadline Visibility & Preloader Synchronization",
+          "description": "High-contrast urgent deadline text in dark mode and synchronized dashboard revealing after full data load."
+        }
+      ]
+    },
+    {
+      "version": "v2.37.0",
+      "badge": "Stable",
+      "date": "February 2026",
+      "changes": [
+        {
+          "type": "New Feature",
+          "title": "Gray Mode Monochromatic Theme",
+          "description": "Sleek low-strain monochromatic theme set as system dark mode default across Classroom, Timeline, and Dashboards."
+        },
+        {
+          "type": "Fix",
+          "title": "Overdue Task Highlights",
+          "description": "Redesigned overdue task cards for all dark themes to guarantee clarity without harsh contrast."
+        }
+      ]
+    },
+    {
+      "version": "v2.34.0",
+      "badge": "Stable",
+      "date": "February 2026",
+      "changes": [
+        {
+          "type": "New Feature",
+          "title": "Classroom Sync to Tasks",
+          "description": "One-click synchronization of active Google Classroom assignments into b1t-Sched tasks for Admins and CRs with duplicate prevention."
+        }
+      ]
+    },
+    {
+      "version": "v2.33.0",
+      "badge": "Stable",
+      "date": "February 2026",
+      "changes": [
+        {
+          "type": "New Feature",
+          "title": "Student Search & Semester Auto-Promotion",
+          "description": "Real-time user search bar in User Management and automatic semester advancement in July and January with cooldown protection."
+        },
+        {
+          "type": "New Feature",
+          "title": "Mobile Monthly Calendar View",
+          "description": "Compact date grid with week numbers, dot indicators, and tappable date task panels."
+        }
+      ]
+    },
+    {
+      "version": "v2.28.0",
+      "badge": "Stable",
+      "date": "February 2026",
+      "changes": [
+        {
+          "type": "New Feature",
+          "title": "Activity Timeline Heatmap & Live User Counter",
+          "description": "Interactive productivity heatmap, weekly bar charts, and live active user count."
+        }
+      ]
+    },
+    {
+      "version": "v2.20.0",
+      "badge": "Stable",
+      "date": "February 2026",
+      "changes": [
+        {
+          "type": "New Feature",
+          "title": "Progressive Web App (PWA) & Calendar View",
+          "description": "Full offline support, Service Worker caching, install prompt management, and desktop monthly calendar view."
+        }
+      ]
+    },
+    {
+      "version": "v2.0.0",
+      "badge": "Major",
+      "date": "February 2026",
+      "changes": [
+        {
+          "type": "Major",
+          "title": "Complete Redesign as SPA with Firebase",
+          "description": "Rebuilt from ground up as a Single Page Application with Firebase Authentication, Firestore database, and role-based access control."
+        }
+      ]
+    }
+  ]
+}

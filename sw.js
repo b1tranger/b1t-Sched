@@ -3,7 +3,7 @@
  * Handles caching strategies, offline functionality, and background sync
  */
 
-const CACHE_VERSION = 'v2.44.0';
+const CACHE_VERSION = 'v2.45.0';
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `dynamic-${CACHE_VERSION}`;
 const API_CACHE = `api-${CACHE_VERSION}`;
@@ -13,6 +13,7 @@ const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
+  '/changes.json',
   '/css/main.css',
   '/css/colors.css',
   '/css/components.css',
@@ -25,6 +26,7 @@ const STATIC_ASSETS = [
   '/css/calendar.css',
   '/css/timeline.css',
   '/css/responsive.css',
+  '/css/changelog.css',
   '/js/app.js',
   '/js/auth.js',
   '/js/classroom.js',

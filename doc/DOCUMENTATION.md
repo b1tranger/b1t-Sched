@@ -2402,12 +2402,14 @@ You can use basic markdown formatting in task and event descriptions:
 
 ---
 
-_Last Updated: August 1, 2026 (v2.44.0)_
+_Last Updated: August 20, 2026 (v2.45.0)_
 
 ## Version History
 
 ### v2.45.0 (Latest)
 
+- **New Feature**: **Version Update & What's New Modal** — Interactive changelog modal that automatically notifies users whenever a new service worker version is deployed, loading update history directly from `changes.json` with direct links to full documentation.
+- **Fix & Enhancement**: **Persistent Task Type Filters & Re-clickable Controls** — Task list filters (Assignment, Homework, Exam, Project, Presentation, Other) remain strictly active when checking/unchecking tasks or deleting entries. Filter buttons are re-clickable to instantly refresh the filtered view.
 - **Fix & Enhancement**: **Dynamic Department & Metadata Options Architecture** — Resolved issue where adding new department options in Firebase Firestore did not reflect in frontend dropdown selectors.
   - **Server-Priority Fetching**: Configured `DB.getDepartments()`, `DB.getSemesters()`, and `DB.getSections()` to prioritize fetching fresh metadata directly from the Firestore server (`source: 'server'`), preventing stale cache issues caused by offline IndexedDB persistence.
   - **Multi-Structure Document Support**: Added flexible parsing across various Firestore data formats (`list`, `departments`, `options`, `values`, `items`, `data`, comma-separated strings, numeric-keyed arrays, and key-value maps) and standalone `departments` collections.
@@ -2415,6 +2417,8 @@ _Last Updated: August 1, 2026 (v2.44.0)_
   - **Comprehensive Faculty Filter**: Updated `App.setupFacultyDepartmentFilter()` to load all configured departments from Firestore metadata in addition to active tasks.
   - **Dropdown State Preservation**: Enhanced `UI.populateDropdown()` to preserve user selections when dropdowns are re-populated dynamically.
   - **Onboarding Route Listener**: Added explicit `set-details` route handling to `Router.onRouteChange` so onboarding department selectors load reliably on direct navigation and refreshes.
+- **Enhancement**: **Smaller Desktop Display Responsiveness (1366x768px)** — Added optimized typography, spacing, card dimensions, and UI scaling specifically tuned for compact desktop displays and standard 1366x768 laptop screens.
+- **Enhancement**: **Dedicated Semester Notice Dismissal Flag** — Semester auto-promotion notice dismissal is now persisted to the user profile in Firestore database (`semesterNoticeDismissedCycle`), keeping the banner dismissed across multiple logins until the next promotion cycle.
 
 ### v2.44.0
 

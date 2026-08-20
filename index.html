@@ -27,6 +27,7 @@
     <link rel="stylesheet" href="css/note.css">
     <link rel="stylesheet" href="css/calendar.css">
     <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/changelog.css">
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1353,6 +1354,9 @@
                                 <button type="button" id="profile-reset-password-btn" class="btn btn-warning">
                                     <i class="fas fa-key"></i> Reset Password
                                 </button>
+                                <button type="button" id="profile-view-changelog-btn" class="btn btn-secondary">
+                                    <i class="fas fa-bullhorn"></i> What's New
+                                </button>
                                 <button type="button" id="cancel-settings-btn" class="btn btn-secondary">
                                     Cancel
                                 </button>
@@ -2020,6 +2024,10 @@
                 <a href="https://github.com/b1tranger/b1t-Sched" target="_blank" rel="noopener noreferrer">
                     <i class="fab fa-github"></i> Source Code
                 </a>
+                <span class="footer-separator">|</span>
+                <a href="#" id="footer-changelog-link" onclick="if(window.ChangelogModal){window.ChangelogModal.checkAndShowChangelog(true);}return false;">
+                    <i class="fas fa-bullhorn"></i> What's New
+                </a>
             </p>
         </footer>
     </div>
@@ -2079,6 +2087,9 @@
     <!-- Task Export Module -->
     <script src="js/task-export.js"></script>
 
+    <!-- Changelog & What's New Module -->
+    <script src="js/changelog-modal.js"></script>
+
     <script src="js/app.js"></script>
     <script src="js/calendar-view.js"></script>
 
@@ -2118,6 +2129,43 @@
                 <button id="semester-modal-close-btn" class="btn btn-secondary">
                     Got it
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- What's New / Version Update Modal -->
+    <div id="changelog-modal" class="modal" style="display: none;" role="dialog" aria-labelledby="changelog-modal-title" aria-modal="true">
+        <div class="modal-content changelog-modal-content">
+            <div class="modal-header changelog-modal-header">
+                <div class="changelog-header-title">
+                    <div class="changelog-header-icon">
+                        <i class="fas fa-bullhorn"></i>
+                    </div>
+                    <div class="changelog-title-group">
+                        <h2 id="changelog-modal-title">What's New in b1t-Sched</h2>
+                        <div class="changelog-subtitle">
+                            <span>Latest updates</span>
+                            <span id="changelog-version-badge" class="changelog-version-badge">v2.45.0</span>
+                        </div>
+                    </div>
+                </div>
+                <button id="close-changelog-modal" class="btn btn-icon" title="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="changelog-modal-body" class="modal-body changelog-modal-body">
+                <!-- Dynamically populated from changes.json -->
+            </div>
+            <div class="modal-footer changelog-modal-footer">
+                <div class="changelog-doc-hint">
+                    <i class="fas fa-book-open"></i>
+                    <span>Want to explore all details? Read the <a href="https://b1tranger.netlify.app/render.html?file=https%3A%2F%2Fgithub.com%2Fb1tranger%2Fb1t-Sched%2Fblob%2Fmain%2Fdoc%2FDOCUMENTATION.md" target="_blank" rel="noopener noreferrer">Full Project Documentation</a>.</span>
+                </div>
+                <div class="changelog-footer-actions">
+                    <button id="changelog-modal-got-it-btn" class="btn btn-primary">
+                        <i class="fas fa-check"></i> Got it
+                    </button>
+                </div>
             </div>
         </div>
     </div>
