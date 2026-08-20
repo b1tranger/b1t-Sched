@@ -3,48 +3,420 @@
    ============================================ */
 
 /* ============================================
-   ZOOM NORMALIZATION BY SCREEN RESOLUTION
-   Prevents UI overflow on devices that render
-   at non-standard zoom levels.
-   Note: CSS zoom is supported in Chromium-based
-   browsers (Chrome, Edge, Opera, Samsung Internet).
+   SMALLER DESKTOP DISPLAYS (1366x768px & Standard Laptops)
+   Optimizes font sizes, spacing, header, grids,
+   cards, and interactive elements for smaller desktop displays.
    ============================================ */
-/* @media (max-width: 360px) {
-  html {
-    zoom: 85%;
-  }
-}
-
-@media (min-width: 361px) and (max-width: 480px) {
-  html {
-    zoom: 90%;
-  }
-}
-
-@media (min-width: 481px) and (max-width: 768px) {
-  html {
-    zoom: 95%;
-  }
-}
-
 @media (min-width: 769px) and (max-width: 1366px) {
-  html {
-    zoom: 90%;
-    /* Fixed override for 1366 screens per request
-  }
-} 
+  :root {
+    /* Scaled Font Sizes for Smaller Desktop */
+    --font-xs: 11px;
+    --font-sm: 13px;
+    --font-md: 14.5px;
+    --font-lg: 16.5px;
+    --font-xl: 20px;
+    --font-xxl: 26px;
 
-@media (min-width: 1367px) and (max-width: 1920px) {
-  html {
-    zoom: 100%;
+    /* Scaled Spacing for Smaller Desktop */
+    --spacing-xs: 3px;
+    --spacing-sm: 6px;
+    --spacing-md: 12px;
+    --spacing-lg: 18px;
+    --spacing-xl: 24px;
+    --spacing-xxl: 36px;
+
+    /* Scaled Border Radius */
+    --radius-lg: 10px;
+  }
+
+  /* Compact Navbar & Header */
+  .navbar {
+    height: 58px;
+  }
+
+  .nav-container {
+    max-width: 1280px;
+    padding: 0 var(--spacing-md);
+  }
+
+  .nav-logo {
+    width: 38px;
+    height: 38px;
+  }
+
+  .nav-title {
+    font-size: 1.15rem;
+  }
+
+  .nav-links {
+    gap: 12px;
+  }
+
+  .nav-link {
+    padding: 5px 10px;
+    font-size: var(--font-sm);
+  }
+
+  .user-details-card {
+    padding: 4px 10px;
+    max-width: 240px;
+    gap: 6px;
+  }
+
+  .user-avatar {
+    font-size: 1.4rem;
+  }
+
+  .user-email {
+    font-size: var(--font-xs);
+  }
+
+  .user-department {
+    font-size: 10px;
+  }
+
+  .settings-icon {
+    font-size: var(--font-sm);
+  }
+
+  /* Main Content Offsets */
+  .main-content {
+    padding-top: 66px;
+  }
+
+  .view {
+    min-height: calc(100vh - 66px);
+  }
+
+  /* Dashboard Layout */
+  .dashboard-container {
+    max-width: 1240px;
+    padding: var(--spacing-md) var(--spacing-lg);
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr 310px;
+    gap: var(--spacing-lg);
+  }
+
+  .dashboard-sidebar {
+    top: calc(58px + var(--spacing-md));
+    max-height: calc(100vh - 75px);
+    padding: var(--spacing-md);
+  }
+
+  .dashboard-main {
+    gap: var(--spacing-lg);
+  }
+
+  .section-header {
+    margin-bottom: var(--spacing-md);
+  }
+
+  .section-header h2 {
+    font-size: var(--font-lg);
+    gap: 6px;
+  }
+
+  /* Resource Links / Quick Actions */
+  .resource-links-container {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+  }
+
+  .resource-link-card {
+    padding: var(--spacing-md);
+  }
+
+  .resource-link-card .resource-icon {
+    font-size: 22px;
+    margin-bottom: var(--spacing-xs);
+  }
+
+  .resource-link-card h3 {
+    font-size: var(--font-md);
+    margin-bottom: 2px;
+  }
+
+  .resource-link-card p {
+    font-size: var(--font-xs);
+  }
+
+  .external-resources-link {
+    padding: var(--spacing-md);
+  }
+
+  /* Task & Event Cards */
+  .tasks-container,
+  .events-container {
+    gap: var(--spacing-sm);
+  }
+
+  .task-card,
+  .event-card {
+    padding: var(--spacing-md);
+  }
+
+  .task-header,
+  .event-header {
+    gap: var(--spacing-sm);
+  }
+
+  .task-title,
+  .event-title {
+    font-size: var(--font-md);
+  }
+
+  .task-meta,
+  .event-meta {
+    font-size: var(--font-xs);
+    gap: var(--spacing-xs);
+  }
+
+  .task-actions,
+  .event-actions {
+    gap: 4px;
+  }
+
+  .event-date {
+    width: 44px;
+    height: 44px;
+  }
+
+  .event-day {
+    font-size: 15px;
+  }
+
+  .event-month {
+    font-size: 9.5px;
+  }
+
+  .event-description {
+    font-size: var(--font-xs);
+  }
+
+  /* Classroom View */
+  .classroom-grid {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: var(--spacing-md);
+  }
+
+  .course-card {
+    border-radius: var(--radius-md);
+  }
+
+  .course-header {
+    padding: var(--spacing-md);
+  }
+
+  .course-name {
+    font-size: var(--font-md);
+  }
+
+  .course-code {
+    font-size: var(--font-xs);
+  }
+
+  .course-body {
+    padding: var(--spacing-md);
+  }
+
+  /* Notice Cards */
+  .notice-card {
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+  }
+
+  .notice-title {
+    font-size: var(--font-md);
+  }
+
+  .notice-date,
+  .notice-meta {
+    font-size: var(--font-xs);
+  }
+
+  .notice-tag {
+    padding: 2px 8px;
+    font-size: 10.5px;
+  }
+
+  /* Notes View */
+  .notes-container {
+    gap: var(--spacing-md);
+  }
+
+  .notes-sidebar {
+    width: 240px;
+  }
+
+  .note-card {
+    padding: var(--spacing-md);
+  }
+
+  .note-editor {
+    padding: var(--spacing-md);
+  }
+
+  .note-editor-toolbar {
+    gap: 4px;
+    padding-bottom: var(--spacing-sm);
+  }
+
+  .note-editor-toolbar .btn {
+    padding: 4px 8px;
+    font-size: var(--font-xs);
+  }
+
+  /* Calendar View */
+  .calendar-modal-content {
+    max-width: 1060px;
+    max-height: 90vh;
+  }
+
+  .calendar-day-header {
+    padding: 6px;
+    font-size: var(--font-xs);
+  }
+
+  .calendar-day {
+    min-height: 75px;
+    padding: 4px;
+  }
+
+  .day-number {
+    font-size: var(--font-xs);
+  }
+
+  .calendar-event-pill {
+    padding: 2px 5px;
+    font-size: 10px;
+    margin-bottom: 2px;
+  }
+
+  /* Modals, Forms, Inputs & Buttons */
+  .modal-content {
+    padding: var(--spacing-lg);
+    max-width: 460px;
+    max-height: calc(100vh - 50px);
+  }
+
+  .modal-header {
+    margin-bottom: var(--spacing-md);
+  }
+
+  .modal-title {
+    font-size: var(--font-lg);
+  }
+
+  .modal-body {
+    margin-bottom: var(--spacing-md);
+  }
+
+  .form-group {
+    margin-bottom: var(--spacing-md);
+  }
+
+  .form-label {
+    font-size: var(--font-xs);
+    margin-bottom: 3px;
+  }
+
+  .form-input,
+  .form-select,
+  .form-textarea {
+    padding: 7px 12px;
+    font-size: var(--font-sm);
+    min-height: 36px;
+  }
+
+  .btn {
+    padding: 6px 14px;
+    font-size: var(--font-sm);
+  }
+
+  .btn-icon {
+    min-width: 36px;
+    min-height: 36px;
+    padding: 6px;
+  }
+
+  /* Floating Buttons & Profile */
+  .note-button-desktop,
+  .note-toggle {
+    bottom: 50px;
+    right: 16px;
+    padding: 8px 14px;
+    font-size: var(--font-sm);
+  }
+
+  .home-button {
+    bottom: 50px;
+    right: 16px;
+    width: 34px;
+    height: 34px;
+  }
+
+  .back-icon {
+    bottom: 50px;
+    right: 54px;
+    width: 18px;
+    height: 22px;
+  }
+
+  .scroll-button {
+    bottom: 50px;
+    right: 90px;
+    padding: 14px;
+  }
+
+  .profile-settings-container {
+    max-width: 600px;
+    padding: var(--spacing-lg) var(--spacing-md);
+  }
+
+  .profile-settings-card {
+    padding: var(--spacing-lg);
+  }
+
+  .profile-avatar-large {
+    font-size: 4.5rem;
+  }
+
+  .auth-card,
+  .set-details-card {
+    padding: var(--spacing-xl) var(--spacing-lg);
+    max-width: 380px;
+  }
+
+  .faq-section {
+    max-width: 720px;
+    margin: var(--spacing-xl) auto var(--spacing-lg);
   }
 }
 
-@media (min-width: 1921px) {
-  html {
-    zoom: 110%;
+/* Height-Constrained Smaller Desktop Displays (e.g. 768px or 720px screen height) */
+@media (min-width: 769px) and (max-height: 768px) {
+  .modal-content {
+    max-height: calc(100vh - 40px);
+    padding: var(--spacing-md) var(--spacing-lg);
+    overflow-y: auto;
   }
-} */
+
+  .dashboard-sidebar {
+    max-height: calc(100vh - 75px);
+  }
+
+  .calendar-modal-content {
+    max-height: 92vh;
+  }
+
+  .auth-card,
+  .set-details-card {
+    padding: var(--spacing-lg);
+  }
+}
 
 /* Tablets and smaller */
 @media (max-width: 992px) {

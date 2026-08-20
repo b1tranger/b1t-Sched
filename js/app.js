@@ -345,6 +345,9 @@ const App = {
   },
 
   setupTaskEventListeners() {
+    // Setup Task Type Filter Listeners
+    this.setupTaskFilterListeners();
+
     // Add Task button
     const addTaskBtn = document.getElementById('add-task-btn');
     if (addTaskBtn) {
@@ -947,6 +950,18 @@ const App = {
       // Re-render tasks with updated completions
       UI.renderTasks(this.currentTasks, this.userCompletions, this.isAdmin, this.isCR, Auth.getUserId());
 
+      // Re-apply active filter directly — must run AFTER renderTasks rebuilds the DOM
+      const activeRadio = document.querySelector('input[name="task-filter"]:checked');
+      const activeFilter = (activeRadio && activeRadio.value) || this.currentFilter;
+      if (activeFilter && activeFilter !== 'all') {
+        this.filterTasksByType(activeFilter);
+      }
+
+      // Notify calendar view if initialized
+      if (this.calendarView) {
+        this.calendarView.onTasksUpdated();
+      }
+
       // Log activity
       const task = this.currentTasks.find(t => t.id === taskId);
       if (task) {
@@ -1420,9 +1435,13 @@ const App = {
           console.log(`[Semester Auto-Update] Advancing semester from ${oldSem} to ${newSem} for cycle ${currentCycle}`);
           profileData.semester = newSem;
           profileData.lastSemesterCycle = currentCycle;
+          // Clear dismissed flag so user sees notice for the newly triggered semester update
+          delete profileData.semesterNoticeDismissedCycle;
+          localStorage.removeItem('semesterNoticeDismissedCycle');
           await DB.updateUserProfile(userId, {
             semester: newSem,
-            lastSemesterCycle: currentCycle
+            lastSemesterCycle: currentCycle,
+            semesterNoticeDismissedCycle: firebase.firestore.FieldValue.delete()
           });
           Utils.storage.set('userProfile', profileData);
 
@@ -1480,21 +1499,49 @@ const App = {
 
     if (!currentCycle) return;
 
-    // Show if not dismissed for the current semester cycle (every July and January)
-    const dismissedCycle = localStorage.getItem('semesterNoticeDismissedCycle');
-    if (dismissedCycle !== currentCycle) {
-      card.style.display = 'flex';
-    } else {
+    // Dedicated database flag check:
+    // Check if dismissed in the user's Firestore profile or fallback to localStorage
+    const dismissedCycle = (this.userProfile && this.userProfile.semesterNoticeDismissedCycle) ||
+      localStorage.getItem('semesterNoticeDismissedCycle');
+
+    if (dismissedCycle === currentCycle) {
       card.style.display = 'none';
       return;
+    } else {
+      card.style.display = 'flex';
     }
+
+    // Helper to persist dismiss state both in Firebase database and locally
+    const dismissNotice = async () => {
+      // 1. Update local storage
+      localStorage.setItem('semesterNoticeDismissedCycle', currentCycle);
+
+      // 2. Update in-memory user profile
+      if (this.userProfile) {
+        this.userProfile.semesterNoticeDismissedCycle = currentCycle;
+        Utils.storage.set('userProfile', this.userProfile);
+      }
+
+      // 3. Persist dedicated flag to Firebase database for the user
+      const userId = (this.currentUser && this.currentUser.uid) ||
+        (typeof Auth !== 'undefined' && Auth.getUserId && Auth.getUserId());
+      if (userId) {
+        try {
+          await DB.updateUserProfile(userId, {
+            semesterNoticeDismissedCycle: currentCycle
+          });
+        } catch (err) {
+          console.warn('[Semester Notice] Could not save dismiss flag to Firestore:', err);
+        }
+      }
+    };
 
     // "Check Profile" button navigates to Profile Settings and dismisses notice for current cycle
     const checkBtn = document.getElementById('home-semester-notice-check-btn');
     if (checkBtn) {
-      checkBtn.onclick = () => {
-        localStorage.setItem('semesterNoticeDismissedCycle', currentCycle);
+      checkBtn.onclick = async () => {
         card.style.display = 'none';
+        await dismissNotice();
         Router.navigate('profile-settings');
       };
     }
@@ -1504,9 +1551,9 @@ const App = {
     if (dismissBtn) {
       dismissBtn.onclick = () => {
         card.style.animation = 'semesterNoticeSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) reverse both';
-        setTimeout(() => {
+        setTimeout(async () => {
           card.style.display = 'none';
-          localStorage.setItem('semesterNoticeDismissedCycle', currentCycle);
+          await dismissNotice();
         }, 230);
       };
     }
@@ -1718,15 +1765,15 @@ const App = {
       this.setupTaskFilterListeners();
 
       // Re-apply current filter if set
-      if (this.currentFilter && this.currentFilter !== 'all') {
-        const radio = document.querySelector(`input[name="task-filter"][value="${this.currentFilter}"]`);
-        if (radio) radio.checked = true;
-        this.filterTasksByType(this.currentFilter);
-        const clearBtn = document.getElementById('clear-task-filter-btn');
-        if (clearBtn) clearBtn.style.display = 'inline-flex';
+      this.reapplyActiveTaskFilter();
+      const activeRadio = document.querySelector('input[name="task-filter"]:checked');
+      const clearBtn = document.getElementById('clear-task-filter-btn');
+      if (clearBtn) {
+        clearBtn.style.display = (activeRadio && activeRadio.value !== 'all') ? 'inline-flex' : 'none';
       }
 
       this.updateUserCount();
+      this.initHomeSemesterNotice();
     } catch (error) {
       console.error('[App] Error in loadDashboardData:', error);
     } finally {
@@ -1882,26 +1929,41 @@ const App = {
   },
 
   setupTaskFilterListeners() {
-    // Task Filter Radio Buttons
+    const filterLabels = document.querySelectorAll('.task-filter-label');
     const filterRadios = document.querySelectorAll('input[name="task-filter"]');
     const clearFilterBtn = document.getElementById('clear-task-filter-btn');
 
+    filterLabels.forEach(label => {
+      label.onclick = (e) => {
+        const radio = label.querySelector('input[name="task-filter"]');
+        if (radio) {
+          radio.checked = true;
+          this.currentFilter = radio.value;
+          this.filterTasksByType(radio.value);
+          if (clearFilterBtn) clearFilterBtn.style.display = 'inline-flex';
+        }
+      };
+    });
+
     filterRadios.forEach(radio => {
-      radio.addEventListener('change', (e) => {
-        const type = e.target.value;
-        this.filterTasksByType(type);
+      radio.onchange = (e) => {
+        this.currentFilter = e.target.value;
+        this.filterTasksByType(e.target.value);
         if (clearFilterBtn) clearFilterBtn.style.display = 'inline-flex';
-      });
+      };
     });
 
     if (clearFilterBtn) {
-      clearFilterBtn.addEventListener('click', () => {
+      clearFilterBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         // Uncheck all radios
         filterRadios.forEach(radio => radio.checked = false);
         // Show all tasks
+        this.currentFilter = 'all';
         this.filterTasksByType('all');
         clearFilterBtn.style.display = 'none';
-      });
+      };
     }
 
     // Faculty Department Filter
@@ -1932,28 +1994,62 @@ const App = {
     }
   },
 
+  reapplyActiveTaskFilter() {
+    const activeRadio = document.querySelector('input[name="task-filter"]:checked');
+    const filter = (activeRadio && activeRadio.value) || this.currentFilter || 'all';
+    this.filterTasksByType(filter);
+  },
+
   filterTasksByType(type) {
+    const activeRadio = document.querySelector('input[name="task-filter"]:checked');
+    if (!type || type === 'all') {
+      if (activeRadio && activeRadio.value) {
+        type = activeRadio.value;
+      } else {
+        type = 'all';
+      }
+    }
     this.currentFilter = type;
-    const tasks = document.querySelectorAll('.task-card');
+    const container = document.getElementById('tasks-container');
+    if (!container) return;
+
+    const tasks = container.querySelectorAll('.task-card');
     let visibleCount = 0;
+    const normalizedTarget = (this.currentFilter || 'all').toLowerCase().trim();
 
     tasks.forEach(task => {
-      if (type === 'all' || task.dataset.type === type) {
-        task.style.display = 'block';
+      const taskType = (task.dataset.type || 'other').toLowerCase().trim();
+      if (normalizedTarget === 'all' || taskType === normalizedTarget) {
+        task.style.setProperty('display', 'block', 'important');
         visibleCount++;
       } else {
-        task.style.display = 'none';
+        task.style.setProperty('display', 'none', 'important');
       }
     });
+
+    // Handle faculty task groups: hide group container if all tasks within it are filtered out
+    container.querySelectorAll('.faculty-task-group').forEach(group => {
+      const groupVisibleTasks = Array.from(group.querySelectorAll('.task-card')).filter(card => card.style.display !== 'none');
+      group.style.display = groupVisibleTasks.length > 0 ? '' : 'none';
+    });
+
+    // Handle clear button display
+    const clearBtn = document.getElementById('clear-task-filter-btn');
+    if (clearBtn) {
+      clearBtn.style.display = (this.currentFilter && this.currentFilter !== 'all') ? 'inline-flex' : 'none';
+    }
 
     // Handle no tasks message
     const noTasksMsg = document.getElementById('no-tasks-message');
     if (noTasksMsg) {
       if (visibleCount === 0) {
         noTasksMsg.style.display = 'block';
-        noTasksMsg.querySelector('p').textContent = type === 'all'
-          ? "No pending tasks! You're all caught up."
-          : `No pending ${type}s found.`;
+        const p = noTasksMsg.querySelector('p');
+        if (p) {
+          p.textContent = normalizedTarget === 'all'
+            ? "No pending tasks! You're all caught up."
+            : `No pending ${type} tasks found.`;
+        }
       } else {
         noTasksMsg.style.display = 'none';
       }
@@ -2221,6 +2317,13 @@ const App = {
       // Remove from local state and re-render
       this.currentTasks = this.currentTasks.filter(t => t.id !== taskId);
       UI.renderTasks(this.currentTasks, this.userCompletions, this.isAdmin, this.isCR, Auth.getUserId());
+
+      // Re-apply active filter directly — must run AFTER renderTasks rebuilds the DOM
+      const activeRadio = document.querySelector('input[name="task-filter"]:checked');
+      const activeFilter = (activeRadio && activeRadio.value) || this.currentFilter;
+      if (activeFilter && activeFilter !== 'all') {
+        this.filterTasksByType(activeFilter);
+      }
 
       // Notify calendar view of task updates
       if (this.calendarView) {
