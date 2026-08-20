@@ -2136,6 +2136,9 @@
     <!-- What's New / Version Update Modal -->
     <div id="changelog-modal" class="modal" style="display: none;" role="dialog" aria-labelledby="changelog-modal-title" aria-modal="true">
         <div class="modal-content changelog-modal-content">
+            <button id="close-changelog-modal" class="changelog-close-btn" title="Close" aria-label="Close modal">
+                <i class="fas fa-times"></i>
+            </button>
             <div class="modal-header changelog-modal-header">
                 <div class="changelog-header-title">
                     <div class="changelog-header-icon">
@@ -2149,9 +2152,6 @@
                         </div>
                     </div>
                 </div>
-                <button id="close-changelog-modal" class="btn btn-icon" title="Close">
-                    <i class="fas fa-times"></i>
-                </button>
             </div>
             <div id="changelog-modal-body" class="modal-body changelog-modal-body">
                 <!-- Dynamically populated from changes.json -->

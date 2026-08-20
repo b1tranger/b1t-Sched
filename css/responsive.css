@@ -550,6 +550,28 @@
   .deadline-options input[type="datetime-local"] {
     width: 100%;
   }
+
+  /* Mobile Modal Width Expansion & Padding Reduction */
+  .modal {
+    padding: 6px;
+  }
+
+  .modal-content:not(#add-task-modal .modal-content):not(#edit-task-modal .modal-content),
+  .modal-card {
+    width: calc(100% - 12px) !important;
+    max-width: 100% !important;
+    margin: 6px auto !important;
+    padding: var(--spacing-md) !important;
+    border-radius: var(--radius-md) !important;
+  }
+
+  .modal-header {
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .modal-body {
+    margin-bottom: var(--spacing-sm);
+  }
 }
 
 /* Very small mobile */
@@ -590,6 +612,18 @@
 
   .resource-link-card h3 {
     font-size: var(--font-md);
+  }
+
+  .modal {
+    padding: 4px;
+  }
+
+  .modal-content:not(#add-task-modal .modal-content):not(#edit-task-modal .modal-content),
+  .modal-card {
+    width: calc(100% - 8px) !important;
+    margin: 4px auto !important;
+    padding: 10px 12px !important;
+    border-radius: 10px !important;
   }
 }
 
