@@ -271,8 +271,10 @@
 
   /* Calendar View */
   .calendar-modal-content {
+    min-width: 820px;
     max-width: 1060px;
     max-height: 90vh;
+    overflow: visible !important;
   }
 
   .calendar-day-header {
@@ -410,6 +412,7 @@
 
   .calendar-modal-content {
     max-height: 92vh;
+    overflow: visible !important;
   }
 
   .auth-card,

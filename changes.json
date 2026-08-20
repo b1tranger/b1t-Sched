@@ -1,11 +1,43 @@
 {
-  "currentVersion": "v2.45.0",
+  "currentVersion": "v2.45.1",
   "lastUpdated": "August 20, 2026",
   "documentationUrl": "https://b1tranger.netlify.app/render.html?file=https%3A%2F%2Fgithub.com%2Fb1tranger%2Fb1t-Sched%2Fblob%2Fmain%2Fdoc%2FDOCUMENTATION.md",
   "history": [
     {
-      "version": "v2.45.0",
+      "version": "v2.45.1",
       "badge": "Latest",
+      "date": "August 2026",
+      "changes": [
+        {
+          "type": "Enhancement",
+          "title": "Changelog Modal Theme Colors & Vivid Badges",
+          "description": "Enhanced font brightness and contrast in dark and gray modes for changelog descriptions, dates, and subtitle texts. Added bright, high-contrast category badges for New Feature, Fix & Enhancement, Security, and Major updates."
+        },
+        {
+          "type": "Enhancement",
+          "title": "Calendar Desktop Minimum Width & Cell Sizing",
+          "description": "Enforced an 820px minimum width on the desktop calendar modal content and 780px on the calendar grid with horizontal overflow support, preventing task items and course names from being squeezed on compact displays."
+        },
+        {
+          "type": "Fix & Enhancement",
+          "title": "Protruding Floating Close Button & Unclipped Corner",
+          "description": "Redesigned the calendar modal close button to float over the top-right corner with 360-degree rotation and scale micro-interactions. Eliminated container corner clipping by enforcing visible overflow and elevated z-index."
+        },
+        {
+          "type": "Enhancement",
+          "title": "Theme-Adaptive Month & Year Dropdown Chevrons",
+          "description": "Replaced harsh red dropdown arrows with sleek, modern stroke chevrons tuned to match active Light, Dark (lime green), and Gray (lavender/silver) themes."
+        },
+        {
+          "type": "Enhancement",
+          "title": "Hidden Scrollbars Across Calendar Window",
+          "description": "Applied cross-browser scrollbar hiding across the calendar grid, weekly views, mobile date lists, and task detail modals while retaining full smooth scrolling via touch, mouse wheel, and trackpad."
+        }
+      ]
+    },
+    {
+      "version": "v2.45.0",
+      "badge": "Stable",
       "date": "August 2026",
       "changes": [
         {

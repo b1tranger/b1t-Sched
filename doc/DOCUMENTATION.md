@@ -2402,11 +2402,19 @@ You can use basic markdown formatting in task and event descriptions:
 
 ---
 
-_Last Updated: August 20, 2026 (v2.45.0)_
+_Last Updated: August 20, 2026 (v2.45.1)_
 
 ## Version History
 
-### v2.45.0 (Latest)
+### v2.45.1 (Latest)
+
+- **Enhancement**: **Changelog Modal Theme Colors & Vivid Badges** — Enhanced font brightness and contrast in dark and gray modes for changelog descriptions, dates, and subtitle texts. Added bright, high-contrast category badges for New Feature, Fix & Enhancement, Security, and Major updates.
+- **Enhancement**: **Calendar Desktop Minimum Width & Cell Sizing** — Enforced an 820px minimum width on the desktop calendar modal content and 780px on the calendar grid with horizontal overflow support, preventing task items and course names from being squeezed on compact displays.
+- **Fix & Enhancement**: **Protruding Floating Close Button & Unclipped Corner** — Redesigned the calendar modal close button to float over the top-right corner with 360-degree rotation and scale micro-interactions. Eliminated container corner clipping by enforcing visible overflow and elevated z-index.
+- **Enhancement**: **Theme-Adaptive Month & Year Dropdown Chevrons** — Replaced harsh red dropdown arrows with sleek, modern stroke chevrons tuned to match active Light, Dark (lime green), and Gray (lavender/silver) themes.
+- **Enhancement**: **Hidden Scrollbars Across Calendar Window** — Applied cross-browser scrollbar hiding across the calendar grid, weekly views, mobile date lists, and task detail modals while retaining full smooth scrolling via touch, mouse wheel, and trackpad.
+
+### v2.45.0
 
 - **New Feature**: **Version Update & What's New Modal** — Interactive changelog modal that automatically notifies users whenever a new service worker version is deployed, loading update history directly from `changes.json` with direct links to full documentation.
 - **Fix & Enhancement**: **Persistent Task Type Filters & Re-clickable Controls** — Task list filters (Assignment, Homework, Exam, Project, Presentation, Other) remain strictly active when checking/unchecking tasks or deleting entries. Filter buttons are re-clickable to instantly refresh the filtered view.

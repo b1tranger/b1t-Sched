@@ -111,7 +111,7 @@ class CalendarView {
 
     // Create modal content container
     const modalContent = document.createElement('div');
-    modalContent.className = 'modal-content calendar-modal-content';
+    modalContent.className = 'calendar-modal-content';
 
     // Create calendar header
     const header = document.createElement('div');
@@ -209,7 +209,6 @@ class CalendarView {
     header.appendChild(prevBtn);
     header.appendChild(titleContainer);
     header.appendChild(nextBtn);
-    header.appendChild(closeBtn);
 
     // Create calendar grid container
     const gridContainer = document.createElement('div');
@@ -250,12 +249,16 @@ class CalendarView {
     loadingState.style.display = 'none';
     loadingState.innerHTML = '<div class="loader"></div><p>Loading calendar...</p>';
 
-    // Assemble modal
+    // Assemble modal - close button attached directly to modalContent for protruding top-right positioning
+    modalContent.appendChild(closeBtn);
     modalContent.appendChild(header);
     modalContent.appendChild(gridContainer);
     modalContent.appendChild(emptyState);
     modalContent.appendChild(loadingState);
     modal.appendChild(modalContent);
+
+    // Attach click handler directly to close button
+    closeBtn.addEventListener('click', () => this.close());
 
     // Append to body
     document.body.appendChild(modal);
