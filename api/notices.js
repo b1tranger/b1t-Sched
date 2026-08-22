@@ -8,7 +8,7 @@ import { put, head } from '@vercel/blob';
 // Configuration
 const BLOB_FILENAME = 'notices.json';
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours cache validity
-const DEFAULT_SEED_ID = 760;
+const DEFAULT_SEED_ID = 739;
 const PROBE_RANGE = 20;
 
 export default async function handler(req, res) {
