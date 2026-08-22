@@ -2431,6 +2431,7 @@ _Last Updated: August 20, 2026 (v2.45.1)_
   - **Cache & Merge Sensitivity**: Enhanced `mergeAndSkipUnchanged()` to check `existing.status === item.status`, ensuring changes in assignment submission status immediately invalidate stale cache rows and refresh the UI.
   - **Auto-Sync to Pending Tasks (`syncTurnedInAssignmentsToUserCompletions`)**: Whenever the user signs into Classroom or loads classroom contents, assignments detected as `Turned in`, `Turned in (Late)`, `Returned`, or `Graded` automatically match and mark corresponding tasks in the user's "Pending Tasks" list as completed/checked in Firestore and UI.
   - **Classroom Sync Two-Way Add & Update (`syncAssignmentsToTasks`)**: Enhanced the Admin/CR Sync feature so that clicking **Sync** not only adds new assignments to the main task list, but also automatically updates existing synced tasks if a teacher modifies deadlines, titles, or descriptions in Google Classroom.
+  - **Classroom Desktop Minimum Width & Overflow Protection**: Enforced an 800px minimum width (`min-width: 800px;`) on `.classroom-modal-content` with horizontal scroll support on `#classroom-modal`, ensuring cards, action buttons, and course details are never squeezed on compact desktop or laptop displays.
   - **Pill UI & Theming**: Fixed at the bottom-right corner of each assignment card (`bottom: 10px; right: 16px;`) with dedicated light, dark, and monochromatic gray theme styling.
 
 ### v2.45.0

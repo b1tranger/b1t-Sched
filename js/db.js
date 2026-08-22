@@ -251,8 +251,12 @@ const DB = {
         });
 
         // Log task completion activity
-        if (userEmail && userRole) {
-          await ActivityLogger.logTaskCompletion(taskId, userId, userEmail, userRole);
+        if (userEmail && userRole && typeof ActivityLogger !== 'undefined' && ActivityLogger.logTaskCompletion) {
+          try {
+            await ActivityLogger.logTaskCompletion(taskId, {}, userId, { role: userRole, email: userEmail });
+          } catch (logErr) {
+            console.warn('[DB] ActivityLogger logTaskCompletion warning:', logErr);
+          }
         }
       } else {
         await completionRef.delete();

@@ -206,9 +206,14 @@ body.dark-mode .classroom-header-logout-btn:hover {
    Modal (Desktop)
    ========================================= */
 /* Reusing general modal styles, but adding specific class for size/color */
+#classroom-modal {
+    overflow-x: auto;
+}
+
 .classroom-modal-content {
     width: 90%;
     max-width: 1000px;
+    min-width: 800px;
     /* Wider for desktop view */
     height: 80vh;
     display: flex;
@@ -216,6 +221,14 @@ body.dark-mode .classroom-header-logout-btn:hover {
     padding: 0;
     overflow: hidden;
     border-radius: 8px;
+    box-shadow: var(--shadow-lg);
+}
+
+@media (max-width: 860px) and (min-width: 769px) {
+    .classroom-modal-content {
+        min-width: 740px;
+        width: 95%;
+    }
 }
 
 .classroom-modal-header {

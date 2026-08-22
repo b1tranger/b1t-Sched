@@ -5,7 +5,8 @@
 const Classroom = {
     // Configuration
     CLIENT_ID: '142195418679-0ripc2dn76otvkvfnk6kdk2aitdd29rm.apps.googleusercontent.com',
-    SCOPES: 'https://www.googleapis.com/auth/classroom.courses.readonly https://www.googleapis.com/auth/classroom.coursework.me.readonly https://www.googleapis.com/auth/classroom.announcements.readonly https://www.googleapis.com/auth/classroom.courseworkmaterials.readonly',
+    SCOPES: 'https://www.googleapis.com/auth/classroom.courses.readonly https://www.googleapis.com/auth/classroom.coursework.me.readonly https://www.googleapis.com/auth/classroom.student-submissions.me.readonly https://www.googleapis.com/auth/classroom.student-submissions.students.readonly https://www.googleapis.com/auth/classroom.announcements.readonly https://www.googleapis.com/auth/classroom.courseworkmaterials.readonly',
+    SCOPE_VERSION: 'v2.46.0',
 
     // Date filter configuration (in months)
     DATE_FILTER_MONTHS: 6, // Only show items from the last 6 months
@@ -22,6 +23,7 @@ const Classroom = {
     _authResolve: null, // Promise resolver for session check
     _sessionCheckTimeout: null,
     hasExpiredSession: false, // Flag for showing cached data with re-sign-in prompt
+    hasScopePermissionIssue: false, // Flag when token lacks student-submissions scope
 
     // Cache
     cache: {},
@@ -335,6 +337,14 @@ const Classroom = {
             const token = localStorage.getItem('classroom_token');
             const expiryStr = localStorage.getItem('classroom_token_expiry');
             const isConnected = localStorage.getItem('classroom_connected') === 'true';
+            const storedScopeVersion = localStorage.getItem('classroom_scope_version');
+
+            // If stored token lacks latest scope version (v2.46.0 studentSubmissions scope), invalidate token
+            if (storedScopeVersion !== this.SCOPE_VERSION) {
+                console.log('[Classroom] Scope version mismatch (required: ' + this.SCOPE_VERSION + ', found: ' + storedScopeVersion + ') — invalidating old token to prompt for updated permissions');
+                localStorage.removeItem('classroom_token');
+                localStorage.removeItem('classroom_token_expiry');
+            }
 
             // Store resolve context to be called when auth succeeds or fails
             this._authResolve = resolve;
@@ -345,17 +355,19 @@ const Classroom = {
                 this._cleanupAuthPromise(false);
             }, 5000);
 
-            if (token && expiryStr) {
+            const activeToken = localStorage.getItem('classroom_token');
+            if (activeToken && expiryStr) {
                 const expiryTime = parseInt(expiryStr);
                 // Check if token is valid (with 5 min buffer)
                 if (Date.now() < expiryTime - (5 * 60 * 1000)) {
                     console.log('Restoring valid Classroom session from storage...');
-                    this.accessToken = token;
+                    this.accessToken = activeToken;
 
                     // Schedule refresh
                     const timeUntilRefresh = Math.max(expiryTime - Date.now() - (5 * 60 * 1000), 0);
 
                     if (this.refreshTimer) clearTimeout(this.refreshTimer);
+
                     this.refreshTimer = setTimeout(() => {
                         console.log('Refreshing Classroom token...');
                         if (this.tokenClient) {
@@ -399,58 +411,33 @@ const Classroom = {
         }
     },
 
-    _handleAuthError(error) {
-        console.log('Auth error:', error);
-        const errObj = error || {};
-        const errType = typeof errObj === 'string' ? errObj : (errObj.error || errObj.error_subtype || '');
-
-        // If error is silent refresh requiring interaction, preserve connection and use cached session mode
-        if (errType === 'interaction_required' || errType === 'access_denied' || errType === 'user_closed_popup') {
-            console.log('[Classroom] Silent refresh requires interaction, keeping user connected with cached data');
-            this.hasExpiredSession = true;
-            this.showCachedDataWithBanner();
-            this._cleanupAuthPromise(false);
-            return;
-        }
-
-        // Hard failure or explicit rejection - clean up session state
-        localStorage.removeItem('classroom_connected');
-        localStorage.removeItem('classroom_token');
-        localStorage.removeItem('classroom_token_expiry');
-        this.accessToken = null;
-        this.renderLoginState();
-        this._cleanupAuthPromise(false);
+    // Show cached data with a sticky re-connect banner
+    async showCachedDataWithBanner() {
+        this.updateBottomCachedFooter(true);
+        await this.loadCachedItems(this.currentView === 'notifications' ? 'announcements' : (this.currentView === 'materials' ? 'materials' : 'assignments'));
     },
 
+    // Setup UI event listeners
     setupEventListeners() {
-        console.log('Setting up Classroom event listeners...');
-
-        // Mobile Toggle Button
-        const toggleBtn = document.getElementById('classroom-toggle');
-        if (toggleBtn) {
-            console.log('Attaching click listener to mobile toggle button');
-            toggleBtn.addEventListener('click', () => {
-                console.log('Mobile toggle clicked');
+        // Mobile Toggle Buttons (handle multiple possible IDs)
+        const toggleMobile = document.getElementById('classroom-toggle') || document.getElementById('classroom-toggle-btn');
+        if (toggleMobile) {
+            toggleMobile.addEventListener('click', () => {
                 this.openClassroomParams();
             });
-        } else {
-            console.warn('Mobile toggle button (classroom-toggle) not found in DOM');
+            console.log('Attached listener to mobile classroom toggle');
         }
 
-        // Desktop Navigation Button
-        const navBtn = document.getElementById('classroom-nav-btn');
+        // Desktop Navigation Buttons
+        const navBtn = document.getElementById('classroom-nav-btn') || document.getElementById('classroom-toggle-btn-desktop');
         if (navBtn) {
-            console.log('Attaching click listener to desktop nav button');
             navBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                console.log('Desktop nav button clicked');
+                if (e) e.preventDefault();
                 this.openClassroomParams();
             });
-        } else {
-            console.warn('Desktop nav button (classroom-nav-btn) not found in DOM');
+            console.log('Attached listener to desktop classroom nav button');
         }
 
-        // Close Buttons
         const closeMobile = document.getElementById('close-classroom-sidebar');
         const closeDesktop = document.getElementById('close-classroom-modal');
         const overlay = document.getElementById('classroom-overlay');
@@ -458,22 +445,16 @@ const Classroom = {
         if (closeMobile) {
             closeMobile.addEventListener('click', () => this.toggleSidebar(false));
             console.log('Attached listener to close-classroom-sidebar');
-        } else {
-            console.warn('close-classroom-sidebar not found in DOM');
         }
 
         if (closeDesktop) {
             closeDesktop.addEventListener('click', () => this.toggleModal(false));
             console.log('Attached listener to close-classroom-modal');
-        } else {
-            console.warn('close-classroom-modal not found in DOM');
         }
 
         if (overlay) {
             overlay.addEventListener('click', () => this.toggleSidebar(false));
             console.log('Attached listener to classroom-overlay');
-        } else {
-            console.warn('classroom-overlay not found in DOM');
         }
 
         console.log('Event listeners setup complete');
@@ -499,7 +480,16 @@ const Classroom = {
             if (this.courses.length === 0) {
                 this.fetchCoursesAndLoadAll();
             } else {
-                this.loadAllAssignments();
+                // Show current view immediately for instant response
+                this.renderCurrentView();
+                // Always trigger background refresh to update newly turned-in assignments
+                this.fetchAllContentData().then(() => {
+                    if (this.currentView === 'todo' || this.currentView === 'materials' || this.currentView === 'notifications') {
+                        this.renderCurrentView();
+                    }
+                }).catch(err => {
+                    console.warn('[Classroom] Background live sync warning:', err);
+                });
             }
             return;
         }
@@ -558,6 +548,8 @@ const Classroom = {
 
         // Save token to storage for persistence
         localStorage.setItem('classroom_token', this.accessToken);
+        localStorage.setItem('classroom_scope_version', this.SCOPE_VERSION);
+        this.hasScopePermissionIssue = false;
 
         // Calculate and save expiry
         if (tokenResponse.expires_in) {
@@ -615,6 +607,7 @@ const Classroom = {
         this.courses = [];
         this.currentCourseId = null;
         this.hasExpiredSession = false;
+        this.hasScopePermissionIssue = false;
 
         // Clear cached classroom data
         this.initCacheManager();
@@ -630,6 +623,7 @@ const Classroom = {
         localStorage.removeItem('classroom_connected');
         localStorage.removeItem('classroom_token');
         localStorage.removeItem('classroom_token_expiry');
+        localStorage.removeItem('classroom_scope_version');
 
         if (this.refreshTimer) {
             clearTimeout(this.refreshTimer);
@@ -741,11 +735,17 @@ const Classroom = {
                             const submissions = subData.studentSubmissions || [];
                             submissions.forEach(sub => {
                                 if (sub.courseWorkId) {
-                                    submissionsMap.set(sub.courseWorkId, sub);
+                                    submissionsMap.set(String(sub.courseWorkId), sub);
                                 }
                             });
+                            console.log(`[Classroom] Submissions for ${course.name}: ${submissions.length} loaded`);
                         } catch (subErr) {
                             console.warn(`Failed to parse submissions for course ${course.name}:`, subErr);
+                        }
+                    } else if (submissionsRes) {
+                        console.warn(`[Classroom] studentSubmissions returned HTTP ${submissionsRes.status} for course ${course.name}`);
+                        if (submissionsRes.status === 403 || submissionsRes.status === 401) {
+                            this.hasScopePermissionIssue = true;
                         }
                     }
 
@@ -771,16 +771,16 @@ const Classroom = {
                             work.courseState = course.courseState;
 
                             // Determine detailed submission status
-                            const sub = submissionsMap.get(work.id);
-                            const subState = sub ? sub.state : 'NEW';
+                            const sub = submissionsMap.get(String(work.id));
+                            const rawState = (sub && sub.state) ? String(sub.state).toUpperCase() : 'NEW';
                             const isLate = sub ? Boolean(sub.late) : false;
                             const assignedGrade = sub && typeof sub.assignedGrade === 'number' ? sub.assignedGrade : null;
 
-                            work.submissionState = subState;
+                            work.submissionState = rawState;
                             work.isLate = isLate;
                             work.assignedGrade = assignedGrade;
 
-                            if (subState === 'RETURNED') {
+                            if (rawState === 'RETURNED') {
                                 if (assignedGrade !== null) {
                                     work.status = `Graded: ${assignedGrade}${work.maxPoints ? `/${work.maxPoints}` : ''}`;
                                     work.statusCode = 'graded';
@@ -788,7 +788,7 @@ const Classroom = {
                                     work.status = 'Returned';
                                     work.statusCode = 'returned';
                                 }
-                            } else if (subState === 'TURNED_IN') {
+                            } else if (rawState === 'TURNED_IN') {
                                 work.status = isLate ? 'Turned in (Late)' : 'Turned in';
                                 work.statusCode = 'turned_in';
                             } else if (isPastDue) {
@@ -1419,18 +1419,25 @@ const Classroom = {
             // Filter for assignments that have been submitted, returned, or graded
             const turnedInAssignments = assignments.filter(a => {
                 if (!a) return false;
-                return a.statusCode === 'turned_in' || 
-                       a.statusCode === 'returned' || 
-                       a.statusCode === 'graded' || 
-                       a.submissionState === 'TURNED_IN' || 
-                       a.submissionState === 'RETURNED' || 
-                       a.status === 'Turned in' || 
-                       a.status === 'Returned' || 
-                       (a.status && a.status.startsWith('Graded')) ||
-                       a.status === 'Turned in (Late)';
+                const state = (a.submissionState || '').toUpperCase();
+                const code = (a.statusCode || '').toLowerCase();
+                const status = (a.status || '').toLowerCase();
+                return code === 'turned_in' || 
+                       code === 'returned' || 
+                       code === 'graded' || 
+                       state === 'TURNED_IN' || 
+                       state === 'RETURNED' || 
+                       status.includes('turned in') || 
+                       status.includes('returned') || 
+                       status.includes('graded');
             });
 
-            if (turnedInAssignments.length === 0) return;
+            if (turnedInAssignments.length === 0) {
+                console.log('[Classroom] No turned-in/graded assignments detected to auto-complete in tasks');
+                return;
+            }
+
+            console.log(`[Classroom] Checking ${turnedInAssignments.length} turned-in/graded assignment(s) against Pending Tasks...`);
 
             // Get available tasks
             let tasks = (typeof App !== 'undefined' && Array.isArray(App.currentTasks)) ? App.currentTasks : [];
@@ -1460,7 +1467,7 @@ const Classroom = {
                 const matchingTasks = tasks.filter(task => {
                     if (!task) return false;
                     // 1. Direct match by classroomWorkId
-                    if (task.classroomWorkId && task.classroomWorkId === assignment.id) {
+                    if (task.classroomWorkId && String(task.classroomWorkId) === String(assignment.id)) {
                         return true;
                     }
                     // 2. Match by alternateLink in description
@@ -1483,6 +1490,7 @@ const Classroom = {
 
                     // Toggle task completion in DB
                     if (typeof DB !== 'undefined' && typeof DB.toggleTaskCompletion === 'function') {
+                        console.log(`[Classroom] Auto-completing task "${task.title}" for user because assignment "${assignment.title}" is turned in`);
                         const toggleRes = await DB.toggleTaskCompletion(userId, task.id, true, userEmail, userRole);
                         if (toggleRes && toggleRes.success) {
                             userCompletions[task.id] = { completedAt: new Date() };
@@ -1493,7 +1501,7 @@ const Classroom = {
             }
 
             if (newlyCompletedCount > 0) {
-                console.log(`[Classroom] Automatically checked ${newlyCompletedCount} task(s) in Pending Tasks for turned-in assignment(s)`);
+                console.log(`[Classroom] Successfully auto-checked ${newlyCompletedCount} task(s) in Pending Tasks`);
 
                 if (typeof App !== 'undefined') {
                     App.userCompletions = userCompletions;
@@ -1595,7 +1603,19 @@ const Classroom = {
             `;
         }
 
-        const fullHtml = headerHtml + `<div style="flex: 1; overflow-y: auto;">${listHtml}</div>`;
+        const scopeNoticeHtml = (this.hasScopePermissionIssue && viewType === 'todo') ? `
+            <div style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: #fca5a5;">
+                    <i class="fa-solid fa-circle-exclamation" style="color: #ef4444; font-size: 1rem;"></i>
+                    <span>Permission needed to display "Turned in" & "Graded" status badges.</span>
+                </div>
+                <button onclick="Classroom.login()" class="btn btn-sm btn-primary" style="padding: 4px 10px; font-size: 0.75rem; white-space: nowrap;">
+                    <i class="fas fa-sync-alt"></i> Reconnect
+                </button>
+            </div>
+        ` : '';
+
+        const fullHtml = headerHtml + `<div style="flex: 1; overflow-y: auto;">${scopeNoticeHtml}${listHtml}</div>`;
 
         const containers = this.getContainers();
         containers.forEach(container => {
@@ -1978,7 +1998,19 @@ const Classroom = {
             `;
         }
 
-        const fullHtml = headerHtml + `<div style="flex: 1; overflow-y: auto;">${listHtml}</div>`;
+        const scopeNoticeHtml = (this.hasScopePermissionIssue && viewType === 'todo') ? `
+            <div style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: #fca5a5;">
+                    <i class="fa-solid fa-circle-exclamation" style="color: #ef4444; font-size: 1rem;"></i>
+                    <span>Permission needed to display "Turned in" & "Graded" status badges.</span>
+                </div>
+                <button onclick="Classroom.login()" class="btn btn-sm btn-primary" style="padding: 4px 10px; font-size: 0.75rem; white-space: nowrap;">
+                    <i class="fas fa-sync-alt"></i> Reconnect
+                </button>
+            </div>
+        ` : '';
+
+        const fullHtml = headerHtml + `<div style="flex: 1; overflow-y: auto;">${scopeNoticeHtml}${listHtml}</div>`;
 
         const containers = this.getContainers();
         containers.forEach(container => {

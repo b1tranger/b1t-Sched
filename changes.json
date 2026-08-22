@@ -27,6 +27,11 @@
           "type": "Enhancement",
           "title": "Two-Way Task Sync with In-Place Updates",
           "description": "Clicking the Sync button in Classroom To-Do now adds new assignments and automatically updates existing tasks if a teacher modifies deadlines, titles, or descriptions in Google Classroom."
+        },
+        {
+          "type": "Enhancement",
+          "title": "Classroom Desktop Minimum Width & Overflow Protection",
+          "description": "Enforced an 800px minimum width on the desktop Classroom modal with horizontal scroll support, preventing coursework cards and headers from being squeezed on compact and 1366x768 laptop displays."
         }
       ]
     },
