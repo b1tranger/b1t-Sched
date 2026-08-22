@@ -166,28 +166,85 @@ const Classroom = {
 
     // Helper to retrieve data from in-memory cache, CacheManager, or JSON template cache
     async getOrFetchData(type) {
+        let result = [];
         if (this.inMemoryCache && this.inMemoryCache[type] && this.inMemoryCache[type].length > 0) {
-            return this.inMemoryCache[type];
-        }
+            result = this.inMemoryCache[type];
+        } else {
+            this.initCacheManager();
+            if (this.cacheManager) {
+                const cached = await this.cacheManager.getCachedClassroomData(type);
+                if (cached && cached.data && cached.data.length > 0) {
+                    if (!this.inMemoryCache) this.inMemoryCache = {};
+                    this.inMemoryCache[type] = cached.data;
+                    result = cached.data;
+                }
+            }
 
-        this.initCacheManager();
-        if (this.cacheManager) {
-            const cached = await this.cacheManager.getCachedClassroomData(type);
-            if (cached && cached.data && cached.data.length > 0) {
-                if (!this.inMemoryCache) this.inMemoryCache = {};
-                this.inMemoryCache[type] = cached.data;
-                return cached.data;
+            if (result.length === 0) {
+                const jsonCache = this.getJsonCache();
+                if (jsonCache && jsonCache[type]) {
+                    if (!this.inMemoryCache) this.inMemoryCache = {};
+                    this.inMemoryCache[type] = jsonCache[type];
+                    result = jsonCache[type];
+                }
             }
         }
 
-        const jsonCache = this.getJsonCache();
-        if (jsonCache && jsonCache[type]) {
-            if (!this.inMemoryCache) this.inMemoryCache = {};
-            this.inMemoryCache[type] = jsonCache[type];
-            return jsonCache[type];
+        if (type === 'assignments' && Array.isArray(result)) {
+            result = this.sortAssignments(result);
+            if (this.inMemoryCache) this.inMemoryCache.assignments = result;
         }
 
-        return [];
+        return result || [];
+    },
+
+    // Sort assignments into 2 vertical groups: Pending/Active first (Assigned, Missing), then Completed (Turned In, Returned, Graded), each sorted ascending by due date
+    sortAssignments(assignments) {
+        if (!Array.isArray(assignments)) return [];
+
+        const isSubmittedOrReturned = (item) => {
+            if (!item) return false;
+            if (item.statusCode) {
+                return item.statusCode === 'turned_in' || item.statusCode === 'returned' || item.statusCode === 'graded';
+            }
+            if (item.submissionState) {
+                return item.submissionState === 'TURNED_IN' || item.submissionState === 'RETURNED';
+            }
+            if (item.status) {
+                return item.status === 'Turned in' || item.status === 'Returned' || item.status.startsWith('Graded') || item.status === 'Turned in (Late)';
+            }
+            return false;
+        };
+
+        return [...assignments].sort((a, b) => {
+            const groupA = isSubmittedOrReturned(a) ? 1 : 0;
+            const groupB = isSubmittedOrReturned(b) ? 1 : 0;
+
+            if (groupA !== groupB) {
+                return groupA - groupB;
+            }
+
+            // Within the same group, maintain ascending due date order (earliest deadline first)
+            if (!a.dueDate && !b.dueDate) return 0;
+            if (!a.dueDate) return 1;
+            if (!b.dueDate) return -1;
+
+            const dateA = new Date(
+                a.dueDate.year,
+                a.dueDate.month - 1,
+                a.dueDate.day,
+                a.dueTime?.hours || 23,
+                a.dueTime?.minutes || 59
+            );
+            const dateB = new Date(
+                b.dueDate.year,
+                b.dueDate.month - 1,
+                b.dueDate.day,
+                b.dueTime?.hours || 23,
+                b.dueTime?.minutes || 59
+            );
+            return dateA - dateB;
+        });
     },
 
     // Toggle and render persistent bottom cached content footer
@@ -750,13 +807,7 @@ const Classroom = {
                 }
             }
 
-            allAssignments.sort((a, b) => {
-                if (!a.dueDate) return 1;
-                if (!b.dueDate) return -1;
-                const dateA = new Date(a.dueDate.year, a.dueDate.month - 1, a.dueDate.day);
-                const dateB = new Date(b.dueDate.year, b.dueDate.month - 1, b.dueDate.day);
-                return dateA - dateB;
-            });
+            allAssignments = this.sortAssignments(allAssignments);
 
             // Incremental sync & merge
             const mergedAssignments = this.mergeAndSkipUnchanged('assignments', allAssignments);
@@ -765,6 +816,10 @@ const Classroom = {
                 await this.cacheManager.cacheClassroomData('assignments', mergedAssignments);
             }
             this.saveJsonCache('assignments', mergedAssignments);
+
+            // Automatically check matching tasks in "Pending Tasks" for turned in assignments
+            this.syncTurnedInAssignmentsToUserCompletions(mergedAssignments);
+
             return mergedAssignments;
 
         } catch (error) {
@@ -1038,6 +1093,11 @@ const Classroom = {
         if (cachedItems && cachedItems.length > 0) {
             console.log(`[Classroom] Showing cached ${type} with persistent bottom Reconnect banner`);
 
+            if (type === 'assignments') {
+                cachedItems = this.sortAssignments(cachedItems);
+                this.syncTurnedInAssignmentsToUserCompletions(cachedItems);
+            }
+
             // Calculate how long ago the data was cached
             const cachedAgo = Date.now() - timestamp;
             const hoursAgo = Math.floor(cachedAgo / (1000 * 60 * 60));
@@ -1244,12 +1304,12 @@ const Classroom = {
 
             const classroomWorkIds = syncableAssignments.map(a => a.id);
             const existingTasksResult = await DB.getTasksByClassroomIds(classroomWorkIds);
-            const existingIds = new Set();
+            const existingTasksMap = new Map();
 
             if (existingTasksResult.success && existingTasksResult.data) {
                 existingTasksResult.data.forEach(task => {
                     if (task.classroomWorkId) {
-                        existingIds.add(task.classroomWorkId);
+                        existingTasksMap.set(task.classroomWorkId, task);
                     }
                 });
             }
@@ -1257,10 +1317,9 @@ const Classroom = {
             const userId = Auth.getUserId();
             const userEmail = Auth.getUserEmail();
             let addedCount = 0;
+            let updatedCount = 0;
 
             for (const assignment of syncableAssignments) {
-                if (existingIds.has(assignment.id)) continue;
-
                 // Format due date to be compatible with DB structure
                 const due = new Date(assignment.dueDate.year, assignment.dueDate.month - 1, assignment.dueDate.day, assignment.dueTime?.hours || 23, assignment.dueTime?.minutes || 59);
 
@@ -1281,13 +1340,43 @@ const Classroom = {
                     classroomWorkId: assignment.id
                 };
 
-                const result = await DB.createTask(userId, userEmail, taskData);
-                if (result.success) {
-                    addedCount++;
+                const existingTask = existingTasksMap.get(assignment.id);
+
+                if (existingTask) {
+                    // Check if deadline, title, course, or description changed in Classroom
+                    let existingDueIso = null;
+                    if (existingTask.deadline) {
+                        const existingDate = existingTask.deadline.toDate ? existingTask.deadline.toDate() : new Date(existingTask.deadline);
+                        existingDueIso = existingDate.toISOString();
+                    }
+
+                    const hasChanges = existingTask.title !== taskData.title ||
+                                       existingTask.course !== taskData.course ||
+                                       existingTask.description !== taskData.description ||
+                                       existingDueIso !== taskData.deadline;
+
+                    if (hasChanges) {
+                        const updateRes = await DB.updateTask(existingTask.id, taskData);
+                        if (updateRes && updateRes.success) {
+                            updatedCount++;
+                        }
+                    }
+                } else {
+                    const result = await DB.createTask(userId, userEmail, taskData);
+                    if (result && result.success) {
+                        addedCount++;
+                    }
                 }
             }
 
-            alert(`Successfully synced ${addedCount} new assignment(s) to Tasks!`);
+            if (addedCount === 0 && updatedCount === 0) {
+                alert('All assignments are already up to date in Tasks.');
+            } else {
+                const messages = [];
+                if (addedCount > 0) messages.push(`${addedCount} new assignment(s) added`);
+                if (updatedCount > 0) messages.push(`${updatedCount} existing task(s) updated with new deadlines/details`);
+                alert(`Sync completed:\n• ${messages.join('\n• ')}`);
+            }
 
             // Refresh dashboard tasks
             if (App && typeof App.loadDashboardData === 'function') {
@@ -1302,6 +1391,129 @@ const Classroom = {
                 syncBtn.disabled = false;
                 syncBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Sync';
             }
+        }
+    },
+
+    /**
+     * Automatically mark matching tasks in "Pending Tasks" as completed for turned-in/graded assignments
+     * @param {Array} assignments 
+     */
+    async syncTurnedInAssignmentsToUserCompletions(assignments) {
+        if (!Array.isArray(assignments) || assignments.length === 0) return;
+
+        // Skip if user is restricted/blocked
+        if (typeof App !== 'undefined' && App.isBlocked) return;
+
+        try {
+            const userId = (typeof Auth !== 'undefined' && Auth.getUserId) ? Auth.getUserId() : null;
+            if (!userId) return;
+
+            const userEmail = (typeof Auth !== 'undefined' && Auth.getUserEmail) ? Auth.getUserEmail() : null;
+            let userRole = 'Student';
+            if (typeof App !== 'undefined') {
+                if (App.isAdmin) userRole = 'Admin';
+                else if (App.isFaculty) userRole = 'Faculty';
+                else if (App.isCR) userRole = 'CR';
+            }
+
+            // Filter for assignments that have been submitted, returned, or graded
+            const turnedInAssignments = assignments.filter(a => {
+                if (!a) return false;
+                return a.statusCode === 'turned_in' || 
+                       a.statusCode === 'returned' || 
+                       a.statusCode === 'graded' || 
+                       a.submissionState === 'TURNED_IN' || 
+                       a.submissionState === 'RETURNED' || 
+                       a.status === 'Turned in' || 
+                       a.status === 'Returned' || 
+                       (a.status && a.status.startsWith('Graded')) ||
+                       a.status === 'Turned in (Late)';
+            });
+
+            if (turnedInAssignments.length === 0) return;
+
+            // Get available tasks
+            let tasks = (typeof App !== 'undefined' && Array.isArray(App.currentTasks)) ? App.currentTasks : [];
+            if (tasks.length === 0 && typeof DB !== 'undefined' && typeof App !== 'undefined' && App.userProfile) {
+                const tasksResult = await DB.getTasks(App.userProfile.department, App.userProfile.semester, App.userProfile.section);
+                if (tasksResult && tasksResult.success && Array.isArray(tasksResult.data)) {
+                    tasks = tasksResult.data;
+                }
+            }
+
+            if (!tasks || tasks.length === 0) return;
+
+            // Get current user completions
+            let userCompletions = (typeof App !== 'undefined' && App.userCompletions) ? App.userCompletions : {};
+            if (Object.keys(userCompletions).length === 0 && typeof DB !== 'undefined') {
+                const compResult = await DB.getUserTaskCompletions(userId);
+                if (compResult && compResult.success && compResult.data) {
+                    userCompletions = compResult.data;
+                    if (typeof App !== 'undefined') App.userCompletions = userCompletions;
+                }
+            }
+
+            let newlyCompletedCount = 0;
+
+            for (const assignment of turnedInAssignments) {
+                // Find matching task(s) in Pending Tasks
+                const matchingTasks = tasks.filter(task => {
+                    if (!task) return false;
+                    // 1. Direct match by classroomWorkId
+                    if (task.classroomWorkId && task.classroomWorkId === assignment.id) {
+                        return true;
+                    }
+                    // 2. Match by alternateLink in description
+                    if (assignment.alternateLink && task.description && task.description.includes(assignment.alternateLink)) {
+                        return true;
+                    }
+                    // 3. Match by exact title & course (or addedFrom === 'classroom')
+                    if (task.title && assignment.title && task.title.trim().toLowerCase() === assignment.title.trim().toLowerCase()) {
+                        if (task.addedFrom === 'classroom') return true;
+                        if (task.course && assignment.courseName && task.course.trim().toLowerCase() === assignment.courseName.trim().toLowerCase()) {
+                            return true;
+                        }
+                    }
+                    return false;
+                });
+
+                for (const task of matchingTasks) {
+                    // Skip if already marked completed for this user
+                    if (userCompletions[task.id]) continue;
+
+                    // Toggle task completion in DB
+                    if (typeof DB !== 'undefined' && typeof DB.toggleTaskCompletion === 'function') {
+                        const toggleRes = await DB.toggleTaskCompletion(userId, task.id, true, userEmail, userRole);
+                        if (toggleRes && toggleRes.success) {
+                            userCompletions[task.id] = { completedAt: new Date() };
+                            newlyCompletedCount++;
+                        }
+                    }
+                }
+            }
+
+            if (newlyCompletedCount > 0) {
+                console.log(`[Classroom] Automatically checked ${newlyCompletedCount} task(s) in Pending Tasks for turned-in assignment(s)`);
+
+                if (typeof App !== 'undefined') {
+                    App.userCompletions = userCompletions;
+
+                    // Re-render tasks UI if on dashboard
+                    if (typeof UI !== 'undefined' && typeof UI.renderTasks === 'function' && Array.isArray(App.currentTasks)) {
+                        UI.renderTasks(App.currentTasks, App.userCompletions, App.isAdmin, App.isCR, userId);
+                    }
+
+                    if (typeof App.reapplyActiveTaskFilter === 'function') {
+                        App.reapplyActiveTaskFilter();
+                    }
+
+                    if (App.calendarView && typeof App.calendarView.onTasksUpdated === 'function') {
+                        App.calendarView.onTasksUpdated();
+                    }
+                }
+            }
+        } catch (err) {
+            console.warn('[Classroom] Error auto-checking completed tasks for turned-in assignments:', err);
         }
     },
 

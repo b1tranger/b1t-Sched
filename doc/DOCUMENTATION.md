@@ -846,6 +846,11 @@ During signup, Firebase triggers `onAuthStateChanged` immediately when the user 
 - **Unified Sign Out Button**: A single pill-styled Sign Out button (`.classroom-header-logout-btn`, `border-radius: 20px`) is embedded in top window title headers (`#classroom-sidebar` mobile and `#classroom-modal` desktop). The button is dynamically displayed only when logged in / connected. Explicit logout revokes the OAuth token, clears local storage connection flags, clears cache, and resets the view to the login prompt.
 - **Archived Classrooms Management**: Fetches both active and archived courses (`courseStates=ACTIVE&courseStates=ARCHIVED`). Archived classrooms are hidden by default in the "My Classes" view, with a toggle button to expand/hide them. Unified feeds (**To-Do**, **Notices**, **Materials**) strictly filter out content from archived courses.
 - **Client JSON Template Caching & Persistent Reconnect Footer**: Serializes user courses, assignments, notices, and materials into a structured JSON template (`classroom_cached_json`) saved to `localStorage` (mirrored in `sessionStorage`) for persistent offline access across browser tab closures and token expirations. When cached content is displayed due to an expired session, a sticky bottom footer bar (`#classroom-footer-mobile` and `#classroom-footer-desktop`) is rendered with a narrow banner (`"Cached Content, login again to see new data"`) and a persistent `"Reconnect Classroom"` button (`Classroom.login()`).
+- **Real-Time Assignment Status Indicators**: Concurrently queries Google Classroom Student Submissions (`courses/{courseId}/courseWork/-/studentSubmissions?userId=me`) to render color-coded bottom-right badges on all To-Do items: **Assigned** (Blue), **Missing** (Red), **Turned in** / **Turned in (Late)** (Green), and **Returned** / **Graded: X/Y** (Purple).
+- **Two-Group Vertical To-Do Arrangement**: Automatically groups assignments into two vertical sections: active/pending assignments at the top (so they are always immediately visible), followed by completed/turned-in assignments below, each sorted in ascending order of due dates.
+- **Automatic Task Completion Checking**: Upon sign-in or loading classroom contents, assignments in `Turned in`, `Returned`, or `Graded` state automatically match and check/complete corresponding tasks in the user's personal "Pending Tasks" list.
+- **Two-Way Task Sync (Add & Update)**: Clicking **Sync** for Admins/CRs creates new tasks from assignments and automatically updates existing tasks if a teacher modifies deadlines, titles, or instructions in Classroom.
+- **Materials Change Detection**: Live updates to course materials (new Drive files, YouTube links, Forms, or descriptions) are dynamically recognized via `updateTime` comparison and rendered as interactive attachment pills.
 
 **Properties:**
 
@@ -877,8 +882,10 @@ During signup, Firebase triggers `onAuthStateChanged` immediately when the user 
 | `handleItemClick(event, link)`   | Event, Link| void    | Delegate row clicks to open the item URL while ignoring clicks on nested buttons and links.        |
 | `renderItemAttachments(materials)`| Array     | string  | Render Google Drive files, YouTube videos, web links, and forms as clickable attachment pills.     |
 | `getAssignmentStatusInfo(item)`  | object     | object  | Compute detailed status badge info (`label`, `className`, `icon`) for Missing, Assigned, Turned in, and Returned/Graded states. |
+| `sortAssignments(assignments)`   | Array      | Array   | Sort assignments into two vertical groups (Pending first, Completed below) in ascending due dates. |
+| `syncTurnedInAssignmentsToUserCompletions(assignments)` | Array | Promise | Automatically mark matching tasks in Pending Tasks as checked/completed for turned-in or graded assignments. |
 | `updateLogoutButtonVisibility()` | -          | void    | Dynamically show or hide header Sign Out buttons based on connection state.                        |
-| `syncAssignmentsToTasks()`       | -          | void    | (Admin/CR only) Sync assignments to the main task list.                                            |
+| `syncAssignmentsToTasks()`       | -          | void    | (Admin/CR only) Sync assignments to main task list with two-way additions and deadline updates.    |
 | `logout()`                       | -          | void    | Explicitly revoke OAuth token, clear local storage connection flags, clear cache, and reset state. |
 | `cleanupSession()`               | -          | void    | Reset module memory state and render initial login screen.                                         |
 | `close()`                        | Close the calendar modal.                                                                                                                                    |
@@ -2422,6 +2429,8 @@ _Last Updated: August 20, 2026 (v2.45.1)_
     - **`Returned`** / **`Graded: X/Y`** (Purple label `.status-returned`, `<i class="fa-solid fa-award"></i>`): Evaluated and returned by the teacher, displaying points earned when available.
   - **Dynamic Status Helper (`getAssignmentStatusInfo`)**: Generates consistent status labels, badge classes, and icons for both fresh API results and persistent offline JSON cache items.
   - **Cache & Merge Sensitivity**: Enhanced `mergeAndSkipUnchanged()` to check `existing.status === item.status`, ensuring changes in assignment submission status immediately invalidate stale cache rows and refresh the UI.
+  - **Auto-Sync to Pending Tasks (`syncTurnedInAssignmentsToUserCompletions`)**: Whenever the user signs into Classroom or loads classroom contents, assignments detected as `Turned in`, `Turned in (Late)`, `Returned`, or `Graded` automatically match and mark corresponding tasks in the user's "Pending Tasks" list as completed/checked in Firestore and UI.
+  - **Classroom Sync Two-Way Add & Update (`syncAssignmentsToTasks`)**: Enhanced the Admin/CR Sync feature so that clicking **Sync** not only adds new assignments to the main task list, but also automatically updates existing synced tasks if a teacher modifies deadlines, titles, or descriptions in Google Classroom.
   - **Pill UI & Theming**: Fixed at the bottom-right corner of each assignment card (`bottom: 10px; right: 16px;`) with dedicated light, dark, and monochromatic gray theme styling.
 
 ### v2.45.0

@@ -1,11 +1,38 @@
 {
-  "currentVersion": "v2.45.1",
-  "lastUpdated": "August 20, 2026",
+  "currentVersion": "v2.46.0",
+  "lastUpdated": "August 22, 2026",
   "documentationUrl": "https://b1tranger.netlify.app/render.html?file=https%3A%2F%2Fgithub.com%2Fb1tranger%2Fb1t-Sched%2Fblob%2Fmain%2Fdoc%2FDOCUMENTATION.md",
   "history": [
     {
-      "version": "v2.45.1",
+      "version": "v2.46.0",
       "badge": "Latest",
+      "date": "August 2026",
+      "changes": [
+        {
+          "type": "New Feature",
+          "title": "Google Classroom Real-Time Assignment Status Badges",
+          "description": "Integrated real-time submission tracking (studentSubmissions API) to display bottom-right status indicators on all To-Do assignments for Missing (Red), Assigned (Blue), Turned in (Green), and Returned/Graded (Purple) across light, dark, and gray themes."
+        },
+        {
+          "type": "Enhancement",
+          "title": "To-Do Two-Group Vertical Task Arrangement",
+          "description": "Separated active/pending assignments from completed ones so that pending assignments stay clearly in view at the top, while turned-in assignments are neatly grouped below, each sorted in ascending order of due dates."
+        },
+        {
+          "type": "New Feature",
+          "title": "Automatic Pending Tasks Completion Synchronization",
+          "description": "Whenever you sign into Google Classroom or open the Classroom window, turned-in or graded assignments automatically check the corresponding tasks in your personal Pending Tasks list in Firestore."
+        },
+        {
+          "type": "Enhancement",
+          "title": "Two-Way Task Sync with In-Place Updates",
+          "description": "Clicking the Sync button in Classroom To-Do now adds new assignments and automatically updates existing tasks if a teacher modifies deadlines, titles, or descriptions in Google Classroom."
+        }
+      ]
+    },
+    {
+      "version": "v2.45.1",
+      "badge": "Stable",
       "date": "August 2026",
       "changes": [
         {
