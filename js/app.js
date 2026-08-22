@@ -147,7 +147,7 @@ const App = {
   currentTasks: [],
   currentEvents: [],
   currentRaiderEvents: [],
-  mobileEventsActiveView: 'internal',
+  mobileEventsActiveView: localStorage.getItem('b1t_events_sidebar_view') || 'internal',
   isAdmin: false,
   filterPopup: null,
   deleteUserDialog: null,
@@ -550,11 +550,23 @@ const App = {
       });
     }
 
+    // Restore saved mobile events view from localStorage on startup
+    const savedEventsView = localStorage.getItem('b1t_events_sidebar_view');
+    if (savedEventsView && (savedEventsView === 'raiders' || savedEventsView === 'internal')) {
+      this.mobileEventsActiveView = savedEventsView;
+    }
+    UI.switchMobileEventsView(this.mobileEventsActiveView);
+
     // Mobile events sidebar view switcher (between b1t-Sched and UITS Event Raiders)
     const switchBtn = document.getElementById('events-view-switch-btn');
     if (switchBtn) {
       switchBtn.addEventListener('click', () => {
         this.mobileEventsActiveView = (this.mobileEventsActiveView === 'raiders') ? 'internal' : 'raiders';
+        try {
+          localStorage.setItem('b1t_events_sidebar_view', this.mobileEventsActiveView);
+        } catch (e) {
+          console.warn('Failed to save events sidebar view state to localStorage:', e);
+        }
         UI.switchMobileEventsView(this.mobileEventsActiveView);
       });
     }

@@ -17,7 +17,7 @@ A single-page application (SPA) that helps students manage academic tasks, assig
 - ✏️ **Edit Entries** - Users can edit their own tasks; admins can edit all tasks and events; CRs can create department events and manage their own
 - 🔗 **Dynamic Resource Links** - Department-specific routine, calendar, and faculty contacts with built-in PDF viewer
 - 📅 **Event Calendar** - Track upcoming academic events with collapsible descriptions, department scope badge, and clickable links
-- 🛡️ **UITS Event Raiders Live Feed** - Live syndication of hackathons, contests, olympiads, and symposiums from `ou1ts/events` RSS/JSON feeds with desktop sticky sidebar integration and a mobile arrowhead view switcher
+- 🛡️ **UITS Event Raiders Live Feed** - Live syndication of hackathons, contests, olympiads, and symposiums from `ou1ts/events` RSS/JSON feeds with desktop sticky sidebar integration, mobile arrowhead view switcher with localStorage state persistence, and compact two-segment card layouts
 - 📆 **Calendar View** - Interactive monthly calendar with task visualization, date navigation, and responsive mobile layout (monthly/weekly toggle)
 - 📣 **CR Notices** - Class Representatives can post, edit, and delete notices visible to their section group; supports priority levels and deadline tracking
 - 📰 **University Notice Viewer** - View UCAM university notices with PDF preview, powered by Vercel serverless backend with local caching

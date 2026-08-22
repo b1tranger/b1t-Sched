@@ -22,6 +22,21 @@
           "type": "New Feature",
           "title": "Mobile Events Sidebar Arrowhead View Switcher",
           "description": "Integrated a vertically centered solid maroon right-arrowhead toggle button (#events-view-switch-btn) on the left border of the mobile events sidebar that switches views between b1t-Sched internal events and UITS Event Raiders."
+        },
+        {
+          "type": "Enhancement",
+          "title": "Mobile Events Sidebar View State Persistence",
+          "description": "Saved active mobile events sidebar view ('internal' vs 'raiders') to localStorage ('b1t_events_sidebar_view') so user view preference is remembered and automatically restored across app sessions."
+        },
+        {
+          "type": "Enhancement",
+          "title": "Two-Segment Event Card Grid Layout",
+          "description": "Structured event cards into two segments where the header sits beside the date badge and all descriptions, badges, and action buttons span the full width directly below the date badge, eliminating wasted space."
+        },
+        {
+          "type": "Enhancement",
+          "title": "Compact Mobile Events Sidebar Header",
+          "description": "Reduced top and bottom padding on the mobile events drawer header to allocate more vertical screen real estate for event listings."
         }
       ]
     },

@@ -2433,6 +2433,14 @@ _Last Updated: August 22, 2026 (v2.46.0)_
   - Integrated a solid maroon right-pointing arrowhead button (`#events-view-switch-btn`) positioned at the vertical center of the sidebar's left border (`top: 50%; transform: translateY(-50%)`).
   - Button remains strictly hidden when the drawer is closed and appears smoothly when opened (`.events-sidebar.open`).
   - Seamlessly toggles the mobile drawer between **b1t-Sched Events** and **UITS Event Raiders** with directional arrow flipping and animated panel transitions.
+- **Enhancement**: **Mobile Events Sidebar View State Persistence** (`js/app.js`, `js/ui.js`)
+  - Automatically saves the active mobile events drawer view (`'internal'` vs `'raiders'`) to `localStorage` (`b1t_events_sidebar_view`).
+  - Restores the user's view preference on initialization, keeping their preferred view active across page refreshes and app launches.
+- **Enhancement**: **Two-Segment Event Card Grid Layout** (`js/ui.js`, `css/components.css`, `css/dashboard.css`)
+  - Restructured event cards into two clear segments: `.event-header` containing the event title (and department scope badge) alongside `.event-date`, and `.event-details` containing badge pills, contest segments count, collapsible descriptions, and action buttons.
+  - Configured CSS Grid with `display: contents` so that all secondary content spans the full width directly below `.event-date`, eliminating wasted empty space underneath the date badge on compact displays.
+- **Enhancement**: **Compact Mobile Events Sidebar Header** (`css/dashboard.css`)
+  - Reduced top and bottom padding on `.events-sidebar-header` to `var(--spacing-sm) var(--spacing-lg)`, maximizing the vertical viewport area dedicated to event cards.
 
 ### v2.46.0
 

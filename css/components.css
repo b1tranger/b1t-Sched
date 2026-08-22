@@ -610,8 +610,10 @@ body.dark-mode .task-deadline.urgent {
   border: 2px solid var(--border-light);
   border-radius: var(--radius-md);
   padding: var(--spacing-lg);
-  display: flex;
-  gap: var(--spacing-md);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: var(--spacing-xs) var(--spacing-md);
+  align-items: start;
   transition: all var(--transition-fast);
 }
 
@@ -621,6 +623,8 @@ body.dark-mode .task-deadline.urgent {
 }
 
 .event-date {
+  grid-column: 1;
+  grid-row: 1;
   flex-shrink: 0;
   width: 60px;
   height: 60px;
@@ -647,14 +651,34 @@ body.dark-mode .task-deadline.urgent {
 }
 
 .event-content {
-  flex: 1;
+  display: contents;
+}
+
+.event-header {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: 0;
+  min-width: 0;
+  align-self: center;
+}
+
+.event-details {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .event-title {
   color: var(--text-dark);
   font-size: var(--font-lg);
   font-weight: var(--font-semibold);
-  margin-bottom: var(--spacing-xs);
+  margin-bottom: 0;
 }
 
 .event-description {

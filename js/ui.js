@@ -567,14 +567,16 @@ const UI = {
               <h3 class="event-title">${event.title || 'Untitled Event'}</h3>
               <span class="event-scope-badge ${scopeClass}">${scopeLabel}</span>
             </div>
-            <div class="event-description">
-              <div class="event-description-wrapper">
-                <div class="event-description-text">${Utils.escapeAndLinkify(event.description) || 'No description available.'}</div>
-                <p class="event-added-by event-added-by-hidden">Added by ${addedByLabel}</p>
-                <button type="button" class="event-description-toggle" aria-label="Toggle description">
-                  <span class="toggle-text">Show more</span>
-                  <i class="fas fa-chevron-down"></i>
-                </button>
+            <div class="event-details">
+              <div class="event-description">
+                <div class="event-description-wrapper">
+                  <div class="event-description-text">${Utils.escapeAndLinkify(event.description) || 'No description available.'}</div>
+                  <p class="event-added-by event-added-by-hidden">Added by ${addedByLabel}</p>
+                  <button type="button" class="event-description-toggle" aria-label="Toggle description">
+                    <span class="toggle-text">Show more</span>
+                    <i class="fas fa-chevron-down"></i>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -665,25 +667,27 @@ const UI = {
             <div class="event-header">
               <h3 class="event-title">${Utils.escapeHtml(event.title)}</h3>
             </div>
-            <div class="raider-badge-container">
-              ${categoryBadge}
-              ${deadlineBadge}
-              ${feeBadge}
-              ${venueBadge}
-            </div>
-            ${subEventsBadge}
-            <div class="event-description">
-              <div class="event-description-wrapper">
-                <div class="event-description-text">${Utils.escapeAndLinkify(event.description) || 'No details available.'}</div>
-                <button type="button" class="event-description-toggle" aria-label="Toggle description">
-                  <span class="toggle-text">Show more</span>
-                  <i class="fas fa-chevron-down"></i>
-                </button>
+            <div class="event-details">
+              <div class="raider-badge-container">
+                ${categoryBadge}
+                ${deadlineBadge}
+                ${feeBadge}
+                ${venueBadge}
               </div>
+              ${subEventsBadge}
+              <div class="event-description">
+                <div class="event-description-wrapper">
+                  <div class="event-description-text">${Utils.escapeAndLinkify(event.description) || 'No details available.'}</div>
+                  <button type="button" class="event-description-toggle" aria-label="Toggle description">
+                    <span class="toggle-text">Show more</span>
+                    <i class="fas fa-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              <a href="${targetUrl}" target="_blank" rel="noopener noreferrer" class="raider-external-btn" title="View details on UITS Event Raiders">
+                <i class="fas fa-external-link-alt"></i> Details
+              </a>
             </div>
-            <a href="${targetUrl}" target="_blank" rel="noopener noreferrer" class="raider-external-btn" title="View details on UITS Event Raiders">
-              <i class="fas fa-external-link-alt"></i> Details
-            </a>
           </div>
         </div>
       `;
@@ -707,6 +711,12 @@ const UI = {
     const tooltip = document.getElementById('events-sidebar-tooltip');
 
     if (!internalView || !raidersView || !switchBtn) return;
+
+    try {
+      localStorage.setItem('b1t_events_sidebar_view', targetView);
+    } catch (e) {
+      console.warn('Failed to save events sidebar view state to localStorage:', e);
+    }
 
     const showRaiders = targetView === 'raiders';
 
