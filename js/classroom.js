@@ -708,7 +708,7 @@ const Classroom = {
 
     async fetchAssignmentsData() {
         try {
-            const allAssignments = [];
+            let allAssignments = [];
             const cutoffDate = new Date();
             cutoffDate.setMonth(cutoffDate.getMonth() - this.DATE_FILTER_MONTHS);
 
