@@ -1325,6 +1325,11 @@ const App = {
     if (taskExportSection) taskExportSection.style.display = 'none';
     if (noteToggleMobile) noteToggleMobile.style.setProperty('display', 'none', 'important');
     if (noteButtonDesktop) noteButtonDesktop.style.setProperty('display', 'none', 'important');
+
+    // Hide changelog modal if open
+    if (typeof ChangelogModal !== 'undefined' && typeof ChangelogModal.close === 'function') {
+      ChangelogModal.close();
+    }
   },
 
   async loadSetDetailsForm() {
@@ -1806,6 +1811,11 @@ const App = {
 
       this.updateUserCount();
       this.initHomeSemesterNotice();
+
+      // Check and show changelog modal if new version is available
+      if (typeof ChangelogModal !== 'undefined' && typeof ChangelogModal.checkAndShowChangelog === 'function') {
+        ChangelogModal.checkAndShowChangelog();
+      }
     } catch (error) {
       console.error('[App] Error in loadDashboardData:', error);
     } finally {

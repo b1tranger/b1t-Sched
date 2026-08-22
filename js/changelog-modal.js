@@ -11,10 +11,9 @@ const ChangelogModal = {
   /**
    * Initialize Changelog Modal
    */
-  async init() {
+  init() {
     console.log('[ChangelogModal] Initializing...');
     this.setupEventListeners();
-    await this.checkAndShowChangelog();
   },
 
   /**
@@ -40,6 +39,24 @@ const ChangelogModal = {
    * Check if current version is newer than last seen version and show modal
    */
   async checkAndShowChangelog(forceOpen = false) {
+    if (!forceOpen) {
+      // Auto-popup only if user is logged in and active view is dashboard
+      const currentUser = (typeof Auth !== 'undefined' && typeof Auth.getCurrentUser === 'function')
+        ? Auth.getCurrentUser()
+        : (window.firebase && firebase.auth ? firebase.auth().currentUser : null);
+
+      const currentRoute = (typeof Router !== 'undefined' && typeof Router.getCurrentRoute === 'function')
+        ? Router.getCurrentRoute()
+        : null;
+
+      const dashboardView = document.getElementById('dashboard-view');
+      const isDashboardVisible = dashboardView && dashboardView.style.display !== 'none';
+
+      if (!currentUser || (currentRoute !== 'dashboard' && !isDashboardVisible)) {
+        return;
+      }
+    }
+
     const data = await this.fetchChanges();
     if (!data || !data.currentVersion) return;
 
