@@ -85,6 +85,7 @@ async function updateAllUserSemesters() {
                     batch.update(docRef, {
                         semester: newSem,
                         lastSemesterCycle: currentCycle,
+                        semesterNoticeDismissedCycle: firebase.firestore.FieldValue.delete(),
                         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                     batchCount++;

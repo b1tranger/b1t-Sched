@@ -79,4 +79,20 @@ assertEqual(incrementSemester('8th'), 'alumni / special', '8th -> alumni / speci
 assertEqual(incrementSemester('alumni / special'), 'alumni / special', 'alumni / special stays alumni / special');
 assertEqual(incrementSemester('1st', 2), '3rd', '1st + 2 steps -> 3rd');
 
+// 4. Banner Dismiss Flag Logic Tests
+function shouldShowSemesterNotice(userProfile, currentCycle) {
+  if (!userProfile) return false;
+  const dismissed = userProfile.semesterNoticeDismissedCycle;
+  return dismissed !== currentCycle;
+}
+
+const userProfileDismissed = { semesterNoticeDismissedCycle: '2026-07' };
+const userProfileNewUpdate = { semesterNoticeDismissedCycle: '2026-01' };
+const userProfileNoFlag = {};
+
+assertEqual(shouldShowSemesterNotice(userProfileDismissed, '2026-07'), false, 'Dismissed in 2026-07 hides banner in 2026-07');
+assertEqual(shouldShowSemesterNotice(userProfileNewUpdate, '2026-07'), true, 'Dismissed in 2026-01 shows banner when cycle advances to 2026-07');
+assertEqual(shouldShowSemesterNotice(userProfileNoFlag, '2026-07'), true, 'No dismiss flag shows banner');
+
 console.log('Semester Utils Unit Tests completed successfully.');
+
