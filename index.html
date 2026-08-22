@@ -475,7 +475,7 @@
                         </section>
                     </div>
 
-                    <!-- Right Column: Events (Desktop) -->
+                    <!-- Right Column: Events & Event Raiders (Desktop) -->
                     <aside class="dashboard-sidebar desktop-only">
                         <section class="events-section">
                             <div class="section-header">
@@ -508,6 +508,32 @@
                                 </button>
                             </div>
                         </section>
+
+                        <!-- UITS Event Raiders Section (Desktop) -->
+                        <section class="raider-events-section" id="raider-events-desktop-section">
+                            <div class="section-header">
+                                <h2>
+                                    <i class="fas fa-shield-alt"></i> Event Raiders
+                                    <span class="section-guide-tooltip"
+                                        data-tooltip="Active hackathons, olympiads, and symposiums syndicated live from UITS Event Raiders RSS feed.">
+                                        <i class="fas fa-info-circle"></i>
+                                    </span>
+                                </h2>
+                                <a href="https://ou1ts.github.io/events/" target="_blank" rel="noopener noreferrer"
+                                    class="raider-header-link" title="Visit UITS Event Raiders Portal">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </a>
+                            </div>
+
+                            <div id="raider-events-container" class="raider-events-container">
+                                <!-- Raider event cards will be dynamically loaded -->
+                            </div>
+
+                            <div id="no-raider-events-message" class="no-data-message" style="display: none;">
+                                <i class="fas fa-flag-checkered"></i>
+                                <p>No active raider events found.</p>
+                            </div>
+                        </section>
                     </aside>
 
                 </div>
@@ -520,33 +546,60 @@
 
                 <!-- Mobile Events Sidebar -->
                 <div id="events-sidebar" class="events-sidebar mobile-only">
+                    <!-- Right Arrowhead Toggle Button on Left Border -->
+                    <button id="events-view-switch-btn" class="events-view-switch-btn" aria-label="Switch to UITS Event Raiders" title="Switch to UITS Event Raiders">
+                        <span class="switch-btn-icon"><i class="fas fa-chevron-right"></i></span>
+                    </button>
+
                     <div class="events-sidebar-header">
-                        <h3><i class="fas fa-calendar-alt"></i> Events
-                            <span class="section-guide-tooltip"
+                        <h3 id="events-sidebar-title">
+                            <i id="events-sidebar-icon" class="fas fa-calendar-alt"></i>
+                            <span id="events-sidebar-title-text">Events</span>
+                            <span id="events-sidebar-tooltip" class="section-guide-tooltip"
                                 data-tooltip="Official events created by Admin, CR, or Faculty. Check here for general announcements, holidays, and schedules.">
                                 <i class="fas fa-info-circle"></i>
                             </span>
                         </h3>
-                        <button id="close-events-sidebar" class="btn btn-icon">
+                        <button id="close-events-sidebar" class="btn btn-icon" aria-label="Close events sidebar">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
-                    <div id="events-container-mobile" class="events-container-mobile">
-                        <!-- Events will be cloned here for mobile -->
+
+                    <!-- View 1: Internal b1t-Sched Events -->
+                    <div id="events-view-internal" class="events-view-panel active">
+                        <div id="events-container-mobile" class="events-container-mobile">
+                            <!-- Events will be cloned here for mobile -->
+                        </div>
+                        <div id="no-events-message-mobile" class="no-data-message" style="display: none;">
+                            <i class="fas fa-calendar-check"></i>
+                            <p>No upcoming events.</p>
+                        </div>
+                        <!-- Mobile Events Actions -->
+                        <div class="events-sidebar-actions">
+                            <button id="add-event-btn-mobile" class="btn btn-secondary cr-faculty-or-admin"
+                                style="display: none;">
+                                <i class="fas fa-plus"></i> Add Event
+                            </button>
+                            <button id="view-old-events-btn-mobile" class="btn btn-secondary">
+                                <i class="fas fa-history"></i> Old Events
+                            </button>
+                        </div>
                     </div>
-                    <div id="no-events-message-mobile" class="no-data-message" style="display: none;">
-                        <i class="fas fa-calendar-check"></i>
-                        <p>No upcoming events.</p>
-                    </div>
-                    <!-- Mobile Events Actions -->
-                    <div class="events-sidebar-actions">
-                        <button id="add-event-btn-mobile" class="btn btn-secondary cr-faculty-or-admin"
-                            style="display: none;">
-                            <i class="fas fa-plus"></i> Add Event
-                        </button>
-                        <button id="view-old-events-btn-mobile" class="btn btn-secondary">
-                            <i class="fas fa-history"></i> Old Events
-                        </button>
+
+                    <!-- View 2: UITS Event Raiders RSS Events -->
+                    <div id="events-view-raiders" class="events-view-panel" style="display: none;">
+                        <div id="raider-events-container-mobile" class="raider-events-container-mobile">
+                            <!-- Raider events will be loaded here for mobile -->
+                        </div>
+                        <div id="no-raider-events-message-mobile" class="no-data-message" style="display: none;">
+                            <i class="fas fa-flag-checkered"></i>
+                            <p>No active raider events found.</p>
+                        </div>
+                        <div class="events-sidebar-actions">
+                            <a href="https://ou1ts.github.io/events/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary raider-portal-btn">
+                                <i class="fas fa-external-link-alt"></i> Open Event Raiders Portal
+                            </a>
+                        </div>
                     </div>
                 </div>
                 <div id="events-overlay" class="events-overlay mobile-only"></div>
@@ -2089,6 +2142,9 @@
 
     <!-- Changelog & What's New Module -->
     <script src="js/changelog-modal.js"></script>
+
+    <!-- UITS Event Raiders Feed Module -->
+    <script src="js/raids-feed.js"></script>
 
     <script src="js/app.js"></script>
     <script src="js/calendar-view.js"></script>

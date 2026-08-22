@@ -41,14 +41,41 @@
     height: fit-content;
     max-height: calc(100vh - 120px);
     overflow-y: auto;
+    overflow-x: hidden;
     background-color: var(--bg-white);
     border-radius: var(--radius-lg);
     padding: var(--spacing-lg);
     box-shadow: var(--shadow-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xl);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.dashboard-sidebar * {
+    min-width: 0;
 }
 
 .dashboard-sidebar .events-section {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    box-sizing: border-box;
     margin-bottom: 0;
+    padding-bottom: var(--spacing-lg);
+    border-bottom: 2px solid var(--border-light);
+}
+
+.dashboard-sidebar .raider-events-section {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 0;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
 }
 
 .dashboard-sidebar .section-header {
@@ -60,15 +87,21 @@
 }
 
 /* Sidebar event cards - more compact */
-.dashboard-sidebar .events-container {
+.dashboard-sidebar .events-container,
+.dashboard-sidebar .raider-events-container {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-sm);
+    width: 100%;
+    box-sizing: border-box;
 }
 
-.dashboard-sidebar .event-card {
+.dashboard-sidebar .event-card,
+.dashboard-sidebar .raider-card {
     padding: var(--spacing-md);
     border-width: 1px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .dashboard-sidebar .event-date {
@@ -2791,5 +2824,343 @@ body.gray-mode .export-format-pill input[type="radio"]:checked + .pill-content {
     color: #fca5a5;
     box-shadow: 0 0 0 1px #ef4444;
 }
+
+/* ============================================
+   UITS EVENT RAIDERS FEED STYLES
+   ============================================ */
+
+/* Desktop Section */
+.raider-events-section {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.raider-events-section .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+}
+
+.raider-header-link {
+    color: var(--primary-maroon);
+    font-size: var(--font-sm);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.raider-header-link:hover {
+    color: var(--maroon-hover);
+    background-color: rgba(128, 0, 0, 0.08);
+}
+
+body.dark-mode .raider-header-link {
+    color: var(--link-blue);
+}
+
+body.dark-mode .raider-header-link:hover {
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Raider Cards Container */
+.raider-events-container,
+.raider-events-container-mobile {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Raider Event Card */
+.raider-card {
+    border-left: 3px solid var(--primary-maroon);
+    background-color: var(--bg-white);
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    gap: var(--spacing-sm);
+    overflow: hidden;
+}
+
+.raider-card:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.raider-card .event-date {
+    background-color: var(--primary-maroon);
+    background-image: none;
+    color: var(--text-white);
+    flex-shrink: 0;
+}
+
+.raider-card .event-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.raider-card .event-title {
+    font-size: var(--font-md);
+    font-weight: var(--font-semibold);
+    color: var(--text-dark);
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    margin: 0;
+}
+
+.raider-badge-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+    margin-bottom: 6px;
+    width: 100%;
+}
+
+.raider-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: var(--font-medium);
+    padding: 2px 6px;
+    border-radius: 4px;
+    line-height: 1.2;
+    white-space: normal;
+    word-break: break-word;
+    max-width: 100%;
+}
+
+.raider-badge-category {
+    background-color: rgba(128, 0, 0, 0.1);
+    color: var(--primary-maroon);
+    border: 1px solid rgba(128, 0, 0, 0.2);
+}
+
+.raider-badge-deadline {
+    background-color: rgba(255, 193, 7, 0.15);
+    color: #856404;
+    border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.raider-badge-fee {
+    background-color: rgba(40, 167, 69, 0.12);
+    color: #1e7e34;
+    border: 1px solid rgba(40, 167, 69, 0.25);
+}
+
+.raider-badge-venue {
+    background-color: rgba(23, 162, 184, 0.12);
+    color: #117a8b;
+    border: 1px solid rgba(23, 162, 184, 0.25);
+}
+
+.raider-badge-online {
+    background-color: rgba(102, 16, 242, 0.12);
+    color: #520dc2;
+    border: 1px solid rgba(102, 16, 242, 0.25);
+}
+
+.raider-subevents-summary {
+    font-size: var(--font-xs);
+    color: var(--text-medium);
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.raider-external-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: var(--font-xs);
+    color: var(--primary-maroon);
+    font-weight: var(--font-semibold);
+    text-decoration: none;
+    margin-top: 6px;
+    padding: 3px 8px;
+    border-radius: var(--radius-sm);
+    background-color: rgba(128, 0, 0, 0.06);
+    border: 1px solid rgba(128, 0, 0, 0.15);
+    transition: all var(--transition-fast);
+}
+
+.raider-external-btn:hover {
+    background-color: var(--primary-maroon);
+    color: var(--text-white);
+    text-decoration: none;
+}
+
+.raider-portal-btn {
+    text-align: center;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+/* ============================================
+   MOBILE EVENTS SIDEBAR VIEW SWITCHER
+   ============================================ */
+
+/* Right Arrowhead Switch Button (solid single color, no gradient) */
+.events-view-switch-btn {
+    position: absolute;
+    left: -32px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 34px;
+    height: 52px;
+    background-color: var(--primary-maroon);
+    background-image: none;
+    color: var(--text-white);
+    border: none;
+    cursor: pointer;
+    display: none !important; /* Strictly hidden when sidebar is closed */
+    align-items: center;
+    justify-content: center;
+    clip-path: polygon(0% 0%, 55% 0%, 100% 50%, 55% 100%, 0% 100%);
+    filter: drop-shadow(-3px 3px 6px rgba(0, 0, 0, 0.3));
+    z-index: calc(var(--z-modal) + 2);
+    transition: transform var(--transition-fast), background-color var(--transition-fast), filter var(--transition-fast), clip-path var(--transition-fast);
+    padding: 0;
+    margin: 0;
+}
+
+/* ONLY show when the mobile events sidebar is open */
+.events-sidebar.open .events-view-switch-btn {
+    display: flex !important;
+}
+
+.events-view-switch-btn:hover {
+    background-color: var(--maroon-hover);
+    background-image: none;
+    transform: translateY(-50%) scale(1.08);
+    filter: drop-shadow(-4px 4px 8px rgba(0, 0, 0, 0.4));
+}
+
+.events-view-switch-btn:active {
+    transform: translateY(-50%) scale(0.95);
+}
+
+.events-view-switch-btn .switch-btn-icon {
+    font-size: 1.1rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: -6px;
+    transition: transform var(--transition-medium);
+}
+
+/* Active Raider Mode for Switch Button (solid single color, no gradient) */
+.events-view-switch-btn.active-raiders {
+    background-color: var(--secondary-maroon);
+    background-image: none;
+    clip-path: polygon(45% 0%, 100% 0%, 100% 100%, 45% 100%, 0% 50%);
+    left: -32px;
+}
+
+.events-view-switch-btn.active-raiders:hover {
+    background-color: var(--accent-maroon);
+    background-image: none;
+}
+
+.events-view-switch-btn.active-raiders .switch-btn-icon {
+    margin-left: 6px;
+}
+
+/* Mobile Sidebar View Panels */
+.events-view-panel {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    padding: var(--spacing-md);
+    gap: var(--spacing-sm);
+    animation: eventsViewFadeIn 0.25s ease forwards;
+}
+
+@keyframes eventsViewFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Dark Mode Overrides for Raider Feed */
+body.dark-mode .raider-events-section {
+    border-top-color: var(--border-medium);
+}
+
+body.dark-mode .raider-card {
+    background-color: var(--bg-lighter);
+    border-left-color: #ef4444;
+}
+
+body.dark-mode .raider-badge-category {
+    background-color: rgba(239, 68, 68, 0.18);
+    color: #fca5a5;
+    border-color: rgba(239, 68, 68, 0.35);
+}
+
+body.dark-mode .raider-badge-deadline {
+    background-color: rgba(245, 158, 11, 0.18);
+    color: #fcd34d;
+    border-color: rgba(245, 158, 11, 0.35);
+}
+
+body.dark-mode .raider-badge-fee {
+    background-color: rgba(16, 185, 129, 0.18);
+    color: #6ee7b7;
+    border-color: rgba(16, 185, 129, 0.35);
+}
+
+body.dark-mode .raider-badge-venue {
+    background-color: rgba(6, 182, 212, 0.18);
+    color: #67e8f9;
+    border-color: rgba(6, 182, 212, 0.35);
+}
+
+body.dark-mode .raider-badge-online {
+    background-color: rgba(168, 85, 247, 0.18);
+    color: #d8b4fe;
+    border-color: rgba(168, 85, 247, 0.35);
+}
+
+body.dark-mode .raider-external-btn {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #fca5a5;
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+body.dark-mode .raider-external-btn:hover {
+    background-color: #dc2626;
+    color: #ffffff;
+}
+
+body.dark-mode .events-view-switch-btn {
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
 
 

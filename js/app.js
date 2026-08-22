@@ -146,14 +146,14 @@ const App = {
   userCompletions: {},
   currentTasks: [],
   currentEvents: [],
+  currentRaiderEvents: [],
+  mobileEventsActiveView: 'internal',
   isAdmin: false,
   filterPopup: null,
   deleteUserDialog: null,
   calendarView: null,
   isCR: false,
   isFaculty: false,
-  isBlocked: false,
-  allUsers: [],
   isBlocked: false,
   allUsers: [],
   isSigningUp: false, // Flag to prevent auth state handling during signup
@@ -550,10 +550,21 @@ const App = {
       });
     }
 
-    // Event description toggle delegation (works for all users)
+    // Mobile events sidebar view switcher (between b1t-Sched and UITS Event Raiders)
+    const switchBtn = document.getElementById('events-view-switch-btn');
+    if (switchBtn) {
+      switchBtn.addEventListener('click', () => {
+        this.mobileEventsActiveView = (this.mobileEventsActiveView === 'raiders') ? 'internal' : 'raiders';
+        UI.switchMobileEventsView(this.mobileEventsActiveView);
+      });
+    }
+
+    // Event description toggle delegation (works for both internal and raider events)
     const eventsContainers = [
       document.getElementById('events-container'),
-      document.getElementById('events-container-mobile')
+      document.getElementById('events-container-mobile'),
+      document.getElementById('raider-events-container'),
+      document.getElementById('raider-events-container-mobile')
     ];
     eventsContainers.forEach(container => {
       if (container) {
@@ -1755,11 +1766,20 @@ const App = {
         }
       }
 
-      // Load events
-      const eventsResult = await DB.getEvents(department);
-      if (eventsResult.success) {
+      // Concurrently fetch internal events & external raider events
+      const [eventsResult, raiderEvents] = await Promise.all([
+        DB.getEvents(department),
+        (typeof RaidsFeed !== 'undefined') ? RaidsFeed.fetchActiveRaiderEvents() : Promise.resolve([])
+      ]);
+
+      if (eventsResult && eventsResult.success) {
         this.currentEvents = eventsResult.data;
         UI.renderEvents(this.currentEvents, this.isAdmin, this.isCR, this.isFaculty, userId);
+      }
+
+      this.currentRaiderEvents = raiderEvents || [];
+      if (typeof UI.renderRaiderEvents === 'function') {
+        UI.renderRaiderEvents(this.currentRaiderEvents);
       }
 
       this.setupTaskFilterListeners();

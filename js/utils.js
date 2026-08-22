@@ -128,6 +128,17 @@ const Utils = {
     return [`${group}1`, `${group}2`];
   },
 
+  // Escape HTML entities to prevent XSS
+  escapeHtml(text) {
+    if (!text) return '';
+    return String(text)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  },
+
   // Convert URLs in text to clickable links
   linkify(text) {
     if (!text) return '';

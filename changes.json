@@ -1,11 +1,33 @@
 {
-  "currentVersion": "v2.46.0",
+  "currentVersion": "v2.47.0",
   "lastUpdated": "August 22, 2026",
   "documentationUrl": "https://b1tranger.netlify.app/render.html?file=https%3A%2F%2Fgithub.com%2Fb1tranger%2Fb1t-Sched%2Fblob%2Fmain%2Fdoc%2FDOCUMENTATION.md",
   "history": [
     {
-      "version": "v2.46.0",
+      "version": "v2.47.0",
       "badge": "Latest",
+      "date": "August 2026",
+      "changes": [
+        {
+          "type": "New Feature",
+          "title": "UITS Event Raiders Live RSS & JSON Feed Syndication",
+          "description": "Syndicated active competitions, hackathons, olympiads, and symposiums live from ou1ts/events (https://ou1ts.github.io/events/raids.json) with RSS 2.0 XML fallback, 30-minute caching, and deep-links to event entries."
+        },
+        {
+          "type": "Enhancement",
+          "title": "Desktop Sticky Sidebar Dedicated Events Layout",
+          "description": "Organized the desktop sidebar with generous vertical separation between upcoming academic events and syndicated Event Raiders, ensuring both have dedicated full-width vertical space without horizontal scroll or cramped cards."
+        },
+        {
+          "type": "New Feature",
+          "title": "Mobile Events Sidebar Arrowhead View Switcher",
+          "description": "Integrated a vertically centered solid maroon right-arrowhead toggle button (#events-view-switch-btn) on the left border of the mobile events sidebar that switches views between b1t-Sched internal events and UITS Event Raiders."
+        }
+      ]
+    },
+    {
+      "version": "v2.46.0",
+      "badge": "Stable",
       "date": "August 2026",
       "changes": [
         {

@@ -270,6 +270,7 @@ b1t-Sched/
 │   ├── notice.js                # Notice viewer module (UCAM notices + PDF)
 │   ├── notes.js                 # Note-taking module with file upload
 │   ├── classroom.js             # Google Classroom API integration
+│   ├── raids-feed.js            # UITS Event Raiders RSS & JSON feed service
 │   ├── admin-api.js             # Admin API client (password reset, user deletion)
 │   ├── pwa-detector.js          # PWA detection
 │   ├── manifest-generator.js    # Manifest generation
@@ -1750,6 +1751,7 @@ Router.onRouteChange((routeName) => {
 | 2.44.0   | Aug 2026    | Google Classroom Materials Tab & Client JSON Caching: Added Materials view tab, full client JSON template caching (`classroom_cached_json`), unified pre-fetching with incremental skip tracking, persistent bottom reconnect banner, and row copy actions.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | 2.45.0   | Aug 2026    | Dynamic Department & Metadata Options: Server-priority fetching for Firestore metadata, multi-structure document support, dynamic event department selectors, and comprehensive faculty filters.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | 2.46.0   | Aug 2026    | Google Classroom Assignment Status Badges: Integrated real-time student submission tracking (`studentSubmissions?userId=me`) to render distinct bottom-right status badges on all To-Do assignments for Missing (Red), Assigned (Blue), Turned in (Green), and Returned / Graded: X/Y (Purple) across all color themes.                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| 2.47.0   | Aug 2026    | UITS Event Raiders Live Feed Integration: Syndicated live hackathons, contests, olympiads, and symposiums from `ou1ts/events` RSS/JSON feeds (`js/raids-feed.js`). Organized desktop sidebar with dedicated vertical separation below upcoming events, and integrated a vertically centered solid maroon right-arrowhead view switcher on the mobile events drawer.                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
 ---
 
@@ -2413,12 +2415,26 @@ You can use basic markdown formatting in task and event descriptions:
 
 ---
 
+_Last Updated: August 22, 2026 (v2.47.0)_
 _Last Updated: August 22, 2026 (v2.46.0)_
-_Last Updated: August 20, 2026 (v2.45.1)_
 
 ## Version History
 
-### v2.46.0 (Latest)
+### v2.47.0 (Latest)
+
+- **New Feature**: **UITS Event Raiders Live RSS & JSON Feed Syndication** (`js/raids-feed.js`) — Syndicated active tech competitions, hackathons, olympiads, and symposiums live from the `ou1ts/events` portal into b1t-Sched.
+  - **Native JSON & RSS Fallback Ingestion**: Consumes `https://ou1ts.github.io/events/raids.json` preserving rich metadata (`subEvents`, `venue`, `fee`, `RegEndDate`, `dateRange`, and deep links) with an automatic fallback parser for the RSS 2.0 XML feed (`https://ou1ts.github.io/events/feed.xml`).
+  - **Resilient Client Caching**: Stores feed results in `localStorage` (`b1t_raider_events_cache`) with a 30-minute TTL and graceful stale cache fallback during offline or network error states.
+  - **Rich Event Presentation**: Renders event cards with date badge (Day/Month), category badge, registration deadline pill, fee badge, venue/online tag, contest segments count, collapsible description (*Show more / Show less*), and direct portal link buttons.
+- **Enhancement**: **Desktop Sidebar Dedicated Vertical Events Layout** (`css/dashboard.css`)
+  - Enforced strict vertical flex layout on `.dashboard-sidebar.desktop-only` with generous spacing (`gap: var(--spacing-xl)`) and visual separation between `<section class="events-section">` and `<section class="raider-events-section">`.
+  - Both upcoming academic events and syndicated Raider events occupy dedicated full-width vertical space inside the sticky sidebar, eliminating horizontal scrollbar and card squeeze.
+- **New Feature**: **Mobile Events Drawer Arrowhead View Switcher** (`css/dashboard.css`, `js/ui.js`, `js/app.js`)
+  - Integrated a solid maroon right-pointing arrowhead button (`#events-view-switch-btn`) positioned at the vertical center of the sidebar's left border (`top: 50%; transform: translateY(-50%)`).
+  - Button remains strictly hidden when the drawer is closed and appears smoothly when opened (`.events-sidebar.open`).
+  - Seamlessly toggles the mobile drawer between **b1t-Sched Events** and **UITS Event Raiders** with directional arrow flipping and animated panel transitions.
+
+### v2.46.0
 
 - **New Feature**: **Google Classroom Real-Time Assignment Status Indicators** — Added comprehensive submission state tracking for all assignments listed under the **To-Do** section (both Unified "All Courses" and Course Detail views).
   - **Student Submissions API Integration**: Extended `fetchAssignmentsData()` to concurrently query the Google Classroom Student Submissions endpoint (`courses/{courseId}/courseWork/-/studentSubmissions?userId=me`) alongside coursework.

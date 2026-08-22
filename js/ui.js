@@ -594,6 +594,155 @@ const UI = {
     }
   },
 
+  // Render UITS Event Raiders events
+  renderRaiderEvents(events = []) {
+    const container = document.getElementById('raider-events-container');
+    const mobileContainer = document.getElementById('raider-events-container-mobile');
+    const noEventsMsg = document.getElementById('no-raider-events-message');
+    const noEventsMsgMobile = document.getElementById('no-raider-events-message-mobile');
+
+    if (!container && !mobileContainer) return;
+
+    if (!events || events.length === 0) {
+      if (container) container.innerHTML = '';
+      if (mobileContainer) mobileContainer.innerHTML = '';
+      if (noEventsMsg) noEventsMsg.style.display = 'block';
+      if (noEventsMsgMobile) noEventsMsgMobile.style.display = 'block';
+      return;
+    }
+
+    if (noEventsMsg) noEventsMsg.style.display = 'none';
+    if (noEventsMsgMobile) noEventsMsgMobile.style.display = 'none';
+
+    const eventsHTML = events.map(event => {
+      const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
+      const day = isNaN(eventDate.getDate()) ? '!' : eventDate.getDate();
+      const month = isNaN(eventDate.getTime()) ? 'EVENT' : eventDate.toLocaleDateString('en-US', { month: 'short' });
+
+      // Badges
+      const categoryBadge = event.category ? `
+        <span class="raider-badge raider-badge-category">
+          <i class="fas fa-trophy"></i> ${Utils.escapeHtml(event.category)}
+        </span>
+      ` : '';
+
+      const deadlineBadge = event.regEndDate ? `
+        <span class="raider-badge raider-badge-deadline" title="Registration deadline">
+          <i class="fas fa-hourglass-half"></i> Reg: ${Utils.escapeHtml(event.regEndDate)}
+        </span>
+      ` : '';
+
+      const feeBadge = event.fee ? `
+        <span class="raider-badge raider-badge-fee" title="Registration fee">
+          <i class="fas fa-tag"></i> ${Utils.escapeHtml(event.fee)}
+        </span>
+      ` : '';
+
+      const venueBadge = event.venue ? `
+        <span class="raider-badge ${event.isOnline ? 'raider-badge-online' : 'raider-badge-venue'}" title="Venue">
+          <i class="fas ${event.isOnline ? 'fa-globe' : 'fa-map-marker-alt'}"></i> ${Utils.escapeHtml(event.venue)}
+        </span>
+      ` : '';
+
+      // Sub-events summary
+      const subEventsCount = Array.isArray(event.subEvents) ? event.subEvents.length : 0;
+      const subEventsBadge = subEventsCount > 0 ? `
+        <div class="raider-subevents-summary">
+          <i class="fas fa-layer-group"></i> ${subEventsCount} Contest Segment${subEventsCount > 1 ? 's' : ''}
+        </div>
+      ` : '';
+
+      // Primary action link
+      const targetUrl = event.externalUrl || event.portalUrl || 'https://ou1ts.github.io/events/';
+
+      return `
+        <div class="event-card raider-card" data-raid-id="${event.id || ''}">
+          <div class="event-date">
+            <div class="event-day">${day}</div>
+            <div class="event-month">${month}</div>
+          </div>
+          <div class="event-content">
+            <div class="event-header">
+              <h3 class="event-title">${Utils.escapeHtml(event.title)}</h3>
+            </div>
+            <div class="raider-badge-container">
+              ${categoryBadge}
+              ${deadlineBadge}
+              ${feeBadge}
+              ${venueBadge}
+            </div>
+            ${subEventsBadge}
+            <div class="event-description">
+              <div class="event-description-wrapper">
+                <div class="event-description-text">${Utils.escapeAndLinkify(event.description) || 'No details available.'}</div>
+                <button type="button" class="event-description-toggle" aria-label="Toggle description">
+                  <span class="toggle-text">Show more</span>
+                  <i class="fas fa-chevron-down"></i>
+                </button>
+              </div>
+            </div>
+            <a href="${targetUrl}" target="_blank" rel="noopener noreferrer" class="raider-external-btn" title="View details on UITS Event Raiders">
+              <i class="fas fa-external-link-alt"></i> Details
+            </a>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    if (container) {
+      container.innerHTML = eventsHTML;
+    }
+    if (mobileContainer) {
+      mobileContainer.innerHTML = eventsHTML;
+    }
+  },
+
+  // Switch mobile events sidebar view between 'internal' and 'raiders'
+  switchMobileEventsView(targetView) {
+    const internalView = document.getElementById('events-view-internal');
+    const raidersView = document.getElementById('events-view-raiders');
+    const switchBtn = document.getElementById('events-view-switch-btn');
+    const titleText = document.getElementById('events-sidebar-title-text');
+    const titleIcon = document.getElementById('events-sidebar-icon');
+    const tooltip = document.getElementById('events-sidebar-tooltip');
+
+    if (!internalView || !raidersView || !switchBtn) return;
+
+    const showRaiders = targetView === 'raiders';
+
+    if (showRaiders) {
+      internalView.style.display = 'none';
+      internalView.classList.remove('active');
+      raidersView.style.display = 'flex';
+      raidersView.classList.add('active');
+
+      if (titleText) titleText.textContent = 'Event Raiders';
+      if (titleIcon) titleIcon.className = 'fas fa-shield-alt';
+      if (tooltip) tooltip.setAttribute('data-tooltip', 'Live tech competitions, hackathons, and symposiums from UITS Event Raiders RSS feed.');
+
+      switchBtn.classList.add('active-raiders');
+      switchBtn.setAttribute('title', 'Switch to b1t-Sched Events');
+      switchBtn.setAttribute('aria-label', 'Switch to b1t-Sched Events');
+      const iconSpan = switchBtn.querySelector('.switch-btn-icon');
+      if (iconSpan) iconSpan.innerHTML = '<i class="fas fa-chevron-left"></i>';
+    } else {
+      raidersView.style.display = 'none';
+      raidersView.classList.remove('active');
+      internalView.style.display = 'flex';
+      internalView.classList.add('active');
+
+      if (titleText) titleText.textContent = 'Events';
+      if (titleIcon) titleIcon.className = 'fas fa-calendar-alt';
+      if (tooltip) tooltip.setAttribute('data-tooltip', 'Official events created by Admin, CR, or Faculty. Check here for general announcements, holidays, and schedules.');
+
+      switchBtn.classList.remove('active-raiders');
+      switchBtn.setAttribute('title', 'Switch to UITS Event Raiders');
+      switchBtn.setAttribute('aria-label', 'Switch to UITS Event Raiders');
+      const iconSpan = switchBtn.querySelector('.switch-btn-icon');
+      if (iconSpan) iconSpan.innerHTML = '<i class="fas fa-chevron-right"></i>';
+    }
+  },
+
   // Render old/past events
   renderOldEvents(events) {
     const container = document.getElementById('old-events-container');
