@@ -3,7 +3,7 @@
  * Handles caching strategies, offline functionality, and background sync
  */
 
-const CACHE_VERSION = 'v2.45.1';
+const CACHE_VERSION = 'v2.47.0';
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `dynamic-${CACHE_VERSION}`;
 const API_CACHE = `api-${CACHE_VERSION}`;
@@ -30,6 +30,7 @@ const STATIC_ASSETS = [
   '/js/app.js',
   '/js/auth.js',
   '/js/classroom.js',
+  '/js/raids-feed.js',
   '/js/db.js',
   '/js/ui.js',
   '/js/utils.js',
