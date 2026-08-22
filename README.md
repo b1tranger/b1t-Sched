@@ -20,7 +20,7 @@ A single-page application (SPA) that helps students manage academic tasks, assig
 - 📆 **Calendar View** - Interactive monthly calendar with task visualization, date navigation, and responsive mobile layout (monthly/weekly toggle)
 - 📣 **CR Notices** - Class Representatives can post, edit, and delete notices visible to their section group; supports priority levels and deadline tracking
 - 📰 **University Notice Viewer** - View UCAM university notices with PDF preview, powered by Vercel serverless backend with local caching
-- 🏫 **Google Classroom Integration** - View assignments and announcements from enrolled courses in a unified interface with OAuth session persistence
+- 🏫 **Google Classroom Integration** - View assignments, announcements, and course materials in a unified interface with OAuth session persistence, cache fallback, and dynamic status badges (**Assigned**, **Missing**, **Turned in**, **Returned / Graded**)
 - 📝 **Note Taking** - Personal notes with markdown support, auto-save, and file upload via catbox.moe/tmpfiles.org
 - 📊 **Activity Timeline** - Visual heatmap and bar chart tracking user activity (logins, tasks, events) for productivity insights
 - 🔔 **Push Notifications** - Real-time browser notifications for new tasks and events (mobile-compatible)

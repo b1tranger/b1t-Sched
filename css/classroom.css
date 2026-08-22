@@ -462,6 +462,7 @@ body.dark-mode .classroom-modal-header {
 }
 
 .classroom-item {
+    position: relative;
     padding: 16px 20px;
     border-bottom: 1px solid var(--classroom-border);
     display: flex;
@@ -472,6 +473,10 @@ body.dark-mode .classroom-modal-header {
     text-decoration: none;
     color: inherit;
     cursor: pointer;
+}
+
+.classroom-item.has-status {
+    padding-bottom: 30px;
 }
 
 .classroom-item:hover {
@@ -663,6 +668,110 @@ body.dark-mode .classroom-modal-header {
         opacity: 0.85;
         visibility: visible;
     }
+}
+
+/* =========================================
+   Status Indicator Badge (To-Do Assignments)
+   ========================================= */
+.classroom-status-badge {
+    position: absolute;
+    bottom: 10px;
+    right: 16px;
+    padding: 3px 9px;
+    border-radius: 12px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.2;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    pointer-events: none;
+    z-index: 2;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    white-space: nowrap;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.classroom-status-badge i {
+    font-size: 0.72rem;
+}
+
+/* Missing - Urgent Overdue (Red Label) */
+.classroom-status-badge.status-missing {
+    background-color: #fde8e8;
+    color: #9b1c1c;
+    border: 1px solid #f8b4b4;
+}
+
+/* Assigned - Pending Upcoming (Blue Label) */
+.classroom-status-badge.status-assigned {
+    background-color: #ebf5ff;
+    color: #1e429f;
+    border: 1px solid #c3ddfd;
+}
+
+/* Turned In - Submitted (Green Label) */
+.classroom-status-badge.status-turned-in {
+    background-color: #def7ec;
+    color: #03543f;
+    border: 1px solid #84e1bc;
+}
+
+/* Returned / Graded - Evaluated (Purple Label) */
+.classroom-status-badge.status-returned {
+    background-color: #edebfe;
+    color: #5521b5;
+    border: 1px solid #dcd7fe;
+}
+
+/* Dark Mode Overrides */
+body.dark-mode .classroom-status-badge.status-missing {
+    background-color: rgba(248, 113, 113, 0.2);
+    color: #fca5a5;
+    border: 1px solid rgba(248, 113, 113, 0.4);
+}
+
+body.dark-mode .classroom-status-badge.status-assigned {
+    background-color: rgba(96, 165, 250, 0.2);
+    color: #93c5fd;
+    border: 1px solid rgba(96, 165, 250, 0.4);
+}
+
+body.dark-mode .classroom-status-badge.status-turned-in {
+    background-color: rgba(52, 211, 153, 0.2);
+    color: #6ee7b7;
+    border: 1px solid rgba(52, 211, 153, 0.4);
+}
+
+body.dark-mode .classroom-status-badge.status-returned {
+    background-color: rgba(167, 139, 250, 0.2);
+    color: #c4b5fd;
+    border: 1px solid rgba(167, 139, 250, 0.4);
+}
+
+/* Gray Mode Overrides */
+body.gray-mode .classroom-status-badge.status-missing {
+    background-color: rgba(255, 99, 96, 0.2);
+    color: #ff8583;
+    border: 1px solid rgba(255, 99, 96, 0.4);
+}
+
+body.gray-mode .classroom-status-badge.status-assigned {
+    background-color: rgba(147, 197, 253, 0.2);
+    color: #bfdbfe;
+    border: 1px solid rgba(147, 197, 253, 0.4);
+}
+
+body.gray-mode .classroom-status-badge.status-turned-in {
+    background-color: rgba(74, 222, 128, 0.2);
+    color: #86efac;
+    border: 1px solid rgba(74, 222, 128, 0.4);
+}
+
+body.gray-mode .classroom-status-badge.status-returned {
+    background-color: rgba(192, 132, 252, 0.2);
+    color: #d8b4fe;
+    border: 1px solid rgba(192, 132, 252, 0.4);
 }
 
 /* =========================================

@@ -40,7 +40,7 @@ b1t-Sched is a web-based academic task scheduler designed for university student
 - **Event Calendar** - Track upcoming academic events with enhanced markdown support (HTML entities, code blocks, `<pre>` tags), clickable links, collapsible descriptions (2-line truncation), and department scope badge (ALL/CSE/etc.)
 - **Event Editing** - Admins can edit all events; CRs can edit/delete their own events
 - **Resource Links** - Quick access to department-specific resources with built-in PDF viewer (desktop: Google Docs Viewer in modal; mobile: opens in new tab)
-- **Google Classroom Integration** - View all assignments, announcements, and posted course materials from enrolled courses in a unified interface with OAuth authentication and session persistence (auto-refresh tokens & cached fallback mode). Features three view toggle tabs (**To-Do**, **Notices**, **Materials**), responsive mobile course view header (toggle buttons wrap cleanly to the 2nd line under the course title), default hiding of Archived Classrooms with an interactive toggle button, a unified pill-styled Sign Out button dynamically shown when logged in, seamless expired token recovery with a 1-click **Reconnect** banner (prevents popup flashes and blank screens), and a one-click **Sync to Tasks** feature for Admins/CRs to automatically add Classroom assignments to the main Tasks list (avoids duplicates).
+- **Google Classroom Integration** - View all assignments, announcements, and posted course materials from enrolled courses in a unified interface with OAuth authentication and session persistence (auto-refresh tokens & cached fallback mode). Features three view toggle tabs (**To-Do**, **Notices**, **Materials**), real-time assignment status badges (**Assigned** [Blue], **Missing** [Red], **Turned in** / **Turned in (Late)** [Green], and **Returned** / **Graded: X/Y** [Purple]), responsive mobile course view header (toggle buttons wrap cleanly to the 2nd line under the course title), default hiding of Archived Classrooms with an interactive toggle button, a unified pill-styled Sign Out button dynamically shown when logged in, seamless expired token recovery with a 1-click **Reconnect** banner (prevents popup flashes and blank screens), and a one-click **Sync to Tasks** feature for Admins/CRs to automatically add Classroom assignments to the main Tasks list (avoids duplicates).
 - **Session Security** - Automatic logout after 1 hour of inactivity (unless "Stay logged in" is checked), with activity-based timer reset for enhanced security
 - **Stay Logged In** - Optional "Trust this device" checkbox on login to persist session indefinitely on safe devices
 - **Role Badges** - Visual indicators for CR and Faculty contributors in task cards and contribution lists
@@ -876,6 +876,7 @@ During signup, Firebase triggers `onAuthStateChanged` immediately when the user 
 | `copyItemText(event, btn)`       | Event, Elem| Promise | Copy item title/caption text to system clipboard with temporary checkmark visual feedback.           |
 | `handleItemClick(event, link)`   | Event, Link| void    | Delegate row clicks to open the item URL while ignoring clicks on nested buttons and links.        |
 | `renderItemAttachments(materials)`| Array     | string  | Render Google Drive files, YouTube videos, web links, and forms as clickable attachment pills.     |
+| `getAssignmentStatusInfo(item)`  | object     | object  | Compute detailed status badge info (`label`, `className`, `icon`) for Missing, Assigned, Turned in, and Returned/Graded states. |
 | `updateLogoutButtonVisibility()` | -          | void    | Dynamically show or hide header Sign Out buttons based on connection state.                        |
 | `syncAssignmentsToTasks()`       | -          | void    | (Admin/CR only) Sync assignments to the main task list.                                            |
 | `logout()`                       | -          | void    | Explicitly revoke OAuth token, clear local storage connection flags, clear cache, and reset state. |
@@ -1739,6 +1740,9 @@ Router.onRouteChange((routeName) => {
 | 2.39.0   | Feb 2026    | **Note Section Overhaul**: (1) **PDF Export**: Integrated `html2pdf.js` for one-click note-to-PDF generation. (2) **Automatic ZIP Fallback**: Integrated `JSZip` to client-side compress unsupported file types (e.g., `.sh`, `.exe`) into `.zip` blobs before upload. (3) **Layout Optimization**: Removed fixed `max-height` constraints in `css/note.css` to enable full flexbox expansion, eliminating whitespace gaps in the note modal editor. (4) **CORS Fix**: Re-prioritized `file.io` as the lead upload provider to bypass `catbox.moe` CORS restrictions on certain domains.                                                                                                                                                                                                        |
 | 2.40.0   | Mar 2026    | PWA Offline Improvements: Resolved view loading issues in offline mode; fixed Google Classroom caching persistence across views; implemented Vercel Blob storage for backend file serving.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | 2.41.0   | Mar 11 2026 | Enhanced Markdown Support: Rewrote rendering pipeline to support fenced code blocks (```), <pre> tags, and safe HTML entities (math/Greek symbols) globally across tasks, events, notices, and notes. Improved CSS for code block visibility.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| 2.44.0   | Aug 2026    | Google Classroom Materials Tab & Client JSON Caching: Added Materials view tab, full client JSON template caching (`classroom_cached_json`), unified pre-fetching with incremental skip tracking, persistent bottom reconnect banner, and row copy actions.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| 2.45.0   | Aug 2026    | Dynamic Department & Metadata Options: Server-priority fetching for Firestore metadata, multi-structure document support, dynamic event department selectors, and comprehensive faculty filters.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| 2.46.0   | Aug 2026    | Google Classroom Assignment Status Badges: Integrated real-time student submission tracking (`studentSubmissions?userId=me`) to render distinct bottom-right status badges on all To-Do assignments for Missing (Red), Assigned (Blue), Turned in (Green), and Returned / Graded: X/Y (Purple) across all color themes.                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 
 ---
 
@@ -1753,8 +1757,8 @@ Router.onRouteChange((routeName) => {
 
 ---
 
-_Documentation last updated: March 11, 2026_
-_Version: 2.41.0_
+_Documentation last updated: August 22, 2026_
+_Version: 2.46.0_
 
 ---
 
@@ -2402,11 +2406,24 @@ You can use basic markdown formatting in task and event descriptions:
 
 ---
 
-_Last Updated: August 1, 2026 (v2.44.0)_
+_Last Updated: August 22, 2026 (v2.46.0)_
 
 ## Version History
 
-### v2.45.0 (Latest)
+### v2.46.0 (Latest)
+
+- **New Feature**: **Google Classroom Real-Time Assignment Status Indicators** — Added comprehensive submission state tracking for all assignments listed under the **To-Do** section (both Unified "All Courses" and Course Detail views).
+  - **Student Submissions API Integration**: Extended `fetchAssignmentsData()` to concurrently query the Google Classroom Student Submissions endpoint (`courses/{courseId}/courseWork/-/studentSubmissions?userId=me`) alongside coursework.
+  - **Multi-State Classification**: Automatically parses submission state (`RETURNED`, `TURNED_IN`, `NEW`, `CREATED`), late submission flags (`isLate: true`), and grades (`assignedGrade` / `maxPoints`) while checking due dates against real time:
+    - **`Missing`** (Red label `.status-missing`, `<i class="fa-solid fa-circle-exclamation"></i>`): Assignment is past its due date and has not been submitted.
+    - **`Assigned`** (Blue label `.status-assigned`, `<i class="fa-solid fa-clock"></i>`): Active upcoming assignment awaiting student submission.
+    - **`Turned in`** / **`Turned in (Late)`** (Green label `.status-turned-in`, `<i class="fa-solid fa-circle-check"></i>`): Successfully submitted by the student.
+    - **`Returned`** / **`Graded: X/Y`** (Purple label `.status-returned`, `<i class="fa-solid fa-award"></i>`): Evaluated and returned by the teacher, displaying points earned when available.
+  - **Dynamic Status Helper (`getAssignmentStatusInfo`)**: Generates consistent status labels, badge classes, and icons for both fresh API results and persistent offline JSON cache items.
+  - **Cache & Merge Sensitivity**: Enhanced `mergeAndSkipUnchanged()` to check `existing.status === item.status`, ensuring changes in assignment submission status immediately invalidate stale cache rows and refresh the UI.
+  - **Pill UI & Theming**: Fixed at the bottom-right corner of each assignment card (`bottom: 10px; right: 16px;`) with dedicated light, dark, and monochromatic gray theme styling.
+
+### v2.45.0
 
 - **Fix & Enhancement**: **Dynamic Department & Metadata Options Architecture** — Resolved issue where adding new department options in Firebase Firestore did not reflect in frontend dropdown selectors.
   - **Server-Priority Fetching**: Configured `DB.getDepartments()`, `DB.getSemesters()`, and `DB.getSections()` to prioritize fetching fresh metadata directly from the Firestore server (`source: 'server'`), preventing stale cache issues caused by offline IndexedDB persistence.

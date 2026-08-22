@@ -144,7 +144,7 @@ const Classroom = {
                 const freshTime = item.updateTime || item.creationTime || (item.dueDate ? `${item.dueDate.year}-${item.dueDate.month}-${item.dueDate.day}` : '');
                 const existingTime = existing.updateTime || existing.creationTime || (existing.dueDate ? `${existing.dueDate.year}-${existing.dueDate.month}-${existing.dueDate.day}` : '');
 
-                if (freshTime && existingTime && freshTime === existingTime) {
+                if (freshTime && existingTime && freshTime === existingTime && existing.status === item.status) {
                     skippedCount++;
                     return existing; // Skip updating, retain existing loaded object
                 } else {
@@ -665,18 +665,45 @@ const Classroom = {
                 if (course.courseState !== 'ACTIVE') continue;
 
                 try {
-                    const response = await fetch(`https://classroom.googleapis.com/v1/courses/${course.id}/courseWork?orderBy=dueDate desc`, {
-                        headers: { 'Authorization': `Bearer ${this.accessToken}` }
-                    });
+                    const [courseWorkRes, submissionsRes] = await Promise.all([
+                        fetch(`https://classroom.googleapis.com/v1/courses/${course.id}/courseWork?orderBy=dueDate desc`, {
+                            headers: { 'Authorization': `Bearer ${this.accessToken}` }
+                        }),
+                        fetch(`https://classroom.googleapis.com/v1/courses/${course.id}/courseWork/-/studentSubmissions?userId=me`, {
+                            headers: { 'Authorization': `Bearer ${this.accessToken}` }
+                        }).catch(err => {
+                            console.warn(`Failed to fetch student submissions for course ${course.name}:`, err);
+                            return null;
+                        })
+                    ]);
 
-                    if (response.ok) {
-                        const data = await response.json();
+                    let submissionsMap = new Map();
+                    if (submissionsRes && submissionsRes.ok) {
+                        try {
+                            const subData = await submissionsRes.json();
+                            const submissions = subData.studentSubmissions || [];
+                            submissions.forEach(sub => {
+                                if (sub.courseWorkId) {
+                                    submissionsMap.set(sub.courseWorkId, sub);
+                                }
+                            });
+                        } catch (subErr) {
+                            console.warn(`Failed to parse submissions for course ${course.name}:`, subErr);
+                        }
+                    }
+
+                    if (courseWorkRes && courseWorkRes.ok) {
+                        const data = await courseWorkRes.json();
                         const courseWork = data.courseWork || [];
 
                         courseWork.forEach(work => {
+                            let isPastDue = false;
                             if (work.dueDate) {
-                                const dueDate = new Date(work.dueDate.year, work.dueDate.month - 1, work.dueDate.day);
+                                const dueDate = new Date(work.dueDate.year, work.dueDate.month - 1, work.dueDate.day, work.dueTime?.hours || 23, work.dueTime?.minutes || 59);
                                 if (dueDate < cutoffDate) return;
+                                if (dueDate < new Date()) {
+                                    isPastDue = true;
+                                }
                             } else if (work.creationTime) {
                                 const creationDate = new Date(work.creationTime);
                                 if (creationDate < cutoffDate) return;
@@ -685,6 +712,36 @@ const Classroom = {
                             work.courseName = course.name;
                             work.courseId = course.id;
                             work.courseState = course.courseState;
+
+                            // Determine detailed submission status
+                            const sub = submissionsMap.get(work.id);
+                            const subState = sub ? sub.state : 'NEW';
+                            const isLate = sub ? Boolean(sub.late) : false;
+                            const assignedGrade = sub && typeof sub.assignedGrade === 'number' ? sub.assignedGrade : null;
+
+                            work.submissionState = subState;
+                            work.isLate = isLate;
+                            work.assignedGrade = assignedGrade;
+
+                            if (subState === 'RETURNED') {
+                                if (assignedGrade !== null) {
+                                    work.status = `Graded: ${assignedGrade}${work.maxPoints ? `/${work.maxPoints}` : ''}`;
+                                    work.statusCode = 'graded';
+                                } else {
+                                    work.status = 'Returned';
+                                    work.statusCode = 'returned';
+                                }
+                            } else if (subState === 'TURNED_IN') {
+                                work.status = isLate ? 'Turned in (Late)' : 'Turned in';
+                                work.statusCode = 'turned_in';
+                            } else if (isPastDue) {
+                                work.status = 'Missing';
+                                work.statusCode = 'missing';
+                            } else {
+                                work.status = 'Assigned';
+                                work.statusCode = 'assigned';
+                            }
+
                             allAssignments.push(work);
                         });
                     }
@@ -1482,6 +1539,71 @@ const Classroom = {
         btn.title = isExpanded ? 'Collapse details' : 'Show details';
     },
 
+    getAssignmentStatusInfo(item) {
+        let statusCode = item.statusCode;
+        let statusLabel = item.status;
+        const subState = item.submissionState;
+        
+        let isPastDue = false;
+        if (item.dueDate) {
+            const due = new Date(item.dueDate.year, item.dueDate.month - 1, item.dueDate.day, item.dueTime?.hours || 23, item.dueTime?.minutes || 59);
+            if (due < new Date()) {
+                isPastDue = true;
+            }
+        }
+
+        if (!statusCode) {
+            if (subState === 'RETURNED' || item.status === 'Returned' || (item.status && item.status.startsWith('Graded'))) {
+                if (typeof item.assignedGrade === 'number') {
+                    statusCode = 'graded';
+                    statusLabel = `Graded: ${item.assignedGrade}${item.maxPoints ? `/${item.maxPoints}` : ''}`;
+                } else {
+                    statusCode = 'returned';
+                    statusLabel = 'Returned';
+                }
+            } else if (subState === 'TURNED_IN' || item.status === 'Turned in' || item.status === 'Turned in (Late)') {
+                statusCode = 'turned_in';
+                statusLabel = item.isLate ? 'Turned in (Late)' : 'Turned in';
+            } else if (isPastDue) {
+                statusCode = 'missing';
+                statusLabel = 'Missing';
+            } else {
+                statusCode = 'assigned';
+                statusLabel = 'Assigned';
+            }
+        }
+
+        let statusClass = 'status-assigned';
+        let statusIcon = 'fa-clock';
+
+        switch (statusCode) {
+            case 'missing':
+                statusClass = 'status-missing';
+                statusIcon = 'fa-circle-exclamation';
+                break;
+            case 'turned_in':
+                statusClass = 'status-turned-in';
+                statusIcon = 'fa-circle-check';
+                break;
+            case 'returned':
+            case 'graded':
+                statusClass = 'status-returned';
+                statusIcon = 'fa-award';
+                break;
+            case 'assigned':
+            default:
+                statusClass = 'status-assigned';
+                statusIcon = 'fa-clock';
+                break;
+        }
+
+        return {
+            label: statusLabel || 'Assigned',
+            className: statusClass,
+            icon: statusIcon
+        };
+    },
+
     renderUnifiedListItem(item, type) {
         let title, date, link, icon, snippet, fullText, courseName;
 
@@ -1527,8 +1649,19 @@ const Classroom = {
         const copyText = title ? (rawText ? `${title}\n\n${rawText}` : title) : rawText;
         const escapedCopyText = copyText.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#039;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
+        let statusBadgeHtml = '';
+        if (type === 'todo') {
+            const statusInfo = this.getAssignmentStatusInfo(item);
+            statusBadgeHtml = `
+                <div class="classroom-status-badge ${statusInfo.className}">
+                    <i class="fa-solid ${statusInfo.icon}"></i>
+                    <span>${statusInfo.label}</span>
+                </div>
+            `;
+        }
+
         return `
-            <div class="classroom-item" onclick="Classroom.handleItemClick(event, '${link}')" data-copy-text="${escapedCopyText}">
+            <div class="classroom-item ${type === 'todo' ? 'has-status' : ''}" onclick="Classroom.handleItemClick(event, '${link}')" data-copy-text="${escapedCopyText}">
                 <div class="item-icon ${iconClass}">
                     <i class="fas fa-${icon}"></i>
                 </div>
@@ -1559,6 +1692,7 @@ const Classroom = {
                         </button>
                     ` : ''}
                 </div>
+                ${statusBadgeHtml}
             </div>
         `;
     },
@@ -1627,7 +1761,7 @@ const Classroom = {
         } else {
             listHtml = `
                 <div class="classroom-list-container">
-                    ${items.map(item => this.renderListItem(item, viewType, course.alternateLink)).join('')}
+                    ${items.map(item => this.renderListItem(item, viewType, course ? course.alternateLink : '#')).join('')}
                 </div>
             `;
         }
@@ -1683,8 +1817,19 @@ const Classroom = {
         const copyText = title ? (rawText ? `${title}\n\n${rawText}` : title) : rawText;
         const escapedCopyText = copyText.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#039;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
+        let statusBadgeHtml = '';
+        if (type === 'todo') {
+            const statusInfo = this.getAssignmentStatusInfo(item);
+            statusBadgeHtml = `
+                <div class="classroom-status-badge ${statusInfo.className}">
+                    <i class="fa-solid ${statusInfo.icon}"></i>
+                    <span>${statusInfo.label}</span>
+                </div>
+            `;
+        }
+
         return `
-            <div class="classroom-item" onclick="Classroom.handleItemClick(event, '${link}')" data-copy-text="${escapedCopyText}">
+            <div class="classroom-item ${type === 'todo' ? 'has-status' : ''}" onclick="Classroom.handleItemClick(event, '${link}')" data-copy-text="${escapedCopyText}">
                 <div class="item-icon ${iconClass}">
                     <i class="fas fa-${icon}"></i>
                 </div>
@@ -1714,6 +1859,7 @@ const Classroom = {
                         </button>
                     ` : ''}
                 </div>
+                ${statusBadgeHtml}
             </div>
         `;
     }
