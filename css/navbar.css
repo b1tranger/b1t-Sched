@@ -12,6 +12,7 @@
   box-shadow: var(--shadow-md);
   z-index: var(--z-fixed);
   height: 70px;
+  transition: top var(--transition-fast, 0.2s ease);
 }
 
 .nav-container {

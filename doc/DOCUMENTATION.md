@@ -943,7 +943,9 @@ During signup, Firebase triggers `onAuthStateChanged` immediately when the user 
 
 - Visual indicator when user is offline
 - Shows "You're offline. Showing cached content."
-- Automatically hides when connection restored
+- Dedicated space layout: measures rendered banner height via `ResizeObserver` and sets `--offline-banner-height` CSS custom property to push the fixed navbar, main content, sidebars, mobile navigation drawer, and login screen down cleanly without overlaying content
+- Automatically hides and resets `--offline-banner-height` to `0px` when connection is restored
+- Smooth transitions on navbar top and main content padding
 
 #### SW Update Manager (`js/sw-update-manager.js`)
 
@@ -2438,9 +2440,11 @@ _Last Updated: August 22, 2026 (v2.46.0)_
   - Restores the user's view preference on initialization, keeping their preferred view active across page refreshes and app launches.
 - **Enhancement**: **Two-Segment Event Card Grid Layout** (`js/ui.js`, `css/components.css`, `css/dashboard.css`)
   - Restructured event cards into two clear segments: `.event-header` containing the event title (and department scope badge) alongside `.event-date`, and `.event-details` containing badge pills, contest segments count, collapsible descriptions, and action buttons.
-  - Configured CSS Grid with `display: contents` so that all secondary content spans the full width directly below `.event-date`, eliminating wasted empty space underneath the date badge on compact displays.
-- **Enhancement**: **Compact Mobile Events Sidebar Header** (`css/dashboard.css`)
-  - Reduced top and bottom padding on `.events-sidebar-header` to `var(--spacing-sm) var(--spacing-lg)`, maximizing the vertical viewport area dedicated to event cards.
+- **Enhancement**: **Offline Banner Dedicated Layout Space & Dynamic Height Offset** (`js/offline-indicator.js`, `css/components.css`, `css/navbar.css`, `css/main.css`, `index.html`)
+  - Re-engineered the offline indicator from a floating overlay into a dedicated layout space that dynamically pushes all top-level website content, navbars, sidebars, and login views downward.
+  - Implemented dynamic rendered height measurement with `ResizeObserver` (and window `resize` fallback) setting the root CSS custom property `--offline-banner-height`.
+  - Configured `body.offline-active` styling across `.navbar`, `.main-content`, `.nav-center` (mobile drawer), `.auth-container`, `.set-details-container`, `.dashboard-sidebar`, and slide-out sidebars (`.events-sidebar`, `.notice-sidebar`, `.classroom-sidebar`) so that no content or header is clipped or hidden when offline.
+  - Added smooth CSS transitions to `.navbar` and `.main-content` for fluid layout shifting.
 
 ### v2.46.0
 

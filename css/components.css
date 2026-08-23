@@ -968,6 +968,10 @@ body.dark-mode .install-prompt {
    OFFLINE INDICATOR
    ============================================ */
 
+:root {
+  --offline-banner-height: 0px;
+}
+
 .offline-indicator {
   position: fixed;
   top: 0;
@@ -975,7 +979,7 @@ body.dark-mode .install-prompt {
   right: 0;
   background: #ff9800;
   color: white;
-  padding: 12px 20px;
+  padding: 10px 20px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -985,6 +989,7 @@ body.dark-mode .install-prompt {
   z-index: 10001;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   animation: slideDown 0.3s ease-out;
+  box-sizing: border-box;
 }
 
 @keyframes slideDown {
@@ -1001,52 +1006,74 @@ body.dark-mode .install-prompt {
   font-size: 16px;
 }
 
-/* Mobile: reduce offline banner height */
+/* Mobile: reduce offline banner height and handle text wrap */
 @media (max-width: 768px) {
   .offline-indicator {
-    padding: 6px 12px;
+    padding: 8px 12px;
     font-size: 12px;
     gap: 6px;
+    text-align: center;
   }
 
   .offline-indicator i {
     font-size: 13px;
+    flex-shrink: 0;
   }
 }
 
-/* Adjust ALL content when offline indicator is shown (using body class for compatibility) */
+/* Dedicated layout space when offline banner is shown - push all website content down */
 body.offline-active .navbar {
-  top: 44px;
+  top: var(--offline-banner-height, 42px);
 }
 
 body.offline-active .main-content {
-  margin-top: 44px;
+  padding-top: calc(80px + var(--offline-banner-height, 42px));
 }
 
-/* Push all fixed sidebar toggles down when offline */
-body.offline-active .events-toggle,
-body.offline-active .notice-toggle,
-body.offline-active .classroom-toggle,
-body.offline-active .note-toggle {
-  margin-top: 44px;
+@media (max-width: 1024px) {
+  body.offline-active .main-content {
+    padding-top: calc(66px + var(--offline-banner-height, 42px));
+  }
 }
 
-/* Mobile: smaller banner = smaller offset */
 @media (max-width: 768px) {
   body.offline-active .navbar {
-    top: 30px;
+    top: var(--offline-banner-height, 34px);
+  }
+
+  body.offline-active .navbar .nav-center,
+  body.offline-active .nav-center {
+    top: calc(60px + var(--offline-banner-height, 34px));
   }
 
   body.offline-active .main-content {
-    margin-top: 30px;
+    padding-top: calc(60px + var(--offline-banner-height, 34px));
   }
+}
 
-  body.offline-active .events-toggle,
-  body.offline-active .notice-toggle,
-  body.offline-active .classroom-toggle,
-  body.offline-active .note-toggle {
-    margin-top: 30px;
+/* Auth (Login/Signup) and Set Details view adjustments when offline */
+body.offline-active .auth-container,
+body.offline-active .set-details-container {
+  margin-top: 0 !important;
+  min-height: calc(100vh - var(--offline-banner-height, 42px));
+}
+
+/* Sticky and Fixed sidebars offset when offline */
+body.offline-active .dashboard-sidebar {
+  top: calc(80px + var(--spacing-lg) + var(--offline-banner-height, 42px));
+}
+
+@media (max-width: 1024px) {
+  body.offline-active .dashboard-sidebar {
+    top: calc(58px + var(--spacing-md) + var(--offline-banner-height, 42px));
   }
+}
+
+body.offline-active .events-sidebar,
+body.offline-active .notice-sidebar,
+body.offline-active .classroom-sidebar {
+  top: var(--offline-banner-height, 42px);
+  height: calc(100vh - var(--offline-banner-height, 42px));
 }
 
 
