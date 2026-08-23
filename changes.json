@@ -41,7 +41,7 @@
         {
           "type": "Enhancement",
           "title": "Offline Banner Dedicated Layout Space & Dynamic Height Offset",
-          "description": "Re-engineered the offline banner with dynamic height measurement (ResizeObserver) and CSS variable (--offline-banner-height) to provide dedicated space and push the navbar, content, sidebars, and login screen down cleanly without overlaying or obscuring top website elements."
+          "description": "Re-engineered the offline banner with dynamic height measurement (ResizeObserver) and CSS variable (--offline-banner-height) to provide dedicated space and push the navbar, main content, mobile drawer sidebars (Events, Notices, Classroom) & backdrops, and login screen down cleanly without overlaying or obscuring top website elements."
         }
       ]
     },

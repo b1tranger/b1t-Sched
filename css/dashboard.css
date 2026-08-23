@@ -371,7 +371,7 @@ body.dark-mode .description-link:hover {
     background-color: var(--bg-white);
     box-shadow: var(--shadow-lg);
     z-index: var(--z-modal);
-    transition: transform var(--transition-medium);
+    transition: transform var(--transition-medium), top var(--transition-fast, 0.2s ease), height var(--transition-fast, 0.2s ease);
     display: flex;
     flex-direction: column;
     transform: translateX(100%);

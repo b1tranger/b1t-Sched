@@ -33,7 +33,7 @@ A single-page application (SPA) that helps students manage academic tasks, assig
 - ❓ **FAQ Section** - Collapsible accordion explaining how the site works, user roles, and profile settings
 - 🎨 **Maroon Theme** - Professional dark maroon and off-white color scheme
 - 📱 **Fully Responsive** - Works on desktop, tablet, and mobile
-- 📲 **Progressive Web App** - Installable app with offline support and service worker caching
+- 📲 **Progressive Web App & Offline Experience** - Installable app with offline caching, background sync queue, and an adaptive offline banner that dynamically pushes all top-level content, navigation bars, and mobile sidebars down without overlaying UI elements
 
 > 📖 For complete documentation, see [`doc/DOCUMENTATION.md`](doc/DOCUMENTATION.md)
 

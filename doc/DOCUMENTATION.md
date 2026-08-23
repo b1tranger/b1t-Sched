@@ -2440,11 +2440,11 @@ _Last Updated: August 22, 2026 (v2.46.0)_
   - Restores the user's view preference on initialization, keeping their preferred view active across page refreshes and app launches.
 - **Enhancement**: **Two-Segment Event Card Grid Layout** (`js/ui.js`, `css/components.css`, `css/dashboard.css`)
   - Restructured event cards into two clear segments: `.event-header` containing the event title (and department scope badge) alongside `.event-date`, and `.event-details` containing badge pills, contest segments count, collapsible descriptions, and action buttons.
-- **Enhancement**: **Offline Banner Dedicated Layout Space & Dynamic Height Offset** (`js/offline-indicator.js`, `css/components.css`, `css/navbar.css`, `css/main.css`, `index.html`)
+- **Enhancement**: **Offline Banner Dedicated Layout Space & Dynamic Height Offset** (`js/offline-indicator.js`, `css/components.css`, `css/navbar.css`, `css/main.css`, `index.html`, `css/dashboard.css`, `css/notice.css`, `css/classroom.css`)
   - Re-engineered the offline indicator from a floating overlay into a dedicated layout space that dynamically pushes all top-level website content, navbars, sidebars, and login views downward.
   - Implemented dynamic rendered height measurement with `ResizeObserver` (and window `resize` fallback) setting the root CSS custom property `--offline-banner-height`.
-  - Configured `body.offline-active` styling across `.navbar`, `.main-content`, `.nav-center` (mobile drawer), `.auth-container`, `.set-details-container`, `.dashboard-sidebar`, and slide-out sidebars (`.events-sidebar`, `.notice-sidebar`, `.classroom-sidebar`) so that no content or header is clipped or hidden when offline.
-  - Added smooth CSS transitions to `.navbar` and `.main-content` for fluid layout shifting.
+  - Configured `body.offline-active` styling across `.navbar`, `.main-content`, `.nav-center` (mobile drawer), `.auth-container`, `.set-details-container`, `.dashboard-sidebar`, mobile drawer sidebars (`#events-sidebar`, `#notice-sidebar`, `#classroom-sidebar`), and dimming backdrops (`#events-overlay`, `#notice-overlay`, `#classroom-overlay`) with `!important` offsets and `max-height` constraints so that no content or header is clipped or hidden when offline.
+  - Added smooth CSS `top` and `height` transitions to `.navbar`, `.main-content`, `.events-sidebar`, `.notice-sidebar`, and `.classroom-sidebar` for fluid layout shifting.
 
 ### v2.46.0
 
