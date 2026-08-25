@@ -298,21 +298,30 @@
   }
 
   /* Modals, Forms, Inputs & Buttons */
-  .modal-content {
+  .modal-content:not(#classroom-modal .modal-content):not(.classroom-modal-content) {
     padding: var(--spacing-lg);
     max-width: 460px;
     max-height: calc(100vh - 50px);
   }
 
-  .modal-header {
+  #classroom-modal .modal-content,
+  .classroom-modal-content {
+    padding: 0 !important;
+    max-width: 1000px;
+    width: 90%;
+    height: 80vh;
+    overflow: hidden;
+  }
+
+  .modal-header:not(.classroom-modal-header) {
     margin-bottom: var(--spacing-md);
   }
 
-  .modal-title {
+  .modal-title:not(.classroom-modal-title) {
     font-size: var(--font-lg);
   }
 
-  .modal-body {
+  .modal-body:not(.classroom-modal-body) {
     margin-bottom: var(--spacing-md);
   }
 
@@ -400,10 +409,17 @@
 
 /* Height-Constrained Smaller Desktop Displays (e.g. 768px or 720px screen height) */
 @media (min-width: 769px) and (max-height: 768px) {
-  .modal-content {
+  .modal-content:not(#classroom-modal .modal-content):not(.classroom-modal-content) {
     max-height: calc(100vh - 40px);
     padding: var(--spacing-md) var(--spacing-lg);
     overflow-y: auto;
+  }
+
+  #classroom-modal .modal-content,
+  .classroom-modal-content {
+    padding: 0 !important;
+    max-height: 85vh;
+    overflow: hidden !important;
   }
 
   .dashboard-sidebar {

@@ -200,51 +200,81 @@ const Classroom = {
         return result || [];
     },
 
-    // Sort assignments into 2 vertical groups: Pending/Active first (Assigned, Missing), then Completed (Turned In, Returned, Graded), each sorted ascending by due date
+    // Extract and parse Date from assignment dueDate / dueTime
+    getAssignmentDueDate(item) {
+        if (!item || !item.dueDate) return null;
+        if (typeof item.dueDate === 'object' && 'year' in item.dueDate) {
+            return new Date(
+                item.dueDate.year,
+                item.dueDate.month - 1,
+                item.dueDate.day,
+                item.dueTime?.hours !== undefined ? item.dueTime.hours : 23,
+                item.dueTime?.minutes !== undefined ? item.dueTime.minutes : 59
+            );
+        }
+        if (item.dueDate instanceof Date) return item.dueDate;
+        if (typeof item.dueDate === 'string' || typeof item.dueDate === 'number') {
+            const d = new Date(item.dueDate);
+            if (!isNaN(d.getTime())) return d;
+        }
+        return null;
+    },
+
+    // Check if assignment has passed its due date
+    isPastDue(item, now = new Date()) {
+        const due = this.getAssignmentDueDate(item);
+        if (!due) return false;
+        return due < now;
+    },
+
+    // Check if assignment is submitted, turned in, graded, or returned
+    isSubmittedOrReturned(item) {
+        if (!item) return false;
+        if (item.statusCode) {
+            return item.statusCode === 'turned_in' || item.statusCode === 'returned' || item.statusCode === 'graded';
+        }
+        if (item.submissionState) {
+            return item.submissionState === 'TURNED_IN' || item.submissionState === 'RETURNED';
+        }
+        if (item.status) {
+            return item.status === 'Turned in' || item.status === 'Returned' || (typeof item.status === 'string' && item.status.startsWith('Graded')) || item.status === 'Turned in (Late)';
+        }
+        return false;
+    },
+
+    // Determine assignment group: 0 = Assigned (no due date), 1 = Due date yet to pass, 2 = Passed due date, 3 = Completed
+    getAssignmentGroup(item, now = new Date()) {
+        if (!item) return 0;
+        if (this.isSubmittedOrReturned(item)) return 3;
+        if (!item.dueDate) return 0;
+        if (this.isPastDue(item, now)) return 2;
+        return 1;
+    },
+
+    // Sort assignments into 3 vertical groups (+ completed):
+    // 1. "Assigned" tasks (no due date)
+    // 2. Tasks that have yet to pass due date (upcoming deadlines, ascending)
+    // 3. Tasks that have passed due date (missing/overdue, ascending)
+    // 4. Completed tasks (turned in, returned, graded, ascending)
     sortAssignments(assignments) {
         if (!Array.isArray(assignments)) return [];
-
-        const isSubmittedOrReturned = (item) => {
-            if (!item) return false;
-            if (item.statusCode) {
-                return item.statusCode === 'turned_in' || item.statusCode === 'returned' || item.statusCode === 'graded';
-            }
-            if (item.submissionState) {
-                return item.submissionState === 'TURNED_IN' || item.submissionState === 'RETURNED';
-            }
-            if (item.status) {
-                return item.status === 'Turned in' || item.status === 'Returned' || item.status.startsWith('Graded') || item.status === 'Turned in (Late)';
-            }
-            return false;
-        };
+        const now = new Date();
 
         return [...assignments].sort((a, b) => {
-            const groupA = isSubmittedOrReturned(a) ? 1 : 0;
-            const groupB = isSubmittedOrReturned(b) ? 1 : 0;
+            const groupA = this.getAssignmentGroup(a, now);
+            const groupB = this.getAssignmentGroup(b, now);
 
             if (groupA !== groupB) {
                 return groupA - groupB;
             }
 
             // Within the same group, maintain ascending due date order (earliest deadline first)
-            if (!a.dueDate && !b.dueDate) return 0;
-            if (!a.dueDate) return 1;
-            if (!b.dueDate) return -1;
+            const dateA = this.getAssignmentDueDate(a);
+            const dateB = this.getAssignmentDueDate(b);
 
-            const dateA = new Date(
-                a.dueDate.year,
-                a.dueDate.month - 1,
-                a.dueDate.day,
-                a.dueTime?.hours || 23,
-                a.dueTime?.minutes || 59
-            );
-            const dateB = new Date(
-                b.dueDate.year,
-                b.dueDate.month - 1,
-                b.dueDate.day,
-                b.dueTime?.hours || 23,
-                b.dueTime?.minutes || 59
-            );
+            if (!dateA && !dateB) return 0;
+            if (!dateA) return 1;
+            if (!dateB) return -1;
             return dateA - dateB;
         });
     },
@@ -1548,6 +1578,76 @@ const Classroom = {
         await this.fetchCoursesAndLoadAll();
     },
 
+    // Render To-Do items divided into 3 distinct groups (+ completed) with small-height divider banners
+    renderTodoList(items, renderItemFn) {
+        if (!Array.isArray(items) || items.length === 0) return '';
+        const now = new Date();
+
+        const assignedNoDue = [];
+        const upcomingDue = [];
+        const passedDue = [];
+        const completed = [];
+
+        items.forEach(item => {
+            const group = this.getAssignmentGroup(item, now);
+            if (group === 0) {
+                assignedNoDue.push(item);
+            } else if (group === 1) {
+                upcomingDue.push(item);
+            } else if (group === 2) {
+                passedDue.push(item);
+            } else {
+                completed.push(item);
+            }
+        });
+
+        let html = '';
+
+        // Group 1: Assigned tasks (no due date set)
+        if (assignedNoDue.length > 0) {
+            html += assignedNoDue.map(renderItemFn).join('');
+        }
+
+        // Group 2: Tasks that have yet to pass the due date (upcoming deadlines)
+        if (upcomingDue.length > 0) {
+            html += upcomingDue.map(renderItemFn).join('');
+        }
+
+        // Group 3: Tasks that have passed the due date (missing/overdue) - divided with small-height banner
+        if (passedDue.length > 0) {
+            html += `
+                <div class="classroom-group-divider passed-due-divider">
+                    <div class="classroom-group-divider-line"></div>
+                    <div class="classroom-group-divider-badge">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                        <span>Passed Due Date</span>
+                        <span class="classroom-group-count">${passedDue.length}</span>
+                    </div>
+                    <div class="classroom-group-divider-line"></div>
+                </div>
+            `;
+            html += passedDue.map(renderItemFn).join('');
+        }
+
+        // Group 4: Completed tasks (Turned In, Graded, Returned) - if any
+        if (completed.length > 0) {
+            html += `
+                <div class="classroom-group-divider completed-divider">
+                    <div class="classroom-group-divider-line"></div>
+                    <div class="classroom-group-divider-badge">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>Completed</span>
+                        <span class="classroom-group-count">${completed.length}</span>
+                    </div>
+                    <div class="classroom-group-divider-line"></div>
+                </div>
+            `;
+            html += completed.map(renderItemFn).join('');
+        }
+
+        return html;
+    },
+
     renderAllItems(items, viewType) {
         // Header with Toggle
         const headerHtml = `
@@ -1593,6 +1693,12 @@ const Classroom = {
                 <div class="classroom-empty">
                     <i class="fas fa-${emptyIcon}"></i>
                     <p>No ${emptyText} found.</p>
+                </div>
+            `;
+        } else if (viewType === 'todo') {
+            listHtml = `
+                <div class="classroom-list-container">
+                    ${this.renderTodoList(items, (item) => this.renderUnifiedListItem(item, 'todo'))}
                 </div>
             `;
         } else {
@@ -1988,6 +2094,12 @@ const Classroom = {
                 <div class="classroom-empty">
                     <i class="fas fa-${emptyIcon}"></i>
                     <p>No ${emptyText} found.</p>
+                </div>
+            `;
+        } else if (viewType === 'todo') {
+            listHtml = `
+                <div class="classroom-list-container">
+                    ${this.renderTodoList(items, (item) => this.renderListItem(item, 'todo', course ? course.alternateLink : '#'))}
                 </div>
             `;
         } else {

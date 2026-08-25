@@ -210,6 +210,7 @@ body.dark-mode .classroom-header-logout-btn:hover {
     overflow-x: auto;
 }
 
+#classroom-modal .modal-content,
 .classroom-modal-content {
     width: 90%;
     max-width: 1000px;
@@ -218,16 +219,18 @@ body.dark-mode .classroom-header-logout-btn:hover {
     height: 80vh;
     display: flex;
     flex-direction: column;
-    padding: 0;
+    padding: 0 !important;
     overflow: hidden;
     border-radius: 8px;
     box-shadow: var(--shadow-lg);
 }
 
 @media (max-width: 860px) and (min-width: 769px) {
+    #classroom-modal .modal-content,
     .classroom-modal-content {
         min-width: 740px;
         width: 95%;
+        padding: 0 !important;
     }
 }
 
@@ -785,6 +788,123 @@ body.gray-mode .classroom-status-badge.status-returned {
     background-color: rgba(192, 132, 252, 0.2);
     color: #d8b4fe;
     border: 1px solid rgba(192, 132, 252, 0.4);
+}
+
+/* =========================================
+   To-Do Group Divider Banners
+   ========================================= */
+.classroom-group-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 14px 0 8px 0;
+    padding: 0 2px;
+    width: 100%;
+}
+
+.classroom-group-divider:first-child {
+    margin-top: 4px;
+}
+
+.classroom-group-divider-line {
+    flex: 1;
+    height: 1px;
+    background-color: var(--classroom-border);
+}
+
+.classroom-group-divider-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.classroom-group-count {
+    background: rgba(0, 0, 0, 0.08);
+    padding: 1px 6px;
+    border-radius: 10px;
+    font-size: 0.68rem;
+    font-weight: 700;
+}
+
+/* Passed Due Date Banner */
+.classroom-group-divider.passed-due-divider .classroom-group-divider-badge {
+    background-color: #fde8e8;
+    color: #9b1c1c;
+    border: 1px solid #f8b4b4;
+}
+
+.classroom-group-divider.passed-due-divider .classroom-group-divider-line {
+    background-color: rgba(239, 68, 68, 0.25);
+}
+
+/* Completed Banner */
+.classroom-group-divider.completed-divider .classroom-group-divider-badge {
+    background-color: #def7ec;
+    color: #03543f;
+    border: 1px solid #84e1bc;
+}
+
+.classroom-group-divider.completed-divider .classroom-group-divider-line {
+    background-color: rgba(16, 185, 129, 0.25);
+}
+
+/* Dark Mode Group Dividers */
+body.dark-mode .classroom-group-divider.passed-due-divider .classroom-group-divider-badge {
+    background-color: rgba(248, 113, 113, 0.2);
+    color: #fca5a5;
+    border: 1px solid rgba(248, 113, 113, 0.4);
+}
+
+body.dark-mode .classroom-group-divider.passed-due-divider .classroom-group-divider-line {
+    background-color: rgba(248, 113, 113, 0.3);
+}
+
+body.dark-mode .classroom-group-divider.completed-divider .classroom-group-divider-badge {
+    background-color: rgba(52, 211, 153, 0.2);
+    color: #6ee7b7;
+    border: 1px solid rgba(52, 211, 153, 0.4);
+}
+
+body.dark-mode .classroom-group-divider.completed-divider .classroom-group-divider-line {
+    background-color: rgba(52, 211, 153, 0.3);
+}
+
+body.dark-mode .classroom-group-count {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* Gray Mode Group Dividers */
+body.gray-mode .classroom-group-divider.passed-due-divider .classroom-group-divider-badge {
+    background-color: rgba(255, 99, 96, 0.2);
+    color: #ff8583;
+    border: 1px solid rgba(255, 99, 96, 0.4);
+}
+
+body.gray-mode .classroom-group-divider.passed-due-divider .classroom-group-divider-line {
+    background-color: rgba(255, 99, 96, 0.3);
+}
+
+body.gray-mode .classroom-group-divider.completed-divider .classroom-group-divider-badge {
+    background-color: rgba(74, 222, 128, 0.2);
+    color: #86efac;
+    border: 1px solid rgba(74, 222, 128, 0.4);
+}
+
+body.gray-mode .classroom-group-divider.completed-divider .classroom-group-divider-line {
+    background-color: rgba(74, 222, 128, 0.3);
+}
+
+body.gray-mode .classroom-group-count {
+    background: rgba(255, 255, 255, 0.15);
 }
 
 /* =========================================
