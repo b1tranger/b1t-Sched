@@ -1,11 +1,33 @@
 {
-  "currentVersion": "v2.47.0",
-  "lastUpdated": "August 22, 2026",
+  "currentVersion": "v2.48.0",
+  "lastUpdated": "August 26, 2026",
   "documentationUrl": "https://b1tranger.netlify.app/render.html?file=https%3A%2F%2Fgithub.com%2Fb1tranger%2Fb1t-Sched%2Fblob%2Fmain%2Fdoc%2FDOCUMENTATION.md",
   "history": [
     {
-      "version": "v2.47.0",
+      "version": "v2.48.0",
       "badge": "Latest",
+      "date": "August 2026",
+      "changes": [
+        {
+          "type": "Enhancement",
+          "title": "Google Classroom Window Border Padding Removal",
+          "description": "Eliminated unwanted outer modal padding on smaller desktop and height-constrained screens (769px–1366px), allowing the Google Classroom window to render flush against screen bounds without nested spacing."
+        },
+        {
+          "type": "New Feature",
+          "title": "Classroom To-Do Upcoming Deadlines Priority & Past Deadline Banners",
+          "description": "Restructured the To-Do assignments view to prioritize tasks with active upcoming deadlines at the top in chronological order (earliest deadline first), followed by assigned tasks with no due date, and introduced a compact 'Past deadline' divider banner with task count for overdue assignments."
+        },
+        {
+          "type": "Enhancement",
+          "title": "Completed Tasks Sub-Grouping & Deadline Classification",
+          "description": "Enhanced the Completed assignments section to vertically organize tasks based on remaining deadline status (early/on-time submissions first, followed by a 'Past deadline' sub-banner and late-submitted tasks), with full theme support across Default, Dark, and Gray modes."
+        }
+      ]
+    },
+    {
+      "version": "v2.47.0",
+      "badge": "Stable",
       "date": "August 2026",
       "changes": [
         {

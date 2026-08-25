@@ -1623,7 +1623,7 @@ const Classroom = {
             html += assignedNoDue.map(renderItemFn).join('');
         }
 
-        // Group 3: Tasks that have passed the deadline
+        // Group 3: Tasks that have passed the deadline (unsubmitted/missing)
         // Show the "Past deadline" banner only when there are also upcoming/assigned tasks above;
         // if ALL active tasks are past deadline (nothing above), no banner — just list them.
         if (passedDue.length > 0) {
@@ -1644,7 +1644,8 @@ const Classroom = {
             html += passedDue.map(renderItemFn).join('');
         }
 
-        // Group 4: Completed tasks (Turned In, Graded, Returned) - if any
+        // Group 4: Completed tasks (Turned In, Graded, Returned)
+        // Sub-divided: completed tasks with remaining deadline first, then past-deadline completed tasks
         if (completed.length > 0) {
             html += `
                 <div class="classroom-group-divider completed-divider">
@@ -1657,11 +1658,44 @@ const Classroom = {
                     <div class="classroom-group-divider-line"></div>
                 </div>
             `;
-            html += completed.map(renderItemFn).join('');
+
+            // Split completed into: still within deadline vs past deadline
+            const completedUpcoming = completed.filter(item => {
+                const due = this.getAssignmentDueDate(item);
+                return due && due >= now;
+            });
+            const completedPast = completed.filter(item => {
+                const due = this.getAssignmentDueDate(item);
+                return !due || due < now;
+            });
+
+            // Render sub-group 1: completed tasks whose deadline hasn't passed yet
+            if (completedUpcoming.length > 0) {
+                html += completedUpcoming.map(renderItemFn).join('');
+            }
+
+            // Render "Past deadline" sub-banner + sub-group 2 only when both sub-groups are non-empty
+            if (completedPast.length > 0) {
+                if (completedUpcoming.length > 0) {
+                    html += `
+                        <div class="classroom-group-divider passed-due-divider">
+                            <div class="classroom-group-divider-line"></div>
+                            <div class="classroom-group-divider-badge">
+                                <i class="fa-solid fa-clock-rotate-left"></i>
+                                <span>Past deadline</span>
+                                <span class="classroom-group-count">${completedPast.length}</span>
+                            </div>
+                            <div class="classroom-group-divider-line"></div>
+                        </div>
+                    `;
+                }
+                html += completedPast.map(renderItemFn).join('');
+            }
         }
 
         return html;
     },
+
 
     renderAllItems(items, viewType) {
         // Header with Toggle
