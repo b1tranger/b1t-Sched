@@ -257,7 +257,7 @@ const Classroom = {
     // 1. Tasks that have yet to pass due date (upcoming deadlines, ascending: earliest deadline first)
     // 2. "Assigned" tasks (no due date set)
     // 3. Tasks that have passed deadline (missing/overdue, ascending)
-    // 4. Completed tasks (turned in, returned, graded, ascending)
+    // 4. Completed tasks — sorted: due date not yet passed first, then due date passed, each sub-group ascending
     sortAssignments(assignments) {
         if (!Array.isArray(assignments)) return [];
         const now = new Date();
@@ -270,10 +270,18 @@ const Classroom = {
                 return groupA - groupB;
             }
 
-            // Within the same group, maintain ascending due date order (earliest deadline first)
             const dateA = this.getAssignmentDueDate(a);
             const dateB = this.getAssignmentDueDate(b);
 
+            // Completed tasks (group 3): tasks whose deadline hasn't passed yet float above
+            // those whose deadline has already passed, then ascending by date within each sub-group
+            if (groupA === 3) {
+                const aStillOpen = dateA && dateA >= now;
+                const bStillOpen = dateB && dateB >= now;
+                if (aStillOpen !== bStillOpen) return aStillOpen ? -1 : 1;
+            }
+
+            // All other groups: ascending due date order (earliest deadline first)
             if (!dateA && !dateB) return 0;
             if (!dateA) return 1;
             if (!dateB) return -1;
@@ -1615,9 +1623,13 @@ const Classroom = {
             html += assignedNoDue.map(renderItemFn).join('');
         }
 
-        // Group 3: Tasks that have passed the deadline - divided with small-height banner
+        // Group 3: Tasks that have passed the deadline
+        // Show the "Past deadline" banner only when there are also upcoming/assigned tasks above;
+        // if ALL active tasks are past deadline (nothing above), no banner — just list them.
         if (passedDue.length > 0) {
-            html += `
+            const hasActiveTasksAbove = upcomingDue.length > 0 || assignedNoDue.length > 0;
+            if (hasActiveTasksAbove) {
+                html += `
                 <div class="classroom-group-divider passed-due-divider">
                     <div class="classroom-group-divider-line"></div>
                     <div class="classroom-group-divider-badge">
@@ -1628,6 +1640,7 @@ const Classroom = {
                     <div class="classroom-group-divider-line"></div>
                 </div>
             `;
+            }
             html += passedDue.map(renderItemFn).join('');
         }
 
