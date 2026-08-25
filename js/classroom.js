@@ -242,19 +242,21 @@ const Classroom = {
         return false;
     },
 
-    // Determine assignment group: 0 = Assigned (no due date), 1 = Due date yet to pass, 2 = Passed due date, 3 = Completed
+    // Determine assignment group: 0 = Due date yet to pass (upcoming deadlines), 1 = Assigned (no due date), 2 = Past deadline, 3 = Completed
     getAssignmentGroup(item, now = new Date()) {
-        if (!item) return 0;
+        if (!item) return 1;
         if (this.isSubmittedOrReturned(item)) return 3;
-        if (!item.dueDate) return 0;
-        if (this.isPastDue(item, now)) return 2;
+        if (item.dueDate) {
+            if (this.isPastDue(item, now)) return 2;
+            return 0;
+        }
         return 1;
     },
 
-    // Sort assignments into 3 vertical groups (+ completed):
-    // 1. "Assigned" tasks (no due date)
-    // 2. Tasks that have yet to pass due date (upcoming deadlines, ascending)
-    // 3. Tasks that have passed due date (missing/overdue, ascending)
+    // Sort assignments into vertical groups (+ completed):
+    // 1. Tasks that have yet to pass due date (upcoming deadlines, ascending: earliest deadline first)
+    // 2. "Assigned" tasks (no due date set)
+    // 3. Tasks that have passed deadline (missing/overdue, ascending)
     // 4. Completed tasks (turned in, returned, graded, ascending)
     sortAssignments(assignments) {
         if (!Array.isArray(assignments)) return [];
@@ -1583,17 +1585,17 @@ const Classroom = {
         if (!Array.isArray(items) || items.length === 0) return '';
         const now = new Date();
 
-        const assignedNoDue = [];
         const upcomingDue = [];
+        const assignedNoDue = [];
         const passedDue = [];
         const completed = [];
 
         items.forEach(item => {
             const group = this.getAssignmentGroup(item, now);
             if (group === 0) {
-                assignedNoDue.push(item);
-            } else if (group === 1) {
                 upcomingDue.push(item);
+            } else if (group === 1) {
+                assignedNoDue.push(item);
             } else if (group === 2) {
                 passedDue.push(item);
             } else {
@@ -1603,24 +1605,24 @@ const Classroom = {
 
         let html = '';
 
-        // Group 1: Assigned tasks (no due date set)
-        if (assignedNoDue.length > 0) {
-            html += assignedNoDue.map(renderItemFn).join('');
-        }
-
-        // Group 2: Tasks that have yet to pass the due date (upcoming deadlines)
+        // Group 1: Tasks that have yet to pass the due date (upcoming deadlines)
         if (upcomingDue.length > 0) {
             html += upcomingDue.map(renderItemFn).join('');
         }
 
-        // Group 3: Tasks that have passed the due date (missing/overdue) - divided with small-height banner
+        // Group 2: Assigned tasks (no due date set)
+        if (assignedNoDue.length > 0) {
+            html += assignedNoDue.map(renderItemFn).join('');
+        }
+
+        // Group 3: Tasks that have passed the deadline - divided with small-height banner
         if (passedDue.length > 0) {
             html += `
                 <div class="classroom-group-divider passed-due-divider">
                     <div class="classroom-group-divider-line"></div>
                     <div class="classroom-group-divider-badge">
                         <i class="fa-solid fa-clock-rotate-left"></i>
-                        <span>Passed Due Date</span>
+                        <span>Past deadline</span>
                         <span class="classroom-group-count">${passedDue.length}</span>
                     </div>
                     <div class="classroom-group-divider-line"></div>
