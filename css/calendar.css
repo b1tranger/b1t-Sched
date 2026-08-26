@@ -968,9 +968,87 @@
 }
 
 /* Task Detail Description */
+.task-detail-description .task-description-wrapper {
+  position: relative;
+}
+
 .task-detail-description .task-detail-value {
   white-space: pre-wrap;
   word-wrap: break-word;
+}
+
+.task-detail-description .task-description-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: all var(--transition-fast, 0.2s ease);
+}
+
+.task-detail-description .task-description-text.expanded {
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+  display: block;
+}
+
+.task-detail-description .task-description-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  color: var(--primary, #800000);
+  font-size: var(--font-xs, 0.75rem);
+  cursor: pointer;
+  margin-top: var(--spacing-xs, 4px);
+  margin-left: calc(16px + var(--spacing-sm));
+  padding: 0;
+  background: none;
+  border: none;
+  opacity: 0.85;
+  transition: opacity var(--transition-fast, 0.2s ease);
+}
+
+.task-detail-description .task-description-toggle:hover {
+  opacity: 1;
+}
+
+.task-detail-description .task-description-toggle i {
+  font-size: 10px;
+  transition: transform var(--transition-fast, 0.2s ease);
+}
+
+.task-detail-description .task-description-toggle.expanded i {
+  transform: rotate(180deg);
+}
+
+body.dark-mode .task-detail-description .task-description-toggle {
+  color: var(--primary-light, #d4dd93);
+}
+
+body.gray-mode .task-detail-description .task-description-toggle {
+  color: var(--primary, #ff6360);
+}
+
+.task-detail-value a,
+.task-detail-value .description-link {
+  color: var(--primary);
+  text-decoration: underline;
+  word-break: break-all;
+}
+
+.task-detail-value a:hover,
+.task-detail-value .description-link:hover {
+  color: var(--primary-hover, var(--primary));
+}
+
+body.dark-mode .task-detail-value a,
+body.dark-mode .task-detail-value .description-link {
+  color: var(--primary-light, #d4dd93);
+}
+
+body.gray-mode .task-detail-value a,
+body.gray-mode .task-detail-value .description-link {
+  color: var(--primary, #ff6360);
 }
 
 /* Task Detail Meta */

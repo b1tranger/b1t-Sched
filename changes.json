@@ -1,11 +1,33 @@
 {
-  "currentVersion": "v2.48.0",
+  "currentVersion": "v2.49.0",
   "lastUpdated": "August 26, 2026",
   "documentationUrl": "https://b1tranger.netlify.app/render.html?file=https%3A%2F%2Fgithub.com%2Fb1tranger%2Fb1t-Sched%2Fblob%2Fmain%2Fdoc%2FDOCUMENTATION.md",
   "history": [
     {
-      "version": "v2.48.0",
+      "version": "v2.49.0",
       "badge": "Latest",
+      "date": "August 2026",
+      "changes": [
+        {
+          "type": "New Feature",
+          "title": "Google Classroom Announcement & Assignment Creation Option for Faculty & CR Roles",
+          "description": "Added a dedicated floating action button (.classroom-create-fab) positioned at the bottom-right corner of the Classroom mobile sidebar and desktop modal for Faculty and CR users. Triggers a template modal with a 3-second redirect countdown to Google Classroom with immediate action options."
+        },
+        {
+          "type": "Enhancement",
+          "title": "Calendar View Task Description Clickable Links & Dropdown Toggle",
+          "description": "Enabled rich markdown formatting and clickable hyperlink rendering (Utils.escapeAndLinkify) for task descriptions and details in the Calendar Task Details modal, accompanied by a collapsible dropdown button ('Show more' / 'Show less') with multi-line clamping and full theme support."
+        },
+        {
+          "type": "Enhancement",
+          "title": "LocalSend Web Direct Sharing Integration",
+          "description": "Added a direct link to LocalSend Web (https://web.localsend.org/) within the personal Note Taking modal footer upload instructions for local network peer-to-peer file sharing between devices."
+        }
+      ]
+    },
+    {
+      "version": "v2.48.0",
+      "badge": "Stable",
       "date": "August 2026",
       "changes": [
         {

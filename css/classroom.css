@@ -212,6 +212,7 @@ body.dark-mode .classroom-header-logout-btn:hover {
 
 #classroom-modal .modal-content,
 .classroom-modal-content {
+    position: relative;
     width: 90%;
     max-width: 1000px;
     min-width: 800px;
@@ -1094,4 +1095,187 @@ body.dark-mode .classroom-bottom-banner-text {
 
 body.dark-mode .classroom-reconnect-btn {
     color: #1a1c0d;
+}
+
+/* =========================================
+   Classroom Create Button (Faculty & CR FAB)
+   ========================================= */
+.classroom-create-fab {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: var(--classroom-green, #0f9d58);
+    color: #ffffff;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+    z-index: 1200;
+    font-size: 1.25rem;
+    transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.classroom-create-fab:hover {
+    background-color: var(--classroom-green-hover, #0b8043);
+    transform: scale(1.08);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+.classroom-create-fab:active {
+    transform: scale(0.96);
+}
+
+body.dark-mode .classroom-create-fab {
+    color: #1a1c0d;
+    background-color: var(--classroom-green, #d4dd93);
+}
+
+body.dark-mode .classroom-create-fab:hover {
+    background-color: var(--classroom-green-hover, #b8c466);
+}
+
+/* =========================================
+   Classroom Create WIP Modal
+   ========================================= */
+.classroom-create-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(3px);
+    z-index: 12000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-md);
+}
+
+.classroom-create-modal-content {
+    background: var(--classroom-bg, #ffffff);
+    color: var(--classroom-text, #333333);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 480px;
+    box-shadow: var(--shadow-xl, 0 12px 30px rgba(0, 0, 0, 0.25));
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: classroomModalPop 0.22s ease-out;
+}
+
+@keyframes classroomModalPop {
+    from {
+        opacity: 0;
+        transform: scale(0.93) translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.classroom-create-modal-header {
+    background-color: var(--classroom-green, #800000);
+    color: #ffffff;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.classroom-create-modal-header h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.classroom-create-modal-header .btn-icon {
+    color: #ffffff;
+    background: none;
+    border: none;
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 4px;
+    line-height: 1;
+}
+
+body.dark-mode .classroom-create-modal-header {
+    color: #1a1c0d;
+}
+
+body.dark-mode .classroom-create-modal-header .btn-icon {
+    color: #1a1c0d;
+}
+
+.classroom-create-modal-body {
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 16px;
+}
+
+.classroom-wip-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: rgba(237, 108, 2, 0.12);
+    color: #ed6c02;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border: 1px solid rgba(237, 108, 2, 0.3);
+}
+
+body.dark-mode .classroom-wip-badge {
+    background: rgba(255, 179, 0, 0.15);
+    color: #ffb300;
+    border-color: rgba(255, 179, 0, 0.35);
+}
+
+.classroom-wip-desc {
+    font-size: 0.95rem;
+    color: var(--classroom-text-secondary, #666666);
+    margin: 0;
+    line-height: 1.5;
+}
+
+.classroom-redirect-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: var(--classroom-bg-secondary, #f8f8f8);
+    border: 1px dashed var(--classroom-border, #e0e0e0);
+    border-radius: 8px;
+    font-size: 0.88rem;
+    color: var(--classroom-text, #333333);
+    width: 100%;
+}
+
+.classroom-redirect-box i {
+    color: var(--classroom-green, #800000);
+}
+
+.classroom-create-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 12px 18px;
+    border-top: 1px solid var(--classroom-border, #e0e0e0);
+    background: var(--classroom-bg-secondary, #f8f8f8);
 }

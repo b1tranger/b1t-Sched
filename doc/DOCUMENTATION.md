@@ -2079,7 +2079,6 @@ CalendarView.maxYear = currentYear + 100; // Navigation limit (future)
 - Role="grid" and role="gridcell" on calendar
 - Keyboard navigation support
 - Focus trap prevents tabbing outside modal
-- Screen reader friendly date announcements
 
 ---
 
@@ -2420,12 +2419,22 @@ You can use basic markdown formatting in task and event descriptions:
 
 ---
 
-_Last Updated: August 22, 2026 (v2.47.0)_
-_Last Updated: August 22, 2026 (v2.46.0)_
+_Last Updated: August 26, 2026 (v2.49.0)_
 
 ## Version History
 
-### v2.48.0 (Latest)
+### v2.49.0 (Latest)
+
+- **New Feature**: **Google Classroom Announcement & Assignment Creation Option for Faculty & CR Roles** — Added a dedicated floating action button (`.classroom-create-fab`) positioned in the bottom-right corner of the Classroom mobile sidebar (`#classroom-sidebar`) and desktop modal (`#classroom-modal`).
+  - **Role-Gated Access**: Dynamically displayed only for authenticated users with **Faculty** or **CR** (Class Representative) roles, or Administrators (`isFacultyOrCR()`).
+  - **Template Redirect Modal (`#classroom-create-modal`)**: Clicking the button opens a clean Work-in-Progress modal dialog featuring an active 3-second countdown timer that automatically redirects to the relevant course URL on Google Classroom (or general Google Classroom), alongside **"Go to Classroom Now"** and **"Cancel"** options.
+- **Enhancement**: **Calendar View Task Description Clickable Links & Collapsible Dropdown Toggle** (`js/calendar-view.js`, `css/calendar.css`) —
+  - **Clickable Markdown & URL Parsing**: Upgraded `showSimpleTaskDetails` in `js/calendar-view.js` to parse task descriptions and additional details through `Utils.escapeAndLinkify()`, converting markdown links `[label](url)` and raw URLs into clickable interactive hyperlinks.
+  - **Collapsible Dropdown Button (`.task-description-toggle`)**: Embedded a collapsible dropdown button (*Show more / Show less* with rotating chevron) into task descriptions and details within the calendar task detail popup.
+  - **Multi-Line Clamping**: Truncates descriptions to 2 lines (`-webkit-line-clamp: 2`) when collapsed and smoothly expands to full content height when toggled, styled across Light, Dark, and Gray themes.
+- **Enhancement**: **LocalSend Web Direct Peer-to-Peer Sharing Integration** (`index.html`, `css/note.css`) — Added an inline link to [LocalSend Web](https://web.localsend.org/) within the personal Note Taking modal footer upload instructions (`.upload-instruction`) for direct local network peer-to-peer file sharing between devices without intermediate cloud upload.
+
+### v2.48.0 (Stable)
 
 - **Enhancement**: **Google Classroom Smaller Desktop Border Padding Elimination** — Excluded `#classroom-modal .modal-content` and `.classroom-modal-content` from generic modal padding on screen widths 769px–1366px and max-height 768px in `css/responsive.css` and `css/classroom.css`, rendering the Classroom window flush against modal bounds without nested borders or unwanted padding.
 - **New Feature**: **Google Classroom To-Do Upcoming Deadlines Priority & Multi-Group Vertical Layout** — Reorganized the To-Do assignments section (`js/classroom.js`) into a structured hierarchy:

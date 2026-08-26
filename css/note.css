@@ -274,6 +274,26 @@
     flex-shrink: 0;
 }
 
+.note-localsend-link {
+    color: var(--primary, #800000);
+    text-decoration: underline;
+    font-weight: 600;
+    margin-left: 3px;
+    transition: color var(--transition-fast, 0.2s ease);
+}
+
+.note-localsend-link:hover {
+    color: var(--primary-hover, #990000);
+}
+
+body.dark-mode .note-localsend-link {
+    color: var(--primary-light, #d4dd93);
+}
+
+body.gray-mode .note-localsend-link {
+    color: var(--primary, #ff6360);
+}
+
 /* ─── Fixed Footer Container ───────────────────────── */
 #note-modal .modal-footer {
     display: flex;

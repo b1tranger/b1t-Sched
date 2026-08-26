@@ -18,11 +18,11 @@ A single-page application (SPA) that helps students manage academic tasks, assig
 - 🔗 **Dynamic Resource Links** - Department-specific routine, calendar, and faculty contacts with built-in PDF viewer
 - 📅 **Event Calendar** - Track upcoming academic events with collapsible descriptions, department scope badge, and clickable links
 - 🛡️ **UITS Event Raiders Live Feed** - Live syndication of hackathons, contests, olympiads, and symposiums from `ou1ts/events` RSS/JSON feeds with desktop sticky sidebar integration, mobile arrowhead view switcher with localStorage state persistence, and compact two-segment card layouts
-- 📆 **Calendar View** - Interactive monthly calendar with task visualization, date navigation, and responsive mobile layout (monthly/weekly toggle)
+- 📆 **Calendar View** - Interactive monthly calendar with task visualization, date navigation, responsive mobile layout (monthly/weekly toggle), and clickable links with collapsible description dropdown toggles in task detail cards
 - 📣 **CR Notices** - Class Representatives can post, edit, and delete notices visible to their section group; supports priority levels and deadline tracking
 - 📰 **University Notice Viewer** - View UCAM university notices with PDF preview, powered by Vercel serverless backend with local caching
-- 🏫 **Google Classroom Integration** - View assignments, announcements, and course materials in a unified interface with OAuth session persistence, status indicators (**Assigned**, **Missing**, **Turned in**, **Returned / Graded**), chronological upcoming deadline priority, "Past deadline" divider banners, two-way task sync, and auto-completion tracking for turned-in work
-- 📝 **Note Taking** - Personal notes with markdown support, auto-save, and file upload via catbox.moe/tmpfiles.org
+- 🏫 **Google Classroom Integration** - View assignments, announcements, and course materials in a unified interface with OAuth session persistence, status indicators (**Assigned**, **Missing**, **Turned in**, **Returned / Graded**), chronological upcoming deadline priority, "Past deadline" divider banners, two-way task sync, auto-completion tracking for turned-in work, and a quick announcement/assignment creation option for Faculty and CR roles
+- 📝 **Note Taking** - Personal notes with markdown support, auto-save, file upload via Catbox.moe/Tmpfiles.org, and direct local network sharing via LocalSend Web
 - 📊 **Activity Timeline** - Visual heatmap and bar chart tracking user activity (logins, tasks, events) for productivity insights
 - 🔔 **Push Notifications** - Real-time browser notifications for new tasks and events (mobile-compatible)
 - 🏆 **Contributions** - Leaderboard of top contributors (group-specific or global across all departments)

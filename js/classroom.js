@@ -24,6 +24,7 @@ const Classroom = {
     _sessionCheckTimeout: null,
     hasExpiredSession: false, // Flag for showing cached data with re-sign-in prompt
     hasScopePermissionIssue: false, // Flag when token lacks student-submissions scope
+    createRedirectTimer: null,
 
     // Cache
     cache: {},
@@ -35,6 +36,34 @@ const Classroom = {
     cacheManager: null,
     JSON_CACHE_KEY: 'classroom_cached_json',
 
+    isFacultyOrCR() {
+        if (typeof App !== 'undefined') {
+            if (App.isFaculty || App.isCR || App.isAdmin) return true;
+            if (App.userProfile) {
+                const role = App.userProfile.role;
+                if (role === 'Faculty' || role === 'CR' || role === 'Admin' || App.userProfile.isFaculty === true || App.userProfile.isCR === true) {
+                    return true;
+                }
+            }
+        }
+        if (typeof FacultyClassroom !== 'undefined' && typeof FacultyClassroom.isFacultyUser === 'function' && FacultyClassroom.isFacultyUser()) {
+            return true;
+        }
+        return false;
+    },
+
+    updateCreateButtonVisibility() {
+        const isConnected = localStorage.getItem('classroom_connected') === 'true';
+        const isLoggedIn = Boolean(this.accessToken || isConnected);
+        const isEligible = this.isFacultyOrCR();
+        const showBtn = isLoggedIn && isEligible;
+
+        const mobileBtn = document.getElementById('classroom-create-btn-mobile');
+        const desktopBtn = document.getElementById('classroom-create-btn-desktop');
+        if (mobileBtn) mobileBtn.style.display = showBtn ? 'flex' : 'none';
+        if (desktopBtn) desktopBtn.style.display = showBtn ? 'flex' : 'none';
+    },
+
     updateLogoutButtonVisibility() {
         const isConnected = localStorage.getItem('classroom_connected') === 'true';
         const isLoggedIn = Boolean(this.accessToken || isConnected);
@@ -42,6 +71,60 @@ const Classroom = {
         const modalLogout = document.getElementById('logout-classroom-modal');
         if (sidebarLogout) sidebarLogout.style.display = isLoggedIn ? 'inline-flex' : 'none';
         if (modalLogout) modalLogout.style.display = isLoggedIn ? 'inline-flex' : 'none';
+        this.updateCreateButtonVisibility();
+    },
+
+    openCreateModal() {
+        const modal = document.getElementById('classroom-create-modal');
+        if (!modal) return;
+
+        const countdownEl = document.getElementById('classroom-redirect-countdown');
+        let countdown = 3;
+        if (countdownEl) countdownEl.textContent = countdown;
+
+        modal.style.display = 'flex';
+
+        if (this.createRedirectTimer) {
+            clearInterval(this.createRedirectTimer);
+            this.createRedirectTimer = null;
+        }
+
+        this.createRedirectTimer = setInterval(() => {
+            countdown--;
+            if (countdownEl) countdownEl.textContent = countdown;
+            if (countdown <= 0) {
+                clearInterval(this.createRedirectTimer);
+                this.createRedirectTimer = null;
+                this.proceedToClassroomRedirect();
+            }
+        }, 1000);
+    },
+
+    closeCreateModal() {
+        if (this.createRedirectTimer) {
+            clearInterval(this.createRedirectTimer);
+            this.createRedirectTimer = null;
+        }
+        const modal = document.getElementById('classroom-create-modal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    },
+
+    proceedToClassroomRedirect() {
+        this.closeCreateModal();
+
+        let targetUrl = 'https://classroom.google.com/';
+        if (this.currentCourseId) {
+            const course = this.courses.find(c => c.id === this.currentCourseId);
+            if (course && course.alternateLink) {
+                targetUrl = course.alternateLink;
+            } else {
+                targetUrl = `https://classroom.google.com/c/${this.currentCourseId}`;
+            }
+        }
+
+        window.open(targetUrl, '_blank', 'noopener,noreferrer');
     },
 
     // Initialize cache manager
@@ -495,6 +578,15 @@ const Classroom = {
         if (overlay) {
             overlay.addEventListener('click', () => this.toggleSidebar(false));
             console.log('Attached listener to classroom-overlay');
+        }
+
+        const createModal = document.getElementById('classroom-create-modal');
+        if (createModal) {
+            createModal.addEventListener('click', (e) => {
+                if (e.target === createModal) {
+                    this.closeCreateModal();
+                }
+            });
         }
 
         console.log('Event listeners setup complete');

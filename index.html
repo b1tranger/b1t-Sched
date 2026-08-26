@@ -553,7 +553,8 @@
                 <!-- Mobile Events Sidebar -->
                 <div id="events-sidebar" class="events-sidebar mobile-only">
                     <!-- Right Arrowhead Toggle Button on Left Border -->
-                    <button id="events-view-switch-btn" class="events-view-switch-btn" aria-label="Switch to UITS Event Raiders" title="Switch to UITS Event Raiders">
+                    <button id="events-view-switch-btn" class="events-view-switch-btn"
+                        aria-label="Switch to UITS Event Raiders" title="Switch to UITS Event Raiders">
                         <span class="switch-btn-icon"><i class="fas fa-chevron-right"></i></span>
                     </button>
 
@@ -602,7 +603,8 @@
                             <p>No active raider events found.</p>
                         </div>
                         <div class="events-sidebar-actions">
-                            <a href="https://ou1ts.github.io/events/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary raider-portal-btn">
+                            <a href="https://ou1ts.github.io/events/" target="_blank" rel="noopener noreferrer"
+                                class="btn btn-secondary raider-portal-btn">
                                 <i class="fas fa-external-link-alt"></i> Open Event Raiders Portal
                             </a>
                         </div>
@@ -713,6 +715,12 @@
                     </div>
                     <div id="classroom-footer-mobile" class="classroom-bottom-cached-footer" style="display: none;">
                     </div>
+                    <!-- Create Announcement / Assignment button (Faculty & CR) -->
+                    <button id="classroom-create-btn-mobile" class="classroom-create-fab"
+                        onclick="Classroom.openCreateModal()" title="Create announcement or assignment"
+                        style="display: none;">
+                        <i class="fas fa-plus"></i>
+                    </button>
                 </div>
                 <div id="classroom-overlay" class="classroom-overlay"></div>
 
@@ -745,6 +753,43 @@
                         </div>
                     </div>
                     <div id="classroom-footer-desktop" class="classroom-bottom-cached-footer" style="display: none;">
+                    </div>
+                    <!-- Create Announcement / Assignment button (Faculty & CR) -->
+                    <button id="classroom-create-btn-desktop" class="classroom-create-fab"
+                        onclick="Classroom.openCreateModal()" title="Create announcement or assignment"
+                        style="display: none;">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Google Classroom Create Announcement / Assignment Modal (Template WIP) -->
+            <div id="classroom-create-modal" class="modal classroom-create-modal" style="display: none;">
+                <div class="modal-content classroom-create-modal-content">
+                    <div class="classroom-create-modal-header">
+                        <h3><i class="fas fa-bullhorn"></i> New Class Announcement / Assignment</h3>
+                        <button id="close-classroom-create-modal" class="btn btn-icon"
+                            onclick="Classroom.closeCreateModal()" aria-label="Close">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="classroom-create-modal-body">
+                        <div class="classroom-wip-badge">
+                            <i class="fas fa-tools"></i>
+                            <span>Work in Progress</span>
+                        </div>
+                        <p class="classroom-wip-desc">Direct assignment and announcement creation inside b1t-Sched is
+                            currently under development.</p>
+                        <div class="classroom-redirect-box">
+                            <i class="fas fa-external-link-alt"></i>
+                            <span>Redirecting you to Google Classroom in <strong
+                                    id="classroom-redirect-countdown">3</strong> seconds...</span>
+                        </div>
+                    </div>
+                    <div class="classroom-create-modal-footer">
+                        <button class="btn btn-secondary" onclick="Classroom.closeCreateModal()">Cancel</button>
+                        <button class="btn btn-primary" onclick="Classroom.proceedToClassroomRedirect()">Go to Classroom
+                            Now</button>
                     </div>
                 </div>
             </div>
@@ -810,7 +855,9 @@
                                 <i class="fas fa-info-circle"></i>
                                 <span>Uploads use <strong>Catbox.moe</strong> or <strong>Tmpfiles.org</strong>
                                     (Temporary).
-                                    Back up important content.</span>
+                                    Back up important content. Or use <a href="https://web.localsend.org/"
+                                        target="_blank" rel="noopener noreferrer" class="note-localsend-link">LocalSend
+                                        Web</a> to directly share files between devices in the same network.</span>
                             </p>
                             <!-- file.io fallback (hidden by default, shown after all providers fail) -->
                             <div id="note-fileio-fallback" class="note-fileio-fallback" style="display: none;">
@@ -1715,11 +1762,13 @@
                         </button>
                     </div>
                     <div class="modal-body">
-                        <p class="export-modal-subtitle">Choose whether to export your current pending tasks or complete task history, and select your preferred file format.</p>
+                        <p class="export-modal-subtitle">Choose whether to export your current pending tasks or complete
+                            task history, and select your preferred file format.</p>
 
                         <!-- Export Scope Buttons (Desktop: 2 horizontal buttons, Mobile: 2 vertical rows) -->
                         <div class="export-scope-buttons-grid">
-                            <button type="button" id="export-current-tasks-btn" class="btn btn-primary export-scope-btn">
+                            <button type="button" id="export-current-tasks-btn"
+                                class="btn btn-primary export-scope-btn">
                                 <i class="fas fa-tasks"></i>
                                 <span>Export Current Tasks</span>
                             </button>
@@ -1766,8 +1815,7 @@
             </div>
 
             <!-- Task Export Button Section -->
-            <div id="task-export-section" class="task-export-section"
-                style="display: none; justify-content: center;">
+            <div id="task-export-section" class="task-export-section" style="display: none; justify-content: center;">
                 <button id="open-task-export-btn" class="btn btn-secondary task-export-btn" style="gap: 0;">
                     <i class="fas fa-file-export"></i> Export Tasks
                 </button>
@@ -2084,7 +2132,8 @@
                     <i class="fab fa-github"></i> Source Code
                 </a>
                 <span class="footer-separator">|</span>
-                <a href="#" id="footer-changelog-link" onclick="if(window.ChangelogModal){window.ChangelogModal.checkAndShowChangelog(true);}return false;">
+                <a href="#" id="footer-changelog-link"
+                    onclick="if(window.ChangelogModal){window.ChangelogModal.checkAndShowChangelog(true);}return false;">
                     <i class="fas fa-bullhorn"></i> What's New
                 </a>
             </p>
@@ -2196,7 +2245,8 @@
     </div>
 
     <!-- What's New / Version Update Modal -->
-    <div id="changelog-modal" class="modal" style="display: none;" role="dialog" aria-labelledby="changelog-modal-title" aria-modal="true">
+    <div id="changelog-modal" class="modal" style="display: none;" role="dialog" aria-labelledby="changelog-modal-title"
+        aria-modal="true">
         <div class="modal-content changelog-modal-content">
             <button id="close-changelog-modal" class="changelog-close-btn" title="Close" aria-label="Close modal">
                 <i class="fas fa-times"></i>
@@ -2221,7 +2271,9 @@
             <div class="modal-footer changelog-modal-footer">
                 <div class="changelog-doc-hint">
                     <i class="fas fa-book-open"></i>
-                    <span>Want to explore all details? Read the <a href="https://b1tranger.netlify.app/render.html?file=https%3A%2F%2Fgithub.com%2Fb1tranger%2Fb1t-Sched%2Fblob%2Fmain%2Fdoc%2FDOCUMENTATION.md" target="_blank" rel="noopener noreferrer">Full Project Documentation</a>.</span>
+                    <span>Want to explore all details? Read the <a
+                            href="https://b1tranger.netlify.app/render.html?file=https%3A%2F%2Fgithub.com%2Fb1tranger%2Fb1t-Sched%2Fblob%2Fmain%2Fdoc%2FDOCUMENTATION.md"
+                            target="_blank" rel="noopener noreferrer">Full Project Documentation</a>.</span>
                 </div>
                 <div class="changelog-footer-actions">
                     <button id="changelog-modal-got-it-btn" class="btn btn-primary">

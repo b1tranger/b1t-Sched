@@ -838,6 +838,11 @@ const UI = {
     if (crInfoMessage) {
       crInfoMessage.style.display = (isAdmin || isCR || isFaculty) ? 'none' : 'block';
     }
+
+    // Update Classroom create button visibility for Faculty / CR
+    if (typeof Classroom !== 'undefined' && typeof Classroom.updateCreateButtonVisibility === 'function') {
+      Classroom.updateCreateButtonVisibility();
+    }
   },
 
   // Toggle blocked user mode (read-only mode)

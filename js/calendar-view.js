@@ -1730,7 +1730,13 @@ class CalendarView {
               <i class="fas fa-align-left"></i>
               <strong>Description</strong>
             </div>
-            <div class="task-detail-value">${taskDescription}</div>
+            <div class="task-description-wrapper">
+              <div class="task-detail-value task-description-text">${typeof Utils !== 'undefined' && typeof Utils.escapeAndLinkify === 'function' ? Utils.escapeAndLinkify(taskDescription) : taskDescription}</div>
+              <button type="button" class="task-description-toggle" aria-label="Toggle description">
+                <span class="toggle-text">Show more</span>
+                <i class="fas fa-chevron-down"></i>
+              </button>
+            </div>
           </div>
           ` : ''}
           ${taskDetails ? `
@@ -1739,7 +1745,13 @@ class CalendarView {
               <i class="fas fa-info-circle"></i>
               <strong>Details</strong>
             </div>
-            <div class="task-detail-value">${taskDetails}</div>
+            <div class="task-description-wrapper">
+              <div class="task-detail-value task-description-text">${typeof Utils !== 'undefined' && typeof Utils.escapeAndLinkify === 'function' ? Utils.escapeAndLinkify(taskDetails) : taskDetails}</div>
+              <button type="button" class="task-description-toggle" aria-label="Toggle details">
+                <span class="toggle-text">Show more</span>
+                <i class="fas fa-chevron-down"></i>
+              </button>
+            </div>
           </div>
           ` : ''}
           ${taskAddedByName ? `
@@ -1762,6 +1774,22 @@ class CalendarView {
 
     // Set focus to modal for accessibility
     detailModal.focus();
+
+    // Attach description toggle listeners
+    detailModal.querySelectorAll('.task-description-toggle').forEach(toggleBtn => {
+      toggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const wrapper = toggleBtn.closest('.task-description-wrapper');
+        if (!wrapper) return;
+        const textEl = wrapper.querySelector('.task-description-text');
+        const toggleText = toggleBtn.querySelector('.toggle-text');
+        const isExpanded = textEl.classList.toggle('expanded');
+        toggleBtn.classList.toggle('expanded', isExpanded);
+        if (toggleText) {
+          toggleText.textContent = isExpanded ? 'Show less' : 'Show more';
+        }
+      });
+    });
 
     // Add close button listener
     const closeBtn = document.getElementById('close-task-detail');
