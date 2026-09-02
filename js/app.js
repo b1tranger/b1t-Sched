@@ -149,12 +149,12 @@ const App = {
   currentRaiderEvents: [],
   mobileEventsActiveView: localStorage.getItem('b1t_events_sidebar_view') || 'internal',
   isAdmin: false,
-  filterPopup: null,
-  deleteUserDialog: null,
-  calendarView: null,
   isCR: false,
   isFaculty: false,
   isBlocked: false,
+  realRoles: null, // Stores actual authenticated DB roles { isAdmin, isCR, isFaculty, isBlocked }
+  previewRole: null, // Stores active preview role string ('Faculty', 'CR', 'Student', 'Blocked') or null
+  filterPopup: null,
   allUsers: [],
   isSigningUp: false, // Flag to prevent auth state handling during signup
   currentFilter: 'all', // State to track active task filter
@@ -361,6 +361,14 @@ const App = {
     if (viewOldTasksBtn) {
       viewOldTasksBtn.addEventListener('click', async () => {
         await this.openOldTasksModal();
+      });
+    }
+
+    // Exit Admin Preview button on global banner
+    const exitPreviewBannerBtn = document.getElementById('exit-preview-banner-btn');
+    if (exitPreviewBannerBtn) {
+      exitPreviewBannerBtn.addEventListener('click', () => {
+        this.exitPreview();
       });
     }
 
@@ -1199,6 +1207,29 @@ const App = {
         this.isBlocked = Utils.storage.get('isBlocked') || false;
       }
 
+      // Store authentic DB roles for reference
+      this.realRoles = {
+        isAdmin: this.isAdmin,
+        isCR: this.isCR,
+        isFaculty: this.isFaculty,
+        isBlocked: this.isBlocked
+      };
+
+      // Check if Admin has a temporary session preview role active
+      if (this.realRoles.isAdmin) {
+        const savedPreview = sessionStorage.getItem('b1t_admin_preview_role');
+        if (savedPreview && savedPreview !== 'none') {
+          this.applyPreviewRole(savedPreview, false);
+        } else {
+          this.previewRole = null;
+          UI.updatePreviewBanner(false);
+        }
+      } else {
+        sessionStorage.removeItem('b1t_admin_preview_role');
+        this.previewRole = null;
+        UI.updatePreviewBanner(false);
+      }
+
       // Update UI based on roles
       UI.toggleAdminControls(this.isAdmin, this.isCR, this.isFaculty);
       UI.toggleBlockedUserMode(this.isBlocked);
@@ -1337,6 +1368,10 @@ const App = {
     this.isCR = false;
     this.isFaculty = false;
     this.isBlocked = false;
+    this.realRoles = null;
+    this.previewRole = null;
+    sessionStorage.removeItem('b1t_admin_preview_role');
+    UI.updatePreviewBanner(false);
     Utils.storage.clear();
 
     // Hide dashboard-specific elements when not logged in
@@ -1355,6 +1390,67 @@ const App = {
     if (typeof ChangelogModal !== 'undefined' && typeof ChangelogModal.close === 'function') {
       ChangelogModal.close();
     }
+  },
+
+  // Apply or exit Admin role preview simulation
+  applyPreviewRole(role, reloadData = true) {
+    if (!this.realRoles || !this.realRoles.isAdmin) return;
+
+    if (!role || role === 'none' || role === 'Admin') {
+      // Reset to default admin view
+      this.previewRole = null;
+      sessionStorage.removeItem('b1t_admin_preview_role');
+      this.isAdmin = true;
+      this.isCR = this.realRoles.isCR || false;
+      this.isFaculty = this.realRoles.isFaculty || false;
+      this.isBlocked = this.realRoles.isBlocked || false;
+      UI.updatePreviewBanner(false);
+    } else {
+      // Set preview role
+      this.previewRole = role;
+      sessionStorage.setItem('b1t_admin_preview_role', role);
+      if (role === 'Faculty') {
+        this.isAdmin = false;
+        this.isCR = false;
+        this.isFaculty = true;
+        this.isBlocked = false;
+      } else if (role === 'CR') {
+        this.isAdmin = false;
+        this.isCR = true;
+        this.isFaculty = false;
+        this.isBlocked = false;
+      } else if (role === 'Student') {
+        this.isAdmin = false;
+        this.isCR = false;
+        this.isFaculty = false;
+        this.isBlocked = false;
+      } else if (role === 'Blocked') {
+        this.isAdmin = false;
+        this.isCR = false;
+        this.isFaculty = false;
+        this.isBlocked = true;
+      }
+      UI.updatePreviewBanner(true, role);
+    }
+
+    // Update UI controls based on active preview roles
+    UI.toggleAdminControls(this.isAdmin, this.isCR, this.isFaculty);
+    UI.toggleBlockedUserMode(this.isBlocked);
+    UI.updateSectionVisibility(Router.getCurrentRoute(), true);
+
+    // Refresh profile UI if loaded
+    if (typeof Profile !== 'undefined' && typeof Profile.updateRoleDisplay === 'function') {
+      Profile.updateRoleDisplay();
+    }
+
+    // Reload dashboard data
+    if (reloadData) {
+      this.loadDashboardData();
+    }
+  },
+
+  exitPreview() {
+    this.applyPreviewRole('none', true);
   },
 
   async loadSetDetailsForm() {

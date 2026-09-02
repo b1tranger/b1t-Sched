@@ -78,6 +78,15 @@
 </head>
 
 <body>
+    <!-- Admin Preview Floating Banner -->
+    <div id="admin-preview-banner" class="admin-preview-banner" style="display: none;">
+        <div class="admin-preview-banner-content">
+            <span class="preview-badge"><i class="fas fa-eye"></i> Previewing as <strong id="admin-preview-role-text">Faculty</strong></span>
+            <button id="exit-preview-banner-btn" class="btn btn-sm btn-exit-preview" title="Exit preview mode">
+                <i class="fas fa-times-circle"></i> Exit Preview
+            </button>
+        </div>
+    </div>
     <!-- Offline Indicator -->
     <div id="offline-indicator" class="offline-indicator" style="display: none;" role="status" aria-live="polite">
         <i class="fas fa-wifi-slash"></i>
@@ -1355,6 +1364,22 @@
                             </div>
                             <p class="profile-email" id="profile-email">Loading...</p>
                             <p class="profile-student-id" id="profile-student-id">Student ID: Loading...</p>
+                            <div class="profile-role-wrapper" id="profile-role-wrapper">
+                                <p class="profile-role" id="profile-role">Role: <span id="profile-role-badge" class="role-badge role-badge-student">Student</span> <span id="profile-role-preview-tag" class="preview-tag" style="display: none;">(preview)</span></p>
+                                <div id="admin-preview-control" class="admin-preview-control" style="display: none;">
+                                    <label for="admin-preview-select" class="preview-select-label"><i class="fas fa-eye"></i> Preview as:</label>
+                                    <select id="admin-preview-select" class="form-input form-select admin-preview-select">
+                                        <option value="none">Admin (Default)</option>
+                                        <option value="Faculty">Faculty</option>
+                                        <option value="CR">CR</option>
+                                        <option value="Student">Student</option>
+                                        <option value="Blocked">Blocked</option>
+                                    </select>
+                                    <button type="button" id="exit-preview-profile-btn" class="btn btn-sm btn-exit-preview" style="display: none;" title="Exit preview mode">
+                                        <i class="fas fa-times"></i> Exit
+                                    </button>
+                                </div>
+                            </div>
                         </div>
 
                         <form id="profile-settings-form" class="profile-form">

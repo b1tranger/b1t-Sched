@@ -17,6 +17,11 @@
           "type": "Enhancement",
           "title": "Old Tasks Direct Editing & Automatic Reappearance in Pending Tasks",
           "description": "Enabled role-based editing directly within the Old Tasks modal (.old-task-edit-btn) for Admins and task creators (Students, CRs, and Faculty). Updating an old task deadline to a future date or removing the deadline immediately transfers the task back into Pending Tasks and refreshes all views in real time."
+        },
+        {
+          "type": "New Feature",
+          "title": "User Role Display & Admin Temporary Role Preview Mode",
+          "description": "Displayed current user role status under the Student ID in Profile Settings. Introduced an interactive 'Preview as' dropdown (#admin-preview-select) exclusively for Admins using temporary sessionStorage to simulate Faculty, CR, Student, and Blocked roles without modifying actual database permissions, accompanied by a floating top '#admin-preview-banner' with single-click exit."
         }
       ]
     },

@@ -3197,5 +3197,159 @@ body.dark-mode .events-view-switch-btn {
     border-color: rgba(255, 255, 255, 0.2);
 }
 
+/* ============================================
+   ADMIN PREVIEW MODE & PROFILE ROLE STYLES
+   ============================================ */
+
+.admin-preview-banner {
+    position: fixed;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 99999;
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    color: #ffffff;
+    padding: 6px 14px;
+    border-radius: 30px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.85rem;
+    animation: slideDownPreviewBanner 0.3s ease-out;
+    backdrop-filter: blur(8px);
+}
+
+@keyframes slideDownPreviewBanner {
+    from {
+        transform: translate(-50%, -100%);
+        opacity: 0;
+    }
+    to {
+        transform: translate(-50%, 0);
+        opacity: 1;
+    }
+}
+
+.admin-preview-banner-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.admin-preview-banner .preview-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+}
+
+.admin-preview-banner .preview-badge i {
+    color: #f59e0b;
+}
+
+.btn-exit-preview {
+    background: #ef4444;
+    color: #ffffff;
+    border: none;
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.btn-exit-preview:hover {
+    background: #dc2626;
+    transform: scale(1.04);
+}
+
+/* Profile Role & Preview Wrapper */
+.profile-role-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.profile-role {
+    font-size: var(--font-sm);
+    color: var(--text-medium);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.preview-tag {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #f59e0b;
+    background: rgba(245, 158, 11, 0.15);
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    letter-spacing: 0.3px;
+}
+
+.admin-preview-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+    background: rgba(128, 128, 128, 0.08);
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border-light);
+}
+
+.preview-select-label {
+    font-size: var(--font-xs);
+    font-weight: 600;
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin: 0;
+    cursor: pointer;
+}
+
+.preview-select-label i {
+    color: var(--primary-maroon);
+}
+
+.admin-preview-select {
+    padding: 3px 8px;
+    font-size: var(--font-xs);
+    font-weight: 500;
+    border-radius: 6px;
+    border: 1px solid var(--border-light);
+    background-color: var(--bg-card);
+    color: var(--text-dark);
+    cursor: pointer;
+    outline: none;
+}
+
+.admin-preview-select:focus {
+    border-color: var(--primary-maroon);
+}
+
+/* Dark Mode & Gray Mode overrides for Admin Preview */
+body.dark-mode .admin-preview-banner,
+body.gray-mode .admin-preview-banner {
+    background: linear-gradient(135deg, #18181b, #09090b);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+
+body.dark-mode .preview-select-label i,
+body.gray-mode .preview-select-label i {
+    color: var(--primary);
+}
+
 
 

@@ -885,6 +885,29 @@ const UI = {
     }
   },
 
+  // Update admin preview banner and preview tags
+  updatePreviewBanner(isPreview, previewRole = '') {
+    const banner = document.getElementById('admin-preview-banner');
+    const roleText = document.getElementById('admin-preview-role-text');
+    const profileExitBtn = document.getElementById('exit-preview-profile-btn');
+    const profilePreviewTag = document.getElementById('profile-role-preview-tag');
+
+    if (banner) {
+      banner.style.display = isPreview ? 'flex' : 'none';
+      if (roleText && isPreview) {
+        roleText.textContent = previewRole;
+      }
+    }
+
+    if (profileExitBtn) {
+      profileExitBtn.style.display = isPreview ? 'inline-flex' : 'none';
+    }
+
+    if (profilePreviewTag) {
+      profilePreviewTag.style.display = isPreview ? 'inline-block' : 'none';
+    }
+  },
+
   // Populate dropdown
   async populateDropdown(elementId, items, selectedValue = null) {
     const dropdown = document.getElementById(elementId);

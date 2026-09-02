@@ -4,6 +4,12 @@
 
 # 02.09.26
 
+**User Role Display & Admin Temporary Role Preview Mode**
+- **Profile Role Status**: Displayed active user role badge (`#profile-role-badge`) directly below Student ID in Profile Settings with real-time class styling across Admin, Faculty, CR, Student, and Blocked roles.
+- **Admin Role Preview Simulation**: Introduced an interactive "Preview as" dropdown (`#admin-preview-select`) in Profile Settings exclusively for Admins to simulate other user roles (Faculty, CR, Student, Blocked) in temporary `sessionStorage`. In preview mode, the role status displays an amber `(preview)` tag (`#profile-role-preview-tag`).
+- **Global Floating Preview Banner**: Added a top-centered floating pill (`#admin-preview-banner`) indicating the active preview role with single-click **Exit Preview** action (`App.exitPreview()`). Exiting preview immediately restores full Admin capabilities and refreshes views in real time.
+- **Session Isolation**: Role simulation strictly persists within the active browser tab via `sessionStorage` and automatically resets to the default Admin view upon tab closure or next session start, preventing any permanent alterations to user accounts or database permissions.
+
 **Firebase Task ID in Show More and Direct Old Tasks Editing**
 - **Pending Tasks Firebase ID**: Integrated Firestore document ID into expanded pending task cards (`.task-id-info`, `.task-id-code`) inside `js/ui.js` and `css/components.css`. Displays automatically alongside creator details when "Show more" is clicked, with `user-select: all` for instant copying.
 - **Editable Old Tasks**: Enabled role-based editing directly within the Old Tasks modal (`.old-task-actions`, `.old-task-edit-btn`) for Admins and task owners (Students, CRs, and Faculty).

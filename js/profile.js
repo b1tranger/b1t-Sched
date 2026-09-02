@@ -92,6 +92,27 @@ const Profile = {
       profileSem.addEventListener('change', () => this.updateSectionDropdown('profile-section', profileDept.value, profileSem.value));
     }
 
+    // Admin preview role selector
+    const previewSelect = document.getElementById('admin-preview-select');
+    if (previewSelect) {
+      previewSelect.addEventListener('change', (e) => {
+        const selectedRole = e.target.value;
+        if (typeof App !== 'undefined' && typeof App.applyPreviewRole === 'function') {
+          App.applyPreviewRole(selectedRole, true);
+        }
+      });
+    }
+
+    // Exit preview button in profile
+    const exitProfileBtn = document.getElementById('exit-preview-profile-btn');
+    if (exitProfileBtn) {
+      exitProfileBtn.addEventListener('click', () => {
+        if (typeof App !== 'undefined' && typeof App.exitPreview === 'function') {
+          App.exitPreview();
+        }
+      });
+    }
+
     // Live preview for theme changes
     const profileTheme = document.getElementById('profile-theme');
     if (profileTheme) {
@@ -176,6 +197,9 @@ const Profile = {
       document.getElementById('profile-email').textContent = this.currentProfile.email;
       document.getElementById('profile-student-id').textContent = `Student ID: ${this.currentProfile.studentId || 'Not set'}`;
 
+      // Update Role display & Admin preview selector
+      this.updateRoleDisplay();
+
       // Show cooldown status if applicable
       this.updateCooldownMessage();
 
@@ -219,6 +243,57 @@ const Profile = {
     this.updateNotificationStatus();
 
     UI.showLoading(false);
+  },
+
+  // Update role badge, preview tag, and admin preview dropdown
+  updateRoleDisplay() {
+    const roleBadge = document.getElementById('profile-role-badge');
+    const previewTag = document.getElementById('profile-role-preview-tag');
+    const previewControl = document.getElementById('admin-preview-control');
+    const previewSelect = document.getElementById('admin-preview-select');
+    const exitProfileBtn = document.getElementById('exit-preview-profile-btn');
+
+    if (!roleBadge) return;
+
+    // Determine current effective role
+    let effectiveRole = 'Student';
+    if (typeof App !== 'undefined') {
+      if (App.isAdmin) effectiveRole = 'Admin';
+      else if (App.isFaculty) effectiveRole = 'Faculty';
+      else if (App.isCR) effectiveRole = 'CR';
+      else if (App.isBlocked) effectiveRole = 'Blocked';
+    } else if (this.currentProfile) {
+      if (this.currentProfile.isAdmin) effectiveRole = 'Admin';
+      else if (this.currentProfile.isFaculty || this.currentProfile.role === 'Faculty') effectiveRole = 'Faculty';
+      else if (this.currentProfile.isCR || this.currentProfile.role === 'CR') effectiveRole = 'CR';
+      else if (this.currentProfile.isBlocked) effectiveRole = 'Blocked';
+    }
+
+    // Set role badge text and class
+    roleBadge.textContent = effectiveRole;
+    roleBadge.className = `role-badge ${effectiveRole.toLowerCase()}`;
+
+    // Is preview mode active?
+    const isPreview = typeof App !== 'undefined' && !!(App.realRoles?.isAdmin && App.previewRole);
+    if (previewTag) {
+      previewTag.style.display = isPreview ? 'inline-block' : 'none';
+    }
+    if (exitProfileBtn) {
+      exitProfileBtn.style.display = isPreview ? 'inline-flex' : 'none';
+    }
+
+    // Is the real user an Admin? If so, show the "Preview as" dropdown
+    const isRealAdmin = typeof App !== 'undefined' && !!(App.realRoles?.isAdmin || (App.isAdmin && !App.previewRole));
+    if (previewControl) {
+      if (isRealAdmin) {
+        previewControl.style.display = 'flex';
+        if (previewSelect) {
+          previewSelect.value = App.previewRole || 'none';
+        }
+      } else {
+        previewControl.style.display = 'none';
+      }
+    }
   },
 
   // Render Faculty-specific profile UI with readonly semester/section
