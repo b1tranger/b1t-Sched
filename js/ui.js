@@ -9,21 +9,34 @@ const UI = {
     const appContainer = document.getElementById('app');
     const noteToggleMobile = document.getElementById('note-toggle');
     const noteButtonDesktop = document.getElementById('note-button-desktop');
+    const approvalToggleMobile = document.getElementById('approval-toggle');
+    const approvalButtonDesktop = document.getElementById('approval-button-desktop');
 
     if (show) {
       loadingScreen.style.display = 'flex';
       appContainer.style.display = 'none';
       document.body.style.overflow = 'hidden';
-      // Hide note buttons during loading (.hidden has !important to override .mobile-only/.desktop-only)
+      // Hide buttons during loading (.hidden has !important to override .mobile-only/.desktop-only)
       if (noteToggleMobile) noteToggleMobile.classList.add('hidden');
       if (noteButtonDesktop) noteButtonDesktop.classList.add('hidden');
+      if (approvalToggleMobile) approvalToggleMobile.classList.add('hidden');
+      if (approvalButtonDesktop) approvalButtonDesktop.classList.add('hidden');
     } else {
       loadingScreen.style.display = 'none';
       appContainer.style.display = 'block';
       document.body.style.overflow = '';
-      // Remove hidden class so CSS visibility classes can take over
+      // Remove hidden class so CSS visibility classes can take over for notes
       if (noteToggleMobile) noteToggleMobile.classList.remove('hidden');
       if (noteButtonDesktop) noteButtonDesktop.classList.remove('hidden');
+      // Update approval button visibility based on active role
+      if (typeof ApprovalManager !== 'undefined' && ApprovalManager.updateVisibility) {
+        const role = typeof App !== 'undefined' ? (App.previewRole || (App.isAdmin ? 'Admin' : (App.isDptCoor ? 'DptCoor' : (App.isFaculty ? 'Faculty' : (App.isCR ? 'CR' : 'Student'))))) : 'Student';
+        const dept = typeof App !== 'undefined' && App.userProfile ? App.userProfile.department : null;
+        const isCR = typeof App !== 'undefined' ? App.isCR : false;
+        const isDptCoor = typeof App !== 'undefined' ? App.isDptCoor : false;
+        const isAdmin = typeof App !== 'undefined' ? App.isAdmin : false;
+        ApprovalManager.updateVisibility(role, dept, isCR, isDptCoor, isAdmin);
+      }
     }
   },
 
@@ -444,7 +457,7 @@ const UI = {
               <div class="task-description">
                 <div class="task-description-wrapper">
                   <div class="task-description-text">${Utils.escapeAndLinkify(task.description) || 'No description available.'}</div>
-                  ${task.addedBy ? `<p class="task-added-by task-added-by-hidden">Added by ${task.addedByName || 'User'}${task.addedByRole && (task.addedByRole === 'CR' || task.addedByRole === 'Faculty') ? ` <span class="role-badge role-badge-${task.addedByRole.toLowerCase()}">${task.addedByRole}</span>` : ''}${task.section ? ` (${task.section})` : ''}${isFacultyTask && task.department ? ` - ${task.department}` : ''}</p>` : ''}
+                  ${task.addedBy ? `<p class="task-added-by task-added-by-hidden">Added by ${task.addedByName || 'User'}${task.addedByRole && (task.addedByRole === 'CR' || task.addedByRole === 'Faculty' || task.addedByRole === 'DptCoor' || task.addedByRole === 'DptHead') ? ` <span class="role-badge role-badge-${task.addedByRole.toLowerCase()}">${task.addedByRole}</span>` : ''}${task.section ? ` (${task.section})` : ''}${isFacultyTask && task.department ? ` - ${task.department}` : ''}</p>` : ''}
                   <p class="task-id-info task-added-by-hidden"><span class="task-id-label">Task ID:</span> <code class="task-id-code">${task.id}</code></p>
                   <button type="button" class="task-description-toggle" aria-label="Toggle description">
                     <span class="toggle-text">Show more</span>
@@ -885,17 +898,37 @@ const UI = {
     }
   },
 
+  previewCollapseTimer: null,
+
   // Update admin preview banner and preview tags
   updatePreviewBanner(isPreview, previewRole = '') {
     const banner = document.getElementById('admin-preview-banner');
     const roleText = document.getElementById('admin-preview-role-text');
     const profileExitBtn = document.getElementById('exit-preview-profile-btn');
     const profilePreviewTag = document.getElementById('profile-role-preview-tag');
+    const toggleBtn = document.getElementById('admin-preview-toggle-btn');
+
+    if (this.previewCollapseTimer) {
+      clearTimeout(this.previewCollapseTimer);
+      this.previewCollapseTimer = null;
+    }
 
     if (banner) {
       banner.style.display = isPreview ? 'flex' : 'none';
       if (roleText && isPreview) {
         roleText.textContent = previewRole;
+      }
+
+      if (isPreview) {
+        // Show expanded initially
+        this.minimizePreviewBanner(false);
+
+        // Auto-minimize as just the eye icon after 3 seconds of expanded display
+        this.previewCollapseTimer = setTimeout(() => {
+          this.minimizePreviewBanner(true);
+        }, 3000);
+      } else {
+        this.minimizePreviewBanner(false);
       }
     }
 
@@ -906,6 +939,53 @@ const UI = {
     if (profilePreviewTag) {
       profilePreviewTag.style.display = isPreview ? 'inline-block' : 'none';
     }
+  },
+
+  // Minimize or expand admin preview banner
+  minimizePreviewBanner(minimized = true) {
+    const banner = document.getElementById('admin-preview-banner');
+    const toggleBtn = document.getElementById('admin-preview-toggle-btn');
+    const roleText = document.getElementById('admin-preview-role-text');
+    if (!banner) return;
+
+    if (this.previewCollapseTimer) {
+      clearTimeout(this.previewCollapseTimer);
+      this.previewCollapseTimer = null;
+    }
+
+    if (minimized) {
+      banner.classList.add('is-minimized');
+      if (toggleBtn) {
+        const role = roleText ? roleText.textContent : 'Role';
+        toggleBtn.setAttribute('title', `Previewing as ${role} (Click to expand)`);
+        toggleBtn.setAttribute('aria-expanded', 'false');
+      }
+    } else {
+      banner.classList.remove('is-minimized');
+      if (toggleBtn) {
+        const role = roleText ? roleText.textContent : 'Role';
+        toggleBtn.setAttribute('title', `Previewing as ${role} (Click to minimize)`);
+        toggleBtn.setAttribute('aria-expanded', 'true');
+      }
+      // Auto-minimize after 3 seconds of being expanded
+      this.previewCollapseTimer = setTimeout(() => {
+        this.minimizePreviewBanner(true);
+      }, 3000);
+    }
+  },
+
+  // Toggle admin preview banner expansion
+  togglePreviewBanner() {
+    const banner = document.getElementById('admin-preview-banner');
+    if (!banner) return;
+    const isCurrentlyMinimized = banner.classList.contains('is-minimized');
+
+    if (this.previewCollapseTimer) {
+      clearTimeout(this.previewCollapseTimer);
+      this.previewCollapseTimer = null;
+    }
+
+    this.minimizePreviewBanner(!isCurrentlyMinimized);
   },
 
   // Populate dropdown
@@ -1005,7 +1085,7 @@ const UI = {
     }
   },
 
-  // Update FAQ, Contribution, Task Export, User Counter, and Note Button section visibility based on route
+  // Update FAQ, Contribution, Task Export, User Counter, Note, and Approval Button section visibility based on route
   updateSectionVisibility(routeName, forceAuthStatus = null) {
     const faqSection = document.getElementById('faq-section');
     const contribSection = document.getElementById('contributions-section');
@@ -1013,13 +1093,15 @@ const UI = {
     const userCounter = document.getElementById('total-user-counter');
     const noteToggleMobile = document.getElementById('note-toggle');
     const noteButtonDesktop = document.getElementById('note-button-desktop');
+    const approvalToggleMobile = document.getElementById('approval-toggle');
+    const approvalButtonDesktop = document.getElementById('approval-button-desktop');
     const appFooter = document.getElementById('app-footer');
 
     // Helper to safely toggle display
-    // IMPORTANT: Note buttons use .mobile-only/.desktop-only classes which have !important
+    // IMPORTANT: Note & Approval buttons use .mobile-only/.desktop-only classes which have !important
     // To hide them, we must use inline style with !important to override the CSS.
     // To show them, we remove the inline style so the CSS classes take over.
-    const setNoteVisibility = (el, show) => {
+    const setElementVisibility = (el, show) => {
       if (!el) return;
       if (show) {
         el.style.removeProperty('display');
@@ -1055,11 +1137,13 @@ const UI = {
       }
 
       if (isAuthenticated) {
-        setNoteVisibility(noteToggleMobile, true);
-        setNoteVisibility(noteButtonDesktop, true);
+        setElementVisibility(noteToggleMobile, true);
+        setElementVisibility(noteButtonDesktop, true);
       } else {
-        setNoteVisibility(noteToggleMobile, false);
-        setNoteVisibility(noteButtonDesktop, false);
+        setElementVisibility(noteToggleMobile, false);
+        setElementVisibility(noteButtonDesktop, false);
+        setElementVisibility(approvalToggleMobile, false);
+        setElementVisibility(approvalButtonDesktop, false);
       }
 
     } else {
@@ -1069,8 +1153,10 @@ const UI = {
       if (userCounter) userCounter.style.display = 'none';
       if (appFooter) appFooter.style.display = 'none';
 
-      setNoteVisibility(noteToggleMobile, false);
-      setNoteVisibility(noteButtonDesktop, false);
+      setElementVisibility(noteToggleMobile, false);
+      setElementVisibility(noteButtonDesktop, false);
+      setElementVisibility(approvalToggleMobile, false);
+      setElementVisibility(approvalButtonDesktop, false);
     }
   }
 };

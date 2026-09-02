@@ -619,6 +619,17 @@ body.dark-mode .task-deadline.urgent {
   color: #155724;
 }
 
+.task-type-badge.presentation {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.task-type-badge.meetings,
+.task-type-badge.meeting {
+  background-color: #e0e7ff;
+  color: #3730a3;
+}
+
 /* Event Cards */
 .event-card {
   background: var(--bg-white);
@@ -1348,6 +1359,13 @@ body.offline-active .classroom-overlay {
   background-color: #f3e5f5;
   color: #7b1fa2;
   border: 1px solid #ce93d8;
+}
+
+.role-badge-dptcoor,
+.role-badge-dpthead {
+  background-color: #ccfbf1;
+  color: #0f766e;
+  border: 1px solid #5eead4;
 }
 
 /* Role badge in contributions table */

@@ -535,6 +535,9 @@ const NoticeViewer = {
 
         if (sidebar && overlay) {
             if (open) {
+                const isFacultyOrDptCoor = (typeof App !== 'undefined' && (App.isFaculty || App.isDptCoor)) || (Utils.storage.get('userProfile')?.isFaculty || Utils.storage.get('userProfile')?.isDptCoor || Utils.storage.get('userProfile')?.isDptHead);
+                this.updateNoticeTitles(isFacultyOrDptCoor);
+
                 sidebar.classList.add('open');
                 overlay.classList.add('active');
                 if (toggle) toggle.style.display = 'none'; // Hide toggle when open
@@ -553,6 +556,9 @@ const NoticeViewer = {
     },
 
     openNoticeModal() {
+        const isFacultyOrDptCoor = (typeof App !== 'undefined' && (App.isFaculty || App.isDptCoor)) || (Utils.storage.get('userProfile')?.isFaculty || Utils.storage.get('userProfile')?.isDptCoor || Utils.storage.get('userProfile')?.isDptHead);
+        this.updateNoticeTitles(isFacultyOrDptCoor);
+
         UI.showModal('notice-modal');
         if (!this.noticesLoaded || this.notices.length === 0) {
             this.loadNotices(false);
@@ -561,5 +567,31 @@ const NoticeViewer = {
 
     closeNoticeModal() {
         UI.hideModal('notice-modal');
+    },
+
+    // Update Notice modal/sidebar titles for Faculty/DptCoor vs CR/Student
+    updateNoticeTitles(isFacultyOrDptCoor = false) {
+        const desktopColTitle = document.getElementById('cr-notice-modal-col-title');
+        const mobileSecTitle = document.getElementById('cr-notice-sidebar-section-title');
+        const addModalTitle = document.getElementById('add-cr-notice-modal-title');
+        const addModalTitle2 = document.getElementById('add-cr-notice-modal-title-2');
+        const editModalTitle = document.getElementById('edit-cr-notice-modal-title');
+        const oldModalTitle = document.getElementById('old-cr-notices-modal-title');
+
+        if (isFacultyOrDptCoor) {
+            if (desktopColTitle) desktopColTitle.innerHTML = '<i class="fas fa-building"></i> Department Notices';
+            if (mobileSecTitle) mobileSecTitle.innerHTML = '<i class="fas fa-building"></i> Department Notices';
+            if (addModalTitle) addModalTitle.innerHTML = '<i class="fas fa-plus-circle"></i> Add Department Notice';
+            if (addModalTitle2) addModalTitle2.innerHTML = '<i class="fas fa-plus-circle"></i> Add Department Notice';
+            if (editModalTitle) editModalTitle.innerHTML = '<i class="fas fa-edit"></i> Edit Department Notice';
+            if (oldModalTitle) oldModalTitle.innerHTML = '<i class="fas fa-history"></i> Past Department Notices';
+        } else {
+            if (desktopColTitle) desktopColTitle.innerHTML = '<i class="fas fa-chalkboard-teacher"></i> CR Notices';
+            if (mobileSecTitle) mobileSecTitle.innerHTML = '<i class="fas fa-chalkboard-teacher"></i> Class Notices';
+            if (addModalTitle) addModalTitle.innerHTML = '<i class="fas fa-plus-circle"></i> Add Class Notice';
+            if (addModalTitle2) addModalTitle2.innerHTML = '<i class="fas fa-plus-circle"></i> Add Class Notice';
+            if (editModalTitle) editModalTitle.innerHTML = '<i class="fas fa-edit"></i> Edit Notice';
+            if (oldModalTitle) oldModalTitle.innerHTML = '<i class="fas fa-history"></i> Past Class Notices';
+        }
     }
 };

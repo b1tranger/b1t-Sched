@@ -80,10 +80,13 @@
 <body>
     <!-- Admin Preview Floating Banner -->
     <div id="admin-preview-banner" class="admin-preview-banner" style="display: none;">
-        <div class="admin-preview-banner-content">
-            <span class="preview-badge"><i class="fas fa-eye"></i> Previewing as <strong id="admin-preview-role-text">Faculty</strong></span>
-            <button id="exit-preview-banner-btn" class="btn btn-sm btn-exit-preview" title="Exit preview mode">
-                <i class="fas fa-times-circle"></i> Exit Preview
+        <button id="admin-preview-toggle-btn" class="admin-preview-toggle-btn" type="button" title="Admin Preview Mode" aria-label="Toggle preview details">
+            <i class="fas fa-eye"></i>
+        </button>
+        <div id="admin-preview-banner-content" class="admin-preview-banner-content">
+            <span class="preview-badge">Previewing as <strong id="admin-preview-role-text">Faculty</strong></span>
+            <button id="exit-preview-banner-btn" class="btn btn-sm btn-exit-preview" type="button" title="Exit preview mode">
+                <i class="fas fa-times-circle"></i> <span class="exit-btn-text">Exit Preview</span>
             </button>
         </div>
     </div>
@@ -270,15 +273,21 @@
                         <p class="subtitle">This will help us show you relevant tasks and schedules</p>
 
                         <form id="set-details-form" class="details-form">
-                            <div class="form-group">
-                                <label for="set-student-id">Student ID</label>
+                            <div class="form-group" id="set-id-group">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                                    <label for="set-student-id" id="set-id-label" style="margin-bottom: 0;">Student ID</label>
+                                    <label class="faculty-signup-toggle" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.85em; cursor: pointer; color: var(--text-medium); user-select: none;">
+                                        <input type="checkbox" id="set-is-faculty-checkbox" style="cursor: pointer;">
+                                        <span>Faculty Account</span>
+                                    </label>
+                                </div>
                                 <input type="text" id="set-student-id" class="form-input"
                                     placeholder="Enter your 10-16 digit student ID" pattern="[0-9]{10,16}"
                                     minlength="10" maxlength="16" required>
-                                <small class="form-hint">Your student ID must be 10-16 digits</small>
+                                <small id="set-id-hint" class="form-hint">Your student ID must be 10-16 digits</small>
                             </div>
 
-                            <div class="form-group">
+                            <div class="form-group" id="set-department-group">
                                 <label for="set-department">Department</label>
                                 <select id="set-department" class="form-select" required>
                                     <option value="" disabled selected>Select Department</option>
@@ -286,7 +295,7 @@
                                 </select>
                             </div>
 
-                            <div class="form-group">
+                            <div class="form-group" id="set-semester-group">
                                 <label for="set-semester">Semester</label>
                                 <select id="set-semester" class="form-select" required>
                                     <option value="" disabled selected>Select Semester</option>
@@ -294,7 +303,7 @@
                                 </select>
                             </div>
 
-                            <div class="form-group">
+                            <div class="form-group" id="set-section-group">
                                 <label for="set-section">Section</label>
                                 <select id="set-section" class="form-select" required>
                                     <option value="" disabled selected>Select Section</option>
@@ -455,6 +464,10 @@
                                 <label class="task-filter-label">
                                     <input type="radio" name="task-filter" value="presentation">
                                     <span>Presentation</span>
+                                </label>
+                                <label class="task-filter-label">
+                                    <input type="radio" name="task-filter" value="meetings">
+                                    <span>Meetings</span>
                                 </label>
                                 <label class="task-filter-label">
                                     <input type="radio" name="task-filter" value="other">
@@ -646,7 +659,7 @@
                         <div class="notice-mobile-section">
                             <div class="notice-section-header"
                                 style="justify-content: space-between; display: flex; align-items: center;">
-                                <span><i class="fas fa-chalkboard-teacher"></i> Class Notices</span>
+                                <span id="cr-notice-sidebar-section-title"><i class="fas fa-chalkboard-teacher"></i> Class Notices</span>
                                 <div>
                                     <button id="view-old-cr-notices-btn-mobile" class="btn btn-sm btn-secondary"
                                         title="View Old Notices">
@@ -733,6 +746,61 @@
                 </div>
                 <div id="classroom-overlay" class="classroom-overlay"></div>
 
+                <!-- Mobile Approvals Sidebar Toggle -->
+                <div id="approval-toggle" class="approval-toggle mobile-only" style="display: none;" aria-label="Account Approvals" title="Account Approvals">
+                    <i class="fas fa-user-shield"></i>
+                    <span id="approval-badge-count-mobile" class="approval-badge-count" style="display: none;">0</span>
+                </div>
+
+                <!-- Mobile Approvals Sidebar -->
+                <div id="approval-sidebar" class="approval-sidebar mobile-only">
+                    <div class="approval-sidebar-header">
+                        <h3>
+                            <i class="fas fa-user-shield"></i> Account Approvals
+                            <span class="section-guide-tooltip"
+                                data-tooltip="Manage and verify faculty account registration requests.">
+                                <i class="fas fa-info-circle"></i>
+                            </span>
+                        </h3>
+                        <button id="close-approval-sidebar" class="btn btn-icon" style="color: white;" aria-label="Close approvals sidebar">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div id="approval-sidebar-content" class="approval-sidebar-content">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+                <div id="approval-overlay" class="approval-overlay mobile-only"></div>
+
+            </div>
+
+            <!-- Approvals Button (Desktop - Above Notes) -->
+            <div id="approval-button-desktop" class="approval-button-desktop desktop-only hidden" style="display: none;"
+                aria-label="Account Approvals" aria-expanded="false" role="button" tabindex="0" title="Account Approvals">
+                <i class="fas fa-user-shield" aria-hidden="true"></i>
+                <span id="approval-badge-count-desktop" class="approval-badge-count" style="display: none;">0</span>
+            </div>
+
+            <!-- Approvals Modal (Desktop) -->
+            <div id="approval-modal" class="modal" style="display: none;" role="dialog" aria-labelledby="approval-modal-title"
+                aria-modal="false">
+                <div class="modal-content approval-modal-content">
+                    <div class="modal-header approval-modal-header">
+                        <h2 id="approval-modal-title" class="modal-title">
+                            <i class="fas fa-user-shield" aria-hidden="true"></i> Account Approvals
+                            <span class="section-guide-tooltip"
+                                data-tooltip="Manage and verify faculty account registration requests.">
+                                <i class="fas fa-info-circle"></i>
+                            </span>
+                        </h2>
+                        <button id="close-approval-modal" class="btn btn-icon" aria-label="Close approvals">
+                            <i class="fas fa-times" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <div id="approval-modal-body" class="modal-body approval-modal-body">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
             </div>
 
             <!-- Google Classroom Modal (Desktop) -->
@@ -938,6 +1006,7 @@
                                 <option value="exam">Exam</option>
                                 <option value="project">Project</option>
                                 <option value="presentation">Presentation</option>
+                                <option value="meetings">Meetings</option>
                                 <option value="other">Other</option>
                             </select>
                         </div>
@@ -1018,6 +1087,7 @@
                                 <option value="exam">Exam</option>
                                 <option value="project">Project</option>
                                 <option value="presentation">Presentation</option>
+                                <option value="meetings">Meetings</option>
                                 <option value="other">Other</option>
                             </select>
                         </div>
@@ -1187,7 +1257,7 @@
                             <div class="notice-column">
                                 <div class="notice-column-header"
                                     style="justify-content: space-between; display: flex; align-items: center;">
-                                    <h3 style="margin: 0;"><i class="fas fa-chalkboard-teacher"></i> CR Notices</h3>
+                                    <h3 style="margin: 0;" id="cr-notice-modal-col-title"><i class="fas fa-chalkboard-teacher"></i> CR Notices</h3>
                                     <div>
                                         <button id="view-old-cr-notices-btn-desktop" class="btn btn-sm btn-secondary"
                                             title="View Old Notices">
@@ -1239,7 +1309,7 @@
             <div id="old-cr-notices-modal" class="modal" style="display: none;">
                 <div class="modal-content modal-content-lg">
                     <div class="modal-header">
-                        <h2 class="modal-title">Past Class Notices</h2>
+                        <h2 class="modal-title" id="old-cr-notices-modal-title"><i class="fas fa-history"></i> Past Class Notices</h2>
                         <button id="close-old-cr-notices-modal" class="btn btn-icon">
                             <i class="fas fa-times"></i>
                         </button>
@@ -1260,7 +1330,7 @@
             <div id="add-cr-notice-modal" class="modal" style="display: none;">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h2 class="modal-title">Add Class Notice</h2>
+                        <h2 class="modal-title" id="add-cr-notice-modal-title"><i class="fas fa-plus-circle"></i> Add Class Notice</h2>
                         <button id="close-add-cr-notice-modal" class="btn btn-icon">
                             <i class="fas fa-times"></i>
                         </button>
@@ -1365,19 +1435,22 @@
                             <p class="profile-email" id="profile-email">Loading...</p>
                             <p class="profile-student-id" id="profile-student-id">Student ID: Loading...</p>
                             <div class="profile-role-wrapper" id="profile-role-wrapper">
-                                <p class="profile-role" id="profile-role">Role: <span id="profile-role-badge" class="role-badge role-badge-student">Student</span> <span id="profile-role-preview-tag" class="preview-tag" style="display: none;">(preview)</span></p>
+                                <p class="profile-role" id="profile-role">Role: <span id="profile-role-badge" class="role-badge role-badge-student">Student</span> <span id="profile-role-approval-tag" class="role-approval-tag" style="display: none; background-color: #f59e0b; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600; margin-left: 6px;">(unapproved)</span> <span id="profile-role-preview-tag" class="preview-tag" style="display: none;">(preview)</span></p>
                                 <div id="admin-preview-control" class="admin-preview-control" style="display: none;">
                                     <label for="admin-preview-select" class="preview-select-label"><i class="fas fa-eye"></i> Preview as:</label>
-                                    <select id="admin-preview-select" class="form-input form-select admin-preview-select">
-                                        <option value="none">Admin (Default)</option>
-                                        <option value="Faculty">Faculty</option>
-                                        <option value="CR">CR</option>
-                                        <option value="Student">Student</option>
-                                        <option value="Blocked">Blocked</option>
-                                    </select>
-                                    <button type="button" id="exit-preview-profile-btn" class="btn btn-sm btn-exit-preview" style="display: none;" title="Exit preview mode">
-                                        <i class="fas fa-times"></i> Exit
-                                    </button>
+                                    <div class="admin-preview-select-group">
+                                        <select id="admin-preview-select" class="form-input form-select admin-preview-select">
+                                            <option value="none">Admin (Default)</option>
+                                            <option value="Faculty">Faculty</option>
+                                            <option value="DptCoor">DptCoor</option>
+                                            <option value="CR">CR</option>
+                                            <option value="Student">Student</option>
+                                            <option value="Blocked">Blocked</option>
+                                        </select>
+                                        <button type="button" id="exit-preview-profile-btn" class="btn btn-sm btn-exit-preview" style="display: none;" title="Exit preview mode">
+                                            <i class="fas fa-times"></i> Exit
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1426,7 +1499,7 @@
                                 </select>
                             </div>
 
-                            <div class="form-group">
+                            <div class="form-group" id="profile-semester-group">
                                 <label for="profile-semester">Semester</label>
                                 <select id="profile-semester" class="form-select" required>
                                     <option value="" disabled>Select Semester</option>
@@ -1434,7 +1507,7 @@
                                 </select>
                             </div>
 
-                            <div class="form-group">
+                            <div class="form-group" id="profile-section-group">
                                 <label for="profile-section">Section</label>
                                 <select id="profile-section" class="form-select" required>
                                     <option value="" disabled>Select Section</option>
@@ -1720,8 +1793,9 @@
                                 <select id="filter-role" class="form-select">
                                     <option value="All">All Roles</option>
                                     <option value="Admin">Admin</option>
-                                    <option value="CR">CR</option>
+                                    <option value="DptCoor">DptCoor</option>
                                     <option value="Faculty">Faculty</option>
+                                    <option value="CR">CR</option>
                                     <option value="Blocked">Blocked</option>
                                     <option value="User">Regular User</option>
                                 </select>
@@ -1893,8 +1967,9 @@
                                 <p>b1t-Sched groups students by their academic identity — <strong>Department</strong>,
                                     <strong>Semester</strong>, and <strong>Section</strong>. All users who share the
                                     same
-                                    combination see the same "Pending Tasks" list and can add new tasks to it.
+                                    combination see the same section-level "Pending Tasks" and section-level <strong>Class Notices</strong>.
                                 </p>
+                                <p>For <strong>Faculty and Department Coordinators</strong>, tasks and notices operate on a <strong>department-wide level</strong>, allowing them to manage academic tasks and view department notices without semester or section constraints.</p>
                                 <p>However, <strong>task checkboxes are individual</strong> — marking a task as complete
                                     only
                                     affects your own dashboard. Other users in the same group won't see your completion
@@ -1911,26 +1986,14 @@
                                 <i class="fas fa-user-shield"></i> What are the user roles?
                             </summary>
                             <div class="faq-answer">
-                                <p>There are four special roles in addition to regular users:</p>
+                                <p>There are five specialized roles in addition to regular students:</p>
                                 <ul>
-                                    <li><strong>Admin</strong> — Full control: can create/edit/delete any task or event,
-                                        manage
-                                        all users, assign or remove roles, and access the Firebase dashboard.</li>
-                                    <li><strong>CR (Class Representative)</strong> — Can delete or reset any task in
-                                        their
-                                        section. Can also create events for their own department and edit/delete events
-                                        they
-                                        created.</li>
-                                    <li><strong>Faculty</strong> — Can view department-wide tasks (no semester/section
-                                        filtering). Can create events for their own department and edit/delete events
-                                        they created. Cannot modify semester or section in profile settings.</li>
-                                    <li><strong>Blocked</strong> — Restricted to read-only mode. Cannot add, edit, or
-                                        delete
-                                        tasks, change their profile, or interact with events. A banner is shown at the
-                                        top of
-                                        the dashboard.</li>
-                                    <li><strong>Regular users</strong> — Can add tasks, edit/delete their own tasks, and
-                                        mark tasks as complete.</li>
+                                    <li><strong>Admin</strong> — Full platform authority: can create, edit, or delete any task, notice, or event across all departments, manage user accounts, assign or remove roles, and access the administrative dashboard.</li>
+                                    <li><strong>DptCoor (Department Coordinator)</strong> — Faculty leadership role with department-level coordination capabilities. Can post, edit, and manage <strong>Department Notices</strong> for their entire department, create department-wide events, and manage faculty tasks. Operates department-wide without semester/section constraints.</li>
+                                    <li><strong>Faculty</strong> — Can view and complete department-wide tasks and read <strong>Department Notices</strong>. Can create and manage department events and add faculty tasks/meetings. Cannot post Department Notices (requires the <strong>DptCoor</strong> role) and operates without semester or section profile restrictions.</li>
+                                    <li><strong>CR (Class Representative)</strong> — Student leadership role for a specific section group. Can post, edit, and manage <strong>Class Notices (CR Notices)</strong> for their section, delete or reset any task in their section, and create department events.</li>
+                                    <li><strong>Regular Student / User</strong> — Can add section tasks, edit/delete their own submitted tasks and events, read Class & University Notices, and mark tasks as complete on their personal dashboard.</li>
+                                    <li><strong>Blocked</strong> — Restricted to read-only access. Cannot add, edit, or delete tasks, notices, or events, cannot modify profile settings, and sees a restriction banner on the dashboard.</li>
                                 </ul>
                             </div>
                         </details>
@@ -2000,7 +2063,7 @@
         <div id="add-cr-notice-modal" class="modal" style="display: none;">
             <div class="modal-content modal-content-sm">
                 <div class="modal-header">
-                    <h2 class="modal-title"><i class="fas fa-plus-circle"></i> Add Class Notice</h2>
+                    <h2 class="modal-title" id="add-cr-notice-modal-title-2"><i class="fas fa-plus-circle"></i> Add Class Notice</h2>
                     <button id="close-add-cr-notice-modal" class="btn btn-icon">
                         <i class="fas fa-times"></i>
                     </button>
@@ -2058,7 +2121,7 @@
         <div id="edit-cr-notice-modal" class="modal" style="display: none;">
             <div class="modal-content modal-content-sm">
                 <div class="modal-header">
-                    <h2 class="modal-title">
+                    <h2 class="modal-title" id="edit-cr-notice-modal-title">
                         <i class="fas fa-edit"></i> Edit Notice
                         <i class="fas fa-info-circle section-guide-tooltip"
                             data-tooltip="Fetches PDF notices directly from the UCAM portal. Caches for 7 days. Use the Refresh button to bypass the cache."></i>
@@ -2192,6 +2255,7 @@
     <script src="js/classroom.js"></script>
     <script src="js/facultyClassroom.js"></script>
     <script src="js/notes.js"></script>
+    <script src="js/approvals.js"></script>
     <script src="js/admin-api.js"></script>
     <!-- Notification System Modules -->
     <script src="js/permission-manager.js"></script>

@@ -190,8 +190,8 @@ const Profile = {
     if (result.success) {
       this.currentProfile = result.data;
 
-      // Check if user is Faculty
-      const isFaculty = this.currentProfile.isFaculty === true || this.currentProfile.role === 'Faculty';
+      // Check if user is Faculty or DptCoor
+      const isFaculty = (typeof App !== 'undefined' && (App.isFaculty || App.isDptCoor)) || (this.currentProfile && (this.currentProfile.isFaculty === true || this.currentProfile.isDptCoor === true || this.currentProfile.isDptHead === true || this.currentProfile.role === 'Faculty' || this.currentProfile.role === 'DptCoor' || this.currentProfile.role === 'DptHead'));
 
       // Populate form fields
       document.getElementById('profile-email').textContent = this.currentProfile.email;
@@ -210,10 +210,20 @@ const Profile = {
         await UI.populateDropdown('profile-department', deptResult.data, this.currentProfile.department);
       }
 
+      const semesterGroup = document.getElementById('profile-semester-group') || document.getElementById('profile-semester')?.closest('.form-group');
+      const sectionGroup = document.getElementById('profile-section-group') || document.getElementById('profile-section')?.closest('.form-group');
+      const semesterSelect = document.getElementById('profile-semester');
+      const sectionSelect = document.getElementById('profile-section');
+
       if (isFaculty) {
-        // Faculty users: semester and section are readonly
-        await this.renderFacultyProfileUI();
+        // Faculty and DptCoor users: semester and section dropdowns are hidden
+        this.renderFacultyProfileUI();
       } else {
+        if (semesterGroup) semesterGroup.style.display = 'block';
+        if (sectionGroup) sectionGroup.style.display = 'block';
+        if (semesterSelect) semesterSelect.setAttribute('required', '');
+        if (sectionSelect) sectionSelect.setAttribute('required', '');
+
         // Regular users: load semester and section normally
         const semResult = await DB.getSemesters();
 
@@ -222,7 +232,6 @@ const Profile = {
         }
 
         // If user is alumni / special, make semester dropdown disabled/readonly so it cannot be changed further
-        const semesterSelect = document.getElementById('profile-semester');
         if (semesterSelect && this.currentProfile.semester === 'alumni / special') {
           semesterSelect.disabled = true;
           semesterSelect.title = 'Alumni / Special semester status cannot be changed further.';
@@ -259,11 +268,13 @@ const Profile = {
     let effectiveRole = 'Student';
     if (typeof App !== 'undefined') {
       if (App.isAdmin) effectiveRole = 'Admin';
+      else if (App.isDptCoor) effectiveRole = 'DptCoor';
       else if (App.isFaculty) effectiveRole = 'Faculty';
       else if (App.isCR) effectiveRole = 'CR';
       else if (App.isBlocked) effectiveRole = 'Blocked';
     } else if (this.currentProfile) {
       if (this.currentProfile.isAdmin) effectiveRole = 'Admin';
+      else if (this.currentProfile.isDptCoor || this.currentProfile.role === 'DptCoor' || this.currentProfile.isDptHead || this.currentProfile.role === 'DptHead') effectiveRole = 'DptCoor';
       else if (this.currentProfile.isFaculty || this.currentProfile.role === 'Faculty') effectiveRole = 'Faculty';
       else if (this.currentProfile.isCR || this.currentProfile.role === 'CR') effectiveRole = 'CR';
       else if (this.currentProfile.isBlocked) effectiveRole = 'Blocked';
@@ -273,6 +284,21 @@ const Profile = {
     roleBadge.textContent = effectiveRole;
     roleBadge.className = `role-badge ${effectiveRole.toLowerCase()}`;
 
+    // Toggle faculty profile UI if previewing or real faculty / DptCoor
+    const isEffectiveFaculty = effectiveRole === 'Faculty' || effectiveRole === 'DptCoor';
+    if (isEffectiveFaculty) {
+      this.renderFacultyProfileUI();
+    } else {
+      const semesterGroup = document.getElementById('profile-semester-group') || document.getElementById('profile-semester')?.closest('.form-group');
+      const sectionGroup = document.getElementById('profile-section-group') || document.getElementById('profile-section')?.closest('.form-group');
+      const semesterSelect = document.getElementById('profile-semester');
+      const sectionSelect = document.getElementById('profile-section');
+      if (semesterGroup) semesterGroup.style.display = 'block';
+      if (sectionGroup) sectionGroup.style.display = 'block';
+      if (semesterSelect) semesterSelect.setAttribute('required', '');
+      if (sectionSelect) sectionSelect.setAttribute('required', '');
+    }
+
     // Is preview mode active?
     const isPreview = typeof App !== 'undefined' && !!(App.realRoles?.isAdmin && App.previewRole);
     if (previewTag) {
@@ -280,6 +306,16 @@ const Profile = {
     }
     if (exitProfileBtn) {
       exitProfileBtn.style.display = isPreview ? 'inline-flex' : 'none';
+    }
+
+    // Unapproved state tag for faculty accounts
+    const approvalTag = document.getElementById('profile-role-approval-tag');
+    const isUnapprovedFaculty = this.currentProfile && 
+      (this.currentProfile.isFaculty || this.currentProfile.role === 'Faculty') && 
+      (this.currentProfile.isApproved === false || this.currentProfile.approved === false);
+
+    if (approvalTag) {
+      approvalTag.style.display = (isUnapprovedFaculty && !isPreview) ? 'inline-block' : 'none';
     }
 
     // Is the real user an Admin? If so, show the "Preview as" dropdown
@@ -296,28 +332,17 @@ const Profile = {
     }
   },
 
-  // Render Faculty-specific profile UI with readonly semester/section
-  async renderFacultyProfileUI() {
+  // Render Faculty-specific profile UI by hiding semester and section dropdowns
+  renderFacultyProfileUI() {
+    const semesterGroup = document.getElementById('profile-semester-group') || document.getElementById('profile-semester')?.closest('.form-group');
+    const sectionGroup = document.getElementById('profile-section-group') || document.getElementById('profile-section')?.closest('.form-group');
     const semesterSelect = document.getElementById('profile-semester');
     const sectionSelect = document.getElementById('profile-section');
 
-    if (semesterSelect) {
-      // Replace semester dropdown with readonly text
-      const semesterContainer = semesterSelect.parentElement;
-      semesterContainer.innerHTML = `
-        <label for="profile-semester">Semester</label>
-        <input type="text" id="profile-semester" value="Not Available For Faculty" readonly class="readonly-field" />
-      `;
-    }
-
-    if (sectionSelect) {
-      // Replace section dropdown with readonly text
-      const sectionContainer = sectionSelect.parentElement;
-      sectionContainer.innerHTML = `
-        <label for="profile-section">Section</label>
-        <input type="text" id="profile-section" value="Not Available For Faculty" readonly class="readonly-field" />
-      `;
-    }
+    if (semesterGroup) semesterGroup.style.display = 'none';
+    if (sectionGroup) sectionGroup.style.display = 'none';
+    if (semesterSelect) semesterSelect.removeAttribute('required');
+    if (sectionSelect) sectionSelect.removeAttribute('required');
   },
 
   async updateSectionDropdown(elementId, department, semester, selectedValue = null) {
@@ -369,14 +394,14 @@ const Profile = {
         return;
       }
 
-      // Check if user is Faculty
-      const isFaculty = this.currentProfile && (this.currentProfile.isFaculty === true || this.currentProfile.role === 'Faculty');
+      // Check if user is Faculty or DptCoor
+      const isFaculty = (typeof App !== 'undefined' && (App.isFaculty || App.isDptCoor)) || (this.currentProfile && (this.currentProfile.isFaculty === true || this.currentProfile.isDptCoor === true || this.currentProfile.isDptHead === true || this.currentProfile.role === 'Faculty' || this.currentProfile.role === 'DptCoor' || this.currentProfile.role === 'DptHead'));
 
       const department = document.getElementById('profile-department').value;
       let semester, section;
 
       if (isFaculty) {
-        // Faculty users: skip semester/section validation
+        // Faculty / DptCoor users: skip semester/section validation
         semester = null;
         section = null;
       } else {

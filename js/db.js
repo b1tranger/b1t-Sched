@@ -6,16 +6,23 @@ const DB = {
   // User operations
   async createUserProfile(userId, data) {
     try {
-      await db.collection('users').doc(userId).set({
+      const profileData = {
         email: data.email,
         studentId: data.studentId,
         department: data.department,
-        semester: data.semester,
-        section: data.section,
+        semester: data.semester || null,
+        section: data.section || null,
         lastSemesterCycle: typeof Utils !== 'undefined' ? Utils.getSemesterCycle() : '2026-07',
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
+      };
+
+      if (data.isFaculty !== undefined) profileData.isFaculty = data.isFaculty;
+      if (data.role !== undefined) profileData.role = data.role;
+      if (data.isApproved !== undefined) profileData.isApproved = data.isApproved;
+      if (data.facultyInitial !== undefined) profileData.facultyInitial = data.facultyInitial;
+
+      await db.collection('users').doc(userId).set(profileData);
       console.log('User profile created');
       return { success: true };
     } catch (error) {
@@ -178,6 +185,7 @@ const DB = {
       const rolesResult = await this.getUserRoles(userId);
       let addedByRole = 'Student';
       if (rolesResult.isAdmin) addedByRole = 'Admin';
+      else if (rolesResult.isDptCoor) addedByRole = 'DptCoor';
       else if (rolesResult.isFaculty) addedByRole = 'Faculty';
       else if (rolesResult.isCR) addedByRole = 'CR';
 
@@ -611,22 +619,25 @@ const DB = {
       const doc = await db.collection('users').doc(userId).get();
       if (doc.exists) {
         const data = doc.data();
+        const isDptCoor = data.isDptCoor === true || data.role === 'DptCoor' || data.isDptHead === true || data.role === 'DptHead';
+        const isFaculty = data.isFaculty === true || data.role === 'Faculty' || isDptCoor;
         return {
           success: true,
-          isAdmin: data.isAdmin === true,
-          isCR: data.isCR === true,
-          isFaculty: data.isFaculty === true,
-          isBlocked: data.isBlocked === true
+          isAdmin: data.isAdmin === true || data.role === 'Admin',
+          isCR: data.isCR === true || data.role === 'CR',
+          isFaculty: isFaculty,
+          isDptCoor: isDptCoor,
+          isBlocked: data.isBlocked === true || data.role === 'Blocked'
         };
       }
-      return { success: true, isAdmin: false, isCR: false, isFaculty: false, isBlocked: false };
+      return { success: true, isAdmin: false, isCR: false, isFaculty: false, isDptCoor: false, isBlocked: false };
     } catch (error) {
       console.error('Error checking user roles:', error);
-      return { success: false, isAdmin: false, isCR: false, isFaculty: false, isBlocked: false, error: error.message };
+      return { success: false, isAdmin: false, isCR: false, isFaculty: false, isDptCoor: false, isBlocked: false, error: error.message };
     }
   },
 
-  // Get user role (returns "Admin", "Faculty", "CR", or "Student")
+  // Get user role (returns "Admin", "DptCoor", "Faculty", "CR", or "Student")
   async getUserRole(userId) {
     try {
       const doc = await db.collection('users').doc(userId).get();
@@ -634,10 +645,12 @@ const DB = {
         const data = doc.data();
         // Check role field first (new system)
         if (data.role) {
+          if (data.role === 'DptHead') return { success: true, role: 'DptCoor' };
           return { success: true, role: data.role };
         }
         // Fall back to legacy boolean fields
         if (data.isAdmin === true) return { success: true, role: 'Admin' };
+        if (data.isDptCoor === true || data.isDptHead === true) return { success: true, role: 'DptCoor' };
         if (data.isFaculty === true) return { success: true, role: 'Faculty' };
         if (data.isCR === true) return { success: true, role: 'CR' };
         return { success: true, role: 'Student' };
@@ -872,6 +885,39 @@ const DB = {
         [role]: value,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
+
+      // Handle synchronized role fields
+      if (role === 'isDptCoor') {
+        if (value) {
+          updateData.isFaculty = true;
+          updateData.role = 'DptCoor';
+          updateData.semester = null;
+          updateData.section = null;
+        } else {
+          updateData.isDptCoor = false;
+          updateData.isDptHead = false;
+          updateData.role = 'Faculty';
+        }
+      } else if (role === 'isFaculty') {
+        if (value) {
+          updateData.role = 'Faculty';
+          updateData.semester = null;
+          updateData.section = null;
+        } else {
+          updateData.isFaculty = false;
+          updateData.isDptCoor = false;
+          updateData.isDptHead = false;
+          updateData.role = 'Student';
+        }
+      } else if (role === 'isCR') {
+        if (value) {
+          updateData.role = 'CR';
+        } else {
+          updateData.isCR = false;
+          updateData.role = 'Student';
+        }
+      }
+
       await db.collection('users').doc(userId).update(updateData);
       console.log(`User ${userId} role ${role} set to ${value}`);
       return { success: true };
@@ -957,6 +1003,82 @@ const DB = {
       return { success: true };
     } catch (error) {
       console.error('Error recording bulk semester update:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Get pending unapproved faculty users (for Admin / DptCoor)
+  async getPendingFacultyApprovals(department = null) {
+    try {
+      // Direct query
+      let query = db.collection('users').where('isFaculty', '==', true).where('isApproved', '==', false);
+      if (department && department !== 'All') {
+        query = query.where('department', '==', department);
+      }
+      const snapshot = await query.get();
+      const pending = [];
+      snapshot.forEach(doc => {
+        pending.push({ id: doc.id, ...doc.data() });
+      });
+      return { success: true, data: pending };
+    } catch (error) {
+      console.warn('Direct pending faculty query failed, falling back to memory filtering:', error);
+      try {
+        const allSnapshot = await db.collection('users').get();
+        const pending = [];
+        allSnapshot.forEach(doc => {
+          const data = doc.data();
+          const isFac = data.isFaculty === true || data.role === 'Faculty';
+          const isUnapproved = data.isApproved === false || data.approved === false;
+          if (isFac && isUnapproved) {
+            if (!department || department === 'All' || data.department === department) {
+              pending.push({ id: doc.id, ...data });
+            }
+          }
+        });
+        return { success: true, data: pending };
+      } catch (err2) {
+        console.error('Error getting pending faculty approvals:', err2);
+        return { success: false, error: err2.message };
+      }
+    }
+  },
+
+  // Approve a faculty user account (admin / dptcoor)
+  async approveFacultyUser(userId, approverId) {
+    try {
+      await db.collection('users').doc(userId).update({
+        isApproved: true,
+        role: 'Faculty',
+        isFaculty: true,
+        approvedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        approvedBy: approverId || 'system',
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      console.log(`Faculty user ${userId} approved by ${approverId}`);
+      return { success: true };
+    } catch (error) {
+      console.error('Error approving faculty user:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Reject / Decline a faculty user account
+  async rejectFacultyUser(userId, approverId) {
+    try {
+      // Revert to Student or unapproved state
+      await db.collection('users').doc(userId).update({
+        isFaculty: false,
+        role: 'Student',
+        isApproved: true,
+        rejectedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        rejectedBy: approverId || 'system',
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      console.log(`Faculty user ${userId} rejected by ${approverId}`);
+      return { success: true };
+    } catch (error) {
+      console.error('Error rejecting faculty user:', error);
       return { success: false, error: error.message };
     }
   }

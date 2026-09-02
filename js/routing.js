@@ -65,9 +65,11 @@ const Router = {
         userDetailsCard.style.display = 'flex';
       }
 
-      // Show/hide Notes button based on view (only show on dashboard)
+      // Show/hide Notes & Approval buttons based on view (only show on dashboard)
       const noteToggleMobile = document.getElementById('note-toggle');
       const noteButtonDesktop = document.getElementById('note-button-desktop');
+      const approvalToggleMobile = document.getElementById('approval-toggle');
+      const approvalButtonDesktop = document.getElementById('approval-button-desktop');
       
       if (viewName === 'dashboard') {
         // Show Notes button only on dashboard
@@ -77,13 +79,25 @@ const Router = {
         if (noteButtonDesktop && noteButtonDesktop.style.display !== 'none') {
           noteButtonDesktop.style.display = 'flex';
         }
+        if (typeof ApprovalManager !== 'undefined' && ApprovalManager.updateVisibility) {
+          const profile = typeof App !== 'undefined' ? App.userProfile : null;
+          const role = typeof App !== 'undefined' ? (App.previewRole || (App.isAdmin ? 'Admin' : (App.isDptCoor ? 'DptCoor' : (App.isFaculty ? 'Faculty' : (App.isCR ? 'CR' : 'Student'))))) : 'Student';
+          const dept = profile ? profile.department : null;
+          ApprovalManager.updateVisibility(role, dept, typeof App !== 'undefined' && App.isCR, typeof App !== 'undefined' && App.isDptCoor, typeof App !== 'undefined' && App.isAdmin);
+        }
       } else {
-        // Hide Notes button on all other views
+        // Hide Notes & Approval buttons on all other views
         if (noteToggleMobile) {
           noteToggleMobile.style.display = 'none';
         }
         if (noteButtonDesktop) {
           noteButtonDesktop.style.display = 'none';
+        }
+        if (approvalToggleMobile) {
+          approvalToggleMobile.style.display = 'none';
+        }
+        if (approvalButtonDesktop) {
+          approvalButtonDesktop.style.display = 'none';
         }
       }
 

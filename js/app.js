@@ -151,9 +151,10 @@ const App = {
   isAdmin: false,
   isCR: false,
   isFaculty: false,
+  isDptCoor: false,
   isBlocked: false,
-  realRoles: null, // Stores actual authenticated DB roles { isAdmin, isCR, isFaculty, isBlocked }
-  previewRole: null, // Stores active preview role string ('Faculty', 'CR', 'Student', 'Blocked') or null
+  realRoles: null, // Stores actual authenticated DB roles { isAdmin, isCR, isFaculty, isDptCoor, isBlocked }
+  previewRole: null, // Stores active preview role string ('Faculty', 'DptCoor', 'CR', 'Student', 'Blocked') or null
   filterPopup: null,
   allUsers: [],
   isSigningUp: false, // Flag to prevent auth state handling during signup
@@ -325,6 +326,14 @@ const App = {
         await this.handleSetDetails();
       });
 
+      // Listen for faculty account toggle
+      const facultyToggle = document.getElementById('set-is-faculty-checkbox');
+      if (facultyToggle) {
+        facultyToggle.addEventListener('change', () => {
+          this.toggleFacultySetDetails(facultyToggle.checked);
+        });
+      }
+
       // Listen for department/semester changes to update sections
       const deptSelect = document.getElementById('set-department');
       const semSelect = document.getElementById('set-semester');
@@ -364,10 +373,52 @@ const App = {
       });
     }
 
-    // Exit Admin Preview button on global banner
+    // Toggle/Expand Admin Preview banner on clicking the eye icon / toggle button
+    const previewToggleBtn = document.getElementById('admin-preview-toggle-btn');
+    if (previewToggleBtn) {
+      previewToggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (typeof UI !== 'undefined' && typeof UI.togglePreviewBanner === 'function') {
+          UI.togglePreviewBanner();
+        }
+      });
+    }
+
+    // Clicking anywhere on the banner when minimized expands it
+    const previewBanner = document.getElementById('admin-preview-banner');
+    if (previewBanner) {
+      previewBanner.addEventListener('click', () => {
+        if (previewBanner.classList.contains('is-minimized')) {
+          if (typeof UI !== 'undefined' && typeof UI.minimizePreviewBanner === 'function') {
+            UI.minimizePreviewBanner(false);
+          }
+        }
+      });
+      // Pause auto-collapse timer on hover so user can interact
+      previewBanner.addEventListener('mouseenter', () => {
+        if (typeof UI !== 'undefined' && UI.previewCollapseTimer) {
+          clearTimeout(UI.previewCollapseTimer);
+          UI.previewCollapseTimer = null;
+        }
+      });
+      // Restart 3-second auto-minimize timer on mouseleave if expanded
+      previewBanner.addEventListener('mouseleave', () => {
+        if (!previewBanner.classList.contains('is-minimized')) {
+          if (typeof UI !== 'undefined') {
+            if (UI.previewCollapseTimer) clearTimeout(UI.previewCollapseTimer);
+            UI.previewCollapseTimer = setTimeout(() => {
+              UI.minimizePreviewBanner(true);
+            }, 3000);
+          }
+        }
+      });
+    }
+
+    // Exit Admin Preview button on global banner (only clickable when expanded)
     const exitPreviewBannerBtn = document.getElementById('exit-preview-banner-btn');
     if (exitPreviewBannerBtn) {
-      exitPreviewBannerBtn.addEventListener('click', () => {
+      exitPreviewBannerBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
         this.exitPreview();
       });
     }
@@ -625,6 +676,17 @@ const App = {
     // Clear form first
     document.getElementById('add-task-form').reset();
 
+    // Faculty customization: Course / Designation label and placeholder
+    const courseLabel = document.querySelector('label[for="task-course"]');
+    const courseInput = document.getElementById('task-course');
+    if (this.isFaculty) {
+      if (courseLabel) courseLabel.textContent = 'Course / Designation';
+      if (courseInput) courseInput.placeholder = 'Task for a Faculty / Course';
+    } else {
+      if (courseLabel) courseLabel.textContent = 'Course';
+      if (courseInput) courseInput.placeholder = 'Course Title or Code';
+    }
+
     // Set minimum date to now
     const deadlineInput = document.getElementById('task-deadline');
     const deadlineNone = document.getElementById('deadline-none');
@@ -764,6 +826,17 @@ const App = {
     if (!canEdit) {
       alert('You do not have permission to edit this task');
       return;
+    }
+
+    // Faculty customization: Course / Designation label and placeholder
+    const editCourseLabel = document.querySelector('label[for="edit-task-course"]');
+    const editCourseInput = document.getElementById('edit-task-course');
+    if (this.isFaculty) {
+      if (editCourseLabel) editCourseLabel.textContent = 'Course / Designation';
+      if (editCourseInput) editCourseInput.placeholder = 'Task for a Faculty / Course';
+    } else {
+      if (editCourseLabel) editCourseLabel.textContent = 'Course';
+      if (editCourseInput) editCourseInput.placeholder = 'e.g., CSE301';
     }
 
     // Populate the form
@@ -1198,12 +1271,14 @@ const App = {
         this.isAdmin = rolesResult.isAdmin;
         this.isCR = rolesResult.isCR;
         this.isFaculty = rolesResult.isFaculty;
+        this.isDptCoor = rolesResult.isDptCoor || false;
         this.isBlocked = rolesResult.isBlocked;
       } else {
         console.log('[App] Using cached roles from localStorage (offline fallback)');
         this.isAdmin = Utils.storage.get('isAdmin') || false;
         this.isCR = Utils.storage.get('isCR') || false;
         this.isFaculty = Utils.storage.get('isFaculty') || false;
+        this.isDptCoor = Utils.storage.get('isDptCoor') || false;
         this.isBlocked = Utils.storage.get('isBlocked') || false;
       }
 
@@ -1212,6 +1287,7 @@ const App = {
         isAdmin: this.isAdmin,
         isCR: this.isCR,
         isFaculty: this.isFaculty,
+        isDptCoor: this.isDptCoor,
         isBlocked: this.isBlocked
       };
 
@@ -1237,6 +1313,12 @@ const App = {
       // Force UI update for section visibility (Unit Note button)
       // This ensures buttons appear immediately after login/profile load
       UI.updateSectionVisibility(Router.getCurrentRoute(), true);
+
+      // Update Approval Manager visibility
+      if (typeof ApprovalManager !== 'undefined' && ApprovalManager.updateVisibility) {
+        const activeRole = this.isAdmin ? 'Admin' : (this.isDptCoor ? 'DptCoor' : (this.isFaculty ? 'Faculty' : (this.isCR ? 'CR' : 'Student')));
+        ApprovalManager.updateVisibility(activeRole, this.userProfile.department, this.isCR, this.isDptCoor, this.isAdmin);
+      }
 
       // Initialize Note Manager with user ID
       if (typeof NoteManager !== 'undefined') {
@@ -1367,6 +1449,7 @@ const App = {
     this.isAdmin = false;
     this.isCR = false;
     this.isFaculty = false;
+    this.isDptCoor = false;
     this.isBlocked = false;
     this.realRoles = null;
     this.previewRole = null;
@@ -1403,6 +1486,7 @@ const App = {
       this.isAdmin = true;
       this.isCR = this.realRoles.isCR || false;
       this.isFaculty = this.realRoles.isFaculty || false;
+      this.isDptCoor = this.realRoles.isDptCoor || false;
       this.isBlocked = this.realRoles.isBlocked || false;
       UI.updatePreviewBanner(false);
     } else {
@@ -1413,21 +1497,31 @@ const App = {
         this.isAdmin = false;
         this.isCR = false;
         this.isFaculty = true;
+        this.isDptCoor = false;
+        this.isBlocked = false;
+      } else if (role === 'DptCoor' || role === 'DptHead') {
+        this.isAdmin = false;
+        this.isCR = false;
+        this.isFaculty = true;
+        this.isDptCoor = true;
         this.isBlocked = false;
       } else if (role === 'CR') {
         this.isAdmin = false;
         this.isCR = true;
         this.isFaculty = false;
+        this.isDptCoor = false;
         this.isBlocked = false;
       } else if (role === 'Student') {
         this.isAdmin = false;
         this.isCR = false;
         this.isFaculty = false;
+        this.isDptCoor = false;
         this.isBlocked = false;
       } else if (role === 'Blocked') {
         this.isAdmin = false;
         this.isCR = false;
         this.isFaculty = false;
+        this.isDptCoor = false;
         this.isBlocked = true;
       }
       UI.updatePreviewBanner(true, role);
@@ -1437,6 +1531,23 @@ const App = {
     UI.toggleAdminControls(this.isAdmin, this.isCR, this.isFaculty);
     UI.toggleBlockedUserMode(this.isBlocked);
     UI.updateSectionVisibility(Router.getCurrentRoute(), true);
+
+    // Update Approval Manager visibility for preview
+    if (typeof ApprovalManager !== 'undefined' && ApprovalManager.updateVisibility) {
+      const activeRole = this.isAdmin ? 'Admin' : (this.isDptCoor ? 'DptCoor' : (this.isFaculty ? 'Faculty' : (this.isCR ? 'CR' : 'Student')));
+      const dept = this.userProfile ? this.userProfile.department : 'CSE';
+      ApprovalManager.updateVisibility(activeRole, dept, this.isCR, this.isDptCoor, this.isAdmin);
+    }
+
+    // Update Notice modal titles for faculty/DptCoor vs CR/Student
+    const isFacultyOrDptCoor = this.isFaculty || this.isDptCoor;
+    if (typeof NoticeViewer !== 'undefined' && typeof NoticeViewer.updateNoticeTitles === 'function') {
+      NoticeViewer.updateNoticeTitles(isFacultyOrDptCoor);
+    }
+    if (typeof CRNoticeViewer !== 'undefined' && typeof CRNoticeViewer.updateNoticeTitles === 'function') {
+      CRNoticeViewer.updateNoticeTitles(isFacultyOrDptCoor);
+      CRNoticeViewer.checkCROrAdmin();
+    }
 
     // Refresh profile UI if loaded
     if (typeof Profile !== 'undefined' && typeof Profile.updateRoleDisplay === 'function') {
@@ -1479,19 +1590,58 @@ const App = {
     }
   },
 
+  toggleFacultySetDetails(isFaculty) {
+    const idLabel = document.getElementById('set-id-label');
+    const idInput = document.getElementById('set-student-id');
+    const idHint = document.getElementById('set-id-hint');
+    const semGroup = document.getElementById('set-semester-group');
+    const secGroup = document.getElementById('set-section-group');
+    const semSelect = document.getElementById('set-semester');
+    const secSelect = document.getElementById('set-section');
+
+    if (isFaculty) {
+      if (idLabel) idLabel.textContent = 'Faculty Initial';
+      if (idInput) {
+        idInput.placeholder = 'Enter your faculty initial (e.g. ABC)';
+        idInput.removeAttribute('pattern');
+        idInput.removeAttribute('minlength');
+        idInput.setAttribute('maxlength', '20');
+      }
+      if (idHint) idHint.textContent = 'Enter your official faculty initial / designation';
+      if (semGroup) semGroup.style.display = 'none';
+      if (secGroup) secGroup.style.display = 'none';
+      if (semSelect) semSelect.removeAttribute('required');
+      if (secSelect) secSelect.removeAttribute('required');
+    } else {
+      if (idLabel) idLabel.textContent = 'Student ID';
+      if (idInput) {
+        idInput.placeholder = 'Enter your 10-16 digit student ID';
+        idInput.setAttribute('pattern', '[0-9]{10,16}');
+        idInput.setAttribute('minlength', '10');
+        idInput.setAttribute('maxlength', '16');
+      }
+      if (idHint) idHint.textContent = 'Your student ID must be 10-16 digits';
+      if (semGroup) semGroup.style.display = 'block';
+      if (secGroup) secGroup.style.display = 'block';
+      if (semSelect) semSelect.setAttribute('required', 'required');
+      if (secSelect) secSelect.setAttribute('required', 'required');
+    }
+  },
+
   async handleSetDetails() {
+    const isFacultySignup = document.getElementById('set-is-faculty-checkbox')?.checked || false;
     const studentId = document.getElementById('set-student-id').value.trim();
     const department = document.getElementById('set-department').value;
-    const semester = document.getElementById('set-semester').value;
-    const section = document.getElementById('set-section').value;
+    const semester = isFacultySignup ? null : document.getElementById('set-semester').value;
+    const section = isFacultySignup ? null : document.getElementById('set-section').value;
 
-    if (!studentId || !department || !semester || !section) {
+    if (!studentId || !department || (!isFacultySignup && (!semester || !section))) {
       UI.showMessage('set-details-message', 'Please fill in all fields', 'error');
       return;
     }
 
-    // Validate student ID (10-16 digits)
-    if (!/^[0-9]{10,16}$/.test(studentId)) {
+    // Validate student ID only for regular students
+    if (!isFacultySignup && !/^[0-9]{10,16}$/.test(studentId)) {
       UI.showMessage('set-details-message', 'Student ID must be 10-16 digits', 'error');
       return;
     }
@@ -1501,13 +1651,19 @@ const App = {
     const userId = Auth.getUserId();
     const email = Auth.getUserEmail();
 
-    const result = await DB.createUserProfile(userId, {
+    const profilePayload = {
       email,
       studentId,
       department,
       semester,
-      section
-    });
+      section,
+      isFaculty: isFacultySignup,
+      role: isFacultySignup ? 'Faculty' : 'Student',
+      isApproved: isFacultySignup ? false : true,
+      facultyInitial: isFacultySignup ? studentId : null
+    };
+
+    const result = await DB.createUserProfile(userId, profilePayload);
 
     if (result.success) {
       UI.showMessage('set-details-message', 'Details saved! Loading dashboard...', 'success');
@@ -2221,38 +2377,9 @@ const App = {
 
   async setupFacultyDepartmentFilter() {
     const filterContainer = document.getElementById('faculty-department-filter');
-    const filterSelect = document.getElementById('faculty-dept-filter');
-
-    if (!filterContainer || !filterSelect) return;
-
-    // Show the filter for Faculty users
-    filterContainer.style.display = 'flex';
-
-    // Populate department options from metadata + current tasks
-    const deptResult = await DB.getDepartments();
-    const departments = new Set(deptResult.success ? deptResult.data : []);
-
-    this.currentTasks.forEach(task => {
-      if (task.addedByRole === 'Faculty' && task.department) {
-        departments.add(task.department);
-      }
-    });
-
-    // Clear existing options except "All Departments"
-    filterSelect.innerHTML = '<option value="all">All Departments</option>';
-
-    // Add department options
-    Array.from(departments).sort().forEach(dept => {
-      const option = document.createElement('option');
-      option.value = dept;
-      option.textContent = dept;
-      filterSelect.appendChild(option);
-    });
-
-    // Add change event listener
-    filterSelect.onchange = (e) => {
-      this.filterTasksByDepartment(e.target.value);
-    };
+    if (filterContainer) {
+      filterContainer.style.display = 'none';
+    }
   },
 
   filterTasksByDepartment(department) {
@@ -2798,6 +2925,12 @@ const App = {
           const currentValue = e.target.closest('.toggle-faculty-btn').dataset.currentValue === 'true';
           await this.toggleUserRole(userId, 'isFaculty', !currentValue);
         }
+        // Toggle DptCoor button (Department Coordinator for faculty)
+        if (e.target.closest('.toggle-dptcoor-btn')) {
+          const userId = e.target.closest('.toggle-dptcoor-btn').dataset.userId;
+          const currentValue = e.target.closest('.toggle-dptcoor-btn').dataset.currentValue === 'true';
+          await this.toggleUserRole(userId, 'isDptCoor', !currentValue);
+        }
         // Toggle blocked button
         if (e.target.closest('.toggle-blocked-btn')) {
           const userId = e.target.closest('.toggle-blocked-btn').dataset.userId;
@@ -2912,10 +3045,15 @@ const App = {
     }
 
     container.innerHTML = users.map(user => {
+      const isDptCoor = user.isDptCoor === true || user.role === 'DptCoor' || user.isDptHead === true || user.role === 'DptHead';
+      const isFaculty = user.isFaculty === true || user.role === 'Faculty' || isDptCoor;
+      const isCR = user.isCR === true || user.role === 'CR';
+
       const roles = [];
       if (user.isAdmin) roles.push('<span class="role-badge admin">Admin</span>');
-      if (user.isCR) roles.push('<span class="role-badge cr">CR</span>');
-      if (user.isFaculty) roles.push('<span class="role-badge faculty">Faculty</span>');
+      if (isDptCoor) roles.push('<span class="role-badge dptcoor">DptCoor</span>');
+      else if (isFaculty) roles.push('<span class="role-badge faculty">Faculty</span>');
+      if (isCR) roles.push('<span class="role-badge cr">CR</span>');
       if (user.isBlocked) roles.push('<span class="role-badge blocked">Blocked</span>');
 
       return `
@@ -2926,7 +3064,7 @@ const App = {
             </div>
             <div class="user-basic-info">
               <p class="user-card-email">${user.email || 'No email'}</p>
-              <p class="user-card-details">${user.department || 'N/A'} • ${user.semester || 'N/A'} • ${user.section || 'N/A'}</p>
+              <p class="user-card-details">${user.department || 'N/A'}${isFaculty ? '' : ` • ${user.semester || 'N/A'} • ${user.section || 'N/A'}`}</p>
               <p class="user-card-student-id">ID: ${user.studentId || 'Not set'}</p>
             </div>
             <div class="user-roles">
@@ -2947,18 +3085,26 @@ const App = {
                       title="Delete user account">
                 <i class="fas fa-trash-alt"></i> Delete
               </button>
-              <button class="btn btn-sm btn-action toggle-cr-btn ${user.isCR ? 'active' : ''}" 
+              <button class="btn btn-sm btn-action toggle-cr-btn ${isCR ? 'active' : ''}" 
                       data-user-id="${user.id}" 
-                      data-current-value="${user.isCR || false}" 
-                      title="${user.isCR ? 'Remove CR role' : 'Make CR'}">
-                <i class="fas fa-user-graduate"></i> ${user.isCR ? 'Remove CR' : 'Make CR'}
+                      data-current-value="${isCR}" 
+                      title="${isCR ? 'Remove CR role' : 'Make CR'}">
+                <i class="fas fa-user-graduate"></i> ${isCR ? 'Remove CR' : 'Make CR'}
               </button>
-              <button class="btn btn-sm btn-action toggle-faculty-btn ${user.isFaculty ? 'active' : ''}" 
+              <button class="btn btn-sm btn-action toggle-faculty-btn ${isFaculty ? 'active' : ''}" 
                       data-user-id="${user.id}" 
-                      data-current-value="${user.isFaculty || false}" 
-                      title="${user.isFaculty ? 'Remove Faculty role' : 'Make Faculty'}">
-                <i class="fas fa-chalkboard-teacher"></i> ${user.isFaculty ? 'Remove Faculty' : 'Make Faculty'}
+                      data-current-value="${isFaculty}" 
+                      title="${isFaculty ? 'Remove Faculty role' : 'Make Faculty'}">
+                <i class="fas fa-chalkboard-teacher"></i> ${isFaculty ? 'Remove Faculty' : 'Make Faculty'}
               </button>
+              ${isFaculty ? `
+                <button class="btn btn-sm btn-action toggle-dptcoor-btn ${isDptCoor ? 'active' : ''}" 
+                        data-user-id="${user.id}" 
+                        data-current-value="${isDptCoor}" 
+                        title="${isDptCoor ? 'Remove DptCoor role' : 'Make DptCoor'}">
+                  <i class="fas fa-user-tie"></i> ${isDptCoor ? 'Remove DptCoor' : 'Make DptCoor'}
+                </button>
+              ` : ''}
               <button class="btn btn-sm btn-action toggle-blocked-btn ${user.isBlocked ? 'active danger' : ''}" 
                       data-user-id="${user.id}" 
                       data-current-value="${user.isBlocked || false}" 
@@ -3029,19 +3175,22 @@ const App = {
     if (role !== 'All') {
       switch (role) {
         case 'Admin':
-          filtered = filtered.filter(u => u.isAdmin === true);
+          filtered = filtered.filter(u => u.isAdmin === true || u.role === 'Admin');
           break;
-        case 'CR':
-          filtered = filtered.filter(u => u.isCR === true);
+        case 'DptCoor':
+          filtered = filtered.filter(u => u.isDptCoor === true || u.role === 'DptCoor' || u.isDptHead === true || u.role === 'DptHead');
           break;
         case 'Faculty':
-          filtered = filtered.filter(u => u.isFaculty === true);
+          filtered = filtered.filter(u => (u.isFaculty === true || u.role === 'Faculty') && !(u.isDptCoor === true || u.role === 'DptCoor' || u.isDptHead === true || u.role === 'DptHead'));
+          break;
+        case 'CR':
+          filtered = filtered.filter(u => u.isCR === true || u.role === 'CR');
           break;
         case 'Blocked':
-          filtered = filtered.filter(u => u.isBlocked === true);
+          filtered = filtered.filter(u => u.isBlocked === true || u.role === 'Blocked');
           break;
         case 'User':
-          filtered = filtered.filter(u => !u.isAdmin && !u.isCR && !u.isFaculty && !u.isBlocked);
+          filtered = filtered.filter(u => !u.isAdmin && !u.isCR && !u.isFaculty && !u.isDptCoor && !u.isBlocked);
           break;
       }
     }
@@ -3151,10 +3300,10 @@ const App = {
     const roleNames = {
       'isCR': 'CR',
       'isFaculty': 'Faculty',
+      'isDptCoor': 'Department Coordinator (DptCoor)',
       'isBlocked': value ? 'Block' : 'Unblock'
     };
 
-    const action = value ? 'add' : 'remove';
     const confirmed = confirm(`Are you sure you want to ${value ? 'assign' : 'remove'} ${roleNames[role]} ${value ? 'to' : 'from'} this user?`);
     if (!confirmed) return;
 
@@ -3164,6 +3313,24 @@ const App = {
       const userIndex = this.allUsers.findIndex(u => u.id === userId);
       if (userIndex !== -1) {
         this.allUsers[userIndex][role] = value;
+        if (role === 'isDptCoor') {
+          if (value) {
+            this.allUsers[userIndex].isFaculty = true;
+            this.allUsers[userIndex].role = 'DptCoor';
+            this.allUsers[userIndex].semester = null;
+            this.allUsers[userIndex].section = null;
+          } else {
+            this.allUsers[userIndex].isDptCoor = false;
+            this.allUsers[userIndex].role = 'Faculty';
+          }
+        } else if (role === 'isFaculty') {
+          if (!value) {
+            this.allUsers[userIndex].isDptCoor = false;
+            this.allUsers[userIndex].role = 'Student';
+          } else {
+            this.allUsers[userIndex].role = 'Faculty';
+          }
+        }
       }
       this.filterUsers(); // Re-render with current filters
     } else {

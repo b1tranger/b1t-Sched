@@ -9,6 +9,8 @@ const CRNoticeViewer = {
     unsubscribe: null,
     _isAdmin: false,
     _isCR: false,
+    _isFaculty: false,
+    _isDptCoor: false,
 
     init() {
         console.log('Initializing CR Notice Viewer...');
@@ -82,8 +84,12 @@ const CRNoticeViewer = {
             const roles = await DB.getUserRoles(user.uid);
             this._isAdmin = roles.isAdmin || false;
             this._isCR = roles.isCR || false;
+            this._isFaculty = roles.isFaculty || false;
+            this._isDptCoor = roles.isDptCoor || false;
 
-            if (this._isCR || this._isAdmin) {
+            // Notice creation/management is granted to CRs, Department Coordinators (DptCoor), and Admins
+            const canManageNotices = this._isCR || this._isAdmin || this._isDptCoor;
+            if (canManageNotices) {
                 this.showCROnlyElements();
             } else {
                 this.hideCROnlyElements();
@@ -93,7 +99,10 @@ const CRNoticeViewer = {
             this.hideCROnlyElements();
         }
 
-        // Start listening for notices regardless of role (everyone in section sees them)
+        const isFacultyOrDptCoor = this._isFaculty || this._isDptCoor || (typeof App !== 'undefined' && (App.isFaculty || App.isDptCoor));
+        this.updateNoticeTitles(isFacultyOrDptCoor);
+
+        // Start listening for notices regardless of role
         this.subscribeToNotices();
     },
 
@@ -116,10 +125,36 @@ const CRNoticeViewer = {
         const userDept = profile && profile.department;
         const userSem = profile && profile.semester;
         const userSec = profile && profile.section;
+        const isFacultyOrDptCoor = this._isFaculty || this._isDptCoor || (typeof App !== 'undefined' && (App.isFaculty || App.isDptCoor)) || (profile && (profile.isFaculty || profile.isDptCoor || profile.role === 'Faculty' || profile.role === 'DptCoor'));
 
-        if (!userDept || !userSem || !userSec) {
-            console.log('User profile incomplete, skipping CR notices');
+        if (!userDept || (!isFacultyOrDptCoor && (!userSem || !userSec))) {
+            console.log('User profile incomplete, skipping notices');
             this.renderProfileMissing();
+            return;
+        }
+
+        if (isFacultyOrDptCoor) {
+            console.log(`Subscribing to Department notices for ${userDept}`);
+            this.unsubscribe = db.collection('cr_notices')
+                .where('department', '==', userDept)
+                .limit(50)
+                .onSnapshot(snapshot => {
+                    const notices = [];
+                    snapshot.forEach(doc => {
+                        notices.push({ id: doc.id, ...doc.data() });
+                    });
+                    // Client-side sort by timestamp descending to avoid requiring composite indexes
+                    notices.sort((a, b) => {
+                        const tA = a.timestamp?.toMillis ? a.timestamp.toMillis() : (a.timestamp?.seconds ? a.timestamp.seconds * 1000 : (a.timestamp ? new Date(a.timestamp).getTime() : 0));
+                        const tB = b.timestamp?.toMillis ? b.timestamp.toMillis() : (b.timestamp?.seconds ? b.timestamp.seconds * 1000 : (b.timestamp ? new Date(b.timestamp).getTime() : 0));
+                        return tB - tA;
+                    });
+                    this.notices = notices;
+                    this.renderAllNotices();
+                }, error => {
+                    console.error("Error fetching Department notices:", error);
+                    this.renderError(error.message);
+                });
             return;
         }
 
@@ -128,8 +163,6 @@ const CRNoticeViewer = {
         console.log(`Subscribing to CR notices for ${userDept} ${userSem}-${sectionGroup} (from ${userSec})`);
 
         // Query: Department + Semester + Section Group
-        // Note: This requires a composite index in Firestore.
-        // If index is missing, it will throw an error with a link to create it.
         this.unsubscribe = db.collection('cr_notices')
             .where('department', '==', userDept)
             .where('semester', '==', userSem)
@@ -150,10 +183,12 @@ const CRNoticeViewer = {
     },
 
     renderProfileMissing() {
+        const isFacultyOrDptCoor = this._isFaculty || this._isDptCoor || (typeof App !== 'undefined' && (App.isFaculty || App.isDptCoor));
+        const noticeLabel = isFacultyOrDptCoor ? 'Department Notices' : 'Class Notices';
         const msg = `
             <div class="notice-empty-state">
                 <i class="fas fa-bullhorn" style="font-size: 2em; color: #ccc; margin-bottom: 10px;"></i>
-                <p style="color: #666;">No Class Notices yet</p>
+                <p style="color: #666;">No ${noticeLabel} yet</p>
             </div>
         `;
 
@@ -208,13 +243,14 @@ const CRNoticeViewer = {
 
     renderDesktopList() {
         const activeContainer = document.getElementById('cr-notice-list-desktop');
+        const isFacultyOrDptCoor = this._isFaculty || this._isDptCoor || (typeof App !== 'undefined' && (App.isFaculty || App.isDptCoor));
 
         if (activeContainer) {
             if (this.activeNotices.length === 0) {
                 activeContainer.innerHTML = `
                     <div class="notice-empty-state">
                         <i class="fas fa-clipboard"></i>
-                        <p>No active notices</p>
+                        <p>${isFacultyOrDptCoor ? 'No active department notices' : 'No active notices'}</p>
                     </div>
                 `;
             } else {
@@ -226,13 +262,14 @@ const CRNoticeViewer = {
 
     renderMobileList() {
         const activeContainer = document.getElementById('cr-notice-list-mobile');
+        const isFacultyOrDptCoor = this._isFaculty || this._isDptCoor || (typeof App !== 'undefined' && (App.isFaculty || App.isDptCoor));
 
         if (activeContainer) {
             if (this.activeNotices.length === 0) {
                 activeContainer.innerHTML = `
                     <div class="notice-empty-state">
                         <i class="fas fa-clipboard"></i>
-                        <p>No active notices</p>
+                        <p>${isFacultyOrDptCoor ? 'No active department notices' : 'No active notices'}</p>
                     </div>
                 `;
             } else {
@@ -245,12 +282,17 @@ const CRNoticeViewer = {
     renderOldNoticesList() {
         const oldContainer = document.getElementById('old-cr-notices-container');
         const noOldMsg = document.getElementById('no-old-cr-notices-message');
+        const isFacultyOrDptCoor = this._isFaculty || this._isDptCoor || (typeof App !== 'undefined' && (App.isFaculty || App.isDptCoor));
 
         if (!oldContainer) return;
 
         if (this.oldNotices.length === 0) {
             oldContainer.innerHTML = '';
-            if (noOldMsg) noOldMsg.style.display = 'block';
+            if (noOldMsg) {
+                const p = noOldMsg.querySelector('p');
+                if (p) p.textContent = isFacultyOrDptCoor ? 'No past department notices.' : 'No past notices.';
+                noOldMsg.style.display = 'block';
+            }
         } else {
             if (noOldMsg) noOldMsg.style.display = 'none';
             oldContainer.innerHTML = this.oldNotices.map(notice => this.createOldNoticeItem(notice)).join('');
@@ -289,8 +331,9 @@ const CRNoticeViewer = {
 
         const currentUid = firebase.auth().currentUser ? firebase.auth().currentUser.uid : null;
         const isOwner = currentUid && notice.createdBy === currentUid;
+        const canManageNotice = this._isAdmin || (notice.isDepartmentNotice ? this._isDptCoor : this._isCR);
 
-        // Edit: visible to owner (CR editing own) + Admins (can edit any)
+        // Edit: visible to owner + Admins
         const canEdit = isOwner || this._isAdmin;
         const editBtn = canEdit ? `
             <button class="btn-icon edit-notice-btn cr-only-notice" data-id="${notice.id}" title="Edit Notice" style="display: none;">
@@ -298,12 +341,13 @@ const CRNoticeViewer = {
             </button>
         ` : '';
 
-        // Delete: visible to all CRs + Admins
-        const deleteBtn = `
+        // Delete: visible to coordinators/CRs/Admins or owner
+        const canDelete = canManageNotice || isOwner;
+        const deleteBtn = canDelete ? `
             <button class="btn-icon delete-notice-btn cr-only-notice" data-id="${notice.id}" title="Delete Notice" style="display: none;">
                 <i class="fas fa-trash-alt"></i>
             </button>
-        `;
+        ` : '';
 
         // "Added by" info
         const addedBy = notice.createdByEmail ? notice.createdByEmail.split('@')[0] : 'Unknown';
@@ -475,18 +519,31 @@ const CRNoticeViewer = {
             return;
         }
 
-        // Read dept/sem/sec from stored user profile (same source as Events flow)
+        // Check permissions: only CR (for section notices), DptCoor (for dept notices), and Admin can post
+        if (!this._isAdmin && !this._isCR && !this._isDptCoor) {
+            alert('You do not have permission to post notices. Class Representatives can post Class Notices, and Department Coordinators (DptCoor) or Admins can post Department Notices.');
+            return;
+        }
+
+        // Read dept/sem/sec from stored user profile
         const profile = Utils.storage.get('userProfile');
         const targetDept = profile && profile.department;
         const targetSem = profile && profile.semester;
         const targetSecRaw = profile && profile.section;
-        // Store section group (B1/B2 → B) so both sub-sections see the notice
-        const targetSec = Utils.getSectionGroup(targetSecRaw);
+        const isFacultyOrDptCoor = this._isFaculty || this._isDptCoor || (typeof App !== 'undefined' && (App.isFaculty || App.isDptCoor)) || (profile && (profile.isFaculty || profile.isDptCoor || profile.role === 'Faculty' || profile.role === 'DptCoor'));
 
-        if (!targetDept || !targetSem || !targetSec) {
+        if (!targetDept) {
+            alert('Your profile is incomplete. Please set your Department in Profile Settings first.');
+            return;
+        }
+
+        if (!isFacultyOrDptCoor && (!targetSem || !targetSecRaw)) {
             alert('Your profile is incomplete. Please set your Department, Semester, and Section in Profile Settings first.');
             return;
         }
+
+        // Store section group (B1/B2 → B) for student/CR notices
+        const targetSec = isFacultyOrDptCoor ? null : Utils.getSectionGroup(targetSecRaw);
 
         try {
             const btn = document.querySelector('#add-cr-notice-form button[type="submit"]');
@@ -494,13 +551,21 @@ const CRNoticeViewer = {
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
 
+            let addedByRole = 'Student';
+            if (this._isAdmin) addedByRole = 'Admin';
+            else if (this._isDptCoor) addedByRole = 'DptCoor';
+            else if (this._isFaculty) addedByRole = 'Faculty';
+            else if (this._isCR) addedByRole = 'CR';
+
             const noticeData = {
                 title,
                 description,
                 priority,
                 department: targetDept,
-                semester: targetSem,
-                section: targetSec,
+                semester: isFacultyOrDptCoor ? null : targetSem,
+                section: isFacultyOrDptCoor ? null : targetSec,
+                isDepartmentNotice: isFacultyOrDptCoor,
+                addedByRole,
                 createdBy: user.uid,
                 createdByEmail: user.email || 'Unknown',
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
@@ -641,6 +706,13 @@ const CRNoticeViewer = {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
             }
+        }
+    },
+
+    // Update Notice modal/sidebar titles for Faculty/DptCoor vs CR/Student
+    updateNoticeTitles(isFacultyOrDptCoor = false) {
+        if (typeof NoticeViewer !== 'undefined' && typeof NoticeViewer.updateNoticeTitles === 'function') {
+            NoticeViewer.updateNoticeTitles(isFacultyOrDptCoor);
         }
     }
 };

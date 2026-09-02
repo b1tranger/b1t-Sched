@@ -1090,6 +1090,12 @@ body.gray-mode .task-detail-value .description-link {
   color: var(--text-white);
 }
 
+.role-badge-dptcoor,
+.role-badge-dpthead {
+  background-color: #0d9488;
+  color: var(--text-white);
+}
+
 .role-badge-admin {
   background-color: var(--primary-maroon);
   color: var(--text-white);

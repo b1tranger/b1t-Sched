@@ -20,8 +20,13 @@
         },
         {
           "type": "New Feature",
-          "title": "User Role Display & Admin Temporary Role Preview Mode",
-          "description": "Displayed current user role status under the Student ID in Profile Settings. Introduced an interactive 'Preview as' dropdown (#admin-preview-select) exclusively for Admins using temporary sessionStorage to simulate Faculty, CR, Student, and Blocked roles without modifying actual database permissions, accompanied by a floating top '#admin-preview-banner' with single-click exit."
+          "title": "Faculty Self-Registration, Unapproved State & Account Approvals Modal/Sidebar",
+          "description": "Added a 'Faculty Account' registration toggle in initial setup (set-details-view) allowing faculty members to register with their initials without semester/section constraints. Introduced unapproved faculty state with (unapproved) badge tag in Profile Settings until verified. Implemented an Account Approvals system featuring a desktop shield button (above Notes) and an elevated mobile bookmark toggle/sidebar (bottom: 355px) with full Light, Dark, and Gray theme styling and proper non-blocking overlay state management."
+        },
+        {
+          "type": "New Feature",
+          "title": "User Role Display, DptCoor Role, Faculty Department Notices, Role FAQs & Admin Role Preview Mode",
+          "description": "Introduced the new DptCoor role (Department Coordinator) for faculty leadership with exclusive authority to post Department Notices, custom teal badge styling, and direct Make/Remove DptCoor management controls in User Management. For Faculty and DptCoor users, updated Notice modals to display 'Department Notices' in place of 'CR Notices' with department-wide scope, hidden semester/section profile selectors, added 'Course / Designation' task labeling with 'Task for a Faculty / Course' placeholder, and added a 'Meetings' task type. Enhanced the home page FAQ with complete role context documentation. Profile Settings now includes role badge displays and an interactive 2-row 'Preview as' dropdown for Admins with a floating eye-icon banner that auto-minimizes every 3 seconds."
         }
       ]
     },

@@ -1392,6 +1392,12 @@ body.user-blocked .task-edit-btn {
     color: var(--text-white);
 }
 
+.role-badge.dptcoor,
+.role-badge.dpthead {
+    background-color: #0d9488;
+    color: var(--text-white);
+}
+
 .role-badge.blocked {
     background-color: var(--danger);
     color: var(--text-white);
@@ -1426,6 +1432,11 @@ body.user-blocked .task-edit-btn {
 
 .toggle-faculty-btn.active {
     background-color: #007bff;
+    color: var(--text-white);
+}
+
+.toggle-dptcoor-btn.active {
+    background-color: #0d9488;
     color: var(--text-white);
 }
 
@@ -3203,9 +3214,11 @@ body.dark-mode .events-view-switch-btn {
 
 .admin-preview-banner {
     position: fixed;
-    top: 14px;
-    left: 50%;
-    transform: translateX(-50%);
+    bottom: 24px;
+    right: 24px;
+    left: auto;
+    top: auto;
+    transform: none;
     z-index: 99999;
     background: linear-gradient(135deg, #1e293b, #0f172a);
     color: #ffffff;
@@ -3214,15 +3227,82 @@ body.dark-mode .events-view-switch-btn {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.15);
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     font-size: 0.85rem;
-    animation: slideDownPreviewBanner 0.3s ease-out;
+    animation: slideUpPreviewBannerRight 0.3s ease-out;
     backdrop-filter: blur(8px);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-@keyframes slideDownPreviewBanner {
+.admin-preview-banner.is-minimized {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border-radius: 50%;
+    gap: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 0 0 1.5px rgba(245, 158, 11, 0.5);
+}
+
+.admin-preview-banner.is-minimized:hover {
+    transform: scale(1.08);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5), 0 0 0 2px #f59e0b;
+}
+
+@keyframes slideUpPreviewBannerRight {
     from {
-        transform: translate(-50%, -100%);
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-preview-banner {
+        bottom: 16px;
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%);
+        width: max-content;
+        max-width: calc(100vw - 32px);
+        padding: 6px 12px;
+        gap: 8px;
+        animation: slideUpPreviewBannerMobile 0.3s ease-out;
+    }
+
+    .admin-preview-banner.is-minimized {
+        left: auto;
+        right: 16px;
+        transform: none;
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        border-radius: 50%;
+    }
+
+    .admin-preview-banner.is-minimized:hover {
+        transform: scale(1.08);
+    }
+
+    .admin-preview-banner .btn-exit-preview .exit-btn-text {
+        display: none;
+    }
+
+    .admin-preview-banner .btn-exit-preview {
+        padding: 3px 7px;
+        border-radius: 12px;
+    }
+}
+
+@keyframes slideUpPreviewBannerMobile {
+    from {
+        transform: translate(-50%, 100%);
         opacity: 0;
     }
     to {
@@ -3231,10 +3311,42 @@ body.dark-mode .events-view-switch-btn {
     }
 }
 
+.admin-preview-toggle-btn {
+    background: transparent;
+    border: none;
+    color: #f59e0b;
+    padding: 0;
+    margin: 0;
+    font-size: 0.95rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease, color 0.2s ease;
+    outline: none;
+    line-height: 1;
+}
+
+.admin-preview-toggle-btn:hover {
+    color: #fbbf24;
+    transform: scale(1.1);
+}
+
+.admin-preview-banner.is-minimized .admin-preview-toggle-btn {
+    font-size: 0.95rem;
+    width: 100%;
+    height: 100%;
+}
+
 .admin-preview-banner-content {
     display: flex;
     align-items: center;
     gap: 10px;
+    transition: opacity 0.2s ease;
+}
+
+.admin-preview-banner.is-minimized .admin-preview-banner-content {
+    display: none !important;
 }
 
 .admin-preview-banner .preview-badge {
@@ -3242,10 +3354,6 @@ body.dark-mode .events-view-switch-btn {
     align-items: center;
     gap: 6px;
     font-weight: 500;
-}
-
-.admin-preview-banner .preview-badge i {
-    color: #f59e0b;
 }
 
 .btn-exit-preview {
@@ -3261,6 +3369,7 @@ body.dark-mode .events-view-switch-btn {
     display: inline-flex;
     align-items: center;
     gap: 5px;
+    white-space: nowrap;
 }
 
 .btn-exit-preview:hover {
@@ -3299,12 +3408,13 @@ body.dark-mode .events-view-switch-btn {
 
 .admin-preview-control {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 8px;
-    margin-top: 4px;
+    gap: 6px;
+    margin-top: 6px;
     background: rgba(128, 128, 128, 0.08);
-    padding: 6px 12px;
-    border-radius: 20px;
+    padding: 8px 14px;
+    border-radius: 16px;
     border: 1px solid var(--border-light);
 }
 
@@ -3312,15 +3422,23 @@ body.dark-mode .events-view-switch-btn {
     font-size: var(--font-xs);
     font-weight: 600;
     color: var(--text-dark);
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
     margin: 0;
     cursor: pointer;
+    user-select: none;
 }
 
 .preview-select-label i {
     color: var(--primary-maroon);
+    font-size: 0.85rem;
+}
+
+.admin-preview-select-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .admin-preview-select {
@@ -3349,6 +3467,430 @@ body.gray-mode .admin-preview-banner {
 body.dark-mode .preview-select-label i,
 body.gray-mode .preview-select-label i {
     color: var(--primary);
+}
+
+/* ============================================
+   ACCOUNT APPROVALS UI
+   ============================================ */
+
+/* Desktop Approvals Button (Above Notes - Icon Only) */
+.approval-button-desktop {
+    position: fixed;
+    bottom: 138px;
+    right: 20px;
+    width: 48px;
+    height: 48px;
+    background-color: #0f766e;
+    color: #ffffff;
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    z-index: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 14px rgba(15, 118, 110, 0.35);
+    transition: all var(--transition-fast);
+}
+
+.approval-button-desktop:hover {
+    background-color: #115e59;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(15, 118, 110, 0.45);
+}
+
+.approval-button-desktop i {
+    font-size: 1.25rem;
+}
+
+.approval-button-desktop .approval-badge-count {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+}
+
+/* Mobile Approvals Sidebar Toggle - Positioned higher to prevent covering other toggles */
+.approval-toggle {
+    position: fixed;
+    right: 0;
+    bottom: 355px;
+    background-color: #0f766e;
+    color: #ffffff;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-md) 0 0 var(--radius-md);
+    cursor: pointer;
+    z-index: var(--z-sticky);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-xs);
+    box-shadow: var(--shadow-md);
+    transition: all var(--transition-fast);
+}
+
+.approval-toggle:hover {
+    background-color: #115e59;
+    padding-right: var(--spacing-lg);
+}
+
+.approval-toggle i {
+    font-size: var(--font-lg);
+}
+
+/* Badge Count */
+.approval-badge-count {
+    background-color: #ef4444;
+    color: #ffffff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 999px;
+    line-height: 1;
+    min-width: 18px;
+    text-align: center;
+}
+
+/* Mobile Approvals Sidebar */
+.approval-sidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 85%;
+    max-width: 420px;
+    height: 100vh;
+    background-color: #ffffff;
+    box-shadow: var(--shadow-lg);
+    z-index: var(--z-modal);
+    transition: transform var(--transition-medium), top var(--transition-fast, 0.2s ease), height var(--transition-fast, 0.2s ease);
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+}
+
+.approval-sidebar.open {
+    transform: translateX(0);
+}
+
+.approval-sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md);
+    border-bottom: 2px solid var(--border-light);
+    background-color: #0f766e;
+    color: #ffffff;
+}
+
+.approval-sidebar-header h3 {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: var(--font-lg);
+    margin: 0;
+    color: #ffffff;
+}
+
+.approval-sidebar-content,
+.approval-modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--spacing-md);
+    background-color: #f8fafc;
+}
+
+/* Overlay with proper opacity/visibility defaults */
+.approval-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: calc(var(--z-modal) - 1);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity var(--transition-fast), visibility var(--transition-fast);
+}
+
+.approval-overlay.active,
+.approval-overlay.open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+/* Approval Modal */
+.approval-modal-content {
+    max-width: 580px;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.approval-modal-header {
+    background-color: #0f766e;
+    color: #ffffff;
+    padding: var(--spacing-md) var(--spacing-lg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.approval-modal-header h2 {
+    color: #ffffff;
+    margin: 0;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.approval-modal-header .btn-icon {
+    color: #ffffff;
+}
+
+/* Approvals Header Info */
+.approvals-header-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-xs);
+    border-bottom: 1px solid var(--border-light);
+}
+
+.approvals-count-badge {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.approvals-dept-scope {
+    font-size: 0.8rem;
+    color: #64748b;
+    background-color: #e2e8f0;
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+}
+
+/* Approvals List & Cards */
+.approvals-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.approval-card {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.approval-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.approval-card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+}
+
+.approval-user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: rgba(15, 118, 110, 0.12);
+    color: #0f766e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.approval-user-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.approval-user-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 2px;
+}
+
+.approval-faculty-initial {
+    font-size: 1.05rem;
+    color: #1e293b;
+}
+
+.approval-user-email {
+    margin: 0 0 4px 0;
+    font-size: 0.85rem;
+    color: #475569;
+    word-break: break-all;
+}
+
+.approval-user-meta {
+    margin: 0;
+    font-size: 0.78rem;
+    color: #64748b;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.approval-card-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-sm);
+    padding-top: var(--spacing-xs);
+    border-top: 1px dashed var(--border-light);
+}
+
+/* CR Notice View */
+.approvals-cr-notice {
+    padding: var(--spacing-xl) var(--spacing-md);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.approvals-notice-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background-color: rgba(59, 130, 246, 0.12);
+    color: #3b82f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    margin-bottom: var(--spacing-md);
+}
+
+.approvals-cr-notice h3 {
+    margin: 0 0 var(--spacing-xs) 0;
+    font-size: 1.15rem;
+    color: #1e293b;
+}
+
+.approvals-notice-text {
+    font-size: 0.95rem;
+    color: #475569;
+    margin: 0 0 var(--spacing-sm) 0;
+    line-height: 1.5;
+    max-width: 320px;
+}
+
+.approvals-notice-hint {
+    font-size: 0.8rem;
+    color: #64748b;
+    font-style: italic;
+    max-width: 280px;
+}
+
+/* ============================================
+   Dark Mode Overrides for Approvals
+   ============================================ */
+body.dark-mode .approval-modal-content {
+    background-color: #121212 !important;
+    border-color: #27272a !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7) !important;
+}
+
+body.dark-mode .approval-sidebar {
+    background-color: #121212 !important;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.7) !important;
+}
+
+body.dark-mode .approval-sidebar-content,
+body.dark-mode .approval-modal-body {
+    background-color: #09090b !important;
+}
+
+body.dark-mode .approval-card {
+    background-color: #18181b !important;
+    border-color: #27272a !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4) !important;
+}
+
+body.dark-mode .approval-faculty-initial,
+body.dark-mode .approvals-count-badge,
+body.dark-mode .approvals-cr-notice h3 {
+    color: #f4f4f5 !important;
+}
+
+body.dark-mode .approval-user-email,
+body.dark-mode .approvals-notice-text {
+    color: #a1a1aa !important;
+}
+
+body.dark-mode .approval-user-meta,
+body.dark-mode .approvals-notice-hint {
+    color: #71717a !important;
+}
+
+body.dark-mode .approvals-dept-scope {
+    background-color: #27272a !important;
+    color: #a1a1aa !important;
+}
+
+/* ============================================
+   Gray Mode Overrides for Approvals
+   ============================================ */
+body.gray-mode .approval-modal-content {
+    background-color: #1a1a1a !important;
+    border-color: #333333 !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7) !important;
+}
+
+body.gray-mode .approval-sidebar {
+    background-color: #1a1a1a !important;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.7) !important;
+}
+
+body.gray-mode .approval-sidebar-content,
+body.gray-mode .approval-modal-body {
+    background-color: #141414 !important;
+}
+
+body.gray-mode .approval-card {
+    background-color: #222222 !important;
+    border-color: #333333 !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4) !important;
+}
+
+body.gray-mode .approval-faculty-initial,
+body.gray-mode .approvals-count-badge,
+body.gray-mode .approvals-cr-notice h3 {
+    color: #eae9f1 !important;
+}
+
+body.gray-mode .approval-user-email,
+body.gray-mode .approvals-notice-text {
+    color: #c4c1d7 !important;
+}
+
+body.gray-mode .approval-user-meta,
+body.gray-mode .approvals-notice-hint {
+    color: #8983af !important;
+}
+
+body.gray-mode .approvals-dept-scope {
+    background-color: #2b2b2b !important;
+    color: #c4c1d7 !important;
 }
 
 
