@@ -2093,6 +2093,14 @@ const Classroom = {
             return;
         }
 
+        // Snapshot previous cached data to calculate diffs upon refresh
+        const prevAssignments = (this.inMemoryCache && this.inMemoryCache.assignments) || (this.getJsonCache() && this.getJsonCache().assignments) || [];
+        const prevAnnouncements = (this.inMemoryCache && this.inMemoryCache.announcements) || (this.getJsonCache() && this.getJsonCache().announcements) || [];
+        const prevAssignmentsMap = new Map();
+        prevAssignments.forEach(a => { if (a && a.id) prevAssignmentsMap.set(String(a.id), a); });
+        const prevAnnouncementsMap = new Map();
+        prevAnnouncements.forEach(a => { if (a && a.id) prevAnnouncementsMap.set(String(a.id), a); });
+
         // Clear in-memory cache and CacheManager entries for a fresh sync
         this.inMemoryCache = { assignments: null, announcements: null, materials: null };
         this.initCacheManager();
@@ -2107,6 +2115,162 @@ const Classroom = {
         // Re-fetch courses and reload all
         this.courses = [];
         await this.fetchCoursesAndLoadAll();
+
+        // Compute changes across fresh assignments & announcements
+        const freshAssignments = (this.inMemoryCache && this.inMemoryCache.assignments) || [];
+        const freshAnnouncements = (this.inMemoryCache && this.inMemoryCache.announcements) || [];
+
+        const addedItems = [];
+        const updatedItems = [];
+        const unchangedItems = [];
+
+        // Check assignments
+        for (const item of freshAssignments) {
+            const prev = prevAssignmentsMap.get(String(item.id));
+            if (!prev) {
+                const diff = this.computeItemDiff(null, item, true);
+                addedItems.push({
+                    id: item.id,
+                    title: item.title || 'Assignment',
+                    courseName: item.courseName || 'Classroom Assignment',
+                    link: item.alternateLink || '#',
+                    status: 'added',
+                    diff
+                });
+            } else {
+                const diff = this.computeItemDiff({
+                    title: prev.title,
+                    description: prev.description,
+                    deadline: prev.dueDate ? new Date(prev.dueDate.year, prev.dueDate.month - 1, prev.dueDate.day, prev.dueTime?.hours || 23, prev.dueTime?.minutes || 59) : null
+                }, item, false);
+
+                if (diff.hasAnyChanges) {
+                    updatedItems.push({
+                        id: item.id,
+                        title: item.title || 'Assignment',
+                        courseName: item.courseName || 'Classroom Assignment',
+                        link: item.alternateLink || '#',
+                        status: 'updated',
+                        diff
+                    });
+                } else {
+                    unchangedItems.push({
+                        id: item.id,
+                        title: item.title || 'Assignment',
+                        courseName: item.courseName || 'Classroom Assignment',
+                        link: item.alternateLink || '#',
+                        status: 'unchanged',
+                        diff
+                    });
+                }
+            }
+        }
+
+        // Check announcements / notices
+        for (const ann of freshAnnouncements) {
+            const prev = prevAnnouncementsMap.get(String(ann.id));
+            const annTitle = ann.text ? (ann.text.split('\n')[0].substring(0, 50) + (ann.text.length > 50 ? '...' : '')) : 'Notice / Announcement';
+            if (!prev) {
+                const diff = this.computeItemDiff(null, {
+                    title: annTitle,
+                    description: ann.text,
+                    alternateLink: ann.alternateLink,
+                    materials: ann.materials
+                }, true);
+                addedItems.push({
+                    id: ann.id,
+                    title: annTitle,
+                    courseName: ann.courseName || 'Class Announcement',
+                    link: ann.alternateLink || '#',
+                    status: 'added',
+                    diff
+                });
+            } else {
+                const prevTitle = prev.text ? (prev.text.split('\n')[0].substring(0, 50) + (prev.text.length > 50 ? '...' : '')) : 'Notice / Announcement';
+                const diff = this.computeItemDiff({
+                    title: prevTitle,
+                    description: prev.text
+                }, {
+                    title: annTitle,
+                    description: ann.text,
+                    alternateLink: ann.alternateLink,
+                    materials: ann.materials
+                }, false);
+
+                if (diff.hasAnyChanges) {
+                    updatedItems.push({
+                        id: ann.id,
+                        title: annTitle,
+                        courseName: ann.courseName || 'Class Announcement',
+                        link: ann.alternateLink || '#',
+                        status: 'updated',
+                        diff
+                    });
+                } else {
+                    unchangedItems.push({
+                        id: ann.id,
+                        title: annTitle,
+                        courseName: ann.courseName || 'Class Announcement',
+                        link: ann.alternateLink || '#',
+                        status: 'unchanged',
+                        diff
+                    });
+                }
+            }
+        }
+
+        // Auto-sync tasks to DB for Admin / CR
+        if (typeof App !== 'undefined' && (App.isAdmin || App.isCR)) {
+            try {
+                const syncable = freshAssignments.filter(a => a.dueDate);
+                if (syncable.length > 0) {
+                    const classroomWorkIds = syncable.map(a => a.id);
+                    const existingTasksResult = await DB.getTasksByClassroomIds(classroomWorkIds);
+                    const existingTasksMap = new Map();
+                    if (existingTasksResult.success && existingTasksResult.data) {
+                        existingTasksResult.data.forEach(t => {
+                            if (t.classroomWorkId) existingTasksMap.set(t.classroomWorkId, t);
+                        });
+                    }
+                    const userId = Auth.getUserId();
+                    const userEmail = Auth.getUserEmail();
+                    for (const a of syncable) {
+                        const due = new Date(a.dueDate.year, a.dueDate.month - 1, a.dueDate.day, a.dueTime?.hours || 23, a.dueTime?.minutes || 59);
+                        const linkLabel = a.alternateLink ? `[View in Classroom](${a.alternateLink})\n\n` : '';
+                        const taskData = {
+                            title: a.title,
+                            course: a.courseName || 'Classroom Assignment',
+                            type: 'assignment',
+                            description: linkLabel + (a.description || ''),
+                            department: App.userProfile ? App.userProfile.department : 'ALL',
+                            semester: App.userProfile ? App.userProfile.semester : null,
+                            section: App.userProfile ? App.userProfile.section : null,
+                            deadline: due.toISOString(),
+                            addedFrom: 'classroom',
+                            classroomWorkId: a.id
+                        };
+                        const existingTask = existingTasksMap.get(a.id);
+                        if (existingTask) {
+                            await DB.updateTask(existingTask.id, taskData);
+                        } else {
+                            await DB.createTask(userId, userEmail, taskData);
+                        }
+                    }
+                    if (App && typeof App.loadDashboardData === 'function') {
+                        await App.loadDashboardData();
+                    }
+                }
+            } catch (err) {
+                console.warn('[Classroom] Background task sync on refresh warning:', err);
+            }
+        }
+
+        // Present the Classroom Sync Summary modal briefing
+        this.showSyncSummaryModal({
+            added: addedItems,
+            updated: updatedItems,
+            unchanged: unchangedItems
+        });
     },
 
     // Render To-Do items divided into 3 distinct groups (+ completed) with small-height divider banners
@@ -2642,6 +2806,9 @@ const Classroom = {
                         <span class="classroom-course-title-text">
                             ${course ? course.name : 'Course Details'}
                         </span>
+                        <button class="classroom-back-btn" onclick="Classroom.refreshData()" title="Refresh" style="margin-left: 4px;">
+                            <i class="fas fa-redo-alt"></i>
+                        </button>
                     </div>
                     ${(viewType === 'todo' && typeof App !== 'undefined' && (App.isAdmin || App.isCR)) ? `
                     <button id="sync-classroom-tasks-btn-course" class="btn btn-sm btn-primary" onclick="Classroom.syncAssignmentsToTasks()" title="Sync Assignments to Tasks">

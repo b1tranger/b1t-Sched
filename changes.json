@@ -11,7 +11,7 @@
         {
           "type": "New Feature",
           "title": "Classroom Sync Briefing Modal with GitHub-Style Version Control Diff View",
-          "description": "Replaced plain JavaScript alert popups during Google Classroom sync with an interactive briefing modal (#classroom-sync-modal). Displays exactly which assignments and instruction captions were added or updated, direct post links (View in Classroom), and manual dropdown toggles (View Changes) rendering GitHub-style commit diff views with line-by-line additions (+), deletions (-), file attachment changes, and deadline modifications."
+          "description": "Replaced plain JavaScript alert popups during Google Classroom sync and refresh with an interactive briefing modal (#classroom-sync-modal). Displays exactly which assignments and instruction captions were added or updated, direct post links (View in Classroom), and manual dropdown toggles (View Changes) rendering GitHub-style commit diff views with line-by-line additions (+), deletions (-), file attachment changes, and deadline modifications."
         },
         {
           "type": "New Feature",
