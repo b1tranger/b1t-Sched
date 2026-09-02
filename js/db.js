@@ -288,13 +288,24 @@ const DB = {
       const now = new Date();
       // 12 hour grace period - tasks move to old tasks after 12 hours past deadline
       const gracePeriodCutoff = new Date(now.getTime() - (12 * 60 * 60 * 1000));
-      const sectionsInGroup = Utils.getSectionsInGroup(section);
-      const tasksSnapshot = await db.collection('tasks')
-        .where('department', '==', department)
-        .where('semester', '==', semester)
-        .where('section', 'in', sectionsInGroup)
-        .where('status', '==', 'active')
-        .get();
+      let tasksQuery = db.collection('tasks')
+        .where('department', '==', department);
+
+      if (semester === null && section === null) {
+        tasksQuery = tasksQuery
+          .where('semester', '==', null)
+          .where('section', '==', null);
+      } else if (section) {
+        const sectionsInGroup = Utils.getSectionsInGroup(section);
+        tasksQuery = tasksQuery
+          .where('semester', '==', semester)
+          .where('section', 'in', sectionsInGroup);
+      } else if (semester) {
+        tasksQuery = tasksQuery.where('semester', '==', semester);
+      }
+
+      tasksQuery = tasksQuery.where('status', '==', 'active');
+      const tasksSnapshot = await tasksQuery.get();
 
       const oldTasks = [];
       tasksSnapshot.forEach(doc => {

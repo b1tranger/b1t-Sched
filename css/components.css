@@ -450,15 +450,30 @@ body.gray-mode .resource-link-card .resource-icon .fa-graduation-cap {
   display: block;
 }
 
-/* Hide task-added-by info until description is expanded */
+/* Hide task-added-by & task-id info until description is expanded */
 .task-added-by-hidden {
   display: none;
   margin-top: var(--spacing-sm);
   margin-bottom: 0;
 }
 
-.task-description-text.expanded+.task-added-by-hidden {
+.task-description-text.expanded ~ .task-added-by-hidden {
   display: block;
+}
+
+.task-id-info {
+  font-size: var(--font-xs);
+  color: var(--text-light);
+  margin-top: 4px;
+}
+
+.task-id-code {
+  font-family: monospace;
+  font-size: 0.9em;
+  background-color: rgba(128, 128, 128, 0.12);
+  padding: 1px 5px;
+  border-radius: var(--radius-xs);
+  user-select: all;
 }
 
 .task-description-toggle {

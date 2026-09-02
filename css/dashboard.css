@@ -848,6 +848,18 @@ body.gray-mode .deadline-options input[type="datetime-local"]::-webkit-calendar-
     font-weight: var(--font-medium);
 }
 
+.old-task-actions {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.old-task-actions .task-edit-btn {
+    font-size: var(--font-sm);
+    padding: 6px 8px;
+}
+
 /* Compact no-data message */
 .no-data-message.compact {
     padding: var(--spacing-lg);

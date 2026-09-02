@@ -461,16 +461,27 @@ const App = {
     // Setup delegation for old tasks modal clicks
     const oldTasksContainer = document.getElementById('old-tasks-container');
     if (oldTasksContainer) {
-      oldTasksContainer.addEventListener('click', (e) => {
+      oldTasksContainer.addEventListener('click', async (e) => {
+        // Handle edit button
+        const editBtn = e.target.closest('.old-task-edit-btn, .task-edit-btn');
+        if (editBtn) {
+          const taskId = editBtn.dataset.taskId;
+          await this.openEditTaskModal(taskId);
+          return;
+        }
+
         const item = e.target.closest('.old-task-item');
         if (item && this.oldTasks) {
           const taskId = item.dataset.taskId;
           const task = this.oldTasks.find(t => t.id === taskId);
           if (task) {
-            const deadline = task.deadline ? task.deadline.toDate() : new Date();
+            const deadline = task.deadline ? (task.deadline.toDate ? task.deadline.toDate() : new Date(task.deadline)) : new Date();
             const isCompleted = task.isCompleted || false;
-            const completedDate = task.completedAt ? task.completedAt.toDate() : null;
+            const completedDate = task.completedAt ? (task.completedAt.toDate ? task.completedAt.toDate() : new Date(task.completedAt)) : null;
             const contentHTML = `
+              <div style="margin-bottom: 15px;">
+                <strong>Task ID:</strong> <code style="font-family: monospace; font-size: 0.9em; background-color: rgba(128, 128, 128, 0.12); padding: 2px 6px; border-radius: 4px; user-select: all;">${task.id}</code>
+              </div>
               <div style="margin-bottom: 15px;">
                 <strong>Course:</strong> <span style="background-color: var(--primary-maroon); color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.9em;">${task.course || 'N/A'}</span>
               </div>
@@ -655,10 +666,10 @@ const App = {
     const userId = Auth.getUserId();
     const { department, semester, section } = this.userProfile;
 
-    const result = await DB.getOldTasks(userId, department, semester, section);
+    const result = await DB.getOldTasks(userId, department, this.isFaculty ? null : semester, this.isFaculty ? null : section);
     if (result.success) {
       this.oldTasks = result.data;
-      UI.renderOldTasks(result.data);
+      UI.renderOldTasks(result.data, this.isAdmin, userId);
     }
   },
 
@@ -728,8 +739,11 @@ const App = {
       return;
     }
 
-    // Find the task in currentTasks
-    const task = this.currentTasks.find(t => t.id === taskId);
+    // Find the task in currentTasks or oldTasks
+    let task = this.currentTasks ? this.currentTasks.find(t => t.id === taskId) : null;
+    if (!task && this.oldTasks) {
+      task = this.oldTasks.find(t => t.id === taskId);
+    }
     if (!task) {
       alert('Task not found');
       return;
@@ -817,6 +831,17 @@ const App = {
       UI.hideModal('edit-task-modal');
       // Refresh tasks
       await this.loadDashboardData();
+
+      // If old tasks modal is open or old tasks were loaded, refresh old tasks list
+      if (this.userProfile && (this.oldTasks || document.getElementById('old-tasks-modal')?.style.display === 'flex')) {
+        const userId = Auth.getUserId();
+        const { department, semester, section } = this.userProfile;
+        const oldResult = await DB.getOldTasks(userId, department, this.isFaculty ? null : semester, this.isFaculty ? null : section);
+        if (oldResult.success) {
+          this.oldTasks = oldResult.data;
+          UI.renderOldTasks(oldResult.data, this.isAdmin, userId);
+        }
+      }
     } else {
       alert('Failed to update task: ' + result.error);
     }

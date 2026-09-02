@@ -445,6 +445,7 @@ const UI = {
                 <div class="task-description-wrapper">
                   <div class="task-description-text">${Utils.escapeAndLinkify(task.description) || 'No description available.'}</div>
                   ${task.addedBy ? `<p class="task-added-by task-added-by-hidden">Added by ${task.addedByName || 'User'}${task.addedByRole && (task.addedByRole === 'CR' || task.addedByRole === 'Faculty') ? ` <span class="role-badge role-badge-${task.addedByRole.toLowerCase()}">${task.addedByRole}</span>` : ''}${task.section ? ` (${task.section})` : ''}${isFacultyTask && task.department ? ` - ${task.department}` : ''}</p>` : ''}
+                  <p class="task-id-info task-added-by-hidden"><span class="task-id-label">Task ID:</span> <code class="task-id-code">${task.id}</code></p>
                   <button type="button" class="task-description-toggle" aria-label="Toggle description">
                     <span class="toggle-text">Show more</span>
                     <i class="fas fa-chevron-down"></i>
@@ -468,7 +469,7 @@ const UI = {
   },
 
   // Render old tasks (past deadline - compact view)
-  renderOldTasks(tasks) {
+  renderOldTasks(tasks, isAdmin = false, currentUserId = null) {
     const container = document.getElementById('old-tasks-container');
     const noOldTasksMsg = document.getElementById('no-old-tasks-message');
 
@@ -483,18 +484,28 @@ const UI = {
     noOldTasksMsg.style.display = 'none';
 
     container.innerHTML = tasks.map(task => {
-      const deadline = task.deadline ? task.deadline.toDate() : new Date();
+      const deadline = task.deadline ? (task.deadline.toDate ? task.deadline.toDate() : new Date(task.deadline)) : new Date();
       const isCompleted = task.isCompleted || false;
-      const completedDate = task.completedAt ? task.completedAt.toDate() : null;
+      const completedDate = task.completedAt ? (task.completedAt.toDate ? task.completedAt.toDate() : new Date(task.completedAt)) : null;
 
       // Show different icon and style based on completion status
       const iconClass = isCompleted ? 'fa-check-circle completed-icon' : 'fa-clock overdue-icon';
       const statusClass = isCompleted ? 'completed' : 'overdue';
 
+      // Edit: Admin can edit any task, users can edit their own tasks
+      const canEdit = isAdmin || (currentUserId && task.addedBy === currentUserId);
+      const editButton = canEdit ? `
+        <div class="old-task-actions">
+          <button class="task-edit-btn old-task-edit-btn" data-task-id="${task.id}" title="Edit task">
+            <i class="fas fa-edit"></i>
+          </button>
+        </div>
+      ` : '';
+
       return `
-        <div class="old-task-item ${statusClass}" data-task-id="${task.id}" style="cursor: pointer;">
+        <div class="old-task-item ${statusClass}" data-task-id="${task.id}">
           <i class="fas ${iconClass}"></i>
-          <div class="task-info">
+          <div class="task-info" style="cursor: pointer;">
             <div class="task-title">${task.title || 'Untitled Task'}</div>
             <div class="task-meta">
               ${task.course || ''} • Due: ${Utils.formatDateShort(deadline)}
@@ -502,6 +513,7 @@ const UI = {
               ${!isCompleted ? ' • <span class="overdue-label">Not completed</span>' : ''}
             </div>
           </div>
+          ${editButton}
         </div>
       `;
     }).join('');

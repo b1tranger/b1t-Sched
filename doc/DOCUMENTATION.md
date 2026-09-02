@@ -2,6 +2,13 @@
 
 > **Academic Task Scheduler** - A Single Page Application (SPA) for managing academic tasks, assignments, exams, and events with personalized department-specific content.
 
+# 02.09.26
+
+**Firebase Task ID in Show More and Direct Old Tasks Editing**
+- **Pending Tasks Firebase ID**: Integrated Firestore document ID into expanded pending task cards (`.task-id-info`, `.task-id-code`) inside `js/ui.js` and `css/components.css`. Displays automatically alongside creator details when "Show more" is clicked, with `user-select: all` for instant copying.
+- **Editable Old Tasks**: Enabled role-based editing directly within the Old Tasks modal (`.old-task-actions`, `.old-task-edit-btn`) for Admins and task owners (Students, CRs, and Faculty).
+- **Task Migration on Deadline Extension**: Updated `js/app.js` (`openEditTaskModal`, `handleEditTask`) and `js/db.js` (`getOldTasks`) so that editing an old task's deadline to a future date or removing the deadline automatically restores it to the "Pending Tasks" list in real-time and refreshes the Old Tasks view.
+
 ---
 
 ## Table of Contents
