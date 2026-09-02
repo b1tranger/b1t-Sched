@@ -1279,3 +1279,688 @@ body.dark-mode .classroom-wip-badge {
     border-top: 1px solid var(--classroom-border, #e0e0e0);
     background: var(--classroom-bg-secondary, #f8f8f8);
 }
+
+/* =========================================
+   Classroom Sync Summary Modal & Git Diff
+   ========================================= */
+.classroom-sync-modal-content {
+    max-width: 820px;
+    width: 94%;
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    overflow: hidden;
+    background: var(--classroom-bg, #ffffff);
+    border: 1px solid var(--classroom-border, #e0e0e0);
+    border-radius: var(--radius-lg, 12px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.classroom-sync-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: var(--classroom-green, #800000);
+    color: #ffffff;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.classroom-sync-title-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.classroom-sync-title-group h2 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.classroom-sync-count-badge {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.3px;
+}
+
+.classroom-sync-modal-header .btn-icon {
+    color: #ffffff !important;
+}
+
+.classroom-sync-modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    background: var(--classroom-bg, #ffffff);
+}
+
+.classroom-sync-overview {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 12px 16px;
+    background: var(--classroom-bg-secondary, #f8f8f8);
+    border: 1px solid var(--classroom-border, #e0e0e0);
+    border-radius: 8px;
+}
+
+.sync-overview-stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.84rem;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 6px;
+}
+
+.sync-overview-stat.added {
+    background: rgba(46, 160, 67, 0.15);
+    color: #2ea043;
+    border: 1px solid rgba(46, 160, 67, 0.3);
+}
+
+.sync-overview-stat.updated {
+    background: rgba(56, 139, 253, 0.15);
+    color: #388bfd;
+    border: 1px solid rgba(56, 139, 253, 0.3);
+}
+
+.sync-overview-stat.unchanged {
+    background: rgba(139, 148, 158, 0.15);
+    color: var(--classroom-text-secondary, #666666);
+    border: 1px solid rgba(139, 148, 158, 0.3);
+}
+
+.sync-empty-state {
+    text-align: center;
+    padding: 36px 20px;
+    color: var(--classroom-text-secondary, #666666);
+}
+
+.sync-empty-state i {
+    font-size: 2.5rem;
+    color: #2ea043;
+    margin-bottom: 12px;
+}
+
+.sync-empty-state h4 {
+    margin: 0 0 6px 0;
+    color: var(--classroom-text, #333333);
+    font-size: 1.1rem;
+}
+
+.classroom-sync-items-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Individual Sync Item Card */
+.sync-card {
+    border: 1px solid var(--classroom-border, #e0e0e0);
+    background: var(--classroom-bg, #ffffff);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sync-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.sync-card.status-added {
+    border-left: 4px solid #2ea043;
+}
+
+.sync-card.status-updated {
+    border-left: 4px solid #388bfd;
+}
+
+.sync-card.status-unchanged {
+    border-left: 4px solid var(--classroom-border, #e0e0e0);
+    opacity: 0.85;
+}
+
+.sync-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--classroom-bg-secondary, #f8f8f8);
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.sync-card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 200px;
+}
+
+.sync-card-badges {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.sync-action-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.sync-action-badge.added {
+    background: #2ea043;
+    color: #ffffff;
+}
+
+.sync-action-badge.updated {
+    background: #388bfd;
+    color: #ffffff;
+}
+
+.sync-action-badge.unchanged {
+    background: #6e7681;
+    color: #ffffff;
+}
+
+.sync-course-pill {
+    font-size: 0.74rem;
+    color: var(--classroom-text-secondary, #666666);
+    background: rgba(0, 0, 0, 0.05);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.sync-card-title {
+    margin: 2px 0 0 0;
+    font-size: 0.96rem;
+    font-weight: 600;
+    color: var(--classroom-text, #333333);
+}
+
+.sync-card-meta {
+    font-size: 0.78rem;
+    color: var(--classroom-text-secondary, #666666);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.sync-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sync-view-post-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--classroom-text, #333333);
+    background: var(--classroom-bg, #ffffff);
+    border: 1px solid var(--classroom-border, #e0e0e0);
+    border-radius: 6px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.sync-view-post-btn:hover {
+    background: var(--classroom-green, #800000);
+    color: #ffffff;
+    border-color: var(--classroom-green, #800000);
+}
+
+.sync-diff-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--classroom-text, #333333);
+    background: var(--classroom-bg, #ffffff);
+    border: 1px solid var(--classroom-border, #e0e0e0);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.sync-diff-toggle-btn:hover {
+    background: var(--classroom-bg-secondary, #f8f8f8);
+    border-color: var(--classroom-text-secondary, #666666);
+}
+
+.sync-diff-toggle-btn i.fa-chevron-down {
+    transition: transform 0.25s ease;
+}
+
+.sync-diff-toggle-btn.is-active i.fa-chevron-down {
+    transform: rotate(180deg);
+}
+
+/* Collapsible Dropdown Container */
+.sync-diff-dropdown {
+    display: none;
+    padding: 14px 16px;
+    background: var(--classroom-bg, #ffffff);
+    border-top: 1px solid var(--classroom-border, #e0e0e0);
+}
+
+.sync-diff-dropdown.is-open {
+    display: block;
+    animation: gitDiffFadeIn 0.25s ease-out;
+}
+
+@keyframes gitDiffFadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* =========================================
+   Git Version Control Diff Viewer
+   ========================================= */
+.git-diff-viewer {
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #0d1117;
+    color: #c9d1d9;
+    font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+    font-size: 0.82rem;
+    line-height: 1.5;
+    margin-bottom: 12px;
+}
+
+.git-diff-viewer:last-child {
+    margin-bottom: 0;
+}
+
+.git-diff-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: #161b22;
+    border-bottom: 1px solid #30363d;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.git-diff-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #e6edf3;
+}
+
+.git-diff-stats {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+}
+
+.git-diff-stat-add {
+    color: #3fb950;
+    font-weight: 700;
+}
+
+.git-diff-stat-del {
+    color: #f85149;
+    font-weight: 700;
+}
+
+/* Git Metadata Changes (Title, Deadline) */
+.git-diff-meta-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 14px;
+    background: #161b22;
+    border-bottom: 1px solid #30363d;
+    font-size: 0.8rem;
+}
+
+.git-diff-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.git-diff-meta-label {
+    font-weight: 600;
+    color: #8b949e;
+    min-width: 70px;
+}
+
+.git-diff-del-inline {
+    background: rgba(248, 81, 73, 0.2);
+    color: #ff7b72;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-decoration: line-through;
+}
+
+.git-diff-add-inline {
+    background: rgba(46, 160, 67, 0.2);
+    color: #7ee787;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+/* Git Attachments Diff */
+.git-diff-attachments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 14px;
+    background: #0d1117;
+}
+
+.git-diff-file-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+}
+
+.git-diff-file-tag.added {
+    background: rgba(46, 160, 67, 0.18);
+    border: 1px solid rgba(46, 160, 67, 0.4);
+    color: #7ee787;
+}
+
+.git-diff-file-tag.removed {
+    background: rgba(248, 81, 73, 0.18);
+    border: 1px solid rgba(248, 81, 73, 0.4);
+    color: #ff7b72;
+}
+
+.git-diff-file-tag a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+/* Git Line-by-Line / Side-by-Side Diff Table */
+.git-diff-table-wrapper {
+    overflow-x: auto;
+    max-height: 380px;
+    overflow-y: auto;
+}
+
+.git-diff-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 0.8rem;
+}
+
+.git-diff-table tr {
+    line-height: 1.5;
+}
+
+.git-diff-num {
+    width: 38px;
+    min-width: 38px;
+    max-width: 38px;
+    padding: 2px 6px;
+    text-align: right;
+    color: #484f58;
+    user-select: none;
+    border-right: 1px solid #21262d;
+    background: #0d1117;
+    vertical-align: top;
+}
+
+.git-diff-sign {
+    width: 20px;
+    min-width: 20px;
+    text-align: center;
+    font-weight: 700;
+    user-select: none;
+    vertical-align: top;
+    padding: 2px 0;
+}
+
+.git-diff-code {
+    padding: 2px 8px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    vertical-align: top;
+}
+
+/* Line Types */
+.git-diff-row-add {
+    background: rgba(46, 160, 67, 0.15) !important;
+}
+
+.git-diff-row-add .git-diff-num {
+    background: rgba(46, 160, 67, 0.22);
+    color: #7ee787;
+}
+
+.git-diff-row-add .git-diff-sign {
+    color: #3fb950;
+    background: rgba(46, 160, 67, 0.18);
+}
+
+.git-diff-row-add .git-diff-code {
+    color: #e6edf3;
+}
+
+.git-diff-row-del {
+    background: rgba(248, 81, 73, 0.15) !important;
+}
+
+.git-diff-row-del .git-diff-num {
+    background: rgba(248, 81, 73, 0.22);
+    color: #ff7b72;
+}
+
+.git-diff-row-del .git-diff-sign {
+    color: #f85149;
+    background: rgba(248, 81, 73, 0.18);
+}
+
+.git-diff-row-del .git-diff-code {
+    color: #ff7b72;
+}
+
+.git-diff-row-same {
+    background: transparent;
+}
+
+.git-diff-row-same .git-diff-code {
+    color: #c9d1d9;
+}
+
+/* Side by Side Split Columns on Desktop */
+.git-diff-side-by-side {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-top: 1px solid #30363d;
+}
+
+.git-diff-side-col {
+    overflow-x: auto;
+}
+
+.git-diff-side-col:first-child {
+    border-right: 1px solid #30363d;
+}
+
+.git-diff-side-header {
+    padding: 6px 10px;
+    background: #161b22;
+    border-bottom: 1px solid #30363d;
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: #8b949e;
+}
+
+.classroom-sync-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 12px 20px;
+    background: var(--classroom-bg-secondary, #f8f8f8);
+    border-top: 1px solid var(--classroom-border, #e0e0e0);
+}
+
+/* Dark Mode Overrides for Sync Modal & Git Diff */
+body.dark-mode .classroom-sync-modal-content {
+    background: #101206;
+    border-color: #7e8b1b;
+}
+
+body.dark-mode .classroom-sync-modal-header {
+    background: #d4dd93;
+    color: #101206;
+}
+
+body.dark-mode .classroom-sync-title-group h2,
+body.dark-mode .classroom-sync-count-badge {
+    color: #101206;
+}
+
+body.dark-mode .classroom-sync-count-badge {
+    background: rgba(0, 0, 0, 0.15);
+}
+
+body.dark-mode .classroom-sync-modal-header .btn-icon {
+    color: #101206 !important;
+}
+
+body.dark-mode .classroom-sync-modal-body,
+body.dark-mode .sync-card {
+    background: #1a1c0d;
+}
+
+body.dark-mode .classroom-sync-overview,
+body.dark-mode .sync-card-header,
+body.dark-mode .classroom-sync-modal-footer,
+body.dark-mode .sync-diff-dropdown {
+    background: #141609;
+}
+
+body.dark-mode .sync-card-title {
+    color: #f0f1ea;
+}
+
+body.dark-mode .sync-view-post-btn,
+body.dark-mode .sync-diff-toggle-btn {
+    background: #1a1c0d;
+    color: #f0f1ea;
+    border-color: #7e8b1b;
+}
+
+body.dark-mode .sync-view-post-btn:hover {
+    background: #d4dd93;
+    color: #101206;
+}
+
+/* Gray Mode Overrides */
+body.gray-mode .classroom-sync-modal-content {
+    background: #1a1a1a;
+    border-color: #404040;
+}
+
+body.gray-mode .classroom-sync-modal-header {
+    background: #ff6360;
+    color: #ffffff;
+}
+
+body.gray-mode .classroom-sync-modal-body,
+body.gray-mode .sync-card {
+    background: #1a1a1a;
+}
+
+body.gray-mode .classroom-sync-overview,
+body.gray-mode .sync-card-header,
+body.gray-mode .classroom-sync-modal-footer,
+body.gray-mode .sync-diff-dropdown {
+    background: #2b2b2b;
+}
+
+body.gray-mode .sync-card-title {
+    color: #ffffff;
+}
+
+body.gray-mode .sync-view-post-btn,
+body.gray-mode .sync-diff-toggle-btn {
+    background: #1a1a1a;
+    color: #ffffff;
+    border-color: #404040;
+}
+
+body.gray-mode .sync-view-post-btn:hover {
+    background: #ff6360;
+    color: #ffffff;
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 768px) {
+    .classroom-sync-modal-content {
+        width: 100%;
+        max-width: 100%;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+        margin: 0;
+    }
+
+    .sync-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .sync-card-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .git-diff-side-by-side {
+        grid-template-columns: 1fr;
+    }
+
+    .git-diff-side-col:first-child {
+        border-right: none;
+        border-bottom: 1px solid #30363d;
+    }
+}

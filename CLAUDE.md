@@ -1,7 +1,7 @@
 # Repository Rules & Guidelines
 
 ## 1. Changelog & History Maintenance
-- **Automatic History Updates**: Whenever adding new features, fixing bugs, refactoring components, or altering UI/styles in this codebase, always document the changes in doc/DOCUMENTATION.md , changes.json.
+- **Automatic History Updates**: Whenever adding new features, fixing bugs, refactoring components, or altering UI/styles in this codebase, always document the changes in doc/DOCUMENTATION.md , changes.json, sw.js#L5-5 (const CACHE_VERSION).
 - **Date Format**: Group entries under the current date using the format `# DD.MM.YY` (e.g., `# 02.09.26`) placed chronologically at the top of the file directly beneath the frontmatter tags comment block.
 - **Entry Structure**:
   - Title the main change in bold with a clear feature/fix description.

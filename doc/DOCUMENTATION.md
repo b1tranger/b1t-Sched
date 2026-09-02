@@ -4,6 +4,15 @@
 
 # 02.09.26
 
+**Classroom Sync Briefing Modal & GitHub Version Control Diff View**
+- **Interactive Sync Summary Modal (`#classroom-sync-modal`)**: Replaced the legacy JavaScript `alert()` dialogs during Classroom sync with a dedicated, dark-themed briefing modal. The modal summarizes total processed items with clean status pills (`+ Added`, `~ Updated`, `= Up to date`), handles empty/up-to-date states cleanly, and provides direct links (`.sync-view-post-btn`) to view original Google Classroom posts in a new tab.
+- **GitHub-Style Version Control Diff Engine**: Built an in-engine Longest Common Subsequence (LCS) line diff algorithm (`computeLineDiff`) that generates exact line-by-line diffs with line numbers, green addition indicators (`+`, `.git-diff-row-add`), red deletion indicators (`-`, `.git-diff-row-del`), and line change counters (`+X lines, -Y lines`).
+- **Collapsible Manual Dropdown Diffs (`.sync-diff-dropdown`)**: Added a manual "View Changes" / "Hide Changes" toggle button (`.sync-diff-toggle-btn`) with smooth chevron rotation for each synced item card, revealing:
+  - **Property Diff**: Highlights changed titles (`- Old Title` -> `+ New Title`) and changed deadlines (`- Old Deadline` -> `+ New Deadline`).
+  - **Files & Attachments Diff**: Lists attached Drive files, YouTube links, web URLs, and Google Forms with addition badges (`+ File.pdf`).
+  - **Line-by-Line Instructions Diff**: Monospace code table with split line numbers and diff styling.
+- **Course-Level Sync Support**: Embedded the Admin/CR Sync action button (`#sync-classroom-tasks-btn-course`) into the course details header (`renderCourseDetails`) in addition to the all-courses unified view.
+
 **User Role Display, DptCoor Role, Faculty Customizations, Notice Permissions & Admin Role Preview Mode**
 - **Faculty Self-Registration & Unapproved State**: Added a "Faculty Account" toggle (`#set-is-faculty-checkbox`) in the Initial Setup view (`set-details-view`). When enabled, adapts the Student ID field into `"Faculty Initial"` (with placeholder `"Enter your faculty initial (e.g. ABC)"`), while cleanly hiding and bypassing semester and section requirements. Upon submission, the account is registered with `isFaculty: true, role: 'Faculty', isApproved: false`. In Profile Settings, unapproved faculty accounts display an amber `(unapproved)` tag (`#profile-role-approval-tag`) directly beside the role status badge.
 - **Account Approvals Management (Modal, Sidebar & Theme Support)**: Implemented a dedicated Account Approvals system (`js/approvals.js`, `#approval-modal`, `#approval-sidebar`) accessible via a sleek desktop floating icon-only shield button (`#approval-button-desktop` with `48x48px` dimensions) elevated to `bottom: 138px` cleanly above the "Notes" button, and via a mobile bookmark toggle tab (`#approval-toggle` positioned at `bottom: 355px` to cleanly clear existing sidebar toggles).

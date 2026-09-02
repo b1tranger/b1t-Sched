@@ -871,6 +871,36 @@
                 </div>
             </div>
 
+            <!-- Google Classroom Sync Summary Modal (Git Diff Briefing) -->
+            <div id="classroom-sync-modal" class="modal" style="display: none;" role="dialog" aria-labelledby="classroom-sync-modal-title" aria-modal="true">
+                <div class="modal-content classroom-sync-modal-content">
+                    <div class="modal-header classroom-sync-modal-header">
+                        <div class="classroom-sync-title-group">
+                            <h2 id="classroom-sync-modal-title" class="modal-title">
+                                <i class="fas fa-sync-alt"></i> Classroom Sync Summary
+                            </h2>
+                            <span id="classroom-sync-badge" class="classroom-sync-count-badge">0 Changes</span>
+                        </div>
+                        <button id="close-classroom-sync-modal" class="btn btn-icon" onclick="Classroom.closeSyncSummaryModal()" aria-label="Close">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body classroom-sync-modal-body">
+                        <div id="classroom-sync-overview-bar" class="classroom-sync-overview">
+                            <!-- Stats overview rendered dynamically -->
+                        </div>
+                        <div id="classroom-sync-items-container" class="classroom-sync-items-container">
+                            <!-- Sync items with diff dropdowns rendered dynamically -->
+                        </div>
+                    </div>
+                    <div class="modal-footer classroom-sync-modal-footer">
+                        <button class="btn btn-primary" onclick="Classroom.closeSyncSummaryModal()">
+                            <i class="fas fa-check"></i> Done
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Note Toggle Button (Mobile) -->
             <div id="note-toggle" class="note-toggle mobile-only hidden" style="display: none;" aria-label="Open notes"
                 aria-expanded="false" role="button" tabindex="0">

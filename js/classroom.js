@@ -1402,14 +1402,413 @@ const Classroom = {
         });
     },
 
+    /**
+     * Compute line-by-line diff between two text strings using Longest Common Subsequence (LCS)
+     * @param {string} oldText 
+     * @param {string} newText 
+     * @returns {Object} { lines, addCount, delCount, hasChanges }
+     */
+    computeLineDiff(oldText, newText) {
+        const linesOld = (oldText || '').split(/\r?\n/);
+        const linesNew = (newText || '').split(/\r?\n/);
+
+        if (linesOld.length > 1 && linesOld[linesOld.length - 1] === '') linesOld.pop();
+        if (linesNew.length > 1 && linesNew[linesNew.length - 1] === '') linesNew.pop();
+
+        const n = linesOld.length;
+        const m = linesNew.length;
+
+        // DP table for LCS
+        const dp = Array.from({ length: n + 1 }, () => new Uint16Array(m + 1));
+        for (let i = 0; i < n; i++) {
+            for (let j = 0; j < m; j++) {
+                if (linesOld[i] === linesNew[j]) {
+                    dp[i + 1][j + 1] = dp[i][j] + 1;
+                } else {
+                    dp[i + 1][j + 1] = Math.max(dp[i + 1][j], dp[i][j + 1]);
+                }
+            }
+        }
+
+        // Backtrack to assemble diff stream
+        let i = n, j = m;
+        const diffStream = [];
+        while (i > 0 || j > 0) {
+            if (i > 0 && j > 0 && linesOld[i - 1] === linesNew[j - 1]) {
+                diffStream.unshift({ type: 'same', oldLine: i, newLine: j, text: linesOld[i - 1] });
+                i--;
+                j--;
+            } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+                diffStream.unshift({ type: 'add', oldLine: null, newLine: j, text: linesNew[j - 1] });
+                j--;
+            } else if (i > 0 && (j === 0 || dp[i][j - 1] < dp[i - 1][j])) {
+                diffStream.unshift({ type: 'del', oldLine: i, newLine: null, text: linesOld[i - 1] });
+                i--;
+            }
+        }
+
+        const addCount = diffStream.filter(d => d.type === 'add').length;
+        const delCount = diffStream.filter(d => d.type === 'del').length;
+
+        return {
+            lines: diffStream,
+            addCount,
+            delCount,
+            hasChanges: addCount > 0 || delCount > 0
+        };
+    },
+
+    /**
+     * Extract structured materials list from Classroom item
+     * @param {Array} materials 
+     * @returns {Array} List of { title, url, icon, type }
+     */
+    extractMaterialsList(materials) {
+        if (!materials || !Array.isArray(materials)) return [];
+        return materials.map(mat => {
+            let title = 'Attachment';
+            let url = '#';
+            let icon = 'fa-paperclip';
+            let type = 'file';
+
+            if (mat.driveFile && mat.driveFile.driveFile) {
+                title = mat.driveFile.driveFile.title || 'Google Drive File';
+                url = mat.driveFile.driveFile.alternateLink || '#';
+                icon = 'fa-file';
+                type = 'driveFile';
+            } else if (mat.youtubeVideo) {
+                title = mat.youtubeVideo.title || 'YouTube Video';
+                url = mat.youtubeVideo.alternateLink || `https://www.youtube.com/watch?v=${mat.youtubeVideo.id}`;
+                icon = 'fa-video';
+                type = 'youtube';
+            } else if (mat.link) {
+                title = mat.link.title || mat.link.url || 'Web Link';
+                url = mat.link.url || '#';
+                icon = 'fa-link';
+                type = 'link';
+            } else if (mat.form) {
+                title = mat.form.title || 'Google Form';
+                url = mat.form.formUrl || '#';
+                icon = 'fa-file-signature';
+                type = 'form';
+            }
+            return { title, url, icon, type };
+        });
+    },
+
+    /**
+     * Compute full property and line diff between existing task and fresh classroom item
+     * @param {Object|null} existingTask 
+     * @param {Object} assignment 
+     * @param {boolean} isNew 
+     * @returns {Object} Detailed diff object
+     */
+    computeItemDiff(existingTask, assignment, isNew = false) {
+        const linkLabel = assignment.alternateLink ? `[View in Classroom](${assignment.alternateLink})\n\n` : '';
+        const newInstructions = assignment.description || '';
+
+        let oldInstructions = '';
+        let oldTitle = '';
+        let oldDeadlineStr = 'No due date';
+
+        if (existingTask) {
+            const oldFullDesc = existingTask.description || '';
+            oldInstructions = oldFullDesc.replace(/^\[View in Classroom\]\([^\)]+\)\n\n?/, '');
+            oldTitle = existingTask.title || '';
+            if (existingTask.deadline) {
+                const oldDate = existingTask.deadline.toDate ? existingTask.deadline.toDate() : new Date(existingTask.deadline);
+                oldDeadlineStr = Utils.formatDate(oldDate);
+            }
+        }
+
+        const newMaterials = this.extractMaterialsList(assignment.materials);
+
+        let newDeadlineStr = 'No due date';
+        if (assignment.dueDate) {
+            const due = new Date(assignment.dueDate.year, assignment.dueDate.month - 1, assignment.dueDate.day, assignment.dueTime?.hours || 23, assignment.dueTime?.minutes || 59);
+            newDeadlineStr = Utils.formatDate(due);
+        }
+
+        const titleChanged = !isNew && Boolean(oldTitle && assignment.title && oldTitle !== assignment.title);
+        const deadlineChanged = !isNew && oldDeadlineStr !== newDeadlineStr;
+
+        // Line diff for instructions / caption
+        const lineDiff = this.computeLineDiff(isNew ? '' : oldInstructions, newInstructions);
+
+        return {
+            isNew,
+            titleChanged,
+            oldTitle,
+            newTitle: assignment.title,
+            deadlineChanged,
+            oldDeadlineStr,
+            newDeadlineStr,
+            materials: newMaterials,
+            lineDiff,
+            hasAnyChanges: isNew || titleChanged || deadlineChanged || lineDiff.hasChanges
+        };
+    },
+
+    /**
+     * Render Git commit history style diff container
+     * @param {Object} diff 
+     * @returns {string} HTML string
+     */
+    renderDiffViewer(diff) {
+        if (!diff) return '';
+
+        let html = '';
+
+        // 1. Property Changes (Title & Deadline)
+        if (diff.titleChanged || diff.deadlineChanged) {
+            html += `
+                <div class="git-diff-viewer">
+                    <div class="git-diff-header">
+                        <div class="git-diff-title">
+                            <i class="fas fa-tag"></i> Property Changes
+                        </div>
+                    </div>
+                    <div class="git-diff-meta-row">
+                        ${diff.titleChanged ? `
+                            <div class="git-diff-meta-item">
+                                <span class="git-diff-meta-label">Title:</span>
+                                <span class="git-diff-del-inline">${Utils.escapeHtml(diff.oldTitle)}</span>
+                                <i class="fas fa-arrow-right" style="font-size: 0.75rem; color: #8b949e;"></i>
+                                <span class="git-diff-add-inline">${Utils.escapeHtml(diff.newTitle)}</span>
+                            </div>
+                        ` : ''}
+                        ${diff.deadlineChanged ? `
+                            <div class="git-diff-meta-item">
+                                <span class="git-diff-meta-label">Deadline:</span>
+                                <span class="git-diff-del-inline">${Utils.escapeHtml(diff.oldDeadlineStr)}</span>
+                                <i class="fas fa-arrow-right" style="font-size: 0.75rem; color: #8b949e;"></i>
+                                <span class="git-diff-add-inline">${Utils.escapeHtml(diff.newDeadlineStr)}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        // 2. Attachments & Files Diff
+        if (diff.materials && diff.materials.length > 0) {
+            const fileItems = diff.materials.map(mat => `
+                <div class="git-diff-file-tag added">
+                    <i class="fas ${mat.icon}"></i>
+                    <span>+ <strong>${Utils.escapeHtml(mat.title)}</strong></span>
+                    ${mat.url && mat.url !== '#' ? `<a href="${mat.url}" target="_blank" rel="noopener noreferrer"><i class="fas fa-external-link-alt"></i></a>` : ''}
+                </div>
+            `).join('');
+
+            html += `
+                <div class="git-diff-viewer">
+                    <div class="git-diff-header">
+                        <div class="git-diff-title">
+                            <i class="fas fa-paperclip"></i> Files & Attachments (${diff.materials.length})
+                        </div>
+                        <div class="git-diff-stats">
+                            <span class="git-diff-stat-add">+${diff.materials.length} attached</span>
+                        </div>
+                    </div>
+                    <div class="git-diff-attachments-list">
+                        ${fileItems}
+                    </div>
+                </div>
+            `;
+        }
+
+        // 3. Line-by-Line Instructions / Description Diff
+        const ld = diff.lineDiff;
+        if (ld && ld.lines && ld.lines.length > 0) {
+            const tableRows = ld.lines.map(l => {
+                const rowClass = l.type === 'add' ? 'git-diff-row-add' : (l.type === 'del' ? 'git-diff-row-del' : 'git-diff-row-same');
+                const sign = l.type === 'add' ? '+' : (l.type === 'del' ? '-' : ' ');
+                const oldNum = l.oldLine !== null ? l.oldLine : '';
+                const newNum = l.newLine !== null ? l.newLine : '';
+                const escapedText = Utils.escapeHtml(l.text || ' ');
+
+                return `
+                    <tr class="${rowClass}">
+                        <td class="git-diff-num">${oldNum}</td>
+                        <td class="git-diff-num">${newNum}</td>
+                        <td class="git-diff-sign">${sign}</td>
+                        <td class="git-diff-code">${escapedText}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            html += `
+                <div class="git-diff-viewer">
+                    <div class="git-diff-header">
+                        <div class="git-diff-title">
+                            <i class="fas fa-file-alt"></i> Instructions / Description Diff
+                        </div>
+                        <div class="git-diff-stats">
+                            <span class="git-diff-stat-add">+${ld.addCount} lines</span>
+                            <span class="git-diff-stat-del">-${ld.delCount} lines</span>
+                        </div>
+                    </div>
+                    <div class="git-diff-table-wrapper">
+                        <table class="git-diff-table">
+                            <tbody>
+                                ${tableRows}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        } else if (!diff.titleChanged && !diff.deadlineChanged && (!diff.materials || diff.materials.length === 0)) {
+            html += `
+                <div class="git-diff-viewer">
+                    <div class="git-diff-header">
+                        <div class="git-diff-title"><i class="fas fa-check"></i> Details</div>
+                    </div>
+                    <div style="padding: 12px 14px; font-size: 0.82rem; color: #8b949e;">
+                        No textual modifications found. Properties are up to date.
+                    </div>
+                </div>
+            `;
+        }
+
+        return html;
+    },
+
+    /**
+     * Show Sync Summary Modal with git-style version control briefing
+     * @param {Object} summary 
+     */
+    showSyncSummaryModal(summary) {
+        const modal = document.getElementById('classroom-sync-modal');
+        if (!modal) return;
+
+        const badgeEl = document.getElementById('classroom-sync-badge');
+        const overviewEl = document.getElementById('classroom-sync-overview-bar');
+        const itemsContainer = document.getElementById('classroom-sync-items-container');
+
+        const added = summary.added || [];
+        const updated = summary.updated || [];
+        const unchanged = summary.unchanged || [];
+        const totalChanges = added.length + updated.length;
+
+        if (badgeEl) {
+            badgeEl.textContent = `${totalChanges} Change${totalChanges === 1 ? '' : 's'}`;
+        }
+
+        if (overviewEl) {
+            overviewEl.innerHTML = `
+                <span class="sync-overview-stat added"><i class="fas fa-plus-circle"></i> ${added.length} Added</span>
+                <span class="sync-overview-stat updated"><i class="fas fa-pen-nib"></i> ${updated.length} Updated</span>
+                <span class="sync-overview-stat unchanged"><i class="fas fa-check-circle"></i> ${unchanged.length} Up to date</span>
+            `;
+        }
+
+        if (itemsContainer) {
+            if (totalChanges === 0 && unchanged.length === 0) {
+                itemsContainer.innerHTML = `
+                    <div class="sync-empty-state">
+                        <i class="fas fa-clipboard-check"></i>
+                        <h4>No assignments found</h4>
+                        <p>There were no eligible assignments with due dates to sync from Google Classroom.</p>
+                    </div>
+                `;
+            } else if (totalChanges === 0) {
+                itemsContainer.innerHTML = `
+                    <div class="sync-empty-state">
+                        <i class="fas fa-check-double"></i>
+                        <h4>All items are up to date</h4>
+                        <p>No new assignments, deadline changes, or instruction updates detected.</p>
+                    </div>
+                `;
+            } else {
+                const allItems = [...added, ...updated];
+                itemsContainer.innerHTML = allItems.map(item => {
+                    const statusClass = item.status === 'added' ? 'status-added' : (item.status === 'updated' ? 'status-updated' : 'status-unchanged');
+                    const badgeClass = item.status;
+                    const badgeIcon = item.status === 'added' ? 'fa-plus' : (item.status === 'updated' ? 'fa-pen' : 'fa-check');
+                    const badgeLabel = item.status === 'added' ? 'Added Task' : (item.status === 'updated' ? 'Updated' : 'Up to date');
+
+                    const diffHtml = this.renderDiffViewer(item.diff);
+
+                    return `
+                        <div class="sync-card ${statusClass}">
+                            <div class="sync-card-header">
+                                <div class="sync-card-info">
+                                    <div class="sync-card-badges">
+                                        <span class="sync-action-badge ${badgeClass}">
+                                            <i class="fas ${badgeIcon}"></i> ${badgeLabel}
+                                        </span>
+                                        <span class="sync-course-pill">${Utils.escapeHtml(item.courseName || 'Classroom')}</span>
+                                    </div>
+                                    <h4 class="sync-card-title">${Utils.escapeHtml(item.title)}</h4>
+                                    <div class="sync-card-meta">
+                                        <i class="far fa-clock"></i>
+                                        <span>${Utils.escapeHtml(item.diff?.newDeadlineStr || 'No due date')}</span>
+                                    </div>
+                                </div>
+                                <div class="sync-card-actions">
+                                    ${item.link ? `
+                                        <a href="${item.link}" target="_blank" rel="noopener noreferrer" class="sync-view-post-btn" title="View original post in Google Classroom">
+                                            <i class="fas fa-external-link-alt"></i> View in Classroom
+                                        </a>
+                                    ` : ''}
+                                    <button class="sync-diff-toggle-btn" onclick="Classroom.toggleSyncDiff(event, '${item.id}')" title="Toggle version control diff view">
+                                        <span>View Changes</span>
+                                        <i class="fas fa-chevron-down"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="sync-diff-${item.id}" class="sync-diff-dropdown">
+                                ${diffHtml}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    },
+
+    closeSyncSummaryModal() {
+        const modal = document.getElementById('classroom-sync-modal');
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+    },
+
+    toggleSyncDiff(event, itemId) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        const diffEl = document.getElementById(`sync-diff-${itemId}`);
+        const btn = event ? event.currentTarget : null;
+        if (!diffEl) return;
+
+        const isOpen = diffEl.classList.toggle('is-open');
+        if (btn) {
+            btn.classList.toggle('is-active', isOpen);
+            const labelSpan = btn.querySelector('span');
+            if (labelSpan) {
+                labelSpan.textContent = isOpen ? 'Hide Changes' : 'View Changes';
+            }
+        }
+    },
+
     async syncAssignmentsToTasks() {
         if (typeof App === 'undefined' || (!App.isAdmin && !App.isCR)) return;
 
         const syncBtn = document.getElementById('sync-classroom-tasks-btn');
-        if (syncBtn) {
-            syncBtn.disabled = true;
-            syncBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Syncing...';
-        }
+        const courseSyncBtn = document.getElementById('sync-classroom-tasks-btn-course');
+        
+        [syncBtn, courseSyncBtn].forEach(btn => {
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Syncing...';
+            }
+        });
 
         try {
             // Get assignments from cache
@@ -1422,15 +1821,15 @@ const Classroom = {
             }
 
             if (assignments.length === 0) {
-                alert('No assignments found to sync.');
+                this.showSyncSummaryModal({ added: [], updated: [], unchanged: [] });
                 return;
             }
 
-            // Get only assignments (with a valid dueDate)
+            // Get only assignments with a valid dueDate
             const syncableAssignments = assignments.filter(a => a.dueDate);
 
             if (syncableAssignments.length === 0) {
-                alert('No assignments with due dates found to sync.');
+                this.showSyncSummaryModal({ added: [], updated: [], unchanged: [] });
                 return;
             }
 
@@ -1448,8 +1847,9 @@ const Classroom = {
 
             const userId = Auth.getUserId();
             const userEmail = Auth.getUserEmail();
-            let addedCount = 0;
-            let updatedCount = 0;
+            const addedItems = [];
+            const updatedItems = [];
+            const unchangedItems = [];
 
             for (const assignment of syncableAssignments) {
                 // Format due date to be compatible with DB structure
@@ -1475,7 +1875,9 @@ const Classroom = {
                 const existingTask = existingTasksMap.get(assignment.id);
 
                 if (existingTask) {
-                    // Check if deadline, title, course, or description changed in Classroom
+                    // Compute detailed property and line diff
+                    const itemDiff = this.computeItemDiff(existingTask, assignment, false);
+
                     let existingDueIso = null;
                     if (existingTask.deadline) {
                         const existingDate = existingTask.deadline.toDate ? existingTask.deadline.toDate() : new Date(existingTask.deadline);
@@ -1487,28 +1889,51 @@ const Classroom = {
                                        existingTask.description !== taskData.description ||
                                        existingDueIso !== taskData.deadline;
 
-                    if (hasChanges) {
+                    if (hasChanges || itemDiff.hasAnyChanges) {
                         const updateRes = await DB.updateTask(existingTask.id, taskData);
                         if (updateRes && updateRes.success) {
-                            updatedCount++;
+                            updatedItems.push({
+                                id: assignment.id,
+                                title: assignment.title,
+                                courseName: assignment.courseName || 'Classroom Assignment',
+                                link: assignment.alternateLink || '#',
+                                status: 'updated',
+                                diff: itemDiff
+                            });
                         }
+                    } else {
+                        unchangedItems.push({
+                            id: assignment.id,
+                            title: assignment.title,
+                            courseName: assignment.courseName || 'Classroom Assignment',
+                            link: assignment.alternateLink || '#',
+                            status: 'unchanged',
+                            diff: itemDiff
+                        });
                     }
                 } else {
+                    // New Task Addition
+                    const itemDiff = this.computeItemDiff(null, assignment, true);
                     const result = await DB.createTask(userId, userEmail, taskData);
                     if (result && result.success) {
-                        addedCount++;
+                        addedItems.push({
+                            id: assignment.id,
+                            title: assignment.title,
+                            courseName: assignment.courseName || 'Classroom Assignment',
+                            link: assignment.alternateLink || '#',
+                            status: 'added',
+                            diff: itemDiff
+                        });
                     }
                 }
             }
 
-            if (addedCount === 0 && updatedCount === 0) {
-                alert('All assignments are already up to date in Tasks.');
-            } else {
-                const messages = [];
-                if (addedCount > 0) messages.push(`${addedCount} new assignment(s) added`);
-                if (updatedCount > 0) messages.push(`${updatedCount} existing task(s) updated with new deadlines/details`);
-                alert(`Sync completed:\n• ${messages.join('\n• ')}`);
-            }
+            // Open the rich Git Diff Summary Modal
+            this.showSyncSummaryModal({
+                added: addedItems,
+                updated: updatedItems,
+                unchanged: unchangedItems
+            });
 
             // Refresh dashboard tasks
             if (App && typeof App.loadDashboardData === 'function') {
@@ -1517,12 +1942,16 @@ const Classroom = {
 
         } catch (error) {
             console.error('Error syncing assignments:', error);
-            alert('An error occurred while syncing assignments.');
-        } finally {
-            if (syncBtn) {
-                syncBtn.disabled = false;
-                syncBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Sync';
+            if (typeof UI !== 'undefined' && typeof UI.showToast === 'function') {
+                UI.showToast('An error occurred while syncing assignments.', 'error');
             }
+        } finally {
+            [syncBtn, courseSyncBtn].forEach(btn => {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-sync-alt"></i> Sync';
+                }
+            });
         }
     },
 
@@ -2204,14 +2633,21 @@ const Classroom = {
 
         // Header with Back button and Toggle
         const headerHtml = `
-            <div class="classroom-view-header">
-                <div class="classroom-view-header-title">
-                    <button class="classroom-back-btn" onclick="Classroom.renderCourseList()">
-                        <i class="fas fa-arrow-left"></i>
+            <div class="classroom-view-header" style="flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center; flex: 1; justify-content: space-between;">
+                    <div class="classroom-view-header-title">
+                        <button class="classroom-back-btn" onclick="Classroom.renderCourseList()">
+                            <i class="fas fa-arrow-left"></i>
+                        </button>
+                        <span class="classroom-course-title-text">
+                            ${course ? course.name : 'Course Details'}
+                        </span>
+                    </div>
+                    ${(viewType === 'todo' && typeof App !== 'undefined' && (App.isAdmin || App.isCR)) ? `
+                    <button id="sync-classroom-tasks-btn-course" class="btn btn-sm btn-primary" onclick="Classroom.syncAssignmentsToTasks()" title="Sync Assignments to Tasks">
+                        <i class="fas fa-sync-alt"></i> Sync
                     </button>
-                    <span class="classroom-course-title-text">
-                        ${course ? course.name : 'Course Details'}
-                    </span>
+                    ` : ''}
                 </div>
                 <div class="classroom-view-toggle">
                     <button class="view-toggle-btn ${viewType === 'todo' ? 'active' : ''}" onclick="Classroom.switchView('todo')">
