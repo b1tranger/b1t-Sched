@@ -105,7 +105,7 @@ const setupMocks = () => {
 
 // Load modules
 setupMocks();
-const ActivityLoggerModule = await import('../js/activity-logger.js');
+const ActivityLoggerModule = await import('../../js/admin/activity-logger.js');
 const ActivityLogger = ActivityLoggerModule.default || global.ActivityLogger;
 
 // Mock DB module

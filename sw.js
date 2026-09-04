@@ -3,7 +3,7 @@
  * Handles caching strategies, offline functionality, and background sync
  */
 
-const CACHE_VERSION = 'v2.52.0';
+const CACHE_VERSION = 'v2.53.0';
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `dynamic-${CACHE_VERSION}`;
 const API_CACHE = `api-${CACHE_VERSION}`;
@@ -27,18 +27,18 @@ const STATIC_ASSETS = [
   '/css/timeline.css',
   '/css/responsive.css',
   '/css/changelog.css',
-  '/js/app.js',
-  '/js/auth.js',
-  '/js/classroom.js',
-  '/js/raids-feed.js',
-  '/js/db.js',
-  '/js/ui.js',
-  '/js/utils.js',
-  '/js/notes.js',
-  '/js/notice.js',
-  '/js/profile.js',
-  '/js/routing.js',
-  '/js/firebase-config.js',
+  '/js/core/app.js',
+  '/js/core/auth.js',
+  '/js/features/classroom.js',
+  '/js/features/raids-feed.js',
+  '/js/core/db.js',
+  '/js/core/ui.js',
+  '/js/core/utils.js',
+  '/js/features/notes.js',
+  '/js/features/notice.js',
+  '/js/features/profile.js',
+  '/js/core/routing.js',
+  '/js/core/firebase-config.js',
   '/Social-Preview.webp',
   '/images/preloader.gif'
 ];

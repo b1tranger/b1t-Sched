@@ -3362,8 +3362,8 @@ const App = {
               <button class="btn btn-sm btn-action btn-danger delete-user-btn" 
                       data-user-id="${user.id}" 
                       data-user-email="${user.email || ''}"
-                      title="Delete user account">
-                <i class="fas fa-trash-alt"></i> Delete
+                      title="Remove user details from database">
+                <i class="fas fa-user-minus"></i> Remove Details
               </button>
               <button class="btn btn-sm btn-action toggle-cr-btn ${isCR ? 'active' : ''}" 
                       data-user-id="${user.id}" 
@@ -3710,14 +3710,14 @@ const App = {
       this.openUserDeleteAuthModal(userId, userEmail);
 
       // Show success message
-      UI.showMessage('user-management-message', 'User deleted from database successfully', 'success');
+      UI.showMessage('user-management-message', 'User details removed from database successfully', 'success');
     } catch (error) {
       console.error('Delete user error:', error);
 
       // Close dialog
       this.deleteUserDialog.close();
 
-      UI.showMessage('user-management-message', error.message || 'Failed to delete user', 'error');
+      UI.showMessage('user-management-message', error.message || 'Failed to remove user details', 'error');
     } finally {
       UI.showLoading(false);
     }

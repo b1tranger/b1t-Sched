@@ -60,39 +60,41 @@ function assertEqual(actual, expected, testName) {
   }
 }
 
-console.log('Running Semester Utils Unit Tests...');
+describe('Semester Utils Unit Tests', () => {
+  test('Cycle Tests', () => {
+    expect(getSemesterCycle(new Date('2026-07-25'))).toBe('2026-07');
+    expect(getSemesterCycle(new Date('2026-01-15'))).toBe('2026-01');
+    expect(getSemesterCycle(new Date('2026-06-30'))).toBe('2026-01');
+  });
 
-// 1. Cycle Tests
-assertEqual(getSemesterCycle(new Date('2026-07-25')), '2026-07', 'July date produces 2026-07 cycle');
-assertEqual(getSemesterCycle(new Date('2026-01-15')), '2026-01', 'January date produces 2026-01 cycle');
-assertEqual(getSemesterCycle(new Date('2026-06-30')), '2026-01', 'June 30 date produces 2026-01 cycle');
+  test('Elapsed Cycle Tests', () => {
+    expect(getElapsedSemesterCycles('2026-01', '2026-07')).toBe(1);
+    expect(getElapsedSemesterCycles('2026-01', '2027-01')).toBe(2);
+    expect(getElapsedSemesterCycles('2026-07', '2026-07')).toBe(0);
+  });
 
-// 2. Elapsed Cycle Tests
-assertEqual(getElapsedSemesterCycles('2026-01', '2026-07'), 1, '2026-01 to 2026-07 is 1 cycle');
-assertEqual(getElapsedSemesterCycles('2026-01', '2027-01'), 2, '2026-01 to 2027-01 is 2 cycles');
-assertEqual(getElapsedSemesterCycles('2026-07', '2026-07'), 0, 'Same cycle is 0 elapsed');
+  test('Semester Increment Tests', () => {
+    expect(incrementSemester('1st')).toBe('2nd');
+    expect(incrementSemester('7th')).toBe('8th');
+    expect(incrementSemester('8th')).toBe('alumni / special');
+    expect(incrementSemester('alumni / special')).toBe('alumni / special');
+    expect(incrementSemester('1st', 2)).toBe('3rd');
+  });
 
-// 3. Semester Increment Tests
-assertEqual(incrementSemester('1st'), '2nd', '1st -> 2nd');
-assertEqual(incrementSemester('7th'), '8th', '7th -> 8th');
-assertEqual(incrementSemester('8th'), 'alumni / special', '8th -> alumni / special');
-assertEqual(incrementSemester('alumni / special'), 'alumni / special', 'alumni / special stays alumni / special');
-assertEqual(incrementSemester('1st', 2), '3rd', '1st + 2 steps -> 3rd');
+  test('Banner Dismiss Flag Logic Tests', () => {
+    function shouldShowSemesterNotice(userProfile, currentCycle) {
+      if (!userProfile) return false;
+      const dismissed = userProfile.semesterNoticeDismissedCycle;
+      return dismissed !== currentCycle;
+    }
 
-// 4. Banner Dismiss Flag Logic Tests
-function shouldShowSemesterNotice(userProfile, currentCycle) {
-  if (!userProfile) return false;
-  const dismissed = userProfile.semesterNoticeDismissedCycle;
-  return dismissed !== currentCycle;
-}
+    const userProfileDismissed = { semesterNoticeDismissedCycle: '2026-07' };
+    const userProfileNewUpdate = { semesterNoticeDismissedCycle: '2026-01' };
+    const userProfileNoFlag = {};
 
-const userProfileDismissed = { semesterNoticeDismissedCycle: '2026-07' };
-const userProfileNewUpdate = { semesterNoticeDismissedCycle: '2026-01' };
-const userProfileNoFlag = {};
-
-assertEqual(shouldShowSemesterNotice(userProfileDismissed, '2026-07'), false, 'Dismissed in 2026-07 hides banner in 2026-07');
-assertEqual(shouldShowSemesterNotice(userProfileNewUpdate, '2026-07'), true, 'Dismissed in 2026-01 shows banner when cycle advances to 2026-07');
-assertEqual(shouldShowSemesterNotice(userProfileNoFlag, '2026-07'), true, 'No dismiss flag shows banner');
-
-console.log('Semester Utils Unit Tests completed successfully.');
+    expect(shouldShowSemesterNotice(userProfileDismissed, '2026-07')).toBe(false);
+    expect(shouldShowSemesterNotice(userProfileNewUpdate, '2026-07')).toBe(true);
+    expect(shouldShowSemesterNotice(userProfileNoFlag, '2026-07')).toBe(true);
+  });
+});
 

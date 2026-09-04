@@ -231,7 +231,8 @@ const Classroom = {
 
                 if (freshTime && existingTime && freshTime === existingTime && existing.status === item.status) {
                     skippedCount++;
-                    return existing; // Skip updating, retain existing loaded object
+                    // Retain existing item but merge fresh submission/state attributes in case they were updated
+                    return Object.assign({}, existing, item);
                 } else {
                     updatedCount++;
                     return item;
@@ -319,8 +320,11 @@ const Classroom = {
         if (item.statusCode === 'turned_in') return true;
         if (item.submissionState === 'TURNED_IN') return true;
         if (item.status === 'Turned in' || item.status === 'Turned in (Late)') return true;
-        if (item.submissionState === 'RETURNED' && item.sub && Array.isArray(item.sub.submissionHistory)) {
-            return item.sub.submissionHistory.some(h => h.stateHistory && String(h.stateHistory.state).toUpperCase() === 'TURNED_IN');
+        if (item.submissionState === 'RETURNED') {
+            if (item.sub && Array.isArray(item.sub.submissionHistory)) {
+                return item.sub.submissionHistory.some(h => h.stateHistory && String(h.stateHistory.state).toUpperCase() === 'TURNED_IN');
+            }
+            if (typeof item.assignedGrade === 'number') return true;
         }
         return false;
     },
@@ -912,8 +916,13 @@ const Classroom = {
                             let wasActuallyTurnedIn = false;
                             if (rawState === 'TURNED_IN') {
                                 wasActuallyTurnedIn = true;
-                            } else if (rawState === 'RETURNED' && sub && Array.isArray(sub.submissionHistory)) {
-                                wasActuallyTurnedIn = sub.submissionHistory.some(h => h.stateHistory && String(h.stateHistory.state).toUpperCase() === 'TURNED_IN');
+                            } else if (rawState === 'RETURNED') {
+                                if (sub && Array.isArray(sub.submissionHistory)) {
+                                    wasActuallyTurnedIn = sub.submissionHistory.some(h => h.stateHistory && String(h.stateHistory.state).toUpperCase() === 'TURNED_IN');
+                                }
+                                if (!wasActuallyTurnedIn && assignedGrade !== null) {
+                                    wasActuallyTurnedIn = true;
+                                }
                             }
 
                             work.submissionState = rawState;
@@ -960,8 +969,8 @@ const Classroom = {
             this.saveJsonCache('assignments', mergedAssignments);
 
             // NOTE: syncTurnedInAssignmentsToUserCompletions is intentionally NOT called here.
-            // Task completion state is ONLY updated when the user explicitly clicks Sync
-            // (syncAssignmentsToTasks), NOT on refresh or background loads.
+            // Task completion state is ONLY updated when the user explicitly clicks Refresh
+            // (refreshData), NOT on Sync (which only imports tasks) or background loads.
 
             return mergedAssignments;
 
@@ -1239,7 +1248,7 @@ const Classroom = {
             if (type === 'assignments') {
                 cachedItems = this.sortAssignments(cachedItems);
                 // NOTE: syncTurnedInAssignmentsToUserCompletions is intentionally NOT called here.
-                // Task completion state is ONLY updated by the explicit Sync button action.
+                // Task completion state is ONLY updated when the user explicitly clicks Refresh.
             }
 
             // Calculate how long ago the data was cached
@@ -1949,11 +1958,11 @@ const Classroom = {
 
             // Refresh dashboard tasks
             if (App && typeof App.loadDashboardData === 'function') {
-                await App.loadDashboardData();
+                await App.loadDashboardData(false);
             }
 
-            // Sync task completion status for synced tasks - only mark as completed if actually turned in
-            await this.syncTurnedInAssignmentsToUserCompletions(syncableAssignments);
+            // NOTE: syncAssignmentsToTasks ONLY imports / updates assignments in the task database.
+            // Task completion checking upon completion is handled exclusively by the refresh button (refreshData).
 
         } catch (error) {
             console.error('Error syncing assignments:', error);
@@ -2025,17 +2034,16 @@ const Classroom = {
                 // Find matching task(s) in Pending Tasks
                 const matchingTasks = tasks.filter(task => {
                     if (!task) return false;
-                    // 1. Direct match by classroomWorkId
-                    if (task.classroomWorkId && String(task.classroomWorkId) === String(assignment.id)) {
-                        return true;
+                    // 1. Direct match by classroomWorkId (if task has classroomWorkId, it MUST match assignment.id)
+                    if (task.classroomWorkId) {
+                        return String(task.classroomWorkId) === String(assignment.id);
                     }
                     // 2. Match by alternateLink in description
                     if (assignment.alternateLink && task.description && task.description.includes(assignment.alternateLink)) {
                         return true;
                     }
-                    // 3. Match by exact title & course (or addedFrom === 'classroom')
+                    // 3. Match by exact title & course (must match both title AND course; never match across different courses!)
                     if (task.title && assignment.title && task.title.trim().toLowerCase() === assignment.title.trim().toLowerCase()) {
-                        if (task.addedFrom === 'classroom') return true;
                         if (task.course && assignment.courseName && task.course.trim().toLowerCase() === assignment.courseName.trim().toLowerCase()) {
                             return true;
                         }
@@ -2223,6 +2231,14 @@ const Classroom = {
                 }
             }
         }
+
+        // Refresh dashboard tasks so App.currentTasks is fresh before checking completions
+        if (typeof App !== 'undefined' && typeof App.loadDashboardData === 'function') {
+            await App.loadDashboardData(false);
+        }
+
+        // Auto-check completed/turned-in tasks in Pending Tasks upon refresh
+        await this.syncTurnedInAssignmentsToUserCompletions(freshAssignments);
 
         // Present the Classroom Sync Summary modal briefing
         this.showSyncSummaryModal({

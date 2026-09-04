@@ -1,11 +1,57 @@
 {
-  "currentVersion": "v2.52.0",
+  "currentVersion": "v2.53.0",
   "lastUpdated": "September 4, 2026",
   "documentationUrl": "https://b1tranger.netlify.app/render.html?file=https%3A%2F%2Fgithub.com%2Fb1tranger%2Fb1t-Sched%2Fblob%2Fmain%2Fdoc%2FDOCUMENTATION.md",
   "history": [
     {
-      "version": "v2.52.0",
+      "version": "v2.53.0",
       "badge": "Latest",
+      "date": "September 2026",
+      "changes": [
+        {
+          "type": "Refactor",
+          "title": "Architecture: Categorical Folder Organization for JavaScript Codebase",
+          "description": "Organized all 37 root JavaScript files into five modular categorical subdirectories: js/core/ (foundational application infrastructure, routing, auth, db, UI, utils), js/features/ (feature modules including classroom, notes, notice, approvals, timeline, and calendar), js/pwa/ (PWA lifecycle, cache management, offline mode, install prompts), js/notifications/ (notification dispatching, content formatting, types), and js/admin/ (activity logging, migration scripts, admin APIs). Updated index.html, sw.js (CACHE_VERSION bumped to v2.53.0), and inject-env.js."
+        }
+      ]
+    },
+    {
+      "version": "v2.52.2",
+      "badge": "Stable",
+      "date": "September 2026",
+      "changes": [
+        {
+          "type": "Enhancement",
+          "title": "Classroom: Decouple Task Completion Checking from Sync to Refresh Button",
+          "description": "Decoupled task completion auto-checking from the Classroom 'Sync' button to the 'Refresh' button. The 'Sync' button (Classroom.syncAssignmentsToTasks) now strictly focuses on importing and updating coursework into the task database without mutating completion statuses. Automatic checking off of turned-in/graded assignments (and unchecking of unsubmitted assignments) in Pending Tasks is now executed exclusively when clicking the Classroom 'Refresh' button (Classroom.refreshData)."
+        }
+      ]
+    },
+    {
+      "version": "v2.52.1",
+      "badge": "Stable",
+      "date": "September 2026",
+      "changes": [
+        {
+          "type": "Enhancement",
+          "title": "User Management 'Remove Details' Action, Firestore Permission Fix & Fallback",
+          "description": "Renamed 'Delete' button in User Management and Edit User modal to 'Remove Details' for clearer context. Updated firestore.rules to allow admin deletion on user documents and completedTasks subcollections. Enhanced DB.deleteUser with non-fatal completedTasks subcollection cleanup and an automatic fallback that strips all profile details and marks isDeleted: true in the event deployed remote security rules restrict direct deletion. Updated DB.getUserProfile and DB.getAllUsers to filter out and treat stripped records as uninitialized accounts."
+        },
+        {
+          "type": "Bug Fix",
+          "title": "Classroom: Strict Task ID & Course Matching in Completion Sync",
+          "description": "Eliminated cross-course false positive task completions during Classroom sync by enforcing strict classroomWorkId equality and requiring both title and courseName matching when resolving synced tasks. In mergeAndSkipUnchanged, merged fresh submission state attributes into cached assignment entries to prevent stale unsubmitted assignments from being retained."
+        },
+        {
+          "type": "Enhancement",
+          "title": "Classroom Sync Summary Modal: Border Padding Removal",
+          "description": "Removed extra desktop outer border padding from the Classroom Sync Summary modal (#classroom-sync-modal .modal-content, .classroom-sync-modal-content) by adding explicit exclusions to .modal-content padding rules in css/responsive.css and setting padding: 0 !important."
+        }
+      ]
+    },
+    {
+      "version": "v2.52.0",
+      "badge": "Stable",
       "date": "September 2026",
       "changes": [
         {

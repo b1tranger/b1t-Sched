@@ -1293,7 +1293,7 @@ body.dark-mode .classroom-wip-badge {
     max-height: 88vh;
     display: flex;
     flex-direction: column;
-    padding: 0;
+    padding: 0 !important;
     overflow: hidden;
     background: var(--classroom-bg, #ffffff);
     border: 1px solid var(--classroom-border, #e0e0e0);

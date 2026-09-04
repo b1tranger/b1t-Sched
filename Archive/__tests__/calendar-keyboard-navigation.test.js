@@ -7,7 +7,7 @@
 import { jest } from '@jest/globals';
 
 // Import the calendar view module
-const { CalendarView } = await import('../js/calendar-view.js');
+const { CalendarView } = await import('../../js/features/calendar-view.js');
 
 describe('Calendar View - Keyboard Navigation (Task 11.2)', () => {
   let calendar;

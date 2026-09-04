@@ -28,7 +28,7 @@ if (fs.existsSync(envPath)) {
 }
 
 // The path to the config file
-const configPath = path.resolve(__dirname, 'js/firebase-config.js');
+const configPath = path.resolve(__dirname, 'js/core/firebase-config.js');
 
 try {
   // Read the file

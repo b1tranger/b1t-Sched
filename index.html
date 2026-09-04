@@ -1883,7 +1883,7 @@
                     </form>
                     <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
                         <button type="button" id="edit-user-delete-btn" class="btn btn-danger">
-                            <i class="fas fa-trash-alt"></i> Delete User
+                            <i class="fas fa-user-minus"></i> Remove Details
                         </button>
                         <div style="display: flex; gap: var(--spacing-sm);">
                             <button type="button" id="cancel-edit-user" class="btn btn-secondary">Cancel</button>
@@ -1970,7 +1970,7 @@
                 <div class="modal-content modal-danger">
                     <div class="modal-header">
                         <h2 class="modal-title">
-                            <i class="fas fa-exclamation-triangle"></i> Confirm User Deletion
+                            <i class="fas fa-user-minus"></i> Confirm Remove Details
                         </h2>
                         <button id="close-delete-modal" class="btn btn-icon">
                             <i class="fas fa-times"></i>
@@ -1978,7 +1978,7 @@
                     </div>
                     <div class="modal-body">
                         <p class="warning-text">
-                            You are about to permanently delete the user account:
+                            You are about to remove database details for the user account:
                         </p>
                         <p class="user-email-display" id="delete-user-email"></p>
                         <p class="warning-text">
@@ -1990,7 +1990,7 @@
                             <i class="fas fa-times"></i> Cancel
                         </button>
                         <button id="confirm-delete-user" class="btn btn-danger">
-                            <i class="fas fa-trash-alt"></i> Delete User
+                            <i class="fas fa-user-minus"></i> Remove Details
                         </button>
                     </div>
                 </div>
@@ -2001,7 +2001,7 @@
                 <div class="modal-content modal-content-md">
                     <div class="modal-header">
                         <h2 class="modal-title">
-                            <i class="fas fa-check-circle" style="color: var(--success, #10b981);"></i> User Deleted from Database
+                            <i class="fas fa-check-circle" style="color: var(--success, #10b981);"></i> User Details Removed from Database
                         </h2>
                         <button id="close-user-delete-auth-modal" class="btn btn-icon" aria-label="Close modal">
                             <i class="fas fa-times"></i>
@@ -2435,39 +2435,39 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 
     <!-- App JavaScript Modules -->
-    <script src="js/firebase-config.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/db.js"></script>
-    <script src="js/activity-logger.js"></script>
-    <script src="js/ui.js"></script>
-    <script src="js/routing.js"></script>
-    <script src="js/profile.js"></script>
-    <script src="js/utils.js"></script>
+    <script src="js/core/firebase-config.js"></script>
+    <script src="js/core/auth.js"></script>
+    <script src="js/core/db.js"></script>
+    <script src="js/admin/activity-logger.js"></script>
+    <script src="js/core/ui.js"></script>
+    <script src="js/core/routing.js"></script>
+    <script src="js/features/profile.js"></script>
+    <script src="js/core/utils.js"></script>
     <!-- Migration Scripts (Temporary) -->
-    <script src="js/migrate-activity-logs.js"></script>
-    <script src="js/update-user-semesters.js"></script>
+    <script src="js/admin/migrate-activity-logs.js"></script>
+    <script src="js/admin/update-user-semesters.js"></script>
 
-    <script src="js/cr-notice.js"></script>
-    <script src="js/notice.js"></script>
-    <script src="js/classroom.js"></script>
-    <script src="js/facultyClassroom.js"></script>
-    <script src="js/notes.js"></script>
-    <script src="js/approvals.js"></script>
-    <script src="js/admin-api.js"></script>
+    <script src="js/features/cr-notice.js"></script>
+    <script src="js/features/notice.js"></script>
+    <script src="js/features/classroom.js"></script>
+    <script src="js/features/facultyClassroom.js"></script>
+    <script src="js/features/notes.js"></script>
+    <script src="js/features/approvals.js"></script>
+    <script src="js/admin/admin-api.js"></script>
     <!-- Notification System Modules -->
-    <script src="js/permission-manager.js"></script>
-    <script src="js/notification-content-formatter.js"></script>
-    <script src="js/notification-manager.js"></script>
-    <script src="js/firestore-listener-manager.js"></script>
+    <script src="js/core/permission-manager.js"></script>
+    <script src="js/notifications/notification-content-formatter.js"></script>
+    <script src="js/notifications/notification-manager.js"></script>
+    <script src="js/core/firestore-listener-manager.js"></script>
     <!-- PWA Modules -->
-    <script src="js/pwa-detector.js"></script>
-    <script src="js/manifest-generator.js"></script>
-    <script src="js/cache-manager.js"></script>
-    <script src="js/install-prompt.js"></script>
-    <script src="js/offline-indicator.js"></script>
-    <script src="js/offline-manager.js"></script>
-    <script src="js/sw-update-manager.js"></script>
-    <script src="js/pwa-init.js"></script>
+    <script src="js/pwa/pwa-detector.js"></script>
+    <script src="js/pwa/manifest-generator.js"></script>
+    <script src="js/pwa/cache-manager.js"></script>
+    <script src="js/pwa/install-prompt.js"></script>
+    <script src="js/pwa/offline-indicator.js"></script>
+    <script src="js/pwa/offline-manager.js"></script>
+    <script src="js/pwa/sw-update-manager.js"></script>
+    <script src="js/pwa/pwa-init.js"></script>
     <!-- Note Enhancements (PDF + Zip) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -2475,20 +2475,20 @@
 
     <!-- Activity Timeline Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="js/timeline-data.js"></script>
-    <script src="js/timeline-ui.js"></script>
+    <script src="js/features/timeline-data.js"></script>
+    <script src="js/features/timeline-ui.js"></script>
 
     <!-- Task Export Module -->
-    <script src="js/task-export.js"></script>
+    <script src="js/features/task-export.js"></script>
 
     <!-- Changelog & What's New Module -->
-    <script src="js/changelog-modal.js"></script>
+    <script src="js/features/changelog-modal.js"></script>
 
     <!-- UITS Event Raiders Feed Module -->
-    <script src="js/raids-feed.js"></script>
+    <script src="js/features/raids-feed.js"></script>
 
-    <script src="js/app.js"></script>
-    <script src="js/calendar-view.js"></script>
+    <script src="js/core/app.js"></script>
+    <script src="js/features/calendar-view.js"></script>
 
     <!-- PWA Install Prompt -->
     <div id="install-prompt" class="install-prompt" style="display: none;">

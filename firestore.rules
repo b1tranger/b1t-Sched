@@ -68,10 +68,10 @@ service cloud.firestore {
         (request.resource.data.noteContent is string && 
          request.resource.data.noteContent.size() <= 1000000)
       );
-      allow delete: if false;
+      allow delete: if isAdmin();
       
       match /completedTasks/{taskId} {
-        allow read, write: if isOwner(userId);
+        allow read, write: if isOwner(userId) || isAdmin();
       }
     }
     
