@@ -3217,6 +3217,46 @@ const App = {
       });
     }
 
+    // Edit User modal Delete button
+    const editUserDeleteBtn = document.getElementById('edit-user-delete-btn');
+    if (editUserDeleteBtn) {
+      editUserDeleteBtn.addEventListener('click', () => {
+        const userId = document.getElementById('edit-user-id')?.value;
+        const userEmail = document.getElementById('edit-user-email')?.textContent;
+        UI.hideModal('edit-user-modal');
+        if (userId) {
+          this.openDeleteUserDialog(userId, userEmail);
+        }
+      });
+    }
+
+    // User Delete Auth Guidance modal listeners
+    const closeUserDeleteAuthModal = document.getElementById('close-user-delete-auth-modal');
+    const closeUserDeleteAuthDone = document.getElementById('close-user-delete-auth-done');
+    const openFirebaseAuthConsoleBtn = document.getElementById('open-firebase-auth-console-btn');
+    const copyDeletedAuthUidBtn = document.getElementById('copy-deleted-auth-uid-btn');
+
+    if (closeUserDeleteAuthModal) {
+      closeUserDeleteAuthModal.addEventListener('click', () => this.closeUserDeleteAuthModal());
+    }
+    if (closeUserDeleteAuthDone) {
+      closeUserDeleteAuthDone.addEventListener('click', () => this.closeUserDeleteAuthModal());
+    }
+    if (openFirebaseAuthConsoleBtn) {
+      openFirebaseAuthConsoleBtn.addEventListener('click', () => {
+        const uid = document.getElementById('deleted-auth-user-uid')?.textContent;
+        this.openFirebaseAuthConsole(uid);
+      });
+    }
+    if (copyDeletedAuthUidBtn) {
+      copyDeletedAuthUidBtn.addEventListener('click', async () => {
+        const uid = copyDeletedAuthUidBtn.dataset.uid || document.getElementById('deleted-auth-user-uid')?.textContent;
+        if (uid && uid !== '-') {
+          await this.copyUserUid(uid, copyDeletedAuthUidBtn);
+        }
+      });
+    }
+
     // Listen for department/semester changes in edit user modal
     const editUserDept = document.getElementById('edit-user-department');
     const editUserSem = document.getElementById('edit-user-semester');
@@ -3517,7 +3557,7 @@ const App = {
       }
     }
     if (!task) {
-      UI.showToast('Task not found to copy', 'error');
+      UI.showToast('Task not found to copy', 'error', 3000, 'bottom-right');
       return;
     }
 
@@ -3552,10 +3592,10 @@ const App = {
           btn.classList.remove('copied');
         }, 1800);
       }
-      UI.showToast('Task contents copied to clipboard', 'success', 2500);
+      UI.showToast('Task contents copied to clipboard', 'success', 2500, 'bottom-right');
     } catch (err) {
       console.error('Failed to copy task content:', err);
-      UI.showToast('Failed to copy task content', 'error');
+      UI.showToast('Failed to copy task content', 'error', 3000, 'bottom-right');
     }
   },
 
@@ -3592,10 +3632,10 @@ const App = {
           btn.classList.remove('copied');
         }, 1800);
       }
-      UI.showToast(`Task ID (${taskId}) copied to clipboard`, 'success', 2500);
+      UI.showToast(`Task ID (${taskId}) copied to clipboard`, 'success', 2500, 'bottom-right');
     } catch (err) {
       console.error('Failed to copy task ID:', err);
-      UI.showToast('Failed to copy task ID', 'error');
+      UI.showToast('Failed to copy task ID', 'error', 3000, 'bottom-right');
     }
   },
 
@@ -3646,35 +3686,95 @@ const App = {
     UI.showLoading(true);
 
     try {
-      const result = await adminAPI.deleteUser(userId);
+      const result = await DB.deleteUser(userId);
 
-      // Close dialog
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to delete user from database');
+      }
+
+      // Close confirmation dialog
       this.deleteUserDialog.close();
 
       // Remove user from local state
       this.allUsers = this.allUsers.filter(u => u.id !== userId);
 
+      // Update cached user count
+      if (this.allUsers) {
+        DB.updateUserCountCache(this.allUsers.length);
+      }
+
       // Re-render user list
       this.renderUserList(this.allUsers);
 
+      // Open post-deletion guidance modal with Firebase Auth instructions
+      this.openUserDeleteAuthModal(userId, userEmail);
+
       // Show success message
-      UI.showMessage('user-management-message', result.message || 'User deleted successfully', 'success');
+      UI.showMessage('user-management-message', 'User deleted from database successfully', 'success');
     } catch (error) {
       console.error('Delete user error:', error);
 
       // Close dialog
       this.deleteUserDialog.close();
 
-      if (error.message.includes('network')) {
-        UI.showMessage('user-management-message', 'Network error. Please check your connection.', 'error');
-      } else if (error.message.includes('permission')) {
-        UI.showMessage('user-management-message', 'You do not have permission to perform this action.', 'error');
-      } else {
-        UI.showMessage('user-management-message', error.message || 'Failed to delete user', 'error');
-      }
+      UI.showMessage('user-management-message', error.message || 'Failed to delete user', 'error');
     } finally {
       UI.showLoading(false);
     }
+  },
+
+  openUserDeleteAuthModal(userId, userEmail) {
+    const modal = document.getElementById('user-delete-auth-modal');
+    const emailEl = document.getElementById('deleted-auth-user-email');
+    const uidEl = document.getElementById('deleted-auth-user-uid');
+    const copyNotice = document.getElementById('auth-uid-copied-notice');
+    const copyBtn = document.getElementById('copy-deleted-auth-uid-btn');
+
+    if (!modal) return;
+
+    if (emailEl) emailEl.textContent = userEmail || 'No email';
+    if (uidEl) uidEl.textContent = userId || '-';
+    if (copyBtn) copyBtn.dataset.uid = userId || '';
+
+    // Auto-copy UID to clipboard right away
+    if (userId) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(userId).then(() => {
+          if (copyNotice) copyNotice.style.display = 'flex';
+          UI.showToast(`Copied UID: ${userId}`, 'success', 3000, 'bottom-right');
+        }).catch(err => {
+          console.warn('Auto-clipboard copy error:', err);
+        });
+      }
+    }
+
+    modal.style.display = 'flex';
+  },
+
+  closeUserDeleteAuthModal() {
+    const modal = document.getElementById('user-delete-auth-modal');
+    const copyNotice = document.getElementById('auth-uid-copied-notice');
+    if (modal) {
+      modal.style.display = 'none';
+    }
+    if (copyNotice) {
+      copyNotice.style.display = 'none';
+    }
+  },
+
+  openFirebaseAuthConsole(userId) {
+    const projectId = (typeof firebaseConfig !== 'undefined' && firebaseConfig.projectId)
+      ? firebaseConfig.projectId
+      : 'b1t-sched';
+
+    // Copy UID to clipboard again just to be certain
+    if (userId && userId !== '-' && navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(userId).catch(err => console.warn(err));
+      UI.showToast(`Copied UID: ${userId}`, 'success', 3000, 'bottom-right');
+    }
+
+    const authUrl = `https://console.firebase.google.com/project/${projectId}/authentication/users`;
+    window.open(authUrl, '_blank');
   },
 
   async toggleUserRole(userId, role, value) {

@@ -959,8 +959,9 @@ const Classroom = {
             }
             this.saveJsonCache('assignments', mergedAssignments);
 
-            // Automatically check matching tasks in "Pending Tasks" for turned in assignments
-            this.syncTurnedInAssignmentsToUserCompletions(mergedAssignments);
+            // NOTE: syncTurnedInAssignmentsToUserCompletions is intentionally NOT called here.
+            // Task completion state is ONLY updated when the user explicitly clicks Sync
+            // (syncAssignmentsToTasks), NOT on refresh or background loads.
 
             return mergedAssignments;
 
@@ -1237,7 +1238,8 @@ const Classroom = {
 
             if (type === 'assignments') {
                 cachedItems = this.sortAssignments(cachedItems);
-                this.syncTurnedInAssignmentsToUserCompletions(cachedItems);
+                // NOTE: syncTurnedInAssignmentsToUserCompletions is intentionally NOT called here.
+                // Task completion state is ONLY updated by the explicit Sync button action.
             }
 
             // Calculate how long ago the data was cached

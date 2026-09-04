@@ -1881,11 +1881,16 @@
                             </select>
                         </div>
                     </form>
-                    <div class="modal-footer">
-                        <button type="button" id="cancel-edit-user" class="btn btn-secondary">Cancel</button>
-                        <button type="submit" form="edit-user-form" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Save Changes
+                    <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+                        <button type="button" id="edit-user-delete-btn" class="btn btn-danger">
+                            <i class="fas fa-trash-alt"></i> Delete User
                         </button>
+                        <div style="display: flex; gap: var(--spacing-sm);">
+                            <button type="button" id="cancel-edit-user" class="btn btn-secondary">Cancel</button>
+                            <button type="submit" form="edit-user-form" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1986,6 +1991,56 @@
                         </button>
                         <button id="confirm-delete-user" class="btn btn-danger">
                             <i class="fas fa-trash-alt"></i> Delete User
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Deleted - Firebase Auth Cleanup Guidance Modal -->
+            <div id="user-delete-auth-modal" class="modal" style="display: none;">
+                <div class="modal-content modal-content-md">
+                    <div class="modal-header">
+                        <h2 class="modal-title">
+                            <i class="fas fa-check-circle" style="color: var(--success, #10b981);"></i> User Deleted from Database
+                        </h2>
+                        <button id="close-user-delete-auth-modal" class="btn btn-icon" aria-label="Close modal">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="auth-delete-notice-box">
+                            <p><strong>Database records removed:</strong> All user profile data and task completions have been deleted from Firestore.</p>
+                            <div class="auth-delete-warning-banner">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <div>
+                                    <strong>Firebase Authentication Action Required:</strong>
+                                    <p>This user's login credentials still exist in Firebase Authentication. If not removed, the user can still log in with their email and password, which will prompt them to register fresh details on the <em>Set Details</em> page.</p>
+                                    <p style="margin-top: 4px;">To achieve complete removal and revoke login access, delete the user from the Firebase Console.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="user-info-display" style="margin-top: 14px;">
+                            <p><strong>Deleted Email:</strong> <span id="deleted-auth-user-email">-</span></p>
+                            <div class="user-card-email-row" style="margin-top: 6px;">
+                                <p style="margin: 0;"><strong>Firebase UID:</strong> <code id="deleted-auth-user-uid" class="task-id-code" style="user-select: all;">-</code></p>
+                                <button type="button" id="copy-deleted-auth-uid-btn" class="copy-user-uid-btn" title="Copy Firebase UID">
+                                    <i class="far fa-copy"></i>
+                                    <span class="copy-uid-label">Copy UID</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="auth-uid-copied-notice" class="auth-uid-copied-notice" style="display: none;">
+                            <i class="fas fa-clipboard-check"></i> <span>UID copied to clipboard! Paste it into the Firebase Console search bar.</span>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" id="close-user-delete-auth-done" class="btn btn-secondary">
+                            Done
+                        </button>
+                        <button type="button" id="open-firebase-auth-console-btn" class="btn btn-primary btn-firebase-auth">
+                            <i class="fas fa-external-link-alt"></i> Open Firebase Auth Console
                         </button>
                     </div>
                 </div>

@@ -1139,5 +1139,33 @@ const DB = {
       console.error('Error rejecting faculty user:', error);
       return { success: false, error: error.message };
     }
+  },
+
+  // Delete a user document and their subcollections from Firestore (Admin only)
+  async deleteUser(userId) {
+    try {
+      if (!userId) {
+        return { success: false, error: 'User ID is required' };
+      }
+
+      // 1. Delete completedTasks subcollection documents if any
+      const completedTasksSnap = await db.collection('users').doc(userId).collection('completedTasks').get();
+      if (!completedTasksSnap.empty) {
+        const batch = db.batch();
+        completedTasksSnap.forEach(doc => {
+          batch.delete(doc.ref);
+        });
+        await batch.commit();
+      }
+
+      // 2. Delete primary user document
+      await db.collection('users').doc(userId).delete();
+
+      console.log(`User ${userId} deleted from Firestore`);
+      return { success: true };
+    } catch (error) {
+      console.error('Error deleting user from Firestore:', error);
+      return { success: false, error: error.message };
+    }
   }
 };

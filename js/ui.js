@@ -492,7 +492,7 @@ const UI = {
                 <div class="task-description-wrapper">
                   <div class="task-description-text">${Utils.escapeAndLinkify(task.description) || 'No description available.'}</div>
                   <div class="task-meta-footer task-added-by-hidden">
-                    ${task.addedBy ? `<span class="task-added-by">Added by ${task.addedByName || 'User'}${task.addedByRole && (task.addedByRole === 'CR' || task.addedByRole === 'Faculty' || task.addedByRole === 'DptCoor' || task.addedByRole === 'DptHead') ? ` <span class="role-badge role-badge-${task.addedByRole.toLowerCase()}">${task.addedByRole}</span>` : ''}${task.section ? ` (${task.section})` : ''}${isFacultyTask && task.department ? ` - ${task.department}` : ''}</span>` : '<span></span>'}
+                    ${task.addedBy ? `<span class="task-added-by">Added by ${task.addedByName || 'User'}${task.addedByRole && (task.addedByRole === 'CR' || task.addedByRole === 'Faculty' || task.addedByRole === 'DptCoor' || task.addedByRole === 'DptHead') ? ` <span class="role-badge role-badge-${task.addedByRole.toLowerCase()}">${task.addedByRole}</span>` : ''}${task.section ? ` (${task.section})` : ''}${isFacultyTask && task.department ? ` - ${task.department}` : ''}</span>` : ''}
                     <button type="button" class="copy-task-id-btn" data-task-id="${task.id}" title="Copy Task ID" aria-label="Copy Task ID">
                       <i class="fas fa-fingerprint"></i>
                       <span class="task-id-btn-text">Copy ID</span>

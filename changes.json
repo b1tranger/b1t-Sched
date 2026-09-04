@@ -1,11 +1,59 @@
 {
-  "currentVersion": "v2.51.6",
+  "currentVersion": "v2.52.0",
   "lastUpdated": "September 4, 2026",
   "documentationUrl": "https://b1tranger.netlify.app/render.html?file=https%3A%2F%2Fgithub.com%2Fb1tranger%2Fb1t-Sched%2Fblob%2Fmain%2Fdoc%2FDOCUMENTATION.md",
   "history": [
     {
-      "version": "v2.51.6",
+      "version": "v2.52.0",
       "badge": "Latest",
+      "date": "September 2026",
+      "changes": [
+        {
+          "type": "Enhancement",
+          "title": "User Management: Direct Firestore User Deletion & Firebase Auth Cleanup Guidance Modal",
+          "description": "Resolved orphan Firestore user records by replacing client-side Cloud Function calls with direct Firestore deletion (DB.deleteUser) across users and completedTasks collections. Added a post-deletion guidance modal (#user-delete-auth-modal) explaining that while Firestore records are deleted, the user must also be removed from the Firebase Authentication console for complete removal (otherwise re-login triggers the Set Details onboarding). Features automatic UID copying to clipboard with toast notification, a one-click button redirecting to the project's Firebase Authentication console, and an additional Delete button in the Edit User modal footer."
+        }
+      ]
+    },
+    {
+      "version": "v2.51.9",
+      "badge": "Stable",
+      "date": "September 2026",
+      "changes": [
+        {
+          "type": "Enhancement",
+          "title": "Task Card: Task ID Copy Button Left-Aligned After 'Added by'",
+          "description": "Adjusted the layout of .task-meta-footer in css/components.css and js/ui.js to align the Task ID copy button (.copy-task-id-btn) flush to the left, sitting immediately adjacent to the 'Added by' attribution text rather than pushed to the far right or forced onto a separate row."
+        }
+      ]
+    },
+    {
+      "version": "v2.51.8",
+      "badge": "Stable",
+      "date": "September 2026",
+      "changes": [
+        {
+          "type": "Enhancement",
+          "title": "Dashboard Task Copy Toasts: Bottom-Right Corner Placement",
+          "description": "Updated copySingleTask and copyTaskId in js/app.js so that 'Task contents copied to clipboard', 'Task ID copied to clipboard', and their error counterparts all surface at the bottom-right corner (#toast-container-bottom-right), consistent with the UID copy toast behaviour in User Management."
+        }
+      ]
+    },
+    {
+      "version": "v2.51.7",
+      "badge": "Stable",
+      "date": "September 2026",
+      "changes": [
+        {
+          "type": "Bug Fix",
+          "title": "Classroom: Task Completion Auto-Sync Restricted to Explicit Sync Button Only",
+          "description": "Fixed a regression where both the Refresh button and initial Classroom load were auto-checking Pending Tasks as completed, regardless of actual submission status. Removed calls to syncTurnedInAssignmentsToUserCompletions() from fetchAssignmentsData() and the expired-session cache path (showCachedDataWithBanner). Task completion state is now exclusively updated when the user explicitly clicks the Sync button (syncAssignmentsToTasks), which is the only authoritative action for writing to the task database. Refresh is now strictly read-only with respect to completion state."
+        }
+      ]
+    },
+    {
+      "version": "v2.51.6",
+      "badge": "Stable",
       "date": "September 2026",
       "changes": [
         {
