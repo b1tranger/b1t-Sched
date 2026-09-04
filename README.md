@@ -1,98 +1,175 @@
 # b1t-Sched - Academic Task Scheduler
 
-A single-page application (SPA) that helps students manage academic tasks, assignments, exams, and events with personalized department-specific content.
+> **Academic Task Scheduler** - A modern Single Page Application (SPA) designed for university students, class representatives (CRs), and faculty members to organize and track academic tasks, routines, assignments, exams, and notices with department-specific personalization.
 
-<div align=center>
-<img src="Social-Preview.webp" width=200px align=center>
-   <h1>👉 <a href="https://github.com/b1tranger/b1t-Sched/blob/main/doc/DOCUMENTATION.md">Documentation</a> 👈</h1>
-   </div>
-<!-- ![b1t-Sched Preview]() -->
-
-## ✨ Features
-
-- 📱 **Single-Page Application** - Fast, seamless navigation
-- 🔐 **Firebase Authentication** - Secure email/password login with password reset
-- 👤 **User Profiles** - Set department, semester, and section once
-- 📋 **Personalized Tasks** - View tasks filtered by your academic details, with clickable links and collapsible descriptions
-- ✏️ **Edit Entries** - Users can edit their own tasks; admins can edit all tasks and events; CRs can create department events and manage their own
-- 🔗 **Dynamic Resource Links** - Department-specific routine, calendar, and faculty contacts with built-in PDF viewer
-- 📅 **Event Calendar** - Track upcoming academic events with collapsible descriptions, department scope badge, and clickable links
-- 🛡️ **UITS Event Raiders Live Feed** - Live syndication of hackathons, contests, olympiads, and symposiums from `ou1ts/events` RSS/JSON feeds with desktop sticky sidebar integration, mobile arrowhead view switcher with localStorage state persistence, and compact two-segment card layouts
-- 📆 **Calendar View** - Interactive monthly calendar with task visualization, date navigation, responsive mobile layout (monthly/weekly toggle), and clickable links with collapsible description dropdown toggles in task detail cards
-- 📣 **CR Notices** - Class Representatives can post, edit, and delete notices visible to their section group; supports priority levels and deadline tracking
-- 📰 **University Notice Viewer** - View UCAM university notices with PDF preview, powered by Vercel serverless backend with local caching
-- 🏫 **Google Classroom Integration** - View assignments, announcements, and course materials in a unified interface with OAuth session persistence, status indicators (**Assigned**, **Missing**, **Turned in**, **Returned / Graded**), chronological upcoming deadline priority, "Past deadline" divider banners, two-way task sync, auto-completion tracking for turned-in work, and a quick announcement/assignment creation option for Faculty and CR roles
-- 📝 **Note Taking** - Personal notes with markdown support, auto-save, file upload via Catbox.moe/Tmpfiles.org, and direct local network sharing via LocalSend Web
-- 📊 **Activity Timeline** - Visual heatmap and bar chart tracking user activity (logins, tasks, events) for productivity insights
-- 🔔 **Push Notifications** - Real-time browser notifications for new tasks and events (mobile-compatible)
-- 🏆 **Contributions** - Leaderboard of top contributors (group-specific or global across all departments)
-- 📤 **Task Export** - Export tasks to TXT, Markdown (.md), or vector PDF with selectable black fonts, embedded clickable links, 120% scale, straight line dividers, active type filter support (`Exam`, `Assignment`, etc.), and dedicated Old Tasks pagination.
-- 🧭 **Quick Navbar Logo Navigation** - Clickable brand logo and title to instantly navigate to Dashboard view from anywhere on the site with smooth scroll-to-top.
-- 🎓 **Semester Auto-Promotion** - Automatic semester advancement every July and January on user login with 30-day manual profile protection and an Admin fail-safe bulk update tool (with 30s verification countdown & 6-month cooldown)
-- ⚙️ **Profile Settings** - Update your details anytime (30-day cooldown)
-- ❓ **FAQ Section** - Collapsible accordion explaining how the site works, user roles, and profile settings
-- 🎨 **Maroon Theme** - Professional dark maroon and off-white color scheme
-- 📱 **Fully Responsive** - Works on desktop, tablet, and mobile
-- 📲 **Progressive Web App & Offline Experience** - Installable app with offline caching, background sync queue, and an adaptive offline banner that dynamically pushes all top-level content, navigation bars, and mobile sidebars down without overlaying UI elements
-
-> 📖 For complete documentation, see [`doc/DOCUMENTATION.md`](doc/DOCUMENTATION.md)
-
----
-
-## Stack
-<img align="center" width="488" height="346" alt="image" src="https://github.com/user-attachments/assets/34afedc6-2aba-4e80-a38f-0b4239e6556d" />
-
----
-
-## Screenshots
-<div align=center>
-   
-<!-- <img width="300" height="2000" alt="1" src="https://github.com/user-attachments/assets/0984e07f-04cf-446a-9044-9dd13c47bfe2" />
-
-<img width="300" height="2000" alt="2" src="https://github.com/user-attachments/assets/2406add8-a7de-458b-a7c2-f4468f21dbc6" />
-
-<img width="300" height="2000" alt="3" src="https://github.com/user-attachments/assets/0e4ece71-5106-4d86-a772-eea68037c9b0" />
-
-<img width="300" height="2000" alt="4" src="https://github.com/user-attachments/assets/6e059928-8484-4fe3-82bf-43e3385c2aca" />
-
-<img width="300" height="2000" alt="5" src="https://github.com/user-attachments/assets/91fe0f09-79f2-4d1c-b0d8-df2e32e289f5" />
-
-<img width="300" height="2000" alt="6" src="https://github.com/user-attachments/assets/8927eb52-0d49-4d36-8511-06812861aee9" />
-
-<img width="300" height="2000" alt="7" src="https://github.com/user-attachments/assets/4d2a5c94-bef9-46d1-bfbe-9065a6e26aa2" />
-
-<img width="300" height="2000" alt="8" src="https://github.com/user-attachments/assets/53d8d429-966b-49f6-910d-b6923ad142b9" /> -->
-
-
+<div align="center">
+  <img src="Social-Preview.webp" width="220px" alt="b1t-Sched Logo" style="border-radius: 16px; margin-bottom: 12px;">
+  <h1>👉 <a href="https://github.com/b1tranger/b1t-Sched/blob/main/doc/DOCUMENTATION.md">Complete Documentation</a> 👈</h1>
+  <p>
+    <strong>Current Version:</strong> <code>v2.53.7</code> • 
+    <strong>Architecture:</strong> Vanilla JS SPA + Firebase Firestore & Auth + PWA
+  </p>
 </div>
 
+---
+
+## ✨ Features Overview
+
+### 🔐 Authentication & Role Management
+- **Flexible Credential Login**: Students can log in with their Student ID (normalized across string, numeric, and formatted inputs with dashes/spaces) or Email. Faculty can log in with their Faculty ID, initials (case-insensitive), or Email.
+- **Segmented Role Toggles**: Dedicated Student and Faculty login tabs with strict cross-role enforcement (prevents student accounts from authenticating via the faculty tab and vice versa).
+- **Onboarding Role Lockdown**: After initial signup, role identity is locked on the details setup screen, ensuring students cannot bypass section assignments or switch to faculty post-registration.
+- **6-Tier Role System**:
+  1. `Student` - View personalized section tasks, export tasks, take markdown notes, and sync personal Google Classroom assignments.
+  2. `CR` (Class Representative) - Create, edit, and manage section tasks, deadlines, and group notices.
+  3. `Faculty` - Create and manage departmental tasks, access Faculty Classroom, and post department-wide notices.
+  4. `DptCoor` (Department Coordinator) - Faculty privileges plus account review, approvals, and role elevation within their department.
+  5. `DptHead` (Department Head) - Comprehensive departmental oversight and coordinator capabilities.
+  6. `Admin` - Complete platform administration, user management, account approvals, role assignments, UID lookups, and the **Admin Role Preview Mode** (simulate any role with a real-time floating indicator).
+- **Faculty Self-Registration & Approvals**: Faculty self-register with pending status until approved by an Admin or Department Coordinator via the interactive Approvals modal.
+
+### 📋 Task Management & Productivity
+- **Personalized Task Feed**: Automatic task filtering based on Department, Semester, and Section Group (`A1+A2`, `B1+B2`, etc.).
+- **Overdue Grace Period**: Retains tasks in the active feed for a 12-hour grace period after the deadline passes before archiving.
+- **Desktop Single-Row Layout**: Coordinated action row for `Add Tasks`, `View Old`, and `Reset Tasks` on desktop screens.
+- **Mobile-Responsive Task Actions & Filters**:
+  - Compact button labels on mobile (`Add`, `Old`, `Reset`).
+  - Mobile compact dropdown filter (`Filters: [Set Filter] [Clear]`) synchronized bi-directionally with desktop radio pill buttons.
+- **Task Identification**: Copyable Firebase Task UIDs and timestamps for reliable reference and verification.
+
+### 🛡️ Live Feeds & External Integrations
+- **UITS Event Raiders Syndication**: Live syndication of hackathons, contests, symposiums, and tech events from `ou1ts/events` RSS/JSON feeds with desktop sticky sidebar integration and mobile toggle view switchers.
+- **Google Classroom Integration**:
+  - Unified course stream showing assignments, materials, and announcements with OAuth session persistence.
+  - 3-group status layout (**Assigned**, **Missing**, **Turned In / Graded**) with chronological upcoming deadline priority and "Past deadline" visual divider banners.
+  - Strict turn-in verification for automatic task completion.
+  - Decoupled Classroom sync briefing summaries and quick announcement/assignment posting for Faculty and CRs.
+- **University & CR Notices**: Real-time section notices posted by CRs and department notices posted by Faculty, alongside a UCAM university notice viewer with inline PDF preview via a Vercel serverless backend.
+
+### 📝 Notes & Productivity Tools
+- **Rich Markdown Notes**: Personal note-taking module with auto-save, search, formatting tools, and temporary file hosting (Catbox.moe / Tmpfiles.org).
+- **LocalSend Web Integration**: Direct peer-to-peer note and file sharing over local Wi-Fi networks without internet bandwidth overhead.
+- **Task Export**: Export tasks to clean Vector PDF, Markdown (.md), or Plain Text (.txt) with selectable fonts, active type filter support, and dedicated Old Tasks pagination.
+- **Activity Timeline**: Interactive contribution heatmap and activity breakdown charts tracking tasks, events, and login frequency.
+
+### 🎨 Design & Accessibility
+- **Curated Multi-Theme System**:
+  - **Light Mode**: Clean, high-contrast default theme for unauthenticated visitors and public views.
+  - **Dark Mode**: Charcoal base (`#1a1a1a`) with vibrant blue accents (`#3b82f6`) and elevated cards.
+  - **High Contrast**: Pitch black base (`#000000`) with vibrant neon green accents (`#89d134`).
+  - **System Default**: Automatically synchronizes with OS color preferences.
+  - Live theme preview selector in Profile Settings.
+- **Changelog Modal ("What's New in b1t-Sched")**: Responsive modal with a desktop min-width (`600px`) and version badge hierarchy.
+- **Viewport Scroll Stability**: Enforced manual browser scroll restoration and instant scroll-to-top resets on SPA route navigation, user sign-out, and unauthenticated redirects.
+
+### 📱 Progressive Web App (PWA) & Offline
+- **Offline Resilient**: Service worker (`v2.53.7`) caches static assets, dynamic layouts, and recent task data for seamless offline usage.
+- **Adaptive Offline Banner**: Dynamic top banner that pushes navigation and views downward without overlaying or obscuring interactive elements.
+- **PWA Installation**: Installable desktop and mobile app with a customized 3-row install prompt (Icon + Title, Description, Action Buttons) featuring solid backgrounds across all themes.
+
+---
+
+## 📁 Modular Project Structure
+
+All JavaScript modules are categorized into distinct architectural directories:
+
+```
+b1t-Sched/
+├── index.html                    # Single Page Application entry point
+├── manifest.json                 # PWA Web App Manifest
+├── sw.js                         # Service Worker (v2.53.7 caching & background sync)
+├── changes.json                  # Machine-readable release changelog history
+├── firestore.rules               # Firestore Cloud Security Rules & role helpers
+├── README.md                     # Project overview & documentation
+│
+├── css/                          # Modular Stylesheets
+│   ├── colors.css               # Color tokens & theme palettes (Light, Dark, High Contrast)
+│   ├── main.css                 # Base resets, typography, and auth hero layouts
+│   ├── components.css           # Reusable UI elements, modals, and PWA install prompt
+│   ├── dashboard.css            # Task cards, Event Raiders feed, action button rows
+│   ├── navbar.css               # Navigation bar & brand logo styling
+│   ├── classroom.css            # Google Classroom assignment lists & status badges
+│   ├── calendar.css             # Interactive monthly & weekly calendar views
+│   ├── timeline.css             # Activity timeline heatmaps & charts
+│   ├── note.css                 # Markdown note-taking & LocalSend sharing interface
+│   ├── notice.css               # University & CR notice viewers
+│   ├── changelog.css            # "What's New" modal styling & desktop min-width
+│   └── responsive.css           # Mobile breakpoints, compact dropdowns, sidebar drawers
+│
+├── js/                           # Organized Categorical JavaScript Architecture
+│   ├── admin/                   # Administrative Operations & Data Migration
+│   │   ├── activity-logger.js   # Admin-level activity logging
+│   │   ├── admin-api.js         # Administrative utility APIs
+│   │   ├── migrate-activity-logs.js # Historical activity log migration
+│   │   └── update-user-semesters.js # Semester auto-promotion batch tooling
+│   │
+│   ├── core/                    # Core Infrastructure & Foundations
+│   │   ├── app.js               # Application orchestrator, event listeners, auth routing
+│   │   ├── auth.js              # Firebase Authentication wrapper & session timer
+│   │   ├── db.js                # Firestore CRUD, normalized ID lookups & local fallbacks
+│   │   ├── firebase-config.js   # Firebase SDK credentials & service initialization
+│   │   ├── firestore-listener-manager.js # Real-time snapshot listeners for tasks/notices
+│   │   ├── permission-manager.js# Role capability matrix & permission enforcement
+│   │   ├── routing.js           # Hash-based SPA routing with scroll position resets
+│   │   ├── ui.js                # Common UI notifications, loading screen, modal handling
+│   │   └── utils.js             # Formatting, section grouping, and storage helpers
+│   │
+│   ├── features/                # Application Domain Features
+│   │   ├── approvals.js         # Faculty self-registration review & approval modal
+│   │   ├── calendar-view.js     # Monthly/weekly calendar renderer with task badges
+│   │   ├── changelog-modal.js   # "What's New" release notes modal
+│   │   ├── classroom.js         # Google Classroom integration & task sync
+│   │   ├── cr-notice.js         # Section notice creation & deadline management
+│   │   ├── facultyClassroom.js  # Faculty classroom stream & announcement manager
+│   │   ├── notes.js             # Personal notes module, Catbox uploads, LocalSend
+│   │   ├── notice.js            # UCAM university notice reader & PDF viewer
+│   │   ├── profile.js           # Profile settings, cooldown timers, theme selection
+│   │   ├── raids-feed.js        # UITS Event Raiders live RSS/JSON syndication
+│   │   ├── task-export.js       # Vector PDF, Markdown, and TXT task exporter
+│   │   ├── timeline-data.js     # Activity timeline aggregation
+│   │   └── timeline-ui.js       # Heatmap visualization & bar charts
+│   │
+│   ├── notifications/           # Notification Systems
+│   │   ├── notification-manager.js # Browser Push notification orchestrator
+│   │   ├── notification-content-formatter.js # Payload and badge formatting
+│   │   └── notifications-types.js  # Notification category constants
+│   │
+│   └── pwa/                     # Progressive Web App & Offline Experience
+│       ├── cache-manager.js     # Local cache management & user storage cleanup
+│       ├── install-prompt.js    # Custom 3-row PWA installation banner
+│       ├── manifest-generator.js# Dynamic manifest generator
+│       ├── offline-indicator.js # Top-level push-down offline banner
+│       ├── offline-manager.js   # Connectivity detection & event listeners
+│       ├── pwa-detector.js      # Standalone / browser environment detection
+│       ├── pwa-init.js          # Service worker registration & lifecycle
+│       └── sw-update-manager.js # Service worker update notifications
+│
+└── doc/                         # Comprehensive Project Documentation
+    ├── DOCUMENTATION.md         # Full chronological project documentation
+    ├── FIREBASE_SETUP.md        # Step-by-step Firebase configuration guide
+    └── prompts/                 # Complete archive of implementation plans & walkthroughs
+```
 
 ---
 
 ## 🚀 Quick Setup Guide
 
 ### Prerequisites
+- Modern Web Browser (Chrome, Edge, Firefox, Safari, Brave)
+- Code Editor (VS Code recommended)
+- Firebase Account (Free Spark Plan is sufficient)
 
-- A text editor (VS Code recommended)
-- Modern web browser (Chrome, Firefox, Edge)
-- Firebase account (free)
-
-### Step 1: Firebase Backend Setup
-
-1. **Follow the complete Firebase setup guide:**
-   - Open [`FIREBASE_SETUP.md`](doc/FIREBASE_SETUP.md)
-   - Complete all steps to set up Firebase project
-   - Create Firestore collections with sample data
-   - Copy your Firebase configuration
+### Step 1: Firebase Project Setup
+1. Follow the step-by-step setup guide in [`doc/FIREBASE_SETUP.md`](doc/FIREBASE_SETUP.md).
+2. Create Firestore collections (`users`, `tasks`, `events`, `cr_notices`, `resourceLinks`, `metadata`).
+3. Deploy the security rules from [`firestore.rules`](firestore.rules) in the Firebase Console under **Firestore Database** → **Rules**.
 
 ### Step 2: Configure Firebase in Project
-
-1. Open `js/firebase-config.js`
-2. Replace the placeholder values with your Firebase configuration:
+Open [`js/core/firebase-config.js`](js/core/firebase-config.js) and add your project configuration:
 
 ```javascript
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY_HERE",              // Replace with your API key
+  apiKey: "YOUR_API_KEY_HERE",
   authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
   projectId: "YOUR_PROJECT_ID",
   storageBucket: "YOUR_PROJECT_ID.appspot.com",
@@ -101,533 +178,68 @@ const firebaseConfig = {
 };
 ```
 
-### Step 3: Replace Old Index File
-
-1. **Backup your current `index.html`:**
-   ```bash
-   mv index.html index-old-backup.html
-   ```
-
-2. **Rename the new file:**
-   ```bash
-   mv index-new.html index.html
-   ```
-
-### Step 4: Test Locally
-
-1. **Open the project:**
-   - Right-click `index.html` → Open with Live Server (VS Code extension)
-   - OR use Python: `python -m http.server 8000`
-   - OR simply open `index.html` in your browser
-
-2. **Test the flow:**
-   - ✅ Sign up with a new account
-   - ✅ Set your department, semester, section
-   - ✅ View personalized dashboard
-   - ✅ Click resource links
-   - ✅ Access profile settings
-   - ✅ Update your details
-   - ✅ Logout and login again
+### Step 3: Run Locally
+You can run the application with any local HTTP server:
+- **VS Code Live Server**: Right-click `index.html` → *Open with Live Server*
+- **Python**: `python -m http.server 8000`
+- **Node.js**: `npx.cmd serve .`
 
 ---
 
-## 📁 Project Structure
+## 🔒 Security & Access Control
 
+Firestore security rules enforce strict privilege separation:
+- **Public / Unauthenticated**: Can read active user IDs/emails for credential resolution (if `firestore.rules` is published) and general app metadata.
+- **Students**: Can create personal tasks, update/delete tasks they created, view section group tasks, and manage their own notes.
+- **CRs**: Can create and edit section-level tasks, post and manage section notices, and delete group tasks.
+- **Faculty**: Can post department-wide notices, manage departmental tasks, and access Faculty Classroom tools.
+- **Department Coordinators (DptCoor)**: Full faculty permissions plus account approval rights and role modifications for faculty/students within their department.
+- **Admins**: Unrestricted platform management, user role assignments, UID lookups, system-wide task/event management, and the **Admin Role Preview Mode**.
+
+---
+
+## 🛠️ Deployment
+
+### Vercel (Recommended)
+```bash
+npm install -g vercel
+vercel
 ```
-b1t-Sched/
-├── index.html                    # Main SPA entry point
-├── manifest.json                 # PWA manifest
-├── sw.js                         # Service worker
-├── README.md                     # This file
-│
-├── css/                          # Stylesheets
-│   ├── colors.css               # CSS variables (maroon theme)
-│   ├── main.css                 # Core styles
-│   ├── components.css           # Reusable components
-│   ├── dashboard.css            # Dashboard layout, modals
-│   ├── navbar.css               # Navigation bar
-│   ├── notice.css               # Notice viewer & PDF viewer styles
-│   ├── classroom.css            # Google Classroom styles
-│   ├── calendar.css             # Calendar view styles
-│   ├── timeline.css             # Activity timeline styles
-│   ├── note.css                 # Note-taking styles
-│   ├── responsive.css           # Mobile responsive styles
-│   └── ...                      # Additional styles
-│
-├── js/                           # JavaScript modules
-│   ├── firebase-config.js       # Firebase configuration (⚠️ UPDATE THIS)
-│   ├── auth.js                  # Authentication logic
-│   ├── db.js                    # Database operations
-│   ├── routing.js               # SPA routing
-│   ├── ui.js                    # UI rendering
-│   ├── profile.js               # Profile management
-│   ├── utils.js                 # Utility functions
-│   ├── notice.js                # University notice viewer
-│   ├── cr-notice.js             # CR notice management
-│   ├── notes.js                 # Note-taking module
-│   ├── classroom.js             # Google Classroom integration
-│   ├── calendar-view.js         # Calendar view (monthly/weekly)
-│   ├── activity-logger.js       # Activity tracking
-│   ├── timeline-data.js         # Timeline data processing
-│   ├── timeline-ui.js           # Timeline visualization
-│   ├── notification-manager.js  # Push notifications
-│   └── app.js                   # Main application logic
-│
-├── doc/                          # Documentation
-│   ├── DOCUMENTATION.md         # Complete project documentation
-│   ├── FIREBASE_SETUP.md        # Firebase setup guide
-│   └── ...                      # Additional docs
-│
-├── functions/                    # Firebase Cloud Functions
-│   └── index.js                 # Admin functions entry point
-│
-└── images/                       # Image assets
+
+### Netlify
+```bash
+npm install -g netlify-cli
+netlify deploy --prod
+```
+
+### Firebase Hosting
+```bash
+npm install -g firebase-tools
+firebase login
+firebase init hosting
+firebase deploy --only hosting
 ```
 
 ---
 
-## 🎨 User Flow
-
-```
-1. User visits website
-   ↓
-2. Login/Signup
-   ↓
-3. First login? → Set Details (Department, Semester, Section)
-   ↓
-4. Dashboard
-   ├─ Resource Links (3 cards: Routine, Calendar, Faculty)
-   ├─ Pending Tasks (filtered by user settings)
-   └─ Upcoming Events
-   ↓
-5. Click User Details Card (top-right)
-   ↓
-6. Profile Settings
-   ├─ Edit Department
-   ├─ Edit Semester
-   ├─ Edit Section
-   ├─ Save Changes
-   └─ Logout
-```
-
----
-
-## 🔧 Configuration
-
-### Adding Departments
-
-Edit in Firebase Console → Firestore → `metadata` → `departments` (or create individual docs in a `departments` collection):
-
-```json
-{
-  "list": ["CSE", "IT", "CE", "EEE", "BBA", "YOUR_NEW_DEPT"]
-}
-```
-
-> **Note**: The application flexibly supports field names `list`, `departments`, `options`, `values`, `items`, `data`, key-value maps, or comma-separated strings. Newly added departments are dynamically loaded across registration onboarding, Profile Settings, Event creation/editing modals, Faculty task filters, and Admin User Management filters.
-
-### Adding Semesters
-
-Edit in Firebase Console → Firestore → `metadata` → `semesters`:
-
-```json
-{
-  "list": ["1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th"]
-}
-```
-
-### Adding Sections
-
-Edit in Firebase Console → Firestore → `metadata` → `sections`:
-
-```json
-{
-  "CSE-1st": ["A1", "A2"],
-  "CSE-2nd": ["A1", "A2", "B1", "B2"],
-  "IT-1st": ["A1", "A2"],
-  "YOUR_NEW_DEPT-1st": ["A1", "A2"]
-}
-```
-
-> If a department or semester does not have explicit section mappings configured in Firestore, the system automatically falls back to default sections (`A1`, `A2`, `B1`, `B2`, `C1`, `C2`).
-
-### Adding Resource Links
-
-1. Go to Firebase Console → Firestore → `resourceLinks`
-2. Create a document with Department ID (e.g., `CSE`)
-3. Add array field `resources`:
-
-```json
-{
-  "resources": [
-    {
-      "id": 1,
-      "title": "CSE Routine",
-      "description": "(Spring 2026)",
-      "url": "https://docs.google.com/...",
-      "icon": "📅",
-      "type": "routine"
-    },
-    {
-      "id": 2,
-      "title": "Academic Calendar",
-      "description": "(2026)",
-      "url": "https://calendar.google.com/...",
-      "icon": "📆",
-      "type": "calendar"
-    },
-    {
-      "id": 3,
-      "title": "CSE Faculty List",
-      "description": "(Spring 2026)",
-      "url": "https://docs.google.com/...",
-      "icon": "👥",
-      "type": "faculty"
-    }
-  ]
-}
-```
-
-### Adding Tasks
-
-Firebase Console → Firestore → `tasks` → Add document:
-
-```json
-{
-  "title": "Operating Systems Assignment 1",
-  "course": "CSE-3101",
-  "department": "CSE",
-  "semester": "3rd",
-  "section": "A1",
-  "deadline": "2026-03-15T23:59:59Z",  // Use timestamp picker
-  "type": "assignment",  // assignment, homework, exam, project
-  "description": "Complete chapters 1-3 exercises",
-  "details": "Submit via email to instructor",
-  "status": "active",
-  "createdAt": [current timestamp]
-}
-```
-
-### Adding Events
-
-Firebase Console → Firestore → `events` → Add document:
-
-```json
-{
-  "title": "Spring Semester Final Exam",
-  "date": "2026-05-20T09:00:00Z",
-  "department": "ALL",  // or specific department
-  "description": "Final examinations begin",
-  "createdAt": [current timestamp]
-}
-```
----
-
-## Update Timeline Manually
-
-refer to: [activity-timeline--migration](https://github.com/b1tranger/b1t-Sched/blob/main/doc/DOCUMENTATION.md#11-activity-timeline--migration) and [firebase_timeline.md](https://github.com/b1tranger/b1t-Sched/blob/main/doc/notes/firebase_timeline.md)
-
-run in browser console:
-```
-migrateActivityLogs()
-```
-
----
-
-## 🚀 Deployment
-
-### Option 1: Vercel (Recommended)
-
-1. **Install Vercel CLI:**
-   ```bash
-   npm install -g vercel
-   ```
-
-2. **Deploy:**
-   ```bash
-   vercel
-   ```
-
-3. **Follow prompts:**
-   - Link to your project
-   - Deploy!
-
-### Option 2: Netlify
-
-1. **Install Netlify CLI:**
-   ```bash
-   npm install -g netlify-cli
-   ```
-
-2. **Deploy:**
-   ```bash
-   netlify deploy
-   ```
-
-3. **For production:**
-   ```bash
-   netlify deploy --prod
-   ```
-
-### Option 3: GitHub Pages
-
-1. **Push to GitHub:**
-   ```bash
-   git add .
-   git commit -m "Initial commit"
-   git push origin main
-   ```
-
-2. **Enable GitHub Pages:**
-   - Go to repository settings
-   - Scroll to "Pages"
-   - Source: main branch
-   - Save
-
-### Option 4: Firebase Hosting
-
-1. **Install Firebase CLI:**
-   ```bash
-   npm install -g firebase-tools
-   ```
-
-2. **Login:**
-   ```bash
-   firebase login
-   ```
-
-3. **Initialize hosting:**
-   ```bash
-   firebase init hosting
-   ```
-
-4. **Deploy:**
-   ```bash
-   firebase deploy --only hosting
-   ```
-
----
-
-## 🛠️ Admin Operations
-
-### Adding New Users (Manual)
-
-Users can sign up themselves. No manual intervention needed.
-
-### Managing Tasks (Manual Method)
-
-1. Go to Firebase Console → Firestore
-2. Navigate to `tasks` collection
-3. Click "Add document"
-4. Fill in fields and save
-
-### Bulk Import (Advanced)
-
-Create a script to import from Google Sheets:
-
-```javascript
-// Example: Import tasks from array
-const tasks = [/* your tasks */];
-
-tasks.forEach(async (task) => {
-  await db.collection('tasks').add(task);
-});
-```
-
----
-
-## 🔒 Security
-
-### Firestore Security Rules
-
-Already set up in `FIREBASE_SETUP.md`. Rules ensure:
-- ✅ Only authenticated users can access data
-- ✅ Users can only edit their own profile
-- ✅ Users can create tasks and edit/delete their own
-- ✅ Admins have full control over all tasks and events
-- ✅ CRs can create department events and manage their own events
-- ✅ Blocked users are restricted to read-only mode
-
-### API Key Safety
-
-- Firebase API keys are safe to include in client-side code
-- Security is enforced through Firestore Security Rules
-- Domain restrictions can be set in Firebase Console
-
----
-
-## 🐛 Troubleshooting
-
-### Issue: "Firebase not defined"
-
-**Solution:** Check that Firebase CDN scripts are loaded before your app scripts in `index.html`
-
-### Issue: "Permission denied" errors
-
-**Solution:** 
-1. Check Firestore Security Rules
-2. Verify user is authenticated
-3. Check browser console for detailed errors
-
-### Issue: Tasks not showing
-
-**Solution:**
-1. Verify tasks exist in Firestore with matching department/semester/section
-2. Check browser console for errors
-3. Ensure `status` field is "active"
-4. Check deadline is in the future
-
-### Issue: Resource links not appearing
-
-**Solution:**
-1. Check `resourceLinks` collection has document for user's department
-2. Verify `resources` array field exists
-3. Check URLs are valid
-
----
-
-## 📊 Browser Support
-
-- ✅ Chrome/Edge (latest)
-- ✅ Firefox (latest)
-- ✅ Safari (latest)
-- ✅ Mobile browsers
-
----
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 👨‍💻 Development
-
-### Local Development
-
-1. Make changes to HTML/CSS/JS files
-2. Test using Live Server or local HTTP server
-3. Check browser console for errors
-4. Test on different screen sizes
-
-### Adding New Features
-
-1. Update UI components in respective files
-2. Add new routes in `routing.js` if needed
-3. Create new database operations in `db.js`
-4. Update UI rendering in `ui.js`
-
----
-
-## 🤝 Support
-
-For issues or questions:
-1. Check `FIREBASE_SETUP.md` for backend setup
-2. Check `REDESIGN_PLAN.md` for architecture details
-3. Review browser console for error messages
-
----
-
-## 🎉 Getting Started Checklist
-
-- [ ] Complete Firebase setup (see `FIREBASE_SETUP.md`)
-- [ ] Update `js/firebase-config.js` with your credentials
-- [ ] Replace `index.html` with `index-new.html`
-- [ ] Add sample data to Firestore (tasks, events, resource links)
-- [ ] Test signup/login flow
-- [ ] Test setting details
-- [ ] Test dashboard with personalized data
-- [ ] Test profile settings
-- [ ] Deploy to production
-- [ ] Share with students!
-
----
-
-## Feature Request:
-
-from @S. M. Zafrul Islam (zafrul.islam@uits.edu.bd)
-   - [ ] task cards divided into smaller cards for each detail (deadline in a card, title in another card) to make it easier to get innone look
-   - [ ] promote to 59 batch juniors
-   - [x] click logo to go to home screen
-
-from [@Helal Udding Patwary (Shakil) (0432410005101086)](https://github.com/Binary-Eclipse)
-   - [ ] short faq explaining each section
-
-from [@K. M. Jakaria (0432310005101037)](https://github.com/Reaper-X003)
-   - [ ] dark theme [1d16168e1616d84040eeeeee](https://colorhunt.co/palette/1d16168e1616d84040eeeeee)
-   - [ ] light theme [7d0a0abf3131ead196eeeeee](https://colorhunt.co/palette/7d0a0abf3131ead196eeeeee)
-   - [x] Add Monthly Calender view for mobile Tasks.
-   - [x] Add Classroom tasks atumatically adding to the tasks (Automation) (admin: added a button to "sync" the assignments and add them as tasks)
-
-
-
-from [@MuhammadShishir](https://github.com/MuhammadShishir):
-   - [x] Time tracking,
-   - [x] Adding documents,
-   - [ ] Adding AI support, 
-   - [x] Add a timeline view and table view ....
-```
-I will need some elaboration:
-1. Time Tracking: Timeline? like who posted what and when? Is it a different feature?
-2. Document adding: I will be making a Qbank, Insha Allah. Will import that feature (adding questions) as other file upload here.
-3. AI support: how about a model trained with my whole resources dump of all questions, notes, outlines collected?
-```
-   Install clickup and see, 
-   - [ ] Time tracking is per task time tracking using a stop watch or timer button per task ( admin: added timeline, but no timer for each ask)
-   - [ ] In a task many documents r generated or given to use, if we add them here it will be easy to maintain and later we can just share the link to people who need it ( admin: added temp uploads in notes )
-   - [ ] AI support is for updating tasks, creating files and answering questions
-   - [x] The two views I mentioned r the easiest, just call ur tasks into two tabs, one should look like a table of task and another will have calender view and tasks in them showing u ur work timeline, just go to clickup for reference ....
-
-from [@foxxie911](https://github.com/foxxie911)
-   - [ ] need to refine data/files (all digital versions; routines formatted)
-   - [x] add PDF viewer: need to view resources inside the website/app (otherwise I am depending on outside sources --> not convincing)
-   - [x] Faculty-side ( admin: have added the roles, they have separate space for tasks in theory)
-   - [ ] add a feature, the semester of each student will update automatically at the end of semester, or with only one push of button by admin
-
-
----
-
-**Ready to get started? Follow [`FIREBASE_SETUP.md`](doc/FIREBASE_SETUP.md) first!** 🚀
+## 🤝 Feature Requests & Progress Tracking
+
+- [x] **Quick Navbar Navigation**: Clickable brand logo and title to return to Dashboard with smooth scroll-to-top.
+- [x] **FAQ Section**: Expandable accordion explaining sections, permissions, roles, and profile settings.
+- [x] **Theme System**: Light Mode, Dark Mode (blue accent `#3b82f6`), and High Contrast (neon green `#89d134`).
+- [x] **Monthly & Weekly Calendar**: Responsive calendar views with task deadline badges and modal details.
+- [x] **Google Classroom Synchronization**: Automated assignment discovery, status tracking, turned-in verification, and task sync.
+- [x] **Activity Timeline**: Heatmap and frequency bar charts for tracking daily productivity and academic engagement.
+- [x] **Integrated PDF Viewing**: Native in-app viewer for routines, academic calendars, and university notices.
+- [x] **Faculty Roles & Dedicated Workspaces**: Role segregation, faculty-specific set-details, and department notice broadcasting.
+- [x] **Semester Auto-Promotion**: Automatic semester advancement every July and January on user login with 30-day manual profile protection and an Admin fail-safe bulk update tool.
+- [x] **Mobile Pending Tasks Optimization**: Compact dropdown filter (`Filters: [Set Filter] [Clear]`) and shortened button labels (`Add`, `Old`, `Reset`).
+- [x] **PWA Install Experience**: Solid themed backgrounds and 3-row architecture for the install banner.
 
 ---
 
 ## 🙏 Appreciation
 
-Thanks to these individuals who helped with testing, suggestions and support.
+Special thanks to all the faculty members, seniors, classmates, and contributors who have assisted with testing, feedback, and architectural suggestions across the development of **b1t-Sched**.
 
-Faculties
-- [S. M. Zafrul Islam (zafrul.islam@uits.edu.bd)](https://github.com/zafrul097)
-
-Seniors
-- [Md Kamruzzaman Shishir (1814355002)](https://github.com/MuhammadShishir)
-- [Md. Sakibul Hakim (Sadab) (2114951038)](https://github.com/foxxie911)
-- [Zobayer Hasan (2215151106)](https://github.com/zobayersq)
-- [Mohammad Masud Chowdhury Mahir (2215151105)](https://github.com/mahirmasud)
-- [Md Sakib Hosen (0432220005101058)](https://github.com/chatok-jnr)
-- [Akib Reza (0432220005101061)](https://github.com/AkibReza)
-- [Md. Safrid Bhueyan (0432310005101080)](https://github.com/safridbhueyan)
-- [K. M. Jakaria (0432310005101037)](https://github.com/Reaper-X003)
-- [Md. Robiul Hassan (Rabin) (0432310005101096)](https://github.com/Arriesgado47)
-- [Md. Mahfuz (0432310005101057)](https://github.com/Mahfuz5634)
-- [Md. Masud Rahman (0432320005101064)](https://github.com/shoytanbaba99)
-- [Kazi Md. Azhar Uddin Abeer (0432320005101120)](https://github.com/4xrhd)
-- [Md.Jihad Hossan (0432320005101017)](https://github.com/tofazmahmud)
-- [Md. Muhaiminul Islam (0432320005101207)](https://github.com/Maheem0)
-- [Rudro Antony Mrong (0432320005101059)](https://github.com/LackOfHP)
-
-Classmates
-- [Jannatul Ferdus (0432410005101058)](https://github.com/jannatulferdus182003)
-- [Shalehin Ahmed (0432410005101083)](https://github.com/ORNOB-083)
-- [Shamiur Hasan (0432410005101053)](https://github.com/shamiurhasan100)
-- [Md. Jubair Ahammed (0432410005101112)](https://github.com/JubairAhammedJubu)
-- [Saha Pradyumna Prasad (Ankur) (0432410005101159)](https://github.com/Saha-Pradyumna-Prasad)
-- [Manik Halder (0432410005101113)](https://github.com/RayneAshe0)
-- [@Helal Udding Patwary (Shakil) (0432410005101086)](https://github.com/Binary-Eclipse)
-
-Juniors
-- [Mamunur Rahman (04325205101031)](https://github.com/Zirconium001)
-- [Kazi Rabit Jahir (04325205101006)](https://github.com/RabbitJahir)
-
-
-
-
+*For in-depth architectural notes, migration steps, and release notes, consult [`doc/DOCUMENTATION.md`](doc/DOCUMENTATION.md).*

@@ -4,6 +4,60 @@
 
 # 04.09.26
 
+**Changelog Modal Desktop Min-Width, Console Error Fixes & ID Login Permission Handling**
+- **Changelog Modal Min-Width on Smaller Desktop Displays (`css/changelog.css`, `css/responsive.css`)**:
+  - Enforced `min-width: 600px` and `max-width: 780px !important` on `.changelog-modal-content` and `#changelog-modal .modal-content` for desktop displays below 1920px.
+  - Excluded `#changelog-modal .modal-content` from the generic 460px modal clamp in `css/responsive.css` (`@media (min-width: 769px) and (max-width: 1366px)` and `@media (min-width: 769px) and (max-height: 768px)`), allowing the modal to comfortably present version changes.
+- **Console Runtime Error Fixes (`js/core/ui.js`, `sw.js`)**:
+  - Resolved `Uncaught ReferenceError: isAdmin is not defined` inside `UI.showLoading()` by properly declaring `isAdmin = typeof App !== 'undefined' ? App.isAdmin : false;`.
+  - Fixed `TypeError: Failed to execute 'clone' on 'Response': Response body is already used` in `sw.js` `staleWhileRevalidate` by cloning the network response synchronously before passing it to `cache.put()`.
+- **Credential Lookups Permission Fallback & Caching (`js/core/db.js`, `js/core/app.js`)**:
+  - Implemented local cache fallback (`b1t_credential_email_map`) in `DB.getEmailByStudentId()` and `DB.getEmailByFaculty()`.
+  - Added user-facing error guidance in `App.handleLogin()` when unauthenticated Firestore reads fail due to undeployed security rules (`allow read: if isSignedIn();`), informing users to log in with their email address or deploy repository rules to Firebase Console.
+
+**Authentication: Faculty & Student ID/Initials Login, Install Prompt 3-Row Architecture & Login Scroll Reset**
+- **Faculty & Student ID / Initials Flexible Login (`js/core/db.js`, `js/core/app.js`, `index.html`)**:
+  - `DB.getEmailByFaculty()`: Allowed faculty to log in with Faculty ID, initials (case-insensitive), or email. Avoided multi-field composite index requirements by performing single-field lookups on `facultyInitial`, `studentId`, and `facultyId`, followed by in-memory role matching (`isFaculty`, `Faculty`, `DptCoor`, `DptHead`).
+  - `DB.getEmailByStudentId()`: Allowed student login with student ID and password. Implemented multi-format normalization supporting raw string, stripped string (removing dashes/spaces), and numeric formats in Firestore.
+  - Retained strict 10-16 numeric digit enforcement on the set-details page (`pattern="[0-9]{10,16}"` and `/^[0-9]{10,16}$/`) so students must enter their valid student ID upon profile setup.
+  - Maintained email-only input (`type="email"`) and validation on the sign-up page.
+  - Updated login input placeholders and hints dynamically to reflect "Student ID or Email" and "Faculty ID, Initial or Email".
+- **Install Prompt: 3-Row Layout & Solid Background Across Themes (`index.html`, `css/components.css`, `css/colors.css`, `js/pwa/install-prompt.js`)**:
+  - Re-architected `.install-prompt` into a clean 3-row layout:
+    - Row 1: Header row with app icon and title (`Install b1t-Sched`).
+    - Row 2: Description row (`Install our app for quick access and offline use`).
+    - Row 3: Action buttons row (`Install` and `Not now`).
+  - Defined the missing `--bg-card` token across `:root` (`#FFFFFF`), `body.dark-mode` (`#0d0d0d`), and `body.gray-mode` (`#1a1a1a`) in `css/colors.css`.
+  - Set 100% solid, non-transparent card backgrounds on `.install-prompt`: Light Mode (`#ffffff`), Dark Mode (`#242424 !important`), and High Contrast (`#141414 !important`) with matching border colors and high-contrast typography.
+- **Prevent Downward Viewport Scroll on Login Refresh & Logout (`js/core/routing.js`, `js/core/auth.js`, `js/core/app.js`, `js/core/ui.js`)**:
+  - Enforced `history.scrollRestoration = 'manual'` in `Router.init()`.
+  - Added instant scroll-to-top (`window.scrollTo({ top: 0, left: 0, behavior: 'instant' })` and `scrollTop = 0`) across `Router.showView()`, `Auth.logout()`, `App.handleUnauthenticatedUser()`, and `UI.showLoading(false)`.
+
+**Auth, Role Enforcement, Mobile Task Filters, Notices Permission & Login View Polish**
+- **Default Light Mode for Logged-Out State (`index.html`, `js/core/auth.js`, `js/core/app.js`)**:
+  - Initialized `<head>` theme fallback to clean light mode (`light`) when no stored user profile or theme preference is present.
+  - In `Auth.logout()` and `App.handleUnauthenticatedUser()`, proactively stripped `dark-mode` and `gray-mode` classes from `document.body` and `document.documentElement`, ensuring unauthenticated users and public visitors always see the crisp Light Mode interface.
+- **Cross-Role Login Enforcement (`js/core/app.js`)**:
+  - Blocked students from logging in through the Faculty tab and faculty from logging in through the Student tab with explicit feedback (`UI.showToast`).
+  - Cached signup intent roles (`signup_role_<email>`) during registration and performed authoritative post-auth checks in `App.handleAuthenticatedUser()`. If an existing account with mismatched role attributes (e.g. `isFaculty: true` under student login or non-faculty under faculty login) attempts authentication, the session is rejected and logged out immediately.
+- **Role Lockdown on Set-Details (`index.html`, `js/core/app.js`)**:
+  - Hid the `.faculty-signup-toggle` container (`#set-is-faculty-checkbox`) on `#set-details-view` (`display: none;`).
+  - Synced `set-is-faculty-checkbox` state strictly with the verified `currentLoginRole` in `App.loadSetDetailsForm()`, preventing post-registration identity role hopping.
+- **User Management Faculty Action Buttons & Filter Inclusion (`js/core/app.js`)**:
+  - In `App.renderUserList()`, concealed the "Make CR" button for all faculty users, showing exclusively the "Make DptCoor" button.
+  - In `App.filterUsers()`, updated the `Faculty` filter category to encompass `DptCoor` and `DptHead` users alongside base `Faculty` accounts.
+- **Faculty & DptCoor Department Notices Permission Fix (`firestore.rules`, `js/core/firestore-listener-manager.js`)**:
+  - In `firestore.rules`, allowed read access on `cr_notices` for faculty matching on department (`isFaculty() && resource.data.department == getUserDepartment()`) and null-guarded `semester` and `section` string slicing, resolving previous `Missing or insufficient permissions` rule rejections.
+  - In `js/core/firestore-listener-manager.js`, bypassed section task listener setup for faculty profiles and routed department notice listening through `listenForNewDepartmentNotices()` strictly by `department`.
+- **Mobile Pending Tasks Compact Filter Dropdown (`index.html`, `js/core/app.js`, `css/dashboard.css`, `css/responsive.css`)**:
+  - Added `.task-filter-prefix` ("Filters: ") and compact `<select id="task-filter-select">` with default option "Set Filter", positioned alongside the external `.task-filter-clear` button.
+  - Hid desktop radio filter buttons on mobile (`max-width: 768px`) and displayed the compact dropdown row.
+  - Synchronized selection states bi-directionally between `#task-filter-select` and desktop filter pills in `App.setupTaskFilterListeners()`.
+- **Desktop Login 100vh Hero & Scroll-Down Guidance (`index.html`, `js/core/routing.js`, `css/main.css`, `css/responsive.css`)**:
+  - Removed top navbar spacing gap (`padding-top: 0 !important`) via `.no-nav-padding` on `#main-content` for the login view.
+  - Wrapped `#auth-card` inside `.auth-hero-wrapper` with `min-height: 100vh` on desktop, centering the login card and preventing the footer/FAQ from peeking through prematurely.
+  - Added `.login-scroll-indicator` with smooth bouncing chevron animation and click handler scrolling down to `#login-footer-section`.
+
 **Dashboard: Event Raiders Dark Mode Contrast & Task Action Button Row Layout**
 - **Dark Mode Overrides for Raider Feed (`css/dashboard.css`, `body.gray-mode`)**:
   - Replaced dimmed and low-contrast dark badge styling with bright, distinct badges matching the Dark Mode theme:

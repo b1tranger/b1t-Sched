@@ -1,11 +1,82 @@
 {
-  "currentVersion": "v2.53.4",
+  "currentVersion": "v2.53.7",
   "lastUpdated": "September 4, 2026",
   "documentationUrl": "https://b1tranger.netlify.app/render.html?file=https%3A%2F%2Fgithub.com%2Fb1tranger%2Fb1t-Sched%2Fblob%2Fmain%2Fdoc%2FDOCUMENTATION.md",
   "history": [
     {
-      "version": "v2.53.4",
+      "version": "v2.53.7",
       "badge": "Latest",
+      "date": "September 2026",
+      "changes": [
+        {
+          "type": "Fix",
+          "title": "UI showLoading isAdmin Scope & Service Worker Response Clone Fix",
+          "description": "Resolved ReferenceError for isAdmin in UI.showLoading() and fixed asynchronous response cloning in sw.js staleWhileRevalidate to eliminate runtime console errors."
+        },
+        {
+          "type": "UI/UX",
+          "title": "Changelog Modal Min-Width & Desktop Responsive Layout",
+          "description": "Enforced min-width (600px) and max-width (780px) on the 'What's New in b1t-Sched' changelog modal for desktop screens below 1920px, preventing it from collapsing under the generic 460px modal constraints in responsive.css."
+        },
+        {
+          "type": "Security/Auth",
+          "title": "Credential Resolution Permission Handling & Local Cache Fallback",
+          "description": "Implemented local credential mapping fallback for ID/initial login lookups when unauthenticated Firestore reads are restricted by security rules, and added explicit guidance directing users to deploy repository rules to Firebase."
+        }
+      ]
+    },
+    {
+      "version": "v2.53.6",
+      "badge": "Stable",
+      "date": "September 2026",
+      "changes": [
+        {
+          "type": "Security/Auth",
+          "title": "Faculty & Student ID / Initials Flexible Login Support",
+          "description": "Expanded login capabilities allowing faculty to log in with Faculty ID, initial (case-insensitive), or email without composite query index restrictions. Supported student login with ID (normalized across string/numeric formats and dashes/spaces) while retaining strict 10-16 digit requirement on set-details and email-only sign up."
+        },
+        {
+          "type": "UI/UX",
+          "title": "Install Prompt: 3-Row Architecture & Solid Background Across Themes",
+          "description": "Redesigned the PWA install prompt into a 3-row layout (Row 1: Icon + Title, Row 2: Description, Row 3: Action Buttons). Defined missing --bg-card token and applied solid, non-transparent card backgrounds for Light (#ffffff), Dark (#242424), and High Contrast (#141414) themes."
+        },
+        {
+          "type": "Fix",
+          "title": "Prevent Downward Viewport Scroll on Login Refresh & Logout",
+          "description": "Enforced manual browser scroll restoration and instant scroll-to-top on SPA view routing, user sign-out, unauthenticated redirects, and loading screen dismissals."
+        }
+      ]
+    },
+    {
+      "version": "v2.53.5",
+      "badge": "Stable",
+      "date": "September 2026",
+      "changes": [
+        {
+          "type": "Security/Auth",
+          "title": "Role Enforcement, Set-Details Lockdown & Default Light Mode",
+          "description": "Enforced strict role separation preventing student accounts from logging in as faculty and vice-versa. Locked the role on the set-details page by removing the faculty toggle after login. Defaulted unauthenticated sessions to clean Light Mode."
+        },
+        {
+          "type": "Fix",
+          "title": "Faculty & DptCoor Department Notices Permission Fix",
+          "description": "Updated Firestore security rules and listener queries for cr_notices to decouple department notices from semester and section for faculty/DptCoor accounts, resolving 'Missing or insufficient permissions' errors."
+        },
+        {
+          "type": "UI/UX",
+          "title": "User Management Faculty Role Buttons & DptCoor Filter Matching",
+          "description": "Hidden 'Make CR' button for Faculty accounts (leaving only 'Make DptCoor' visible) and included DptCoor and DptHead users in the 'Faculty' filter category."
+        },
+        {
+          "type": "UI/UX",
+          "title": "Mobile Pending Tasks Compact Filter & Desktop Login 100vh Hero",
+          "description": "Replaced sprawling task filter pills on mobile with a compact dropdown selector ('Filters: ' prefix and 'Set Filter' placeholder) while keeping 'Clear' accessible. Expanded desktop login card into a 100vh hero section without top padding gaps and added an animated scroll-down indicator to FAQ & Support."
+        }
+      ]
+    },
+    {
+      "version": "v2.53.4",
+      "badge": "Stable",
       "date": "September 2026",
       "changes": [
         {

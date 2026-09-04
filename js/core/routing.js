@@ -15,9 +15,16 @@ const Router = {
   },
 
   init() {
+    // Disable automatic browser scroll restoration so views always open at top
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual';
+    }
     // Listen for hash changes
     window.addEventListener('hashchange', () => this.handleRoute());
-    window.addEventListener('load', () => this.handleRoute());
+    window.addEventListener('load', () => {
+      this.handleRoute();
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    });
   },
 
   handleRoute() {
@@ -52,6 +59,9 @@ const Router = {
     const view = document.getElementById(`${viewName}-view`);
     if (view) {
       view.style.display = 'block';
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
       
       // Show/hide navbar based on view
       const navbar = document.getElementById('navbar');

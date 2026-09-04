@@ -374,12 +374,12 @@ const App = {
 
       if (role === 'student') {
         if (loginIdLabel) loginIdLabel.textContent = 'Student ID or Email';
-        if (loginIdInput) loginIdInput.placeholder = 'Enter 10-16 digit ID or email';
-        if (loginIdHint) loginIdHint.textContent = 'Log in with your 10-16 digit student ID or email';
+        if (loginIdInput) loginIdInput.placeholder = 'Enter student ID or email';
+        if (loginIdHint) loginIdHint.textContent = 'Log in with your student ID or email';
       } else {
-        if (loginIdLabel) loginIdLabel.textContent = 'Faculty Initial or Email';
-        if (loginIdInput) loginIdInput.placeholder = 'Enter faculty initial (e.g. ABC) or email';
-        if (loginIdHint) loginIdHint.textContent = 'Log in with your faculty initial or email';
+        if (loginIdLabel) loginIdLabel.textContent = 'Faculty ID, Initial or Email';
+        if (loginIdInput) loginIdInput.placeholder = 'Enter faculty ID, initial (e.g. ABC) or email';
+        if (loginIdHint) loginIdHint.textContent = 'Log in with your faculty ID, initial or email';
       }
     };
 
@@ -1307,26 +1307,27 @@ const App = {
     if (!isEmail) {
       UI.showLoading(true);
       if (this.currentLoginRole === 'student') {
-        // Enforce 10-16 numeric digit restriction for student ID
-        if (!/^[0-9]{10,16}$/.test(rawInput)) {
-          UI.showLoading(false);
-          UI.showMessage('auth-message', 'Student ID must be 10-16 digits, or enter your full email address.', 'error');
-          return;
-        }
-
         const lookup = await DB.getEmailByStudentId(rawInput);
         if (!lookup.success || !lookup.email) {
           UI.showLoading(false);
-          UI.showMessage('auth-message', `No student account found with ID "${rawInput}". Please check your ID or sign up first.`, 'error');
+          if (lookup.isPermissionError) {
+            UI.showMessage('auth-message', 'Firestore permissions restricted for unauthenticated reads. Please log in using your registered email and password, or deploy the repository firestore.rules to Firebase.', 'error');
+          } else {
+            UI.showMessage('auth-message', `No student account found with ID "${rawInput}". Please check your ID or sign up first.`, 'error');
+          }
           return;
         }
         targetEmail = lookup.email;
       } else {
-        // Faculty initial login
-        const lookup = await DB.getEmailByFacultyInitial(rawInput);
+        // Faculty ID or initial login
+        const lookup = await DB.getEmailByFaculty(rawInput);
         if (!lookup.success || !lookup.email) {
           UI.showLoading(false);
-          UI.showMessage('auth-message', `No faculty account found with initial "${rawInput}". Please check your initial or sign up first.`, 'error');
+          if (lookup.isPermissionError) {
+            UI.showMessage('auth-message', 'Firestore permissions restricted for unauthenticated reads. Please log in using your registered email and password, or deploy the repository firestore.rules to Firebase.', 'error');
+          } else {
+            UI.showMessage('auth-message', `No faculty account found with ID or initial "${rawInput}". Please check your ID, initial or sign up first.`, 'error');
+          }
           return;
         }
         targetEmail = lookup.email;
@@ -1633,6 +1634,18 @@ const App = {
           document.body.classList.remove('dark-mode');
           document.body.classList.remove('gray-mode');
         }
+      // Cache studentId / facultyInitial to email mapping for future offline or permission-fallback logins
+      if (this.userProfile && this.userProfile.email) {
+        const localMap = Utils.storage.get('b1t_credential_email_map') || {};
+        if (this.userProfile.studentId) {
+          localMap[this.userProfile.studentId] = this.userProfile.email;
+          localMap[this.userProfile.studentId.replace(/[-\s]/g, '')] = this.userProfile.email;
+        }
+        if (this.userProfile.facultyInitial) {
+          localMap[this.userProfile.facultyInitial] = this.userProfile.email;
+          localMap[this.userProfile.facultyInitial.toUpperCase()] = this.userProfile.email;
+        }
+        Utils.storage.set('b1t_credential_email_map', localMap);
       }
 
       // Show/hide admin, CR, and Faculty controls
@@ -1746,6 +1759,9 @@ const App = {
     // Default to Light Mode in logged-out state
     document.body.classList.remove('dark-mode', 'gray-mode');
     document.documentElement.classList.remove('dark-mode', 'gray-mode');
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
     this.isBlocked = false;
     this.realRoles = null;
     this.previewRole = null;

@@ -148,10 +148,15 @@ const Auth = {
       localStorage.clear(); // Clear all stored data
       localStorage.removeItem('trust_device'); // Ensure this is cleared
 
-      // Reset to default Light Mode on logout
+      // Reset to default Light Mode and top scroll on logout
       if (typeof document !== 'undefined') {
         document.body.classList.remove('dark-mode', 'gray-mode');
         document.documentElement.classList.remove('dark-mode', 'gray-mode');
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      }
+      if (typeof window !== 'undefined') {
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
       }
 
       console.log('User logged out');

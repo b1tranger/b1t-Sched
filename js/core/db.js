@@ -66,59 +66,154 @@ const DB = {
   async getEmailByStudentId(studentId) {
     try {
       const cleanId = String(studentId || '').trim();
-      const snapshot = await db.collection('users')
+      if (!cleanId) return { success: false, error: 'Student ID cannot be empty' };
+
+      const strippedId = cleanId.replace(/[-\s]/g, '');
+
+      // Check local cache first as instant fallback
+      const localMap = (typeof Utils !== 'undefined' && Utils.storage.get('b1t_credential_email_map')) || {};
+      if (localMap[cleanId] || localMap[cleanId.toUpperCase()] || localMap[strippedId]) {
+        return { success: true, email: localMap[cleanId] || localMap[cleanId.toUpperCase()] || localMap[strippedId] };
+      }
+
+      // 1. Try exact string match
+      let snapshot = await db.collection('users')
         .where('studentId', '==', cleanId)
         .limit(1)
         .get();
+
+      // 2. Try stripped string match (without dashes/spaces)
+      if (snapshot.empty && strippedId !== cleanId) {
+        snapshot = await db.collection('users')
+          .where('studentId', '==', strippedId)
+          .limit(1)
+          .get();
+      }
+
+      // 3. Try numeric match if digits only
+      if (snapshot.empty && /^[0-9]+$/.test(strippedId)) {
+        snapshot = await db.collection('users')
+          .where('studentId', '==', Number(strippedId))
+          .limit(1)
+          .get();
+      }
+
       if (!snapshot.empty) {
-        return { success: true, email: snapshot.docs[0].data().email };
+        const foundEmail = snapshot.docs[0].data().email;
+        if (foundEmail && typeof Utils !== 'undefined') {
+          localMap[cleanId] = foundEmail;
+          localMap[strippedId] = foundEmail;
+          Utils.storage.set('b1t_credential_email_map', localMap);
+        }
+        return { success: true, email: foundEmail };
       }
       return { success: false, error: 'Student ID not found' };
     } catch (error) {
       console.error('Error finding student by ID:', error);
-      return { success: false, error: error.message };
+      // Fallback to local cache if offline or permissions blocked
+      const cleanId = String(studentId || '').trim();
+      const strippedId = cleanId.replace(/[-\s]/g, '');
+      const localMap = (typeof Utils !== 'undefined' && Utils.storage.get('b1t_credential_email_map')) || {};
+      if (localMap[cleanId] || localMap[cleanId.toUpperCase()] || localMap[strippedId]) {
+        return { success: true, email: localMap[cleanId] || localMap[cleanId.toUpperCase()] || localMap[strippedId] };
+      }
+      return {
+        success: false,
+        error: error.message,
+        isPermissionError: error.code === 'permission-denied' || String(error.message).includes('permissions')
+      };
+    }
+  },
+
+  async getEmailByFaculty(identifier) {
+    try {
+      const cleanInput = String(identifier || '').trim();
+      if (!cleanInput) return { success: false, error: 'Faculty ID or initial cannot be empty' };
+
+      const strippedInput = cleanInput.replace(/[-\s]/g, '');
+
+      // Check local cache first as instant fallback
+      const localMap = (typeof Utils !== 'undefined' && Utils.storage.get('b1t_credential_email_map')) || {};
+      if (localMap[cleanInput] || localMap[cleanInput.toUpperCase()] || localMap[strippedInput]) {
+        return { success: true, email: localMap[cleanInput] || localMap[cleanInput.toUpperCase()] || localMap[strippedInput] };
+      }
+
+      const queries = [];
+
+      // Query facultyInitial exact and uppercase
+      queries.push(db.collection('users').where('facultyInitial', '==', cleanInput).limit(5).get());
+      if (cleanInput.toUpperCase() !== cleanInput) {
+        queries.push(db.collection('users').where('facultyInitial', '==', cleanInput.toUpperCase()).limit(5).get());
+      }
+
+      // Query studentId exact, uppercase, stripped, and numeric (since faculty ID is often stored in studentId)
+      queries.push(db.collection('users').where('studentId', '==', cleanInput).limit(5).get());
+      if (cleanInput.toUpperCase() !== cleanInput) {
+        queries.push(db.collection('users').where('studentId', '==', cleanInput.toUpperCase()).limit(5).get());
+      }
+      if (strippedInput !== cleanInput) {
+        queries.push(db.collection('users').where('studentId', '==', strippedInput).limit(5).get());
+      }
+      if (/^[0-9]+$/.test(strippedInput)) {
+        queries.push(db.collection('users').where('studentId', '==', Number(strippedInput)).limit(5).get());
+      }
+
+      // Query facultyId exact and uppercase
+      queries.push(db.collection('users').where('facultyId', '==', cleanInput).limit(5).get());
+      if (cleanInput.toUpperCase() !== cleanInput) {
+        queries.push(db.collection('users').where('facultyId', '==', cleanInput.toUpperCase()).limit(5).get());
+      }
+
+      const snapshots = await Promise.all(queries);
+      for (const snap of snapshots) {
+        if (!snap.empty) {
+          // Prefer explicitly flagged faculty/coordinator accounts
+          for (const doc of snap.docs) {
+            const data = doc.data();
+            const isFac = data.isFaculty === true || data.role === 'Faculty' || data.isDptCoor === true || data.role === 'DptCoor' || data.isDptHead === true || data.role === 'DptHead';
+            if (isFac && data.email) {
+              if (typeof Utils !== 'undefined') {
+                localMap[cleanInput] = data.email;
+                localMap[cleanInput.toUpperCase()] = data.email;
+                Utils.storage.set('b1t_credential_email_map', localMap);
+              }
+              return { success: true, email: data.email };
+            }
+          }
+          // If no doc had explicit role flag, check if any returned doc has email
+          for (const doc of snap.docs) {
+            const data = doc.data();
+            if (data.email) {
+              if (typeof Utils !== 'undefined') {
+                localMap[cleanInput] = data.email;
+                localMap[cleanInput.toUpperCase()] = data.email;
+                Utils.storage.set('b1t_credential_email_map', localMap);
+              }
+              return { success: true, email: data.email };
+            }
+          }
+        }
+      }
+
+      return { success: false, error: 'Faculty account not found' };
+    } catch (error) {
+      console.error('Error finding faculty by ID or initial:', error);
+      const cleanInput = String(identifier || '').trim();
+      const strippedInput = cleanInput.replace(/[-\s]/g, '');
+      const localMap = (typeof Utils !== 'undefined' && Utils.storage.get('b1t_credential_email_map')) || {};
+      if (localMap[cleanInput] || localMap[cleanInput.toUpperCase()] || localMap[strippedInput]) {
+        return { success: true, email: localMap[cleanInput] || localMap[cleanInput.toUpperCase()] || localMap[strippedInput] };
+      }
+      return {
+        success: false,
+        error: error.message,
+        isPermissionError: error.code === 'permission-denied' || String(error.message).includes('permissions')
+      };
     }
   },
 
   async getEmailByFacultyInitial(initial) {
-    try {
-      const cleanInitial = String(initial || '').trim();
-      if (!cleanInitial) return { success: false, error: 'Initial cannot be empty' };
-
-      // Query by facultyInitial (case-sensitive exact match or uppercase)
-      let snapshot = await db.collection('users')
-        .where('facultyInitial', '==', cleanInitial)
-        .limit(1)
-        .get();
-      if (snapshot.empty) {
-        snapshot = await db.collection('users')
-          .where('facultyInitial', '==', cleanInitial.toUpperCase())
-          .limit(1)
-          .get();
-      }
-      // Fallback for faculty accounts that stored initial in studentId
-      if (snapshot.empty) {
-        snapshot = await db.collection('users')
-          .where('studentId', '==', cleanInitial)
-          .where('isFaculty', '==', true)
-          .limit(1)
-          .get();
-      }
-      if (snapshot.empty) {
-        snapshot = await db.collection('users')
-          .where('studentId', '==', cleanInitial.toUpperCase())
-          .where('isFaculty', '==', true)
-          .limit(1)
-          .get();
-      }
-      if (!snapshot.empty) {
-        return { success: true, email: snapshot.docs[0].data().email };
-      }
-      return { success: false, error: 'Faculty initial not found' };
-    } catch (error) {
-      console.error('Error finding faculty by initial:', error);
-      return { success: false, error: error.message };
-    }
+    return this.getEmailByFaculty(initial);
   },
 
   // Task operations - fetches tasks for the section group (A1+A2 merged, B1+B2 merged, etc.)

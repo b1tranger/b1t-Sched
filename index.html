@@ -178,8 +178,8 @@
                             <div class="form-group">
                                 <label for="login-email" id="login-id-label">Student ID or Email</label>
                                 <input type="text" id="login-email" class="form-input"
-                                    placeholder="Enter 10-16 digit ID or email" required autocomplete="username">
-                                <small id="login-id-hint" class="form-hint">Log in with your 10-16 digit student ID or email</small>
+                                    placeholder="Enter student ID or email" required autocomplete="username">
+                                <small id="login-id-hint" class="form-hint">Log in with your student ID or email</small>
                             </div>
 
                             <div class="form-group">
@@ -2522,10 +2522,12 @@
     <!-- PWA Install Prompt -->
     <div id="install-prompt" class="install-prompt" style="display: none;">
         <div class="install-prompt-content">
-            <img src="/Social-Preview.webp" alt="App Icon" class="install-icon">
+            <div class="install-header-row">
+                <img src="/Social-Preview.webp" alt="App Icon" class="install-icon">
+                <h3 class="install-title">Install b1t-Sched</h3>
+            </div>
             <div class="install-text">
-                <h3>Install b1t-Sched</h3>
-                <p>Install our app for quick access and offline use</p>
+                <p class="install-desc">Install our app for quick access and offline use</p>
             </div>
             <div class="install-actions">
                 <button id="install-btn" class="btn btn-primary">Install</button>

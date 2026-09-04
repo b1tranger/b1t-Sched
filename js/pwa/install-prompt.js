@@ -333,8 +333,7 @@ class InstallPromptManager {
       const content = prompt.querySelector('.install-text');
       if (content) {
         content.innerHTML = `
-          <h3>Install b1t-Sched</h3>
-          <p>Tap <i class="fas fa-share"></i> then "Add to Home Screen"</p>
+          <p class="install-desc">Tap <i class="fas fa-share"></i> then "Add to Home Screen"</p>
         `;
       }
 

@@ -2,10 +2,12 @@
    CHANGELOG / WHAT'S NEW MODAL STYLING
    ============================================ */
 
-.changelog-modal-content {
+.changelog-modal-content,
+#changelog-modal .modal-content {
   position: relative;
-  max-width: 720px;
-  width: 95%;
+  max-width: 780px !important;
+  width: 90% !important;
+  min-width: 600px;
   max-height: 88vh;
   display: flex;
   flex-direction: column;
@@ -14,6 +16,7 @@
   border: 1px solid var(--border-light, #e0e0e0);
   background: var(--bg-white, #ffffff);
   overflow: visible;
+  padding: 0 !important;
   animation: changelogModalFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
@@ -657,8 +660,11 @@ body.gray-mode .changelog-doc-hint a:hover {
 }
 
 @media (max-width: 480px) {
-  .changelog-modal-content {
-    width: calc(100% - 12px);
+  .changelog-modal-content,
+  #changelog-modal .modal-content {
+    width: calc(100% - 12px) !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
     max-height: 94vh;
     margin: 6px auto;
     border-radius: 10px;

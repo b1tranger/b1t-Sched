@@ -37,6 +37,13 @@ const UI = {
         const isAdmin = typeof App !== 'undefined' ? App.isAdmin : false;
         ApprovalManager.updateVisibility(role, dept, isCR, isDptCoor, isAdmin);
       }
+
+      // If on login view, guarantee scroll is reset to top
+      if (typeof Router !== 'undefined' && (Router.currentRoute === 'login' || !Router.currentRoute)) {
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      }
     }
   },
 

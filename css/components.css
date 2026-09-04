@@ -999,11 +999,12 @@ body.dark-mode .task-deadline.urgent {
   right: 24px;
   left: auto;
   transform: none;
-  background: var(--bg-white);
-  border-radius: 12px;
-  box-shadow: var(--shadow-lg);
+  background: #ffffff;
+  border: 1px solid var(--border-medium);
+  border-radius: 14px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
   padding: 16px;
-  max-width: 380px;
+  max-width: 360px;
   width: calc(100% - 48px);
   z-index: 10000;
   animation: slideInRight 0.35s cubic-bezier(0.16, 1, 0.3, 1);
@@ -1036,55 +1037,99 @@ body.dark-mode .task-deadline.urgent {
 
 .install-prompt-content {
   display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+}
+
+/* Row 1: Header with icon and title */
+.install-header-row {
+  display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  width: 100%;
 }
 
-.install-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 8px;
+.install-header-row .install-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
   object-fit: cover;
+  flex-shrink: 0;
 }
 
-.install-text {
-  flex: 1;
-}
-
-.install-text h3 {
-  margin: 0 0 4px 0;
-  font-size: 16px;
+.install-header-row h3,
+.install-title {
+  margin: 0;
+  font-size: 15px;
   font-weight: 600;
   color: var(--text-dark);
 }
 
-.install-text p {
+/* Row 2: Description */
+.install-text,
+.install-desc {
+  width: 100%;
+}
+
+.install-text p,
+.install-desc {
   margin: 0;
-  font-size: 14px;
+  font-size: 13.5px;
+  line-height: 1.4;
   color: var(--text-medium);
 }
 
+/* Row 3: Action Buttons */
 .install-actions {
   display: flex;
+  align-items: center;
+  justify-content: flex-end;
   gap: 8px;
+  width: 100%;
+  margin-top: 2px;
 }
 
 .install-actions .btn {
-  padding: 8px 16px;
-  font-size: 14px;
+  padding: 6px 14px;
+  font-size: 13px;
+  border-radius: 8px;
   white-space: nowrap;
 }
 
-/* Dark mode specific for install prompt */
+/* High Contrast mode (body.dark-mode) */
 body.dark-mode .install-prompt {
   border: 1px solid var(--border-medium);
-  background: var(--bg-card);
+  background: #141414 !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7);
 }
 
-/* Gray mode specific for install prompt */
+body.dark-mode .install-title,
+body.dark-mode .install-header-row h3 {
+  color: #f0f1ea !important;
+}
+
+body.dark-mode .install-desc,
+body.dark-mode .install-text p {
+  color: #badd93 !important;
+}
+
+/* Dark mode (body.gray-mode) */
 body.gray-mode .install-prompt {
   border: 1px solid var(--border-medium);
-  background: var(--bg-card);
+  background: #242424 !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+body.gray-mode .install-title,
+body.gray-mode .install-header-row h3 {
+  color: #eae9f1 !important;
+}
+
+body.gray-mode .install-desc,
+body.gray-mode .install-text p {
+  color: #c4c1d7 !important;
 }
 
 /* Mobile adjustments */
@@ -1092,21 +1137,15 @@ body.gray-mode .install-prompt {
   .install-prompt {
     left: 50%;
     right: auto;
-    bottom: 12px;
+    bottom: 16px;
     transform: translateX(-50%);
     max-width: 400px;
     width: calc(100% - 24px);
     animation: slideUp 0.3s ease-out;
   }
 
-  .install-prompt-content {
-    flex-direction: column;
-    text-align: center;
-  }
-
   .install-actions {
-    width: 100%;
-    flex-direction: column;
+    justify-content: flex-end;
   }
 }
 
