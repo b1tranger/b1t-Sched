@@ -676,7 +676,9 @@ const Classroom = {
         this.tokenClient.requestAccessToken({ prompt: '' });
     },
 
-    handleAuthSuccess(tokenResponse) {
+    async handleAuthSuccess(tokenResponse) {
+        const wasExpiredSession = this.hasExpiredSession;
+
         // Auth successful, save state
         this.accessToken = tokenResponse.access_token;
         this.hasExpiredSession = false;
@@ -713,10 +715,54 @@ const Classroom = {
             localStorage.setItem('classroom_token_expiry', expiryTime.toString());
         }
 
+        // Snapshot cached data before fetching if reconnecting from an expired session
+        let prevAssignments = [];
+        let prevAnnouncements = [];
+        if (wasExpiredSession) {
+            this.initCacheManager();
+            if (this.cacheManager) {
+                try {
+                    const cachedAssignments = await this.cacheManager.getCachedClassroomData('assignments');
+                    const cachedAnnouncements = await this.cacheManager.getCachedClassroomData('announcements');
+                    prevAssignments = (cachedAssignments && cachedAssignments.data) || [];
+                    prevAnnouncements = (cachedAnnouncements && cachedAnnouncements.data) || [];
+                } catch (e) {
+                    console.warn('[Classroom] Error reading cache before reconnect:', e);
+                }
+            }
+            if (prevAssignments.length === 0 && this.getJsonCache()) {
+                prevAssignments = this.getJsonCache().assignments || [];
+            }
+            if (prevAnnouncements.length === 0 && this.getJsonCache()) {
+                prevAnnouncements = this.getJsonCache().announcements || [];
+            }
+            if (prevAssignments.length === 0 && this.inMemoryCache && this.inMemoryCache.assignments) {
+                prevAssignments = this.inMemoryCache.assignments;
+            }
+            if (prevAnnouncements.length === 0 && this.inMemoryCache && this.inMemoryCache.announcements) {
+                prevAnnouncements = this.inMemoryCache.announcements;
+            }
+        }
+
         // Fetch courses and load all assignments/notices/materials
         this.updateBottomCachedFooter(false);
-        this.fetchCoursesAndLoadAll();
+        await this.fetchCoursesAndLoadAll();
         this.updateLogoutButtonVisibility();
+
+        // If reconnecting after session expired, reconcile tasks and show diff modal
+        if (wasExpiredSession) {
+            const freshAssignments = (this.inMemoryCache && this.inMemoryCache.assignments) || [];
+            const freshAnnouncements = (this.inMemoryCache && this.inMemoryCache.announcements) || [];
+
+            if (typeof App !== 'undefined' && typeof App.loadDashboardData === 'function') {
+                await App.loadDashboardData(false);
+            }
+
+            await this.syncTurnedInAssignmentsToUserCompletions(freshAssignments);
+
+            const diffSummary = this.computeClassroomChanges(prevAssignments, prevAnnouncements, freshAssignments, freshAnnouncements);
+            this.showSyncSummaryModal(diffSummary);
+        }
 
         // Resolve the init promise if it was waiting
         this._cleanupAuthPromise(true);
@@ -1842,7 +1888,9 @@ const Classroom = {
             }
 
             if (assignments.length === 0) {
-                this.showSyncSummaryModal({ added: [], updated: [], unchanged: [] });
+                if (typeof UI !== 'undefined' && typeof UI.showToast === 'function') {
+                    UI.showToast('No assignments found to sync.', 'info');
+                }
                 return;
             }
 
@@ -1850,7 +1898,9 @@ const Classroom = {
             const syncableAssignments = assignments.filter(a => a.dueDate);
 
             if (syncableAssignments.length === 0) {
-                this.showSyncSummaryModal({ added: [], updated: [], unchanged: [] });
+                if (typeof UI !== 'undefined' && typeof UI.showToast === 'function') {
+                    UI.showToast('No assignments with due dates found to sync.', 'info');
+                }
                 return;
             }
 
@@ -1949,16 +1999,19 @@ const Classroom = {
                 }
             }
 
-            // Open the rich Git Diff Summary Modal
-            this.showSyncSummaryModal({
-                added: addedItems,
-                updated: updatedItems,
-                unchanged: unchangedItems
-            });
-
             // Refresh dashboard tasks
             if (App && typeof App.loadDashboardData === 'function') {
                 await App.loadDashboardData(false);
+            }
+
+            // Provide non-intrusive toast feedback (modal is reserved for Refresh button)
+            if (typeof UI !== 'undefined' && typeof UI.showToast === 'function') {
+                const totalChanges = addedItems.length + updatedItems.length;
+                if (totalChanges === 0) {
+                    UI.showToast('All assignments are up to date.', 'info');
+                } else {
+                    UI.showToast(`Synced assignments: ${addedItems.length} added, ${updatedItems.length} updated.`, 'success');
+                }
             }
 
             // NOTE: syncAssignmentsToTasks ONLY imports / updates assignments in the task database.
@@ -2099,46 +2152,19 @@ const Classroom = {
         }
     },
 
-    async refreshData() {
-        if (!this.accessToken) {
-            console.log('[Classroom] Cannot refresh without access token, showing login');
-            this.renderLoginState();
-            return;
-        }
-
-        // Snapshot previous cached data to calculate diffs upon refresh
-        const prevAssignments = (this.inMemoryCache && this.inMemoryCache.assignments) || (this.getJsonCache() && this.getJsonCache().assignments) || [];
-        const prevAnnouncements = (this.inMemoryCache && this.inMemoryCache.announcements) || (this.getJsonCache() && this.getJsonCache().announcements) || [];
+    // Compute changes across assignments & announcements between previous cache and fresh data
+    computeClassroomChanges(prevAssignments = [], prevAnnouncements = [], freshAssignments = [], freshAnnouncements = []) {
         const prevAssignmentsMap = new Map();
-        prevAssignments.forEach(a => { if (a && a.id) prevAssignmentsMap.set(String(a.id), a); });
+        (prevAssignments || []).forEach(a => { if (a && a.id) prevAssignmentsMap.set(String(a.id), a); });
         const prevAnnouncementsMap = new Map();
-        prevAnnouncements.forEach(a => { if (a && a.id) prevAnnouncementsMap.set(String(a.id), a); });
-
-        // Clear in-memory cache and CacheManager entries for a fresh sync
-        this.inMemoryCache = { assignments: null, announcements: null, materials: null };
-        this.initCacheManager();
-        if (this.cacheManager) {
-            const cache = await caches.open(this.cacheManager.CACHE_NAME);
-            await cache.delete(this.cacheManager.KEYS.CLASSROOM_ASSIGNMENTS);
-            await cache.delete(this.cacheManager.KEYS.CLASSROOM_ANNOUNCEMENTS);
-            await cache.delete(this.cacheManager.KEYS.CLASSROOM_MATERIALS);
-            console.log('[Classroom] Cleared cached classroom data for refresh');
-        }
-
-        // Re-fetch courses and reload all
-        this.courses = [];
-        await this.fetchCoursesAndLoadAll();
-
-        // Compute changes across fresh assignments & announcements
-        const freshAssignments = (this.inMemoryCache && this.inMemoryCache.assignments) || [];
-        const freshAnnouncements = (this.inMemoryCache && this.inMemoryCache.announcements) || [];
+        (prevAnnouncements || []).forEach(a => { if (a && a.id) prevAnnouncementsMap.set(String(a.id), a); });
 
         const addedItems = [];
         const updatedItems = [];
         const unchangedItems = [];
 
         // Check assignments
-        for (const item of freshAssignments) {
+        for (const item of (freshAssignments || [])) {
             const prev = prevAssignmentsMap.get(String(item.id));
             if (!prev) {
                 const diff = this.computeItemDiff(null, item, true);
@@ -2180,7 +2206,7 @@ const Classroom = {
         }
 
         // Check announcements / notices
-        for (const ann of freshAnnouncements) {
+        for (const ann of (freshAnnouncements || [])) {
             const prev = prevAnnouncementsMap.get(String(ann.id));
             const annTitle = ann.text ? (ann.text.split('\n')[0].substring(0, 50) + (ann.text.length > 50 ? '...' : '')) : 'Notice / Announcement';
             if (!prev) {
@@ -2232,6 +2258,43 @@ const Classroom = {
             }
         }
 
+        return {
+            added: addedItems,
+            updated: updatedItems,
+            unchanged: unchangedItems
+        };
+    },
+
+    async refreshData() {
+        if (!this.accessToken) {
+            console.log('[Classroom] Cannot refresh without access token, showing login');
+            this.renderLoginState();
+            return;
+        }
+
+        // Snapshot previous cached data to calculate diffs upon refresh
+        const prevAssignments = (this.inMemoryCache && this.inMemoryCache.assignments) || (this.getJsonCache() && this.getJsonCache().assignments) || [];
+        const prevAnnouncements = (this.inMemoryCache && this.inMemoryCache.announcements) || (this.getJsonCache() && this.getJsonCache().announcements) || [];
+
+        // Clear in-memory cache and CacheManager entries for a fresh sync
+        this.inMemoryCache = { assignments: null, announcements: null, materials: null };
+        this.initCacheManager();
+        if (this.cacheManager) {
+            const cache = await caches.open(this.cacheManager.CACHE_NAME);
+            await cache.delete(this.cacheManager.KEYS.CLASSROOM_ASSIGNMENTS);
+            await cache.delete(this.cacheManager.KEYS.CLASSROOM_ANNOUNCEMENTS);
+            await cache.delete(this.cacheManager.KEYS.CLASSROOM_MATERIALS);
+            console.log('[Classroom] Cleared cached classroom data for refresh');
+        }
+
+        // Re-fetch courses and reload all
+        this.courses = [];
+        await this.fetchCoursesAndLoadAll();
+
+        // Fresh assignments & announcements
+        const freshAssignments = (this.inMemoryCache && this.inMemoryCache.assignments) || [];
+        const freshAnnouncements = (this.inMemoryCache && this.inMemoryCache.announcements) || [];
+
         // Refresh dashboard tasks so App.currentTasks is fresh before checking completions
         if (typeof App !== 'undefined' && typeof App.loadDashboardData === 'function') {
             await App.loadDashboardData(false);
@@ -2240,12 +2303,9 @@ const Classroom = {
         // Auto-check completed/turned-in tasks in Pending Tasks upon refresh
         await this.syncTurnedInAssignmentsToUserCompletions(freshAssignments);
 
-        // Present the Classroom Sync Summary modal briefing
-        this.showSyncSummaryModal({
-            added: addedItems,
-            updated: updatedItems,
-            unchanged: unchangedItems
-        });
+        // Compute changes across fresh assignments & announcements and present briefing modal
+        const diffSummary = this.computeClassroomChanges(prevAssignments, prevAnnouncements, freshAssignments, freshAnnouncements);
+        this.showSyncSummaryModal(diffSummary);
     },
 
     // Render To-Do items divided into 3 distinct groups (+ completed) with small-height divider banners
