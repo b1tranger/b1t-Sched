@@ -372,21 +372,21 @@ body.gray-mode .resource-link-card .resource-icon .fa-graduation-cap {
 /* Task Cards */
 .task-card {
   background: var(--bg-white);
-  border: 2px solid var(--border-light);
-  border-left: 4px solid var(--primary-maroon);
+  border: 1px solid var(--border-light);
+  border-left: none !important;
   border-radius: var(--radius-md);
-  padding: var(--spacing-md);
+  padding: 10px 14px;
   transition: all var(--transition-fast);
 }
 
 .task-card:hover {
   box-shadow: var(--shadow-md);
-  transform: translateX(5px);
+  transform: translateX(3px);
 }
 
 .task-card.completed {
   opacity: 0.6;
-  border-left-color: var(--success);
+  border-left: none !important;
 }
 
 .task-header {
@@ -430,9 +430,10 @@ body.gray-mode .resource-link-card .resource-icon .fa-graduation-cap {
 .task-description-wrapper {
   position: relative;
   background-color: rgba(128, 128, 128, 0.05);
-  padding: var(--spacing-sm) var(--spacing-md);
+  padding: 8px 12px;
   border-radius: var(--radius-md);
-  border-left: 3px solid var(--border-light);
+  border: 1px solid var(--border-light);
+  border-left: none !important;
 }
 
 .task-description-text {
@@ -450,30 +451,138 @@ body.gray-mode .resource-link-card .resource-icon .fa-graduation-cap {
   display: block;
 }
 
-/* Hide task-added-by & task-id info until description is expanded */
-.task-added-by-hidden {
-  display: none;
+/* Task Header Top Row & Copy Button */
+.task-header-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.task-card-copy-btn {
+  background: rgba(128, 128, 128, 0.08);
+  border: 1px solid var(--border-light);
+  color: var(--text-light);
+  cursor: pointer;
+  padding: 3px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  line-height: 1;
+  transition: all var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.task-card-copy-btn:hover {
+  color: var(--primary-maroon, #800000);
+  background-color: rgba(128, 0, 31, 0.12);
+  border-color: var(--primary-maroon, #800000);
+}
+
+body.dark-mode .task-card-copy-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--border-medium);
+  color: #94a3b8;
+}
+
+body.dark-mode .task-card-copy-btn:hover {
+  color: #38bdf8;
+  background-color: rgba(56, 189, 248, 0.15);
+  border-color: #38bdf8;
+}
+
+body.gray-mode .task-card-copy-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--border-medium);
+  color: #a1a1aa;
+}
+
+body.gray-mode .task-card-copy-btn:hover {
+  color: #67e8f9;
+  background-color: rgba(103, 232, 249, 0.15);
+  border-color: #67e8f9;
+}
+
+/* Task Meta Footer (Added By and Task ID) */
+.task-meta-footer {
   margin-top: var(--spacing-sm);
   margin-bottom: 0;
+  font-size: var(--font-xs);
+  color: var(--text-medium);
+}
+
+@media (min-width: 769px) {
+  .task-meta-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 768px) {
+  .task-meta-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+}
+
+/* Hide task-added-by & task-meta-footer info until description is expanded */
+.task-added-by-hidden {
+  display: none;
 }
 
 .task-description-text.expanded ~ .task-added-by-hidden {
-  display: block;
+  display: flex;
 }
 
-.task-id-info {
-  font-size: var(--font-xs);
-  color: var(--text-light);
-  margin-top: 4px;
-}
-
-.task-id-code {
-  font-family: monospace;
-  font-size: 0.9em;
+.copy-task-id-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   background-color: rgba(128, 128, 128, 0.12);
-  padding: 1px 5px;
-  border-radius: var(--radius-xs);
-  user-select: all;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 2px 8px;
+  font-size: var(--font-xs);
+  color: var(--text-dark);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-family: inherit;
+  font-weight: 500;
+}
+
+.copy-task-id-btn:hover {
+  background-color: var(--primary-maroon);
+  color: var(--text-white);
+  border-color: var(--primary-maroon);
+}
+
+body.dark-mode .copy-task-id-btn {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: var(--border-medium);
+  color: #e2e8f0;
+}
+
+body.dark-mode .copy-task-id-btn:hover {
+  background-color: #38bdf8;
+  color: #0f172a;
+  border-color: #38bdf8;
+}
+
+body.gray-mode .copy-task-id-btn {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: var(--border-medium);
+  color: #e2e8f0;
+}
+
+body.gray-mode .copy-task-id-btn:hover {
+  background-color: #67e8f9;
+  color: #0f172a;
+  border-color: #67e8f9;
 }
 
 .task-description-toggle {
@@ -896,17 +1005,31 @@ body.dark-mode .task-deadline.urgent {
 
 .install-prompt {
   position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: 24px;
+  right: 24px;
+  left: auto;
+  transform: none;
   background: var(--bg-white);
   border-radius: 12px;
   box-shadow: var(--shadow-lg);
   padding: 16px;
-  max-width: 400px;
-  width: calc(100% - 40px);
+  max-width: 380px;
+  width: calc(100% - 48px);
   z-index: 10000;
-  animation: slideUp 0.3s ease-out;
+  animation: slideInRight 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
@@ -965,13 +1088,25 @@ body.dark-mode .task-deadline.urgent {
 /* Dark mode specific for install prompt */
 body.dark-mode .install-prompt {
   border: 1px solid var(--border-medium);
+  background: var(--bg-card);
+}
+
+/* Gray mode specific for install prompt */
+body.gray-mode .install-prompt {
+  border: 1px solid var(--border-medium);
+  background: var(--bg-card);
 }
 
 /* Mobile adjustments */
 @media (max-width: 768px) {
   .install-prompt {
-    bottom: 10px;
-    width: calc(100% - 20px);
+    left: 50%;
+    right: auto;
+    bottom: 12px;
+    transform: translateX(-50%);
+    max-width: 400px;
+    width: calc(100% - 24px);
+    animation: slideUp 0.3s ease-out;
   }
 
   .install-prompt-content {
@@ -983,10 +1118,57 @@ body.dark-mode .install-prompt {
     width: 100%;
     flex-direction: column;
   }
+}
 
-  .install-actions .btn {
-    width: 100%;
-  }
+/* Filter Users Readonly Overlays and Popup */
+.select-readonly-wrapper {
+  position: relative;
+}
+
+.select-readonly-overlay {
+  position: absolute;
+  top: 24px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  cursor: not-allowed;
+  z-index: 10;
+  background: transparent;
+}
+
+.form-select.readonly-select {
+  opacity: 0.55;
+  background-color: var(--bg-lighter, #f1f5f9) !important;
+  cursor: not-allowed !important;
+  pointer-events: none;
+}
+
+.filter-readonly-popup {
+  position: fixed;
+  z-index: 10001;
+  background-color: #1e293b;
+  color: #f8fafc;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm, 6px);
+  font-size: 0.8rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  white-space: nowrap;
+}
+
+.filter-readonly-popup.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+body.dark-mode .filter-readonly-popup,
+body.gray-mode .filter-readonly-popup {
+  background-color: #334155;
+  color: #ffffff;
+  border: 1px solid #475569;
 }
 
 
@@ -1082,10 +1264,13 @@ body.offline-active .main-content {
   body.offline-active #notice-sidebar,
   body.offline-active .notice-sidebar,
   body.offline-active #classroom-sidebar,
-  body.offline-active .classroom-sidebar {
+  body.offline-active .classroom-sidebar,
+  body.offline-active #approval-sidebar,
+  body.offline-active .approval-sidebar {
     top: var(--offline-banner-height, 34px) !important;
-    height: calc(100vh - var(--offline-banner-height, 34px)) !important;
-    max-height: calc(100vh - var(--offline-banner-height, 34px)) !important;
+    bottom: 0 !important;
+    height: calc(100% - var(--offline-banner-height, 34px)) !important;
+    max-height: calc(100% - var(--offline-banner-height, 34px)) !important;
   }
 
   body.offline-active #events-overlay,
@@ -1093,9 +1278,12 @@ body.offline-active .main-content {
   body.offline-active #notice-overlay,
   body.offline-active .notice-overlay,
   body.offline-active #classroom-overlay,
-  body.offline-active .classroom-overlay {
+  body.offline-active .classroom-overlay,
+  body.offline-active #approval-overlay,
+  body.offline-active .approval-overlay {
     top: var(--offline-banner-height, 34px) !important;
-    height: calc(100vh - var(--offline-banner-height, 34px)) !important;
+    bottom: 0 !important;
+    height: calc(100% - var(--offline-banner-height, 34px)) !important;
   }
 }
 
@@ -1122,10 +1310,13 @@ body.offline-active .events-sidebar,
 body.offline-active #notice-sidebar,
 body.offline-active .notice-sidebar,
 body.offline-active #classroom-sidebar,
-body.offline-active .classroom-sidebar {
+body.offline-active .classroom-sidebar,
+body.offline-active #approval-sidebar,
+body.offline-active .approval-sidebar {
   top: var(--offline-banner-height, 42px) !important;
-  height: calc(100vh - var(--offline-banner-height, 42px)) !important;
-  max-height: calc(100vh - var(--offline-banner-height, 42px)) !important;
+  bottom: 0 !important;
+  height: calc(100% - var(--offline-banner-height, 42px)) !important;
+  max-height: calc(100% - var(--offline-banner-height, 42px)) !important;
 }
 
 body.offline-active #events-overlay,
@@ -1133,9 +1324,12 @@ body.offline-active .events-overlay,
 body.offline-active #notice-overlay,
 body.offline-active .notice-overlay,
 body.offline-active #classroom-overlay,
-body.offline-active .classroom-overlay {
+body.offline-active .classroom-overlay,
+body.offline-active #approval-overlay,
+body.offline-active .approval-overlay {
   top: var(--offline-banner-height, 42px) !important;
-  height: calc(100vh - var(--offline-banner-height, 42px)) !important;
+  bottom: 0 !important;
+  height: calc(100% - var(--offline-banner-height, 42px)) !important;
 }
 
 

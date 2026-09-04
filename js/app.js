@@ -10,32 +10,106 @@ class FilterPopup {
     this.applyBtn = document.getElementById('apply-filters-btn');
     this.clearBtn = document.getElementById('clear-filters-btn');
     this.badge = document.getElementById('filter-badge');
+    this.semesterSelect = document.getElementById('filter-semester');
+    this.sectionSelect = document.getElementById('filter-section');
+    this.semesterOverlay = document.getElementById('filter-semester-overlay');
+    this.sectionOverlay = document.getElementById('filter-section-overlay');
+    this.roleSelect = document.getElementById('filter-role');
     this.activeFilters = 0;
+    this._popupTimeout = null;
+    this.setupReadonlyOverlayListeners();
+  }
+
+  setupReadonlyOverlayListeners() {
+    const handleOverlayClick = (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      this.showFacultyNotice(e.currentTarget);
+    };
+
+    if (this.semesterOverlay) {
+      this.semesterOverlay.addEventListener('click', handleOverlayClick);
+    }
+    if (this.sectionOverlay) {
+      this.sectionOverlay.addEventListener('click', handleOverlayClick);
+    }
+  }
+
+  setSemesterSectionReadOnly(isReadOnly) {
+    if (this.semesterSelect) {
+      if (isReadOnly) {
+        this.semesterSelect.classList.add('readonly-select');
+        this.semesterSelect.value = 'All';
+      } else {
+        this.semesterSelect.classList.remove('readonly-select');
+      }
+    }
+    if (this.sectionSelect) {
+      if (isReadOnly) {
+        this.sectionSelect.classList.add('readonly-select');
+        this.sectionSelect.value = 'All';
+      } else {
+        this.sectionSelect.classList.remove('readonly-select');
+      }
+    }
+    if (this.semesterOverlay) {
+      this.semesterOverlay.style.display = isReadOnly ? 'block' : 'none';
+    }
+    if (this.sectionOverlay) {
+      this.sectionOverlay.style.display = isReadOnly ? 'block' : 'none';
+    }
+  }
+
+  showFacultyNotice(targetEl) {
+    const msg = 'Semester and sections are not defined for faculties';
+    this.showFloatingPopup(targetEl, msg);
+    if (typeof UI !== 'undefined' && UI.showToast) {
+      UI.showToast(msg, 'info', 3000);
+    }
+  }
+
+  showFloatingPopup(targetEl, message) {
+    let popupEl = document.getElementById('filter-faculty-notice-popup');
+    if (!popupEl) {
+      popupEl = document.createElement('div');
+      popupEl.id = 'filter-faculty-notice-popup';
+      popupEl.className = 'filter-readonly-popup';
+      document.body.appendChild(popupEl);
+    }
+
+    popupEl.textContent = message;
+
+    if (targetEl) {
+      const rect = targetEl.getBoundingClientRect();
+      const popupWidth = 280;
+      let left = rect.left + (rect.width / 2) - (popupWidth / 2);
+      if (left < 10) left = 10;
+      if (left + popupWidth > window.innerWidth - 10) left = window.innerWidth - popupWidth - 10;
+      popupEl.style.left = `${left}px`;
+      popupEl.style.top = `${Math.max(10, rect.top - 38)}px`;
+    }
+
+    popupEl.classList.add('show');
+
+    if (this._popupTimeout) {
+      clearTimeout(this._popupTimeout);
+    }
+    this._popupTimeout = setTimeout(() => {
+      popupEl.classList.remove('show');
+    }, 2500);
   }
 
   open() {
     if (this.popup) {
       this.popup.style.display = 'flex';
+      const role = this.roleSelect ? this.roleSelect.value : document.getElementById('filter-role')?.value;
+      this.setSemesterSectionReadOnly(role === 'Faculty' || role === 'DptCoor');
     }
   }
 
   close() {
     if (this.popup) {
       this.popup.style.display = 'none';
-    }
-  }
-
-  // Hide semester and section filters for Faculty users
-  hideSemesterSectionForFaculty(isFaculty) {
-    const semesterGroup = document.querySelector('#filter-semester')?.closest('.form-group');
-    const sectionGroup = document.querySelector('#filter-section')?.closest('.form-group');
-
-    if (isFaculty) {
-      if (semesterGroup) semesterGroup.style.display = 'none';
-      if (sectionGroup) sectionGroup.style.display = 'none';
-    } else {
-      if (semesterGroup) semesterGroup.style.display = 'block';
-      if (sectionGroup) sectionGroup.style.display = 'block';
     }
   }
 
@@ -61,9 +135,8 @@ class FilterPopup {
     const role = document.getElementById('filter-role')?.value;
 
     if (dept && dept !== 'All') filters.push('department');
-    // Skip semester and section for Faculty users (they're hidden)
-    const semesterGroup = document.querySelector('#filter-semester')?.closest('.form-group');
-    if (semesterGroup && semesterGroup.style.display !== 'none') {
+    // Skip semester and section for Faculty / DptCoor roles
+    if (role !== 'Faculty' && role !== 'DptCoor') {
       if (sem && sem !== 'All') filters.push('semester');
       if (section && section !== 'All') filters.push('section');
     }
@@ -79,14 +152,11 @@ class FilterPopup {
     const filterRole = document.getElementById('filter-role');
 
     if (filterDept) filterDept.value = 'All';
-    // Only clear semester/section if they're visible (not Faculty user)
-    const semesterGroup = document.querySelector('#filter-semester')?.closest('.form-group');
-    if (semesterGroup && semesterGroup.style.display !== 'none') {
-      if (filterSem) filterSem.value = 'All';
-      if (filterSection) filterSection.value = 'All';
-    }
+    if (filterSem) filterSem.value = 'All';
+    if (filterSection) filterSection.value = 'All';
     if (filterRole) filterRole.value = 'All';
 
+    this.setSemesterSectionReadOnly(false);
     this.updateBadge();
   }
 }
@@ -260,6 +330,15 @@ const App = {
         await this.loadDashboardData();
       } else if (route === 'user-management') {
         await this.loadUserManagement();
+      }
+
+      // Check install prompt visibility on route changes (show post-login, hide on login)
+      if (window.installPromptManager) {
+        if (route === 'login') {
+          window.installPromptManager.hideInstallPrompt();
+        } else {
+          window.installPromptManager.checkAndShowPostLogin();
+        }
       }
     });
 
@@ -562,6 +641,24 @@ const App = {
     const tasksContainer = document.getElementById('tasks-container');
     if (tasksContainer) {
       tasksContainer.addEventListener('click', async (e) => {
+        // Handle single task copy button
+        const taskCopyBtn = e.target.closest('.task-card-copy-btn');
+        if (taskCopyBtn) {
+          e.stopPropagation();
+          const taskId = taskCopyBtn.dataset.taskId;
+          await this.copySingleTask(taskId, taskCopyBtn);
+          return;
+        }
+
+        // Handle copy task ID button
+        const copyTaskIdBtn = e.target.closest('.copy-task-id-btn');
+        if (copyTaskIdBtn) {
+          e.stopPropagation();
+          const taskId = copyTaskIdBtn.dataset.taskId;
+          await this.copyTaskId(taskId, copyTaskIdBtn);
+          return;
+        }
+
         // Handle task checkbox
         const checkbox = e.target.closest('.task-checkbox');
         if (checkbox && checkbox.type === 'checkbox') {
@@ -1514,6 +1611,11 @@ const App = {
     }
 
     UI.showLoading(false);
+
+    // Check and show deferred install prompt post-login
+    if (window.installPromptManager) {
+      window.installPromptManager.checkAndShowPostLogin();
+    }
   },
 
   handleUnauthenticatedUser() {
@@ -1686,7 +1788,11 @@ const App = {
     }
 
     if (semResult.success) {
-      await UI.populateDropdown('set-semester', semResult.data);
+      const studentSemesters = (semResult.data || []).filter(s => {
+        const sNorm = (typeof s === 'string' ? s.toLowerCase().trim() : '');
+        return sNorm !== 'alumni / special' && sNorm !== 'alumni/special' && !sNorm.startsWith('alumni');
+      });
+      await UI.populateDropdown('set-semester', studentSemesters);
     }
   },
 
@@ -2938,6 +3044,10 @@ const App = {
       const input = document.getElementById(inputId);
       if (input) {
         input.addEventListener('change', () => {
+          if (inputId === 'filter-role' && this.filterPopup) {
+            const role = input.value;
+            this.filterPopup.setSemesterSectionReadOnly(role === 'Faculty' || role === 'DptCoor');
+          }
           this.filterUsers();
           if (this.filterPopup) {
             this.filterPopup.updateBadge();
@@ -2952,7 +3062,6 @@ const App = {
       if (this.filterPopup.addFilterBtn) {
         this.filterPopup.addFilterBtn.addEventListener('click', () => {
           this.filterPopup.open();
-          this.filterPopup.hideSemesterSectionForFaculty(this.isFaculty);
         });
       }
 
@@ -3030,12 +3139,6 @@ const App = {
           const userId = e.target.closest('.toggle-cr-btn').dataset.userId;
           const currentValue = e.target.closest('.toggle-cr-btn').dataset.currentValue === 'true';
           await this.toggleUserRole(userId, 'isCR', !currentValue);
-        }
-        // Toggle Faculty button
-        if (e.target.closest('.toggle-faculty-btn')) {
-          const userId = e.target.closest('.toggle-faculty-btn').dataset.userId;
-          const currentValue = e.target.closest('.toggle-faculty-btn').dataset.currentValue === 'true';
-          await this.toggleUserRole(userId, 'isFaculty', !currentValue);
         }
         // Toggle DptCoor button (Department Coordinator for faculty)
         if (e.target.closest('.toggle-dptcoor-btn')) {
@@ -3228,12 +3331,6 @@ const App = {
                       title="${isCR ? 'Remove CR role' : 'Make CR'}">
                 <i class="fas fa-user-graduate"></i> ${isCR ? 'Remove CR' : 'Make CR'}
               </button>
-              <button class="btn btn-sm btn-action toggle-faculty-btn ${isFaculty ? 'active' : ''}" 
-                      data-user-id="${user.id}" 
-                      data-current-value="${isFaculty}" 
-                      title="${isFaculty ? 'Remove Faculty role' : 'Make Faculty'}">
-                <i class="fas fa-chalkboard-teacher"></i> ${isFaculty ? 'Remove Faculty' : 'Make Faculty'}
-              </button>
               ${isFaculty ? `
                 <button class="btn btn-sm btn-action toggle-dptcoor-btn ${isDptCoor ? 'active' : ''}" 
                         data-user-id="${user.id}" 
@@ -3291,9 +3388,8 @@ const App = {
       filtered = filtered.filter(u => u.department === department);
     }
 
-    // Only apply semester/section filters if they're visible (not Faculty user)
-    const semesterGroup = document.querySelector('#filter-semester')?.closest('.form-group');
-    if (semesterGroup && semesterGroup.style.display !== 'none') {
+    // Only apply semester/section filters if role is not Faculty or DptCoor
+    if (role !== 'Faculty' && role !== 'DptCoor') {
       if (semester !== 'All') {
         filtered = filtered.filter(u => u.semester === semester);
       }
@@ -3352,6 +3448,10 @@ const App = {
     if (userSearchInput) userSearchInput.value = '';
     if (clearUserSearchBtn) clearUserSearchBtn.style.display = 'none';
 
+    if (this.filterPopup) {
+      this.filterPopup.setSemesterSectionReadOnly(false);
+    }
+
     this.renderUserList(this.allUsers);
   },
 
@@ -3390,13 +3490,112 @@ const App = {
       }
 
       if (typeof UI !== 'undefined' && typeof UI.showToast === 'function') {
-        UI.showToast(`Copied UID: ${uid}`, 'success');
+        UI.showToast(`Copied UID: ${uid}`, 'success', 3000, 'bottom-right');
       }
     } catch (err) {
       console.error('Failed to copy UID:', err);
       if (typeof UI !== 'undefined' && typeof UI.showToast === 'function') {
-        UI.showToast('Failed to copy UID to clipboard', 'error');
+        UI.showToast('Failed to copy UID to clipboard', 'error', 3000, 'bottom-right');
       }
+    }
+  },
+
+  async copySingleTask(taskId, btn) {
+    if (!taskId) return;
+    let task = (this.currentTasks || []).find(t => t.id === taskId);
+    if (!task && this.oldTasks) {
+      task = this.oldTasks.find(t => t.id === taskId);
+    }
+    if (!task) {
+      const card = document.querySelector(`.task-card[data-task-id="${taskId}"]`);
+      if (card) {
+        const title = card.querySelector('.task-title')?.textContent?.trim();
+        const course = card.querySelector('.task-course')?.textContent?.trim();
+        const desc = card.querySelector('.task-description-text')?.textContent?.trim();
+        const type = card.dataset.type || 'task';
+        task = { id: taskId, title, course, description: desc, type };
+      }
+    }
+    if (!task) {
+      UI.showToast('Task not found to copy', 'error');
+      return;
+    }
+
+    const isCompleted = !!(task.isCompleted || (this.userCompletions && this.userCompletions[taskId]));
+    const taskData = { ...task, isCompleted };
+
+    const formattedText = typeof TaskExport !== 'undefined' && TaskExport.formatSingleTask
+      ? TaskExport.formatSingleTask(taskData)
+      : `[${(task.type || 'TASK').toUpperCase()}] ${task.title}\nCourse: ${task.course || 'N/A'}\nTask ID: ${task.id}\n\n${task.description || ''}`;
+
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(formattedText);
+      } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = formattedText;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+
+      if (btn) {
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check" style="color: var(--success, #22c55e);"></i>';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.innerHTML = originalHtml;
+          btn.classList.remove('copied');
+        }, 1800);
+      }
+      UI.showToast('Task contents copied to clipboard', 'success', 2500);
+    } catch (err) {
+      console.error('Failed to copy task content:', err);
+      UI.showToast('Failed to copy task content', 'error');
+    }
+  },
+
+  async copyTaskId(taskId, btn) {
+    if (!taskId) return;
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(taskId);
+      } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = taskId;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+
+      if (btn) {
+        const textSpan = btn.querySelector('.task-id-btn-text');
+        const icon = btn.querySelector('i');
+        const originalText = textSpan ? textSpan.textContent : '';
+        const originalIconClass = icon ? icon.className : '';
+
+        if (textSpan) textSpan.textContent = 'Copied!';
+        if (icon) icon.className = 'fas fa-check';
+        btn.classList.add('copied');
+
+        setTimeout(() => {
+          if (textSpan) textSpan.textContent = originalText;
+          if (icon) icon.className = originalIconClass;
+          btn.classList.remove('copied');
+        }, 1800);
+      }
+      UI.showToast(`Task ID (${taskId}) copied to clipboard`, 'success', 2500);
+    } catch (err) {
+      console.error('Failed to copy task ID:', err);
+      UI.showToast('Failed to copy task ID', 'error');
     }
   },
 

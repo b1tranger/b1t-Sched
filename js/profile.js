@@ -195,7 +195,12 @@ const Profile = {
 
       // Populate form fields
       document.getElementById('profile-email').textContent = this.currentProfile.email;
-      document.getElementById('profile-student-id').textContent = `Student ID: ${this.currentProfile.studentId || 'Not set'}`;
+      const idLabel = isFaculty ? 'Faculty ID' : 'Student ID';
+      const idValue = (isFaculty ? (this.currentProfile.facultyInitial || this.currentProfile.studentId) : (this.currentProfile.studentId || this.currentProfile.facultyInitial)) || 'Not set';
+      const studentIdEl = document.getElementById('profile-student-id');
+      if (studentIdEl) {
+        studentIdEl.textContent = `${idLabel}: ${idValue}`;
+      }
 
       // Update Role display & Admin preview selector
       this.updateRoleDisplay();
@@ -228,7 +233,19 @@ const Profile = {
         const semResult = await DB.getSemesters();
 
         if (semResult.success) {
-          await UI.populateDropdown('profile-semester', semResult.data, this.currentProfile.semester);
+          const isCurrentlyAlumni = this.currentProfile.semester === 'alumni / special';
+          // Filter out 'alumni / special' so users cannot see or select it in profile page
+          let semesterOptions = (semResult.data || []).filter(s => {
+            const sNorm = (typeof s === 'string' ? s.toLowerCase().trim() : '');
+            return sNorm !== 'alumni / special' && sNorm !== 'alumni/special' && !sNorm.startsWith('alumni');
+          });
+
+          // If the user is already alumni / special (set via auto-promotion or admin), include it so current status displays
+          if (isCurrentlyAlumni) {
+            semesterOptions.push('alumni / special');
+          }
+
+          await UI.populateDropdown('profile-semester', semesterOptions, this.currentProfile.semester);
         }
 
         // If user is alumni / special, make semester dropdown disabled/readonly so it cannot be changed further
@@ -297,6 +314,14 @@ const Profile = {
       if (sectionGroup) sectionGroup.style.display = 'block';
       if (semesterSelect) semesterSelect.setAttribute('required', '');
       if (sectionSelect) sectionSelect.setAttribute('required', '');
+    }
+
+    // Update ID label (Faculty ID vs Student ID) based on effective role
+    const studentIdEl = document.getElementById('profile-student-id');
+    if (studentIdEl && this.currentProfile) {
+      const idLabel = isEffectiveFaculty ? 'Faculty ID' : 'Student ID';
+      const idValue = (isEffectiveFaculty ? (this.currentProfile.facultyInitial || this.currentProfile.studentId) : (this.currentProfile.studentId || this.currentProfile.facultyInitial)) || 'Not set';
+      studentIdEl.textContent = `${idLabel}: ${idValue}`;
     }
 
     // Is preview mode active?
@@ -408,6 +433,14 @@ const Profile = {
         // Regular users: validate semester and section
         semester = document.getElementById('profile-semester').value;
         section = document.getElementById('profile-section').value;
+
+        // If user is already alumni / special, keep their semester locked to alumni / special
+        if (this.currentProfile?.semester === 'alumni / special') {
+          semester = 'alumni / special';
+        } else if (semester === 'alumni / special') {
+          UI.showMessage('profile-message', 'Alumni / Special semester cannot be selected manually. It is set by auto-promotion logic or by an administrator.', 'error');
+          return;
+        }
 
         if (!semester || !section) {
           UI.showMessage('profile-message', 'Please select all fields', 'error');

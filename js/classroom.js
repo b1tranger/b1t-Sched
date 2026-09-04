@@ -310,17 +310,17 @@ const Classroom = {
         return due < now;
     },
 
-    // Check if assignment is submitted, turned in, graded, or returned
+    // Check if assignment is actually submitted and turned in
     isSubmittedOrReturned(item) {
         if (!item) return false;
-        if (item.statusCode) {
-            return item.statusCode === 'turned_in' || item.statusCode === 'returned' || item.statusCode === 'graded';
+        if (item.wasActuallyTurnedIn !== undefined) {
+            return Boolean(item.wasActuallyTurnedIn);
         }
-        if (item.submissionState) {
-            return item.submissionState === 'TURNED_IN' || item.submissionState === 'RETURNED';
-        }
-        if (item.status) {
-            return item.status === 'Turned in' || item.status === 'Returned' || (typeof item.status === 'string' && item.status.startsWith('Graded')) || item.status === 'Turned in (Late)';
+        if (item.statusCode === 'turned_in') return true;
+        if (item.submissionState === 'TURNED_IN') return true;
+        if (item.status === 'Turned in' || item.status === 'Turned in (Late)') return true;
+        if (item.submissionState === 'RETURNED' && item.sub && Array.isArray(item.sub.submissionHistory)) {
+            return item.sub.submissionHistory.some(h => h.stateHistory && String(h.stateHistory.state).toUpperCase() === 'TURNED_IN');
         }
         return false;
     },
@@ -908,9 +908,19 @@ const Classroom = {
                             const isLate = sub ? Boolean(sub.late) : false;
                             const assignedGrade = sub && typeof sub.assignedGrade === 'number' ? sub.assignedGrade : null;
 
+                            // Determine if the student ACTUALLY submitted and turned in this assignment
+                            let wasActuallyTurnedIn = false;
+                            if (rawState === 'TURNED_IN') {
+                                wasActuallyTurnedIn = true;
+                            } else if (rawState === 'RETURNED' && sub && Array.isArray(sub.submissionHistory)) {
+                                wasActuallyTurnedIn = sub.submissionHistory.some(h => h.stateHistory && String(h.stateHistory.state).toUpperCase() === 'TURNED_IN');
+                            }
+
                             work.submissionState = rawState;
                             work.isLate = isLate;
                             work.assignedGrade = assignedGrade;
+                            work.wasActuallyTurnedIn = wasActuallyTurnedIn;
+                            work.sub = sub || null;
 
                             if (rawState === 'RETURNED') {
                                 if (assignedGrade !== null) {
@@ -1940,6 +1950,9 @@ const Classroom = {
                 await App.loadDashboardData();
             }
 
+            // Sync task completion status for synced tasks - only mark as completed if actually turned in
+            await this.syncTurnedInAssignmentsToUserCompletions(syncableAssignments);
+
         } catch (error) {
             console.error('Error syncing assignments:', error);
             if (typeof UI !== 'undefined' && typeof UI.showToast === 'function') {
@@ -1956,7 +1969,8 @@ const Classroom = {
     },
 
     /**
-     * Automatically mark matching tasks in "Pending Tasks" as completed for turned-in/graded assignments
+     * Automatically mark matching tasks in "Pending Tasks" as completed ONLY for turned-in assignments.
+     * If an assignment has NOT been turned in (or was unsubmitted), ensures matching tasks are unchecked.
      * @param {Array} assignments 
      */
     async syncTurnedInAssignmentsToUserCompletions(assignments) {
@@ -1976,29 +1990,6 @@ const Classroom = {
                 else if (App.isFaculty) userRole = 'Faculty';
                 else if (App.isCR) userRole = 'CR';
             }
-
-            // Filter for assignments that have been submitted, returned, or graded
-            const turnedInAssignments = assignments.filter(a => {
-                if (!a) return false;
-                const state = (a.submissionState || '').toUpperCase();
-                const code = (a.statusCode || '').toLowerCase();
-                const status = (a.status || '').toLowerCase();
-                return code === 'turned_in' || 
-                       code === 'returned' || 
-                       code === 'graded' || 
-                       state === 'TURNED_IN' || 
-                       state === 'RETURNED' || 
-                       status.includes('turned in') || 
-                       status.includes('returned') || 
-                       status.includes('graded');
-            });
-
-            if (turnedInAssignments.length === 0) {
-                console.log('[Classroom] No turned-in/graded assignments detected to auto-complete in tasks');
-                return;
-            }
-
-            console.log(`[Classroom] Checking ${turnedInAssignments.length} turned-in/graded assignment(s) against Pending Tasks...`);
 
             // Get available tasks
             let tasks = (typeof App !== 'undefined' && Array.isArray(App.currentTasks)) ? App.currentTasks : [];
@@ -2021,9 +2012,14 @@ const Classroom = {
                 }
             }
 
-            let newlyCompletedCount = 0;
+            let completionsChanged = false;
 
-            for (const assignment of turnedInAssignments) {
+            for (const assignment of assignments) {
+                if (!assignment || !assignment.id) continue;
+
+                // Check if the user has actually submitted and turned in this assignment
+                const isTurnedIn = this.isSubmittedOrReturned(assignment);
+
                 // Find matching task(s) in Pending Tasks
                 const matchingTasks = tasks.filter(task => {
                     if (!task) return false;
@@ -2046,43 +2042,50 @@ const Classroom = {
                 });
 
                 for (const task of matchingTasks) {
-                    // Skip if already marked completed for this user
-                    if (userCompletions[task.id]) continue;
+                    const isCurrentlyCompleted = Boolean(userCompletions[task.id]);
 
-                    // Toggle task completion in DB
-                    if (typeof DB !== 'undefined' && typeof DB.toggleTaskCompletion === 'function') {
-                        console.log(`[Classroom] Auto-completing task "${task.title}" for user because assignment "${assignment.title}" is turned in`);
-                        const toggleRes = await DB.toggleTaskCompletion(userId, task.id, true, userEmail, userRole);
-                        if (toggleRes && toggleRes.success) {
-                            userCompletions[task.id] = { completedAt: new Date() };
-                            newlyCompletedCount++;
+                    if (isTurnedIn && !isCurrentlyCompleted) {
+                        // Mark as completed ONLY when actually submitted / turned in
+                        if (typeof DB !== 'undefined' && typeof DB.toggleTaskCompletion === 'function') {
+                            console.log(`[Classroom] Auto-completing task "${task.title}" because assignment "${assignment.title}" is turned in`);
+                            const toggleRes = await DB.toggleTaskCompletion(userId, task.id, true, userEmail, userRole);
+                            if (toggleRes && toggleRes.success) {
+                                userCompletions[task.id] = { completedAt: new Date() };
+                                completionsChanged = true;
+                            }
+                        }
+                    } else if (!isTurnedIn && isCurrentlyCompleted) {
+                        // Uncheck if NOT turned in (or unsubmitted)
+                        if (typeof DB !== 'undefined' && typeof DB.toggleTaskCompletion === 'function') {
+                            console.log(`[Classroom] Unchecking task "${task.title}" because assignment "${assignment.title}" is NOT turned in`);
+                            const toggleRes = await DB.toggleTaskCompletion(userId, task.id, false, userEmail, userRole);
+                            if (toggleRes && toggleRes.success) {
+                                delete userCompletions[task.id];
+                                completionsChanged = true;
+                            }
                         }
                     }
                 }
             }
 
-            if (newlyCompletedCount > 0) {
-                console.log(`[Classroom] Successfully auto-checked ${newlyCompletedCount} task(s) in Pending Tasks`);
+            if (completionsChanged && typeof App !== 'undefined') {
+                App.userCompletions = userCompletions;
 
-                if (typeof App !== 'undefined') {
-                    App.userCompletions = userCompletions;
+                // Re-render tasks UI if on dashboard
+                if (typeof UI !== 'undefined' && typeof UI.renderTasks === 'function' && Array.isArray(App.currentTasks)) {
+                    UI.renderTasks(App.currentTasks, App.userCompletions, App.isAdmin, App.isCR, userId);
+                }
 
-                    // Re-render tasks UI if on dashboard
-                    if (typeof UI !== 'undefined' && typeof UI.renderTasks === 'function' && Array.isArray(App.currentTasks)) {
-                        UI.renderTasks(App.currentTasks, App.userCompletions, App.isAdmin, App.isCR, userId);
-                    }
+                if (typeof App.reapplyActiveTaskFilter === 'function') {
+                    App.reapplyActiveTaskFilter();
+                }
 
-                    if (typeof App.reapplyActiveTaskFilter === 'function') {
-                        App.reapplyActiveTaskFilter();
-                    }
-
-                    if (App.calendarView && typeof App.calendarView.onTasksUpdated === 'function') {
-                        App.calendarView.onTasksUpdated();
-                    }
+                if (App.calendarView && typeof App.calendarView.onTasksUpdated === 'function') {
+                    App.calendarView.onTasksUpdated();
                 }
             }
         } catch (err) {
-            console.warn('[Classroom] Error auto-checking completed tasks for turned-in assignments:', err);
+            console.warn('[Classroom] Error auto-syncing task completions with Classroom assignments:', err);
         }
     },
 

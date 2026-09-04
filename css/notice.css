@@ -43,13 +43,16 @@
 .notice-sidebar {
     position: fixed;
     top: 0;
+    bottom: 0;
     right: 0;
-    width: 85vw;
-    /* Wider for better reading */
-    max-width: 450px;
-    height: 100vh;
+    width: 85%;
+    max-width: 400px;
+    height: 100%;
+    height: 100dvh;
     background-color: var(--bg-white);
-    box-shadow: var(--shadow-lg);
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+    border-bottom: none !important;
+    border-radius: 0 !important;
     z-index: var(--z-modal);
     transition: transform var(--transition-medium), top var(--transition-fast, 0.2s ease), height var(--transition-fast, 0.2s ease);
     display: flex;

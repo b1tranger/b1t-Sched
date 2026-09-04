@@ -65,22 +65,50 @@ const UI = {
   },
 
   // Show floating toast notification
-  showToast(message, type = 'info', duration = 4000) {
-    let container = document.getElementById('toast-container');
+  showToast(message, type = 'info', duration = 4000, position = null) {
+    // Resolve position: default to bottom-right for Copied UID / user-management, else top-right
+    let resolvedPosition = position;
+    if (!resolvedPosition) {
+      if (typeof message === 'string' && (message.includes('Copied UID') || message.toLowerCase().includes('uid'))) {
+        resolvedPosition = 'bottom-right';
+      } else if (typeof Router !== 'undefined' && Router.currentRoute === 'user-management') {
+        resolvedPosition = 'bottom-right';
+      } else {
+        resolvedPosition = 'top-right';
+      }
+    }
+
+    const isBottom = resolvedPosition === 'bottom-right';
+    const containerId = isBottom ? 'toast-container-bottom-right' : 'toast-container';
+    let container = document.getElementById(containerId);
     if (!container) {
       container = document.createElement('div');
-      container.id = 'toast-container';
-      container.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 10000;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        max-width: 380px;
-        pointer-events: none;
-      `;
+      container.id = containerId;
+      if (isBottom) {
+        container.style.cssText = `
+          position: fixed;
+          bottom: 24px;
+          right: 24px;
+          z-index: 10000;
+          display: flex;
+          flex-direction: column-reverse;
+          gap: 10px;
+          max-width: min(380px, calc(100vw - 48px));
+          pointer-events: none;
+        `;
+      } else {
+        container.style.cssText = `
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          z-index: 10000;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          max-width: min(380px, calc(100vw - 48px));
+          pointer-events: none;
+        `;
+      }
       document.body.appendChild(container);
     }
 
@@ -92,6 +120,7 @@ const UI = {
       info: '#0288d1'
     };
     const bgColor = bgColors[type] || bgColors.info;
+    const initialTranslate = isBottom ? 'translateY(10px)' : 'translateY(-10px)';
 
     toast.style.cssText = `
       background-color: ${bgColor};
@@ -107,7 +136,7 @@ const UI = {
       pointer-events: auto;
       transition: opacity 0.3s ease, transform 0.3s ease;
       opacity: 0;
-      transform: translateY(-10px);
+      transform: ${initialTranslate};
     `;
 
     const iconClass = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle';
@@ -123,7 +152,7 @@ const UI = {
 
     setTimeout(() => {
       toast.style.opacity = '0';
-      toast.style.transform = 'translateY(-10px)';
+      toast.style.transform = initialTranslate;
       setTimeout(() => {
         if (toast.parentNode) toast.parentNode.removeChild(toast);
       }, 300);
@@ -446,8 +475,13 @@ const UI = {
                   <h3 class="task-title">${task.title || ''}</h3>
                 </div>
                 <div class="task-header-right">
-                  ${facultyBadge}
-                  <span class="task-type-badge ${task.type}">${task.type || 'task'}</span>
+                  <div class="task-header-actions-row">
+                    ${facultyBadge}
+                    <span class="task-type-badge ${task.type}">${task.type || 'task'}</span>
+                    <button type="button" class="task-card-copy-btn" data-task-id="${task.id}" title="Copy task contents" aria-label="Copy task contents">
+                      <i class="far fa-copy"></i>
+                    </button>
+                  </div>
                   <div class="task-actions-vertical">
                     ${editButton}
                     ${deleteButton}
@@ -457,8 +491,13 @@ const UI = {
               <div class="task-description">
                 <div class="task-description-wrapper">
                   <div class="task-description-text">${Utils.escapeAndLinkify(task.description) || 'No description available.'}</div>
-                  ${task.addedBy ? `<p class="task-added-by task-added-by-hidden">Added by ${task.addedByName || 'User'}${task.addedByRole && (task.addedByRole === 'CR' || task.addedByRole === 'Faculty' || task.addedByRole === 'DptCoor' || task.addedByRole === 'DptHead') ? ` <span class="role-badge role-badge-${task.addedByRole.toLowerCase()}">${task.addedByRole}</span>` : ''}${task.section ? ` (${task.section})` : ''}${isFacultyTask && task.department ? ` - ${task.department}` : ''}</p>` : ''}
-                  <p class="task-id-info task-added-by-hidden"><span class="task-id-label">Task ID:</span> <code class="task-id-code">${task.id}</code></p>
+                  <div class="task-meta-footer task-added-by-hidden">
+                    ${task.addedBy ? `<span class="task-added-by">Added by ${task.addedByName || 'User'}${task.addedByRole && (task.addedByRole === 'CR' || task.addedByRole === 'Faculty' || task.addedByRole === 'DptCoor' || task.addedByRole === 'DptHead') ? ` <span class="role-badge role-badge-${task.addedByRole.toLowerCase()}">${task.addedByRole}</span>` : ''}${task.section ? ` (${task.section})` : ''}${isFacultyTask && task.department ? ` - ${task.department}` : ''}</span>` : '<span></span>'}
+                    <button type="button" class="copy-task-id-btn" data-task-id="${task.id}" title="Copy Task ID" aria-label="Copy Task ID">
+                      <i class="fas fa-fingerprint"></i>
+                      <span class="task-id-btn-text">Copy ID</span>
+                    </button>
+                  </div>
                   <button type="button" class="task-description-toggle" aria-label="Toggle description">
                     <span class="toggle-text">Show more</span>
                     <i class="fas fa-chevron-down"></i>

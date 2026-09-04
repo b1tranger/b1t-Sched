@@ -501,6 +501,75 @@ const TaskExport = {
   },
 
   /**
+   * Formats a single task card's contents matching the full export format
+   */
+  formatSingleTask(task) {
+    if (!task) return '';
+    const typeUpper = (task.type || 'TASK').toUpperCase();
+    const now = new Date();
+    let deadline = null;
+    let daysUntil = null;
+    let isUrgent = false;
+    let isPastDeadline = false;
+
+    if (task.deadline) {
+      deadline = task.deadline.toDate ? task.deadline.toDate() : new Date(task.deadline);
+      daysUntil = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
+      isUrgent = daysUntil <= 3 && daysUntil > 0;
+      isPastDeadline = deadline < now;
+    }
+
+    let statusStr = task.isCompleted ? 'Completed' : (isPastDeadline ? 'Overdue / Past Deadline' : (isUrgent ? `Pending (${daysUntil} day${daysUntil !== 1 ? 's' : ''} left!)` : 'Pending'));
+    const formattedDeadline = deadline ? (typeof Utils !== 'undefined' && Utils.formatDate ? Utils.formatDate(deadline) : deadline.toLocaleString()) : 'No official Time limit';
+
+    const lines = [
+      `[${typeUpper}] ${task.title || 'Untitled Task'}`,
+      `Course       : ${task.course || 'No course specified'}`,
+      `Status       : ${statusStr}`,
+      `Deadline     : ${formattedDeadline}`
+    ];
+
+    if (task.id) {
+      lines.push(`Task ID      : ${task.id}`);
+    }
+
+    const academicParts = [];
+    if (task.department) academicParts.push(task.department);
+    if (task.semester) academicParts.push(task.semester);
+    if (task.section) academicParts.push(`Section ${task.section}`);
+    if (academicParts.length > 0) {
+      lines.push(`Academic Info: ${academicParts.join(' | ')}`);
+    }
+
+    if (task.addedByName || task.addedBy) {
+      lines.push(`Added By     : ${task.addedByName || 'User'}${task.addedByRole ? ` (${task.addedByRole})` : ''}`);
+    }
+
+    if (task.description) {
+      lines.push('');
+      lines.push('Description:');
+      lines.push(this.markdownToPlainText(task.description));
+    }
+
+    if (task.details) {
+      lines.push('');
+      lines.push('Details:');
+      lines.push(this.markdownToPlainText(task.details));
+    }
+
+    const links = this.extractLinks(`${task.description || ''} ${task.details || ''}`);
+    if (links && links.length > 0) {
+      lines.push('');
+      lines.push('Attached Links:');
+      links.forEach(link => {
+        lines.push(`  - Link: ${link.title}: ${link.url}`);
+      });
+    }
+
+    return lines.join('\n');
+  },
+
+  /**
    * Generates Markdown (.md) export string
    * Divides tasks with "/////   /////   /////"
    */

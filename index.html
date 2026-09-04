@@ -1907,13 +1907,14 @@
                                     <option value="All">All Departments</option>
                                 </select>
                             </div>
-                            <div class="form-group">
+                            <div class="form-group select-readonly-wrapper" id="filter-semester-group">
                                 <label for="filter-semester">Semester</label>
                                 <select id="filter-semester" class="form-select">
                                     <option value="All">All Semesters</option>
                                 </select>
+                                <div id="filter-semester-overlay" class="select-readonly-overlay" style="display: none;" title="Semester is not defined for faculties"></div>
                             </div>
-                            <div class="form-group">
+                            <div class="form-group select-readonly-wrapper" id="filter-section-group">
                                 <label for="filter-section">Section</label>
                                 <select id="filter-section" class="form-select">
                                     <option value="All">All Sections</option>
@@ -1927,6 +1928,7 @@
                                     <option value="C1">C1</option>
                                     <option value="C2">C2</option>
                                 </select>
+                                <div id="filter-section-overlay" class="select-readonly-overlay" style="display: none;" title="Section is not defined for faculties"></div>
                             </div>
                             <div class="form-group">
                                 <label for="filter-role">Role</label>

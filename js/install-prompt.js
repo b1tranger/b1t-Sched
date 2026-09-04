@@ -8,6 +8,7 @@ class InstallPromptManager {
     this.promptEvent = null;
     this.eventFired = false;
     this.STORAGE_KEY = 'pwa-install-dismissed';
+    this.autoDismissTimer = null;
   }
 
   /**
@@ -15,6 +16,7 @@ class InstallPromptManager {
    */
   init() {
     console.log('[Install Prompt] Initializing...');
+    window.installPromptManager = this;
 
     // Listen for beforeinstallprompt event
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -27,6 +29,11 @@ class InstallPromptManager {
       console.log('[Install Prompt] App installed');
       this.hideInstallPrompt();
       localStorage.setItem('pwa-installed', 'true');
+    });
+
+    // Listen for route changes to show prompt after leaving login screen
+    window.addEventListener('hashchange', () => {
+      this.checkAndShowPostLogin();
     });
 
     // Check if already installed
@@ -51,11 +58,29 @@ class InstallPromptManager {
    * Setup UI event listeners for install prompt
    */
   setupUIListeners() {
+    const prompt = document.getElementById('install-prompt');
     const installBtn = document.getElementById('install-btn');
     const dismissBtn = document.getElementById('dismiss-install-btn');
 
+    if (prompt) {
+      // Pause auto-dismiss timer on hover/focus/interaction
+      prompt.addEventListener('mouseenter', () => {
+        this.clearAutoDismissTimer();
+      });
+
+      // Resume auto-dismiss timer on mouse leave
+      prompt.addEventListener('mouseleave', () => {
+        this.startAutoDismissTimer();
+      });
+
+      prompt.addEventListener('touchstart', () => {
+        this.clearAutoDismissTimer();
+      }, { passive: true });
+    }
+
     if (installBtn) {
       installBtn.addEventListener('click', () => {
+        this.clearAutoDismissTimer();
         this.triggerInstall();
       });
     }
@@ -65,6 +90,85 @@ class InstallPromptManager {
         this.saveUserDismissal();
         this.hideInstallPrompt();
       });
+    }
+  }
+
+  /**
+   * Checks if user is currently on the login or unauthenticated screen
+   */
+  isUserOnLoginScreen() {
+    // Check if login view is currently visible
+    const loginView = document.getElementById('login-view');
+    if (loginView && loginView.style.display !== 'none') {
+      return true;
+    }
+
+    // Check router route
+    if (typeof Router !== 'undefined') {
+      const route = Router.currentRoute || (typeof Router.getCurrentRoute === 'function' ? Router.getCurrentRoute() : '');
+      if (route === 'login') return true;
+    }
+
+    // Check user authentication state
+    if (typeof Auth !== 'undefined' && typeof Auth.getCurrentUser === 'function') {
+      const user = Auth.getCurrentUser();
+      if (!user) return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Checks if prompt UI is currently visible
+   */
+  isPromptVisible() {
+    const prompt = document.getElementById('install-prompt');
+    return Boolean(prompt && prompt.style.display !== 'none');
+  }
+
+  /**
+   * Triggers deferred prompt presentation once user has transitioned past login screen
+   */
+  checkAndShowPostLogin() {
+    if (this.isAppInstalled() || this.hasUserDismissed()) {
+      return;
+    }
+
+    if (this.isUserOnLoginScreen()) {
+      return;
+    }
+
+    if (this.isPromptVisible()) {
+      return;
+    }
+
+    if (this.promptEvent) {
+      setTimeout(() => {
+        if (!this.isUserOnLoginScreen() && !this.isPromptVisible()) {
+          this.showInstallPrompt();
+        }
+      }, 1000);
+    }
+  }
+
+  /**
+   * Starts a 5-second auto-dismiss countdown if user does not interact with the prompt
+   */
+  startAutoDismissTimer() {
+    this.clearAutoDismissTimer();
+    this.autoDismissTimer = setTimeout(() => {
+      console.log('[Install Prompt] Auto-dismissing after 5 seconds of no interaction');
+      this.hideInstallPrompt();
+    }, 5000);
+  }
+
+  /**
+   * Clears active auto-dismiss timer
+   */
+  clearAutoDismissTimer() {
+    if (this.autoDismissTimer) {
+      clearTimeout(this.autoDismissTimer);
+      this.autoDismissTimer = null;
     }
   }
 
@@ -81,7 +185,11 @@ class InstallPromptManager {
 
     // Check if user has dismissed before
     if (!this.hasUserDismissed() && !this.isAppInstalled()) {
-      this.showInstallPrompt();
+      if (!this.isUserOnLoginScreen()) {
+        this.showInstallPrompt();
+      } else {
+        console.log('[Install Prompt] User is on login screen, deferring install prompt until after login');
+      }
     }
   }
 
@@ -89,10 +197,16 @@ class InstallPromptManager {
    * Shows the custom install prompt UI
    */
   showInstallPrompt() {
+    if (this.isUserOnLoginScreen()) {
+      console.log('[Install Prompt] Deferred: user is on login screen');
+      return;
+    }
+
     const prompt = document.getElementById('install-prompt');
     if (prompt) {
       prompt.style.display = 'block';
       console.log('[Install Prompt] Showing install prompt');
+      this.startAutoDismissTimer();
     }
   }
 
@@ -100,6 +214,7 @@ class InstallPromptManager {
    * Hides the install prompt UI
    */
   hideInstallPrompt() {
+    this.clearAutoDismissTimer();
     const prompt = document.getElementById('install-prompt');
     if (prompt) {
       prompt.style.display = 'none';

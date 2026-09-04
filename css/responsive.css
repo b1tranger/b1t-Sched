@@ -298,14 +298,16 @@
   }
 
   /* Modals, Forms, Inputs & Buttons */
-  .modal-content:not(#classroom-modal .modal-content):not(.classroom-modal-content) {
+  .modal-content:not(#classroom-modal .modal-content):not(.classroom-modal-content):not(#approval-modal .modal-content):not(.approval-modal-content) {
     padding: var(--spacing-lg);
     max-width: 460px;
     max-height: calc(100vh - 50px);
   }
 
   #classroom-modal .modal-content,
-  .classroom-modal-content {
+  .classroom-modal-content,
+  #approval-modal .modal-content,
+  .approval-modal-content {
     padding: 0 !important;
     max-width: 1000px;
     width: 90%;
@@ -409,14 +411,16 @@
 
 /* Height-Constrained Smaller Desktop Displays (e.g. 768px or 720px screen height) */
 @media (min-width: 769px) and (max-height: 768px) {
-  .modal-content:not(#classroom-modal .modal-content):not(.classroom-modal-content) {
+  .modal-content:not(#classroom-modal .modal-content):not(.classroom-modal-content):not(#approval-modal .modal-content):not(.approval-modal-content) {
     max-height: calc(100vh - 40px);
     padding: var(--spacing-md) var(--spacing-lg);
     overflow-y: auto;
   }
 
   #classroom-modal .modal-content,
-  .classroom-modal-content {
+  .classroom-modal-content,
+  #approval-modal .modal-content,
+  .approval-modal-content {
     padding: 0 !important;
     max-height: 85vh;
     overflow: hidden !important;
