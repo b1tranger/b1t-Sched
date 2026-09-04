@@ -118,13 +118,16 @@ const Profile = {
     if (profileTheme) {
       profileTheme.addEventListener('change', async (e) => {
         const selectedTheme = e.target.value;
-        if (selectedTheme === 'dark') {
+        if (selectedTheme === 'dark' || selectedTheme === 'high-contrast') {
+          // High Contrast mode
           document.body.classList.add('dark-mode');
           document.body.classList.remove('gray-mode');
         } else if (selectedTheme === 'light') {
+          // Light Mode
           document.body.classList.remove('dark-mode');
           document.body.classList.remove('gray-mode');
         } else if (selectedTheme === 'gray') {
+          // Dark Mode
           document.body.classList.add('gray-mode');
           document.body.classList.remove('dark-mode');
         } else {
@@ -262,7 +265,14 @@ const Profile = {
     // Load theme setting
     const themeSelect = document.getElementById('profile-theme');
     if (themeSelect) {
-      themeSelect.value = this.currentProfile.theme || 'system';
+      themeSelect.innerHTML = `
+        <option value="system">System Default</option>
+        <option value="light">Light Mode</option>
+        <option value="gray">Dark Mode</option>
+        <option value="dark">High Contrast</option>
+      `;
+      const savedTheme = this.currentProfile.theme || 'system';
+      themeSelect.value = (savedTheme === 'high-contrast') ? 'dark' : savedTheme;
     }
 
     // Update notification status

@@ -123,11 +123,11 @@ body.gray-mode {
   --bg-dark-gradient-start: #161616;
   --bg-dark-gradient-end: #000000;
 
-  --primary-maroon: #ff6360;
-  --secondary-maroon: #ff8222;
-  --accent-maroon: #ff6360;
-  --light-maroon: #ff8222;
-  --maroon-hover: #ff6360;
+  --primary-maroon: #3b82f6;
+  --secondary-maroon: #2563eb;
+  --accent-maroon: #3b82f6;
+  --light-maroon: #60a5fa;
+  --maroon-hover: #2563eb;
 
   --bg-light: #2b2b2b;
   --bg-lighter: #333333;

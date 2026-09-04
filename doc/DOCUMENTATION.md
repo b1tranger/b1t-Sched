@@ -4,6 +4,34 @@
 
 # 04.09.26
 
+**Dark Mode: Blue Accent Color (#3b82f6) Palette Migration**
+- **Accent Color Shift (`css/colors.css`, `body.gray-mode`)**: Transitioned the accent color for Dark Mode from coral-red (`#ff6360`) to vibrant blue (`#3b82f6`):
+  - `--primary-maroon`: `#3b82f6`
+  - `--secondary-maroon`: `#2563eb`
+  - `--accent-maroon`: `#3b82f6`
+  - `--light-maroon`: `#60a5fa`
+  - `--maroon-hover`: `#2563eb`
+- **Component & Modal Harmonization (`css/classroom.css`, `css/changelog.css`, `css/calendar.css`, `css/note.css`)**:
+  - `css/classroom.css`: Swapped `--classroom-green` and hover borders/headers in `#classroom-sync-modal` to `#3b82f6` and `#2563eb`.
+  - `css/changelog.css`: Updated modal header icon gradient (`#1d4ed8` to `#3b82f6`), version badges, and close button hover shadows to `#3b82f6`.
+  - `css/calendar.css`: Updated cell hover highlights, task detail link toggles, and modal close buttons to `#3b82f6`.
+  - `css/note.css`: Updated LocalSend link hover fallbacks to `#3b82f6`.
+
+**Profile Settings: Theme Option Renaming & Reordering (Dark Mode & High Contrast)**
+- **Renamed & Reordered Theme Options (`index.html`, `js/features/profile.js`, `js/core/app.js`)**:
+  - Renamed `Gray Mode` (charcoal background with coral accents) to `Dark Mode`.
+  - Renamed `Dark Mode` (pitch black background with vibrant green accents) to `High Contrast`.
+  - Reordered vertical option arrangement to place `High Contrast` as the final option:
+    1. System Default (`system`)
+    2. Light Mode (`light`)
+    3. Dark Mode (`gray`)
+    4. High Contrast (`dark`)
+  - Updated live theme preview listeners in `js/features/profile.js` and app startup theme initialization in `js/core/app.js` to seamlessly support and alias theme selections.
+
+**User Management: Removal of 'Remove Details' Button from Edit User Profile Modal**
+- **Modal Footer Simplification (`index.html`, `#edit-user-modal`)**: Removed the `#edit-user-delete-btn` ("Remove Details") button from the footer of the Edit User Profile modal. Adjusted footer styling to `justify-content: flex-end`, keeping the modal exclusively dedicated to editing and saving user details.
+- **Event Listener Cleanup (`js/core/app.js`)**: Removed the `editUserDeleteBtn` click listener and dialog trigger from `App.setupUserManagementListeners()`. The "Remove Details" action remains fully functional and accessible from the primary User Management accounts list cards.
+
 **Architecture: Categorical Folder Organization for JavaScript Codebase**
 - **Modular Directory Structure (`js/`)**: Categorized and organized all 37 JavaScript modules situated in the root `js/` directory into 5 distinct architectural folders:
   - `js/core/`: Foundational application infrastructure (`app.js`, `auth.js`, `db.js`, `firebase-config.js`, `firestore-listener-manager.js`, `permission-manager.js`, `routing.js`, `ui.js`, `utils.js`).

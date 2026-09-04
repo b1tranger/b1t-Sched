@@ -1,11 +1,47 @@
 {
-  "currentVersion": "v2.53.0",
+  "currentVersion": "v2.53.3",
   "lastUpdated": "September 4, 2026",
   "documentationUrl": "https://b1tranger.netlify.app/render.html?file=https%3A%2F%2Fgithub.com%2Fb1tranger%2Fb1t-Sched%2Fblob%2Fmain%2Fdoc%2FDOCUMENTATION.md",
   "history": [
     {
-      "version": "v2.53.0",
+      "version": "v2.53.3",
       "badge": "Latest",
+      "date": "September 2026",
+      "changes": [
+        {
+          "type": "UI/UX",
+          "title": "Dark Mode: Accent Palette Shifted to Blue (#3b82f6)",
+          "description": "Replaced former red accent (#ff6360) with vibrant blue palette (primary: #3b82f6, secondary/hover: #2563eb, light: #60a5fa) for Dark Mode (body.gray-mode) across css/colors.css, css/classroom.css, css/changelog.css, css/calendar.css, and css/note.css."
+        }
+      ]
+    },
+    {
+      "version": "v2.53.2",
+      "badge": "Stable",
+      "date": "September 2026",
+      "changes": [
+        {
+          "type": "UI/UX",
+          "title": "Profile Settings: Theme Renaming & Reordering (Dark Mode & High Contrast)",
+          "description": "Updated theme options in Profile Settings (#profile-theme, js/features/profile.js): renamed 'Gray Mode' to 'Dark Mode' (charcoal/gray base) and 'Dark Mode' to 'High Contrast' (pure black/neon green base). Reordered vertical option arrangement to place 'High Contrast' as the final option (System Default -> Light Mode -> Dark Mode -> High Contrast)."
+        }
+      ]
+    },
+    {
+      "version": "v2.53.1",
+      "badge": "Stable",
+      "date": "September 2026",
+      "changes": [
+        {
+          "type": "UI/UX",
+          "title": "User Management: Removed 'Remove Details' Action from Edit User Modal",
+          "description": "Removed the 'Remove Details' button from the footer of the Edit User Profile modal (#edit-user-modal) in User Management, keeping profile editing focused on detail changes. The 'Remove Details' purge action remains accessible via the main User Management account cards and list."
+        }
+      ]
+    },
+    {
+      "version": "v2.53.0",
+      "badge": "Stable",
       "date": "September 2026",
       "changes": [
         {

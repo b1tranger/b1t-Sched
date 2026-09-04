@@ -23,9 +23,9 @@ body.dark-mode {
 
 /* Override Google Classroom Colors for Gray Mode */
 body.gray-mode {
-    --classroom-green: #ff6360;
+    --classroom-green: #3b82f6;
     /* Mapping from --primary-maroon */
-    --classroom-green-hover: #e05552;
+    --classroom-green-hover: #2563eb;
     /* Slightly darker */
     --classroom-bg: #1a1a1a;
     /* Mapping from --bg-white */
@@ -1906,7 +1906,7 @@ body.gray-mode .classroom-sync-modal-content {
 }
 
 body.gray-mode .classroom-sync-modal-header {
-    background: #ff6360;
+    background: #3b82f6;
     color: #ffffff;
 }
 
@@ -1934,7 +1934,7 @@ body.gray-mode .sync-diff-toggle-btn {
 }
 
 body.gray-mode .sync-view-post-btn:hover {
-    background: #ff6360;
+    background: #3b82f6;
     color: #ffffff;
 }
 

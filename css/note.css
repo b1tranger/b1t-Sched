@@ -291,7 +291,7 @@ body.dark-mode .note-localsend-link {
 }
 
 body.gray-mode .note-localsend-link {
-    color: var(--primary, #ff6360);
+    color: var(--primary, #3b82f6);
 }
 
 /* ─── Fixed Footer Container ───────────────────────── */

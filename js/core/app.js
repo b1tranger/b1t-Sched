@@ -1541,9 +1541,9 @@ const App = {
         this.userProfile.section
       );
 
-      // Apply Dark Theme setting if it exists
+      // Apply Dark / High Contrast Theme setting if it exists
       const userTheme = this.userProfile.theme || 'system';
-      if (userTheme === 'dark') {
+      if (userTheme === 'dark' || userTheme === 'high-contrast') {
         document.body.classList.add('dark-mode');
         document.body.classList.remove('gray-mode');
       } else if (userTheme === 'light') {
@@ -3214,19 +3214,6 @@ const App = {
       editUserForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         await this.handleEditUser();
-      });
-    }
-
-    // Edit User modal Delete button
-    const editUserDeleteBtn = document.getElementById('edit-user-delete-btn');
-    if (editUserDeleteBtn) {
-      editUserDeleteBtn.addEventListener('click', () => {
-        const userId = document.getElementById('edit-user-id')?.value;
-        const userEmail = document.getElementById('edit-user-email')?.textContent;
-        UI.hideModal('edit-user-modal');
-        if (userId) {
-          this.openDeleteUserDialog(userId, userEmail);
-        }
       });
     }
 

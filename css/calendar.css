@@ -1026,7 +1026,7 @@ body.dark-mode .task-detail-description .task-description-toggle {
 }
 
 body.gray-mode .task-detail-description .task-description-toggle {
-  color: var(--primary, #ff6360);
+  color: var(--primary, #3b82f6);
 }
 
 .task-detail-value a,
@@ -1048,7 +1048,7 @@ body.dark-mode .task-detail-value .description-link {
 
 body.gray-mode .task-detail-value a,
 body.gray-mode .task-detail-value .description-link {
-  color: var(--primary, #ff6360);
+  color: var(--primary, #3b82f6);
 }
 
 /* Task Detail Meta */
@@ -1454,10 +1454,10 @@ body.gray-mode .calendar-close-btn {
 }
 
 body.gray-mode .calendar-close-btn:hover {
-  background: var(--primary-maroon, #ff6360);
+  background: var(--primary-maroon, #3b82f6);
   color: #ffffff;
-  border-color: var(--primary-maroon, #ff6360);
-  box-shadow: 0 6px 16px rgba(255, 99, 96, 0.4);
+  border-color: var(--primary-maroon, #3b82f6);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
 }
 
 /* Calendar Cells in Dark/Gray Mode */
@@ -1477,8 +1477,8 @@ body.gray-mode .calendar-cell {
 }
 
 body.gray-mode .calendar-cell:hover {
-  border-color: var(--primary-maroon, #ff6360);
-  background: rgba(255, 99, 96, 0.05);
+  border-color: var(--primary-maroon, #3b82f6);
+  background: rgba(59, 130, 246, 0.05);
 }
 
 /* Tasks in Dark/Gray Mode */
