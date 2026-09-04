@@ -1,13 +1,18 @@
 {
-  "currentVersion": "v2.53.0 to v2.53.9",
+  "currentVersion": "v2.53.0 to v2.53.10",
   "lastUpdated": "September 5, 2026",
   "documentationUrl": "https://b1tranger.netlify.app/render.html?file=https%3A%2F%2Fgithub.com%2Fb1tranger%2Fb1t-Sched%2Fblob%2Fmain%2Fdoc%2FDOCUMENTATION.md",
   "history": [
     {
-      "version": "v2.53.0 to v2.53.9",
+      "version": "v2.53.0 to v2.53.10",
       "badge": "Latest",
       "date": "September 2026",
       "changes": [
+        {
+          "type": "UI/UX",
+          "title": "Classroom Sync Summary Modal Mobile Z-Index & Sidebar Layering Fix",
+          "description": "Elevated #classroom-sync-modal z-index to 12000 with backdrop blur and responsive full-bleed mobile display, ensuring the Git-diff briefing modal displays above the mobile Classroom flyout sidebar (z-index: 1101), creation FAB buttons (z-index: 1200), and all other sidebars across viewport sizes. Added backdrop dismissal listener."
+        },
         {
           "type": "Enhancement",
           "title": "Classroom Sync Modal Decoupling & Expired Session Reconnect Diff Briefing",

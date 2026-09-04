@@ -593,6 +593,15 @@ const Classroom = {
             });
         }
 
+        const syncModal = document.getElementById('classroom-sync-modal');
+        if (syncModal) {
+            syncModal.addEventListener('click', (e) => {
+                if (e.target === syncModal) {
+                    this.closeSyncSummaryModal();
+                }
+            });
+        }
+
         console.log('Event listeners setup complete');
     },
 

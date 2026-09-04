@@ -661,7 +661,7 @@
     padding: 6px;
   }
 
-  .modal-content:not(#add-task-modal .modal-content):not(#edit-task-modal .modal-content),
+  .modal-content:not(#add-task-modal .modal-content):not(#edit-task-modal .modal-content):not(#classroom-sync-modal .modal-content):not(.classroom-sync-modal-content),
   .modal-card {
     width: calc(100% - 12px) !important;
     max-width: 100% !important;
@@ -723,7 +723,7 @@
     padding: 4px;
   }
 
-  .modal-content:not(#add-task-modal .modal-content):not(#edit-task-modal .modal-content),
+  .modal-content:not(#add-task-modal .modal-content):not(#edit-task-modal .modal-content):not(#classroom-sync-modal .modal-content):not(.classroom-sync-modal-content),
   .modal-card {
     width: calc(100% - 8px) !important;
     margin: 4px auto !important;
