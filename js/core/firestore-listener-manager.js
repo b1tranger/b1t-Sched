@@ -24,17 +24,20 @@ const FirestoreListenerManager = {
     }
 
     const { department, semester, section } = userProfile;
+    const isFacultyOrDptCoor = userProfile.isFaculty || userProfile.isDptCoor || userProfile.isDptHead || userProfile.role === 'Faculty' || userProfile.role === 'DptCoor';
 
-    // Set up task listener
-    this.tasksUnsubscribe = this.listenForNewTasks(
-      department,
-      semester,
-      section,
-      async (task) => {
-        console.log('New task detected:', task.id);
-        await NotificationManager.showTaskNotification(task);
-      }
-    );
+    // Set up task listener (only for regular students with semester & section)
+    if (!isFacultyOrDptCoor && semester && section) {
+      this.tasksUnsubscribe = this.listenForNewTasks(
+        department,
+        semester,
+        section,
+        async (task) => {
+          console.log('New task detected:', task.id);
+          await NotificationManager.showTaskNotification(task);
+        }
+      );
+    }
 
     // Set up event listener
     this.eventsUnsubscribe = this.listenForNewEvents(
@@ -46,15 +49,25 @@ const FirestoreListenerManager = {
     );
 
     // Set up notice listener
-    this.noticesUnsubscribe = this.listenForNewNotices(
-      department,
-      semester,
-      section,
-      async (notice) => {
-        console.log('New notice detected:', notice.id);
-        await NotificationManager.showNoticeNotification(notice);
-      }
-    );
+    if (isFacultyOrDptCoor) {
+      this.noticesUnsubscribe = this.listenForNewDepartmentNotices(
+        department,
+        async (notice) => {
+          console.log('New department notice detected:', notice.id);
+          await NotificationManager.showNoticeNotification(notice);
+        }
+      );
+    } else if (semester && section) {
+      this.noticesUnsubscribe = this.listenForNewNotices(
+        department,
+        semester,
+        section,
+        async (notice) => {
+          console.log('New notice detected:', notice.id);
+          await NotificationManager.showNoticeNotification(notice);
+        }
+      );
+    }
 
     this.isInitialized = true;
     console.log('Firestore listeners initialized');
@@ -172,6 +185,39 @@ const FirestoreListenerManager = {
         });
       }, (error) => {
         console.error('Notice listener error:', error);
+        if (error.code === 'unavailable') {
+          console.log('Firestore temporarily unavailable, will auto-reconnect');
+        }
+      });
+  },
+
+  /**
+   * Sets up listener for new department-wide notices (Faculty / DptCoor)
+   * @param {string} department
+   * @param {function} callback
+   * @returns {function} Unsubscribe function
+   */
+  listenForNewDepartmentNotices(department, callback) {
+    let isFirstSnapshot = true;
+
+    return db.collection('cr_notices')
+      .where('department', '==', department)
+      .limit(50)
+      .onSnapshot((snapshot) => {
+        if (isFirstSnapshot) {
+          isFirstSnapshot = false;
+          console.log('Department notice listener initialized, monitoring for new notices');
+          return;
+        }
+
+        snapshot.docChanges().forEach((change) => {
+          if (change.type === 'added') {
+            const notice = { id: change.doc.id, ...change.doc.data() };
+            callback(notice);
+          }
+        });
+      }, (error) => {
+        console.error('Department notice listener error:', error);
         if (error.code === 'unavailable') {
           console.log('Firestore temporarily unavailable, will auto-reconnect');
         }

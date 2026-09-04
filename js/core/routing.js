@@ -60,9 +60,13 @@ const Router = {
       if (viewName === 'login' || viewName === 'set-details') {
         navbar.style.display = 'none';
         userDetailsCard.style.display = 'none';
+        const mainContent = document.getElementById('main-content');
+        if (mainContent) mainContent.classList.add('no-nav-padding');
       } else {
         navbar.style.display = 'block';
         userDetailsCard.style.display = 'flex';
+        const mainContent = document.getElementById('main-content');
+        if (mainContent) mainContent.classList.remove('no-nav-padding');
       }
 
       // Show/hide Notes & Approval buttons based on view (only show on dashboard)

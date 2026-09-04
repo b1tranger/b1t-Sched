@@ -147,6 +147,13 @@ const Auth = {
       this.currentUser = null;
       localStorage.clear(); // Clear all stored data
       localStorage.removeItem('trust_device'); // Ensure this is cleared
+
+      // Reset to default Light Mode on logout
+      if (typeof document !== 'undefined') {
+        document.body.classList.remove('dark-mode', 'gray-mode');
+        document.documentElement.classList.remove('dark-mode', 'gray-mode');
+      }
+
       console.log('User logged out');
       return { success: true };
     } catch (error) {

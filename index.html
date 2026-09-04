@@ -49,17 +49,18 @@
         (function () {
             try {
                 const storedProfile = localStorage.getItem('userProfile');
-                let theme = 'system';
+                let theme = 'light'; // Default to Light Mode for logged-out state
                 if (storedProfile) {
                     const profileData = JSON.parse(storedProfile);
                     if (profileData && profileData.theme) {
                         theme = profileData.theme;
+                    } else {
+                        theme = 'system';
                     }
                 }
 
-                if (theme === 'dark') {
+                if (theme === 'dark' || theme === 'high-contrast') {
                     document.documentElement.classList.add('dark-mode');
-                    // In this app, many styles target body.dark-mode
                     window.addEventListener('DOMContentLoaded', () => document.body.classList.add('dark-mode'));
                 } else if (theme === 'gray') {
                     document.documentElement.classList.add('gray-mode');
@@ -69,6 +70,12 @@
                         document.documentElement.classList.add('gray-mode');
                         window.addEventListener('DOMContentLoaded', () => document.body.classList.add('gray-mode'));
                     }
+                } else {
+                    // Light mode (default for logged out state)
+                    document.documentElement.classList.remove('dark-mode', 'gray-mode');
+                    window.addEventListener('DOMContentLoaded', () => {
+                        document.body.classList.remove('dark-mode', 'gray-mode');
+                    });
                 }
             } catch (e) {
                 console.error("Theme init error", e);
@@ -145,7 +152,8 @@
             <!-- Login/Signup View -->
             <div id="login-view" class="view" style="display: none;">
                 <div class="auth-container">
-                    <div class="auth-card">
+                    <div class="auth-hero-wrapper">
+                        <div class="auth-card">
                         <div class="auth-logo">
                             <img src="Social-Preview.webp" alt="b1t-Sched Logo" class="auth-logo-img">
                             <h1>b1t-Sched</h1>
@@ -269,8 +277,15 @@
                         <div id="auth-message" class="auth-message"></div>
                     </div>
 
-                    <!-- Login Footer & Support / FAQ Section -->
-                    <div class="login-footer-section">
+                    <!-- Scroll Down Animation Indicator -->
+                    <div class="login-scroll-indicator" id="login-scroll-indicator" role="button" tabindex="0" title="Scroll down to FAQ & Support">
+                        <span>FAQ & Support</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+
+                <!-- Login Footer & Support / FAQ Section -->
+                <div class="login-footer-section" id="login-footer-section">
                         <!-- Telegram Contact Card -->
                         <div class="telegram-contact-card">
                             <div class="telegram-contact-icon">
@@ -380,8 +395,8 @@
                             <div class="form-group" id="set-id-group">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
                                     <label for="set-student-id" id="set-id-label" style="margin-bottom: 0;">Student ID</label>
-                                    <label class="faculty-signup-toggle" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.85em; cursor: pointer; color: var(--text-medium); user-select: none;">
-                                        <input type="checkbox" id="set-is-faculty-checkbox" style="cursor: pointer;">
+                                    <label class="faculty-signup-toggle" style="display: none; align-items: center; gap: 6px; font-size: 0.85em; cursor: pointer; color: var(--text-medium); user-select: none;">
+                                        <input type="checkbox" id="set-is-faculty-checkbox" style="display: none;">
                                         <span>Faculty Account</span>
                                     </label>
                                 </div>
@@ -555,6 +570,19 @@
 
                             <!-- Task Type Filter -->
                             <div class="task-filter-row">
+                                <span class="task-filter-prefix">Filters:</span>
+                                <div class="task-filter-dropdown-wrapper">
+                                    <select id="task-filter-select" class="form-select task-filter-select" aria-label="Filter tasks by type">
+                                        <option value="" selected>Set Filter</option>
+                                        <option value="assignment">Assignment</option>
+                                        <option value="homework">Homework</option>
+                                        <option value="exam">Exam</option>
+                                        <option value="project">Project</option>
+                                        <option value="presentation">Presentation</option>
+                                        <option value="meetings">Meetings</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
                                 <label class="task-filter-label">
                                     <input type="radio" name="task-filter" value="assignment">
                                     <span>Assignment</span>

@@ -1,11 +1,23 @@
 {
-  "currentVersion": "v2.53.3",
+  "currentVersion": "v2.53.4",
   "lastUpdated": "September 4, 2026",
   "documentationUrl": "https://b1tranger.netlify.app/render.html?file=https%3A%2F%2Fgithub.com%2Fb1tranger%2Fb1t-Sched%2Fblob%2Fmain%2Fdoc%2FDOCUMENTATION.md",
   "history": [
     {
-      "version": "v2.53.3",
+      "version": "v2.53.4",
       "badge": "Latest",
+      "date": "September 2026",
+      "changes": [
+        {
+          "type": "UI/UX",
+          "title": "Dashboard: Event Raiders Dark Mode Contrast & Task Action Button Row Layout",
+          "description": "Enhanced Event Raiders contrast in Dark Mode (body.gray-mode) with high-visibility category, deadline, fee, and venue badges matching the blue theme. Placed 'Reset Tasks' button on the same row as 'Add Tasks' and 'View Old' on desktop, and added responsive compact labels ('Reset', 'Add', 'Old') on mobile screens."
+        }
+      ]
+    },
+    {
+      "version": "v2.53.3",
+      "badge": "Stable",
       "date": "September 2026",
       "changes": [
         {

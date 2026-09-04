@@ -301,7 +301,7 @@ body.dark-mode .description-link:hover {
 .tasks-actions {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--spacing-md);
+    gap: var(--spacing-sm);
     /* margin-top: var(--spacing-lg); */
     /* padding-top: var(--spacing-lg); */
     border-top: 1px solid var(--border-light);
@@ -309,14 +309,27 @@ body.dark-mode .description-link:hover {
 
 .tasks-actions .btn {
     flex: 1;
-    min-width: 120px;
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    white-space: nowrap;
 }
 
-/* Reset Tasks button - full width on mobile */
+/* Reset Tasks button - shares row with Add Tasks and View Old */
 .tasks-actions .btn-danger {
-    flex-basis: 100%;
     order: 3;
     /* Ensure it appears last */
+}
+
+/* Desktop default: full button text visible, shortened text hidden */
+.tasks-actions .btn-text-short {
+    display: none;
+}
+
+.tasks-actions .btn-text-full {
+    display: inline;
 }
 
 /* ============================================
@@ -1599,6 +1612,11 @@ body.gray-mode .copy-user-uid-btn:hover {
     margin-top: var(--spacing-md);
     margin-bottom: var(--spacing-md);
     align-items: center;
+}
+
+.task-filter-prefix,
+.task-filter-dropdown-wrapper {
+    display: none;
 }
 
 .task-filter-label {
@@ -3277,6 +3295,94 @@ body.dark-mode .raider-external-btn:hover {
 }
 
 body.dark-mode .events-view-switch-btn {
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Dark Mode (Gray Mode) Overrides for Raider Feed */
+body.gray-mode .raider-events-section {
+    border-top-color: var(--border-medium);
+}
+
+body.gray-mode .raider-header-link {
+    color: #60a5fa;
+}
+
+body.gray-mode .raider-header-link:hover {
+    color: #ffffff;
+    background-color: rgba(59, 130, 246, 0.2);
+}
+
+body.gray-mode .raider-card,
+body.gray-mode .dashboard-sidebar .raider-card {
+    background-color: #222222;
+    border-color: #383838;
+    border-left: 3px solid #3b82f6;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+body.gray-mode .raider-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), 0 0 10px rgba(59, 130, 246, 0.2);
+}
+
+body.gray-mode .raider-card .event-date {
+    background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%);
+    color: #ffffff;
+}
+
+body.gray-mode .raider-card .event-title {
+    color: #f8fafc;
+}
+
+body.gray-mode .raider-card .event-details {
+    color: #c4c1d7;
+}
+
+body.gray-mode .raider-badge-category {
+    background-color: rgba(59, 130, 246, 0.22);
+    color: #93c5fd;
+    border-color: rgba(59, 130, 246, 0.45);
+}
+
+body.gray-mode .raider-badge-deadline {
+    background-color: rgba(245, 158, 11, 0.22);
+    color: #fde047;
+    border-color: rgba(245, 158, 11, 0.45);
+}
+
+body.gray-mode .raider-badge-fee {
+    background-color: rgba(16, 185, 129, 0.22);
+    color: #6ee7b7;
+    border-color: rgba(16, 185, 129, 0.45);
+}
+
+body.gray-mode .raider-badge-venue {
+    background-color: rgba(6, 182, 212, 0.22);
+    color: #67e8f9;
+    border-color: rgba(6, 182, 212, 0.45);
+}
+
+body.gray-mode .raider-badge-online {
+    background-color: rgba(168, 85, 247, 0.22);
+    color: #e9d5ff;
+    border-color: rgba(168, 85, 247, 0.45);
+}
+
+body.gray-mode .raider-subevents-summary {
+    color: #cbd5e1;
+}
+
+body.gray-mode .raider-external-btn {
+    background-color: rgba(59, 130, 246, 0.18);
+    color: #93c5fd;
+    border-color: rgba(59, 130, 246, 0.35);
+}
+
+body.gray-mode .raider-external-btn:hover {
+    background-color: #3b82f6;
+    color: #ffffff;
+}
+
+body.gray-mode .events-view-switch-btn {
     border-color: rgba(255, 255, 255, 0.2);
 }
 

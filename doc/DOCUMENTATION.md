@@ -4,6 +4,28 @@
 
 # 04.09.26
 
+**Dashboard: Event Raiders Dark Mode Contrast & Task Action Button Row Layout**
+- **Dark Mode Overrides for Raider Feed (`css/dashboard.css`, `body.gray-mode`)**:
+  - Replaced dimmed and low-contrast dark badge styling with bright, distinct badges matching the Dark Mode theme:
+    - `.raider-card`, `.dashboard-sidebar .raider-card`: Elevated background `#222222`, crisp `#383838` border, and vibrant `#3b82f6` left border accent with subtle glow on hover.
+    - `.raider-card .event-date`: Gradient background from `#1d4ed8` to `#3b82f6` with clean white typography.
+    - `.raider-card .event-title`: High-contrast `#f8fafc` text.
+    - `.raider-badge-category`: Subtle blue background `rgba(59, 130, 246, 0.22)` with `#93c5fd` text and border.
+    - `.raider-badge-deadline`: High-visibility amber background `rgba(245, 158, 11, 0.22)` with `#fde047` text and border.
+    - `.raider-badge-fee`: Vivid emerald background `rgba(16, 185, 129, 0.22)` with `#6ee7b7` text and border.
+    - `.raider-badge-venue`: Crisp cyan background `rgba(6, 182, 212, 0.22)` with `#67e8f9` text and border.
+    - `.raider-badge-online`: Purple background `rgba(168, 85, 247, 0.22)` with `#e9d5ff` text and border.
+    - `.raider-external-btn`: Coordinated `#3b82f6` button style with hover state.
+    - `.raider-header-link`: Clear `#60a5fa` link color with subtle hover pill.
+- **Desktop Single-Row Layout for Task Action Buttons (`css/dashboard.css`, `index.html`)**:
+  - Removed `flex-basis: 100%` on `.tasks-actions .btn-danger` (`#reset-tasks-btn`), allowing `Add Tasks`, `View Old`, and `Reset Tasks` to sit side-by-side in a single row (`flex: 1; min-width: 0; gap: var(--spacing-sm)`).
+  - Preserved `.cr-info-message` automatic row wrapping below the three buttons with `width: 100%`.
+- **Mobile Responsive Button Text Shortening (`index.html`, `css/responsive.css`)**:
+  - Wrapped button labels in `.btn-text-full` (`Add Tasks`, `View Old`, `Reset Tasks`) and `.btn-text-short` (`Add`, `Old`, `Reset`).
+  - Added responsive media query rules in `css/responsive.css` (`@media (max-width: 768px)`):
+    - Hides `.btn-text-full` and displays `.btn-text-short` (`display: inline !important`).
+    - Adjusts button padding (`8px 6px`), font size, and gap (`6px`) so all three buttons fit cleanly across narrow mobile screens.
+
 **Dark Mode: Blue Accent Color (#3b82f6) Palette Migration**
 - **Accent Color Shift (`css/colors.css`, `body.gray-mode`)**: Transitioned the accent color for Dark Mode from coral-red (`#ff6360`) to vibrant blue (`#3b82f6`):
   - `--primary-maroon`: `#3b82f6`

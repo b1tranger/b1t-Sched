@@ -563,6 +563,84 @@
     width: 100%;
   }
 
+  /* Task Action Buttons on Mobile */
+  .tasks-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .tasks-actions .btn {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 8px 6px;
+    font-size: var(--font-sm);
+    justify-content: center;
+    gap: 4px;
+    white-space: nowrap;
+  }
+
+  .tasks-actions .btn i {
+    font-size: 11px;
+    margin-right: 2px;
+  }
+
+  .tasks-actions .btn-text-full {
+    display: none !important;
+  }
+
+  .tasks-actions .btn-text-short {
+    display: inline !important;
+  }
+
+  /* Compact Mobile Task Type Filter Dropdown */
+  .task-filter-row {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    margin-top: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .task-filter-prefix {
+    display: inline-flex !important;
+    align-items: center;
+    font-size: var(--font-sm);
+    font-weight: var(--font-semibold);
+    color: var(--text-dark);
+    flex-shrink: 0;
+  }
+
+  .task-filter-dropdown-wrapper {
+    display: inline-flex !important;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .task-filter-select {
+    width: 100%;
+    height: 36px;
+    padding: 6px 10px;
+    font-size: var(--font-sm);
+    border-radius: var(--radius-md);
+    background-color: var(--bg-lighter);
+    color: var(--text-dark);
+    border: 1px solid var(--border-medium);
+    cursor: pointer;
+  }
+
+  .task-filter-label {
+    display: none !important;
+  }
+
+  .task-filter-clear {
+    margin-left: auto;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
   .profile-avatar-large {
     font-size: 4rem;
   }

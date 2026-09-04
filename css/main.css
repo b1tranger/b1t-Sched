@@ -78,10 +78,21 @@ body.dark-mode {
   transition: padding-top var(--transition-fast, 0.2s ease);
 }
 
+/* Remove fixed navbar space when on login or set-details views */
+.main-content:has(#login-view:not([style*="display: none"])),
+.main-content:has(#set-details-view:not([style*="display: none"])),
+.main-content.no-nav-padding {
+  padding-top: 0 !important;
+}
+
 /* Views */
 .view {
   min-height: calc(100vh - 80px);
   animation: fadeIn var(--transition-medium);
+}
+
+#login-view.view {
+  min-height: 100vh;
 }
 
 @keyframes fadeIn {
@@ -103,18 +114,86 @@ body.dark-mode {
   justify-content: flex-start;
   align-items: center;
   min-height: 100vh;
-  padding: 40px var(--spacing-md);
+  padding: 0 var(--spacing-md);
   background: var(--bg-white);
   box-sizing: border-box;
+  border-top: none !important;
+}
+
+.auth-hero-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+  box-sizing: border-box;
+  padding: var(--spacing-xl) 0 80px 0;
 }
 
 .auth-card {
   background: transparent;
   border-radius: 0;
   box-shadow: none;
-  padding: var(--spacing-md) 0 var(--spacing-xl) 0;
+  padding: 0;
   width: 100%;
   max-width: 440px;
+}
+
+/* Scroll Down Animation Indicator */
+.login-scroll-indicator {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-medium);
+  font-size: 11px;
+  font-weight: var(--font-semibold);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  user-select: none;
+  transition: all var(--transition-fast);
+  animation: bounceScroll 2.2s infinite ease-in-out;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.login-scroll-indicator:hover {
+  color: var(--primary-maroon);
+  background: rgba(0, 0, 0, 0.08);
+}
+
+body.dark-mode .login-scroll-indicator,
+body.gray-mode .login-scroll-indicator {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+body.dark-mode .login-scroll-indicator:hover,
+body.gray-mode .login-scroll-indicator:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.login-scroll-indicator i {
+  font-size: 12px;
+}
+
+@keyframes bounceScroll {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateX(-50%) translateY(0);
+  }
+  40% {
+    transform: translateX(-50%) translateY(6px);
+  }
+  60% {
+    transform: translateX(-50%) translateY(3px);
+  }
 }
 
 .auth-logo {

@@ -465,6 +465,26 @@ const App = {
       });
     }
 
+    // Login scroll down indicator to FAQ & support
+    const loginScrollIndicator = document.getElementById('login-scroll-indicator');
+    if (loginScrollIndicator) {
+      loginScrollIndicator.addEventListener('click', () => {
+        const footerSec = document.getElementById('login-footer-section');
+        if (footerSec) {
+          footerSec.scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+      loginScrollIndicator.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          const footerSec = document.getElementById('login-footer-section');
+          if (footerSec) {
+            footerSec.scrollIntoView({ behavior: 'smooth' });
+          }
+        }
+      });
+    }
+
     // Set details form
     const setDetailsForm = document.getElementById('set-details-form');
     if (setDetailsForm) {
@@ -1319,6 +1339,41 @@ const App = {
       UI.showLoading(true);
     }
 
+    // Role pre-check: prevent student emails from logging in as faculty and vice-versa
+    const localSignupRole = localStorage.getItem('signup_role_' + targetEmail.toLowerCase());
+    if (localSignupRole) {
+      if (this.currentLoginRole === 'faculty' && localSignupRole === 'student') {
+        UI.showLoading(false);
+        UI.showMessage('auth-message', 'This email belongs to a Student account. Please switch to the Student login tab.', 'error');
+        return;
+      }
+      if (this.currentLoginRole === 'student' && localSignupRole === 'faculty') {
+        UI.showLoading(false);
+        UI.showMessage('auth-message', 'This email belongs to a Faculty account. Please switch to the Faculty login tab.', 'error');
+        return;
+      }
+    }
+
+    try {
+      const snap = await db.collection('users').where('email', '==', targetEmail).limit(1).get();
+      if (!snap.empty) {
+        const uData = snap.docs[0].data();
+        const isFac = uData.isFaculty === true || uData.role === 'Faculty' || uData.isDptCoor === true || uData.role === 'DptCoor' || uData.isDptHead === true || uData.role === 'DptHead';
+        if (this.currentLoginRole === 'faculty' && !isFac) {
+          UI.showLoading(false);
+          UI.showMessage('auth-message', 'This email belongs to a Student account. Please switch to the Student login tab.', 'error');
+          return;
+        }
+        if (this.currentLoginRole === 'student' && isFac) {
+          UI.showLoading(false);
+          UI.showMessage('auth-message', 'This email belongs to a Faculty account. Please switch to the Faculty login tab.', 'error');
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn('Role pre-check failed (continuing to Auth):', err);
+    }
+
     const rememberMe = document.getElementById('trust-device')?.checked || false;
     const result = await Auth.login(targetEmail, password, rememberMe);
 
@@ -1411,6 +1466,7 @@ const App = {
     // Set flag to prevent auth state handling during signup
     this.isSigningUp = true;
     sessionStorage.setItem('signup_role', this.currentSignupRole || 'student');
+    localStorage.setItem('signup_role_' + email.toLowerCase(), this.currentSignupRole || 'student');
 
     const result = await Auth.signup(email, password);
 
@@ -1478,6 +1534,22 @@ const App = {
         this.isFaculty = Utils.storage.get('isFaculty') || false;
         this.isDptCoor = Utils.storage.get('isDptCoor') || false;
         this.isBlocked = Utils.storage.get('isBlocked') || false;
+      }
+
+      // Enforce cross-role login restrictions for non-admin accounts
+      if (!this.isAdmin) {
+        if (this.currentLoginRole === 'faculty' && !this.isFaculty) {
+          UI.showMessage('auth-message', 'This account is registered as a Student. Please switch to the Student login tab.', 'error');
+          await Auth.logout();
+          UI.showLoading(false);
+          return;
+        }
+        if (this.currentLoginRole === 'student' && this.isFaculty) {
+          UI.showMessage('auth-message', 'This account is registered as Faculty. Please switch to the Faculty login tab.', 'error');
+          await Auth.logout();
+          UI.showLoading(false);
+          return;
+        }
       }
 
       // Store authentic DB roles for reference
@@ -1591,7 +1663,24 @@ const App = {
         this.initHomeSemesterNotice();
       }
     } else if (profileResult.isNotFound) {
-      // First-time login, show set details
+      // First-time login: verify signup role if available
+      const signupRole = localStorage.getItem('signup_role_' + user.email.toLowerCase()) || sessionStorage.getItem('signup_role');
+      if (signupRole) {
+        if (this.currentLoginRole === 'faculty' && signupRole === 'student') {
+          UI.showMessage('auth-message', 'This account was registered as a Student. Please switch to the Student login tab.', 'error');
+          await Auth.logout();
+          UI.showLoading(false);
+          return;
+        }
+        if (this.currentLoginRole === 'student' && signupRole === 'faculty') {
+          UI.showMessage('auth-message', 'This account was registered as Faculty. Please switch to the Faculty login tab.', 'error');
+          await Auth.logout();
+          UI.showLoading(false);
+          return;
+        }
+      }
+
+      // Show set details
       Router.navigate('set-details');
       await this.loadSetDetailsForm();
     } else {
@@ -1653,6 +1742,10 @@ const App = {
     this.isCR = false;
     this.isFaculty = false;
     this.isDptCoor = false;
+
+    // Default to Light Mode in logged-out state
+    document.body.classList.remove('dark-mode', 'gray-mode');
+    document.documentElement.classList.remove('dark-mode', 'gray-mode');
     this.isBlocked = false;
     this.realRoles = null;
     this.previewRole = null;
@@ -1768,16 +1861,17 @@ const App = {
   },
 
   async loadSetDetailsForm() {
-    // Check if user pre-selected faculty or student during signup
-    const signupRole = sessionStorage.getItem('signup_role');
+    // Determine whether user is faculty strictly based on authenticated role
+    const currentUser = Auth.getCurrentUser();
+    const emailKey = currentUser?.email ? currentUser.email.toLowerCase() : '';
+    const signupRole = (emailKey ? localStorage.getItem('signup_role_' + emailKey) : null) || sessionStorage.getItem('signup_role');
+    const isFaculty = this.currentLoginRole === 'faculty' || signupRole === 'faculty';
+
     const facultyCheckbox = document.getElementById('set-is-faculty-checkbox');
-    if (signupRole === 'faculty') {
-      if (facultyCheckbox) facultyCheckbox.checked = true;
-      this.toggleFacultySetDetails(true);
-    } else if (signupRole === 'student') {
-      if (facultyCheckbox) facultyCheckbox.checked = false;
-      this.toggleFacultySetDetails(false);
-    }
+    const facultyToggle = document.querySelector('.faculty-signup-toggle');
+    if (facultyCheckbox) facultyCheckbox.checked = isFaculty;
+    if (facultyToggle) facultyToggle.style.display = 'none'; // Lock role, prevent toggling
+    this.toggleFacultySetDetails(isFaculty);
 
     // Load departments and semesters
     const deptResult = await DB.getDepartments();
@@ -2469,6 +2563,13 @@ const App = {
     const filterLabels = document.querySelectorAll('.task-filter-label');
     const filterRadios = document.querySelectorAll('input[name="task-filter"]');
     const clearFilterBtn = document.getElementById('clear-task-filter-btn');
+    const filterSelect = document.getElementById('task-filter-select');
+
+    const syncFilterSelect = (val) => {
+      if (filterSelect) {
+        filterSelect.value = val || '';
+      }
+    };
 
     filterLabels.forEach(label => {
       label.onclick = (e) => {
@@ -2476,6 +2577,7 @@ const App = {
         if (radio) {
           radio.checked = true;
           this.currentFilter = radio.value;
+          syncFilterSelect(radio.value);
           this.filterTasksByType(radio.value);
           if (clearFilterBtn) clearFilterBtn.style.display = 'inline-flex';
         }
@@ -2485,10 +2587,24 @@ const App = {
     filterRadios.forEach(radio => {
       radio.onchange = (e) => {
         this.currentFilter = e.target.value;
+        syncFilterSelect(e.target.value);
         this.filterTasksByType(e.target.value);
         if (clearFilterBtn) clearFilterBtn.style.display = 'inline-flex';
       };
     });
+
+    if (filterSelect) {
+      filterSelect.onchange = (e) => {
+        const val = e.target.value;
+        if (val) {
+          const matchingRadio = document.querySelector(`input[name="task-filter"][value="${val}"]`);
+          if (matchingRadio) matchingRadio.checked = true;
+          this.currentFilter = val;
+          this.filterTasksByType(val);
+          if (clearFilterBtn) clearFilterBtn.style.display = 'inline-flex';
+        }
+      };
+    }
 
     if (clearFilterBtn) {
       clearFilterBtn.onclick = (e) => {
@@ -2496,6 +2612,7 @@ const App = {
         e.stopPropagation();
         // Uncheck all radios
         filterRadios.forEach(radio => radio.checked = false);
+        syncFilterSelect('');
         // Show all tasks
         this.currentFilter = 'all';
         this.filterTasksByType('all');
@@ -3352,20 +3469,21 @@ const App = {
                       title="Remove user details from database">
                 <i class="fas fa-user-minus"></i> Remove Details
               </button>
-              <button class="btn btn-sm btn-action toggle-cr-btn ${isCR ? 'active' : ''}" 
-                      data-user-id="${user.id}" 
-                      data-current-value="${isCR}" 
-                      title="${isCR ? 'Remove CR role' : 'Make CR'}">
-                <i class="fas fa-user-graduate"></i> ${isCR ? 'Remove CR' : 'Make CR'}
-              </button>
-              ${isFaculty ? `
+              ${!isFaculty ? `
+                <button class="btn btn-sm btn-action toggle-cr-btn ${isCR ? 'active' : ''}" 
+                        data-user-id="${user.id}" 
+                        data-current-value="${isCR}" 
+                        title="${isCR ? 'Remove CR role' : 'Make CR'}">
+                  <i class="fas fa-user-graduate"></i> ${isCR ? 'Remove CR' : 'Make CR'}
+                </button>
+              ` : `
                 <button class="btn btn-sm btn-action toggle-dptcoor-btn ${isDptCoor ? 'active' : ''}" 
                         data-user-id="${user.id}" 
                         data-current-value="${isDptCoor}" 
                         title="${isDptCoor ? 'Remove DptCoor role' : 'Make DptCoor'}">
                   <i class="fas fa-user-tie"></i> ${isDptCoor ? 'Remove DptCoor' : 'Make DptCoor'}
                 </button>
-              ` : ''}
+              `}
               <button class="btn btn-sm btn-action toggle-blocked-btn ${user.isBlocked ? 'active danger' : ''}" 
                       data-user-id="${user.id}" 
                       data-current-value="${user.isBlocked || false}" 
@@ -3443,7 +3561,7 @@ const App = {
           filtered = filtered.filter(u => u.isDptCoor === true || u.role === 'DptCoor' || u.isDptHead === true || u.role === 'DptHead');
           break;
         case 'Faculty':
-          filtered = filtered.filter(u => (u.isFaculty === true || u.role === 'Faculty') && !(u.isDptCoor === true || u.role === 'DptCoor' || u.isDptHead === true || u.role === 'DptHead'));
+          filtered = filtered.filter(u => u.isFaculty === true || u.role === 'Faculty' || u.isDptCoor === true || u.role === 'DptCoor' || u.isDptHead === true || u.role === 'DptHead');
           break;
         case 'CR':
           filtered = filtered.filter(u => u.isCR === true || u.role === 'CR');

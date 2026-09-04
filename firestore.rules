@@ -175,10 +175,12 @@ service cloud.firestore {
       // Read: Users can read department-wide notices for their dept OR class notices for their sem & sec
       allow read: if isSignedIn() && (
         isAdmin() ||
+        (isFaculty() && resource.data.department == getUserDepartment()) ||
         (resource.data.department == getUserDepartment() && (
           resource.data.isDepartmentNotice == true ||
           resource.data.semester == null ||
-          (resource.data.semester == getUserSemester() && resource.data.section == getUserSection()[0:1])
+          (getUserSemester() != null && getUserSection() != null && 
+           resource.data.semester == getUserSemester() && resource.data.section == getUserSection()[0:1])
         ))
       );
       
