@@ -6,7 +6,7 @@
   <img src="Social-Preview.webp" width="220px" alt="b1t-Sched Logo" style="border-radius: 16px; margin-bottom: 12px;">
   <h1>👉 <a href="https://github.com/b1tranger/b1t-Sched/blob/main/doc/DOCUMENTATION.md">Complete Documentation</a> 👈</h1>
   <p>
-    <strong>Current Version:</strong> <code>v2.53.7</code> • 
+    <strong>Current Version:</strong> <code>v2.53.0 to v2.53.8</code> • 
     <strong>Architecture:</strong> Vanilla JS SPA + Firebase Firestore & Auth + PWA
   </p>
 </div>
@@ -240,6 +240,41 @@ firebase deploy --only hosting
 
 ## 🙏 Appreciation
 
-Special thanks to all the faculty members, seniors, classmates, and contributors who have assisted with testing, feedback, and architectural suggestions across the development of **b1t-Sched**.
+Thanks to these individuals who helped with testing, suggestions and support.
 
-*For in-depth architectural notes, migration steps, and release notes, consult [`doc/DOCUMENTATION.md`](doc/DOCUMENTATION.md).*
+Faculties
+- [S. M. Zafrul Islam (zafrul.islam@uits.edu.bd)](https://github.com/zafrul097)
+
+Seniors
+- [Md Kamruzzaman Shishir (1814355002)](https://github.com/MuhammadShishir)
+- [Md. Sakibul Hakim (Sadab) (2114951038)](https://github.com/foxxie911)
+- [Zobayer Hasan (2215151106)](https://github.com/zobayersq)
+- [Mohammad Masud Chowdhury Mahir (2215151105)](https://github.com/mahirmasud)
+- [Md Sakib Hosen (0432220005101058)](https://github.com/chatok-jnr)
+- [Akib Reza (0432220005101061)](https://github.com/AkibReza)
+- [Md. Safrid Bhueyan (0432310005101080)](https://github.com/safridbhueyan)
+- [K. M. Jakaria (0432310005101037)](https://github.com/Reaper-X003)
+- [Md. Robiul Hassan (Rabin) (0432310005101096)](https://github.com/Arriesgado47)
+- [Md. Mahfuz (0432310005101057)](https://github.com/Mahfuz5634)
+- [Md. Masud Rahman (0432320005101064)](https://github.com/shoytanbaba99)
+- [Kazi Md. Azhar Uddin Abeer (0432320005101120)](https://github.com/4xrhd)
+- [Md.Jihad Hossan (0432320005101017)](https://github.com/tofazmahmud)
+- [Md. Muhaiminul Islam (0432320005101207)](https://github.com/Maheem0)
+- [Rudro Antony Mrong (0432320005101059)](https://github.com/LackOfHP)
+
+Classmates
+- [Jannatul Ferdus (0432410005101058)](https://github.com/jannatulferdus182003)
+- [Shalehin Ahmed (0432410005101083)](https://github.com/ORNOB-083)
+- [Shamiur Hasan (0432410005101053)](https://github.com/shamiurhasan100)
+- [Md. Jubair Ahammed (0432410005101112)](https://github.com/JubairAhammedJubu)
+- [Saha Pradyumna Prasad (Ankur) (0432410005101159)](https://github.com/Saha-Pradyumna-Prasad)
+- [Manik Halder (0432410005101113)](https://github.com/RayneAshe0)
+- [@Helal Udding Patwary (Shakil) (0432410005101086)](https://github.com/Binary-Eclipse)
+
+Juniors
+- [Mamunur Rahman (04325205101031)](https://github.com/Zirconium001)
+- [Kazi Rabit Jahir (04325205101006)](https://github.com/RabbitJahir)
+
+
+
+

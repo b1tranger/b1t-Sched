@@ -1,13 +1,18 @@
 {
-  "currentVersion": "v2.53.7",
+  "currentVersion": "v2.53.0 to v2.53.8",
   "lastUpdated": "September 4, 2026",
   "documentationUrl": "https://b1tranger.netlify.app/render.html?file=https%3A%2F%2Fgithub.com%2Fb1tranger%2Fb1t-Sched%2Fblob%2Fmain%2Fdoc%2FDOCUMENTATION.md",
   "history": [
     {
-      "version": "v2.53.7",
+      "version": "v2.53.0 to v2.53.8",
       "badge": "Latest",
       "date": "September 2026",
       "changes": [
+        {
+          "type": "Fix",
+          "title": "App Script Syntax Error & Infinite Loading Fix",
+          "description": "Restored missing closing brace in theme initialization block within js/core/app.js, resolving Uncaught SyntaxError: Unexpected token 'else' at line 1678 that prevented script evaluation and trapped users on the infinite loading screen."
+        },
         {
           "type": "Fix",
           "title": "UI showLoading isAdmin Scope & Service Worker Response Clone Fix",
@@ -22,14 +27,7 @@
           "type": "Security/Auth",
           "title": "Credential Resolution Permission Handling & Local Cache Fallback",
           "description": "Implemented local credential mapping fallback for ID/initial login lookups when unauthenticated Firestore reads are restricted by security rules, and added explicit guidance directing users to deploy repository rules to Firebase."
-        }
-      ]
-    },
-    {
-      "version": "v2.53.6",
-      "badge": "Stable",
-      "date": "September 2026",
-      "changes": [
+        },
         {
           "type": "Security/Auth",
           "title": "Faculty & Student ID / Initials Flexible Login Support",
@@ -44,14 +42,7 @@
           "type": "Fix",
           "title": "Prevent Downward Viewport Scroll on Login Refresh & Logout",
           "description": "Enforced manual browser scroll restoration and instant scroll-to-top on SPA view routing, user sign-out, unauthenticated redirects, and loading screen dismissals."
-        }
-      ]
-    },
-    {
-      "version": "v2.53.5",
-      "badge": "Stable",
-      "date": "September 2026",
-      "changes": [
+        },
         {
           "type": "Security/Auth",
           "title": "Role Enforcement, Set-Details Lockdown & Default Light Mode",
@@ -71,62 +62,27 @@
           "type": "UI/UX",
           "title": "Mobile Pending Tasks Compact Filter & Desktop Login 100vh Hero",
           "description": "Replaced sprawling task filter pills on mobile with a compact dropdown selector ('Filters: ' prefix and 'Set Filter' placeholder) while keeping 'Clear' accessible. Expanded desktop login card into a 100vh hero section without top padding gaps and added an animated scroll-down indicator to FAQ & Support."
-        }
-      ]
-    },
-    {
-      "version": "v2.53.4",
-      "badge": "Stable",
-      "date": "September 2026",
-      "changes": [
+        },
         {
           "type": "UI/UX",
           "title": "Dashboard: Event Raiders Dark Mode Contrast & Task Action Button Row Layout",
           "description": "Enhanced Event Raiders contrast in Dark Mode (body.gray-mode) with high-visibility category, deadline, fee, and venue badges matching the blue theme. Placed 'Reset Tasks' button on the same row as 'Add Tasks' and 'View Old' on desktop, and added responsive compact labels ('Reset', 'Add', 'Old') on mobile screens."
-        }
-      ]
-    },
-    {
-      "version": "v2.53.3",
-      "badge": "Stable",
-      "date": "September 2026",
-      "changes": [
+        },
         {
           "type": "UI/UX",
           "title": "Dark Mode: Accent Palette Shifted to Blue (#3b82f6)",
           "description": "Replaced former red accent (#ff6360) with vibrant blue palette (primary: #3b82f6, secondary/hover: #2563eb, light: #60a5fa) for Dark Mode (body.gray-mode) across css/colors.css, css/classroom.css, css/changelog.css, css/calendar.css, and css/note.css."
-        }
-      ]
-    },
-    {
-      "version": "v2.53.2",
-      "badge": "Stable",
-      "date": "September 2026",
-      "changes": [
+        },
         {
           "type": "UI/UX",
           "title": "Profile Settings: Theme Renaming & Reordering (Dark Mode & High Contrast)",
           "description": "Updated theme options in Profile Settings (#profile-theme, js/features/profile.js): renamed 'Gray Mode' to 'Dark Mode' (charcoal/gray base) and 'Dark Mode' to 'High Contrast' (pure black/neon green base). Reordered vertical option arrangement to place 'High Contrast' as the final option (System Default -> Light Mode -> Dark Mode -> High Contrast)."
-        }
-      ]
-    },
-    {
-      "version": "v2.53.1",
-      "badge": "Stable",
-      "date": "September 2026",
-      "changes": [
+        },
         {
           "type": "UI/UX",
           "title": "User Management: Removed 'Remove Details' Action from Edit User Modal",
           "description": "Removed the 'Remove Details' button from the footer of the Edit User Profile modal (#edit-user-modal) in User Management, keeping profile editing focused on detail changes. The 'Remove Details' purge action remains accessible via the main User Management account cards and list."
-        }
-      ]
-    },
-    {
-      "version": "v2.53.0",
-      "badge": "Stable",
-      "date": "September 2026",
-      "changes": [
+        },
         {
           "type": "Refactor",
           "title": "Architecture: Categorical Folder Organization for JavaScript Codebase",
@@ -135,7 +91,7 @@
       ]
     },
     {
-      "version": "v2.52.2",
+      "version": "v2.52.0 to v2.52.2",
       "badge": "Stable",
       "date": "September 2026",
       "changes": [
@@ -143,14 +99,7 @@
           "type": "Enhancement",
           "title": "Classroom: Decouple Task Completion Checking from Sync to Refresh Button",
           "description": "Decoupled task completion auto-checking from the Classroom 'Sync' button to the 'Refresh' button. The 'Sync' button (Classroom.syncAssignmentsToTasks) now strictly focuses on importing and updating coursework into the task database without mutating completion statuses. Automatic checking off of turned-in/graded assignments (and unchecking of unsubmitted assignments) in Pending Tasks is now executed exclusively when clicking the Classroom 'Refresh' button (Classroom.refreshData)."
-        }
-      ]
-    },
-    {
-      "version": "v2.52.1",
-      "badge": "Stable",
-      "date": "September 2026",
-      "changes": [
+        },
         {
           "type": "Enhancement",
           "title": "User Management 'Remove Details' Action, Firestore Permission Fix & Fallback",
@@ -165,14 +114,7 @@
           "type": "Enhancement",
           "title": "Classroom Sync Summary Modal: Border Padding Removal",
           "description": "Removed extra desktop outer border padding from the Classroom Sync Summary modal (#classroom-sync-modal .modal-content, .classroom-sync-modal-content) by adding explicit exclusions to .modal-content padding rules in css/responsive.css and setting padding: 0 !important."
-        }
-      ]
-    },
-    {
-      "version": "v2.52.0",
-      "badge": "Stable",
-      "date": "September 2026",
-      "changes": [
+        },
         {
           "type": "Enhancement",
           "title": "User Management: Direct Firestore User Deletion & Firebase Auth Cleanup Guidance Modal",
@@ -181,7 +123,7 @@
       ]
     },
     {
-      "version": "v2.51.9",
+      "version": "v2.51.0 to v2.51.9",
       "badge": "Stable",
       "date": "September 2026",
       "changes": [
@@ -189,38 +131,17 @@
           "type": "Enhancement",
           "title": "Task Card: Task ID Copy Button Left-Aligned After 'Added by'",
           "description": "Adjusted the layout of .task-meta-footer in css/components.css and js/ui.js to align the Task ID copy button (.copy-task-id-btn) flush to the left, sitting immediately adjacent to the 'Added by' attribution text rather than pushed to the far right or forced onto a separate row."
-        }
-      ]
-    },
-    {
-      "version": "v2.51.8",
-      "badge": "Stable",
-      "date": "September 2026",
-      "changes": [
+        },
         {
           "type": "Enhancement",
           "title": "Dashboard Task Copy Toasts: Bottom-Right Corner Placement",
           "description": "Updated copySingleTask and copyTaskId in js/app.js so that 'Task contents copied to clipboard', 'Task ID copied to clipboard', and their error counterparts all surface at the bottom-right corner (#toast-container-bottom-right), consistent with the UID copy toast behaviour in User Management."
-        }
-      ]
-    },
-    {
-      "version": "v2.51.7",
-      "badge": "Stable",
-      "date": "September 2026",
-      "changes": [
+        },
         {
           "type": "Bug Fix",
           "title": "Classroom: Task Completion Auto-Sync Restricted to Explicit Sync Button Only",
           "description": "Fixed a regression where both the Refresh button and initial Classroom load were auto-checking Pending Tasks as completed, regardless of actual submission status. Removed calls to syncTurnedInAssignmentsToUserCompletions() from fetchAssignmentsData() and the expired-session cache path (showCachedDataWithBanner). Task completion state is now exclusively updated when the user explicitly clicks the Sync button (syncAssignmentsToTasks), which is the only authoritative action for writing to the task database. Refresh is now strictly read-only with respect to completion state."
-        }
-      ]
-    },
-    {
-      "version": "v2.51.6",
-      "badge": "Stable",
-      "date": "September 2026",
-      "changes": [
+        },
         {
           "type": "Enhancement",
           "title": "Bottom-Right Corner Placement for User Management UID Copy Toast",
@@ -230,38 +151,17 @@
           "type": "Enhancement",
           "title": "Profile & Registration: Lockdown Manual Selection of Alumni / Special Semester",
           "description": "Restricted the Semester dropdown in Profile Settings (js/profile.js) and Set Details (js/app.js) so users cannot see or select 'alumni / special'. Alumni / special semester status can now only be assigned through automated promotion logic or explicitly by an Administrator in the User Management view. Preserved display of 'alumni / special' in disabled/readonly state only for accounts already carrying the status."
-        }
-      ]
-    },
-    {
-      "version": "v2.51.5",
-      "badge": "Stable",
-      "date": "September 2026",
-      "changes": [
+        },
         {
           "type": "Enhancement",
           "title": "Profile View: Dynamic Faculty ID Label for Faculty Accounts",
           "description": "Updated the profile header in Profile Settings (#profile-settings-view) so that the user ID paragraph (#profile-student-id) dynamically renders as 'Faculty ID: <ID or Initial>' when logged in as a faculty member (Faculty, DptCoor, or DptHead) or when an Admin is previewing as faculty, and 'Student ID: <ID>' for students and standard accounts."
-        }
-      ]
-    },
-    {
-      "version": "v2.51.4",
-      "badge": "Stable",
-      "date": "September 2026",
-      "changes": [
+        },
         {
           "type": "Bug Fix",
           "title": "Classroom Sync: Strict Turned-In Constraint for Task Completion",
           "description": "Fixed an issue where syncing Classroom assignments caused corresponding tasks in Pending Tasks to be marked as checked off/completed even when the student had not submitted and turned in the assignment. Updated isSubmittedOrReturned() and fetchAssignmentsData() in js/classroom.js to strictly verify that the assignment is actually turned in (TURNED_IN or RETURNED with verified submissionHistory) rather than treating teacher-returned or graded unsubmitted work as completed. Enhanced syncAssignmentsToTasks() and syncTurnedInAssignmentsToUserCompletions() so only actually submitted assignments are checked off, while unsubmitted, missing, or reclaimed/unsubmitted assignments remain unchecked, automatically unchecking any erroneously completed tasks."
-        }
-      ]
-    },
-    {
-      "version": "v2.51.3",
-      "badge": "Stable",
-      "date": "September 2026",
-      "changes": [
+        },
         {
           "type": "Enhancement",
           "title": "Pending Tasks UI Refinements: Border Removal, Compact Padding, Inline Desktop Meta & Single Task Copy",
@@ -271,14 +171,7 @@
           "type": "Enhancement",
           "title": "Filter Users Modal: Faculty Read-Only Constraints for Semester & Section",
           "description": "Enforced read-only constraints on Semester and Section selectors (#filter-semester, #filter-section) inside the User Management Filter Users modal (#filter-popup) when faculty roles ('Faculty' or 'DptCoor') are selected. Added transparent overlay interceptors that show a brief floating popup notice and toast message informing the user that semester and sections are not defined for faculties. Automatically bypasses semester and section filtering when faculty roles are active."
-        }
-      ]
-    },
-    {
-      "version": "v2.51.2",
-      "badge": "Stable",
-      "date": "September 2026",
-      "changes": [
+        },
         {
           "type": "Refactor",
           "title": "Remove Make/Remove Faculty Button in User Management",
@@ -293,26 +186,12 @@
           "type": "Enhancement",
           "title": "Full Vertical Height & Bottom Border Removal for All Mobile Sidebars",
           "description": "Standardized all mobile flyout sidebars (Events, Notices, and Account Approvals) to match the Google Classroom sidebar layout. Replaced 100vh with 100% / 100dvh pinned to top: 0 and bottom: 0, removed downward box-shadows and bottom borders, eliminating bottom gaps and border lines on mobile displays and during zoom scaling."
-        }
-      ]
-    },
-    {
-      "version": "v2.51.1",
-      "badge": "Stable",
-      "date": "September 2026",
-      "changes": [
+        },
         {
           "type": "New Feature",
           "title": "Desktop Bottom-Right PWA Install Prompt with Post-Login Deferral & 5-Second Auto-Dismiss",
           "description": "Positioned the 'Install b1t-Sched' web app installation popup (.install-prompt) at the bottom-right corner on desktop screens (bottom: 24px, right: 24px) with smooth slideInRight entrance animation, while retaining centered bottom placement on mobile displays. Deferred the installation prompt so it only displays after leaving the login view, and implemented a 5-second auto-dismiss countdown on inactive prompts with hover and touch pause-and-resume support."
-        }
-      ]
-    },
-    {
-      "version": "v2.51.0",
-      "badge": "Stable",
-      "date": "September 2026",
-      "changes": [
+        },
         {
           "type": "New Feature",
           "title": "Login Screen Overhaul: Student/Faculty Toggle, High-Contrast Password Eye, oU1TS Telegram & FAQ Section",
@@ -474,7 +353,7 @@
       ]
     },
     {
-      "version": "v2.45.1",
+      "version": "v2.45.0 to v2.45.1",
       "badge": "Stable",
       "date": "August 2026",
       "changes": [
@@ -502,14 +381,7 @@
           "type": "Enhancement",
           "title": "Hidden Scrollbars Across Calendar Window",
           "description": "Applied cross-browser scrollbar hiding across the calendar grid, weekly views, mobile date lists, and task detail modals while retaining full smooth scrolling via touch, mouse wheel, and trackpad."
-        }
-      ]
-    },
-    {
-      "version": "v2.45.0",
-      "badge": "Stable",
-      "date": "August 2026",
-      "changes": [
+        },
         {
           "type": "New Feature",
           "title": "Version Update & What's New Modal",
@@ -597,7 +469,7 @@
       ]
     },
     {
-      "version": "v2.41.2",
+      "version": "v2.41.0 to v2.41.2",
       "badge": "Security",
       "date": "March 2026",
       "changes": [
@@ -605,14 +477,7 @@
           "type": "Security",
           "title": "Environment Variable Migration",
           "description": "Migrated standard Firebase API keys inside firebase-config.js to environment variables with strict HTTP referrers restriction."
-        }
-      ]
-    },
-    {
-      "version": "v2.41.0",
-      "badge": "Stable",
-      "date": "March 2026",
-      "changes": [
+        },
         {
           "type": "Enhancement",
           "title": "Enhanced Markdown & Code Blocks",

@@ -2,247 +2,6 @@
 
 > **Academic Task Scheduler** - A Single Page Application (SPA) for managing academic tasks, assignments, exams, and events with personalized department-specific content.
 
-# 04.09.26
-
-**Changelog Modal Desktop Min-Width, Console Error Fixes & ID Login Permission Handling**
-- **Changelog Modal Min-Width on Smaller Desktop Displays (`css/changelog.css`, `css/responsive.css`)**:
-  - Enforced `min-width: 600px` and `max-width: 780px !important` on `.changelog-modal-content` and `#changelog-modal .modal-content` for desktop displays below 1920px.
-  - Excluded `#changelog-modal .modal-content` from the generic 460px modal clamp in `css/responsive.css` (`@media (min-width: 769px) and (max-width: 1366px)` and `@media (min-width: 769px) and (max-height: 768px)`), allowing the modal to comfortably present version changes.
-- **Console Runtime Error Fixes (`js/core/ui.js`, `sw.js`)**:
-  - Resolved `Uncaught ReferenceError: isAdmin is not defined` inside `UI.showLoading()` by properly declaring `isAdmin = typeof App !== 'undefined' ? App.isAdmin : false;`.
-  - Fixed `TypeError: Failed to execute 'clone' on 'Response': Response body is already used` in `sw.js` `staleWhileRevalidate` by cloning the network response synchronously before passing it to `cache.put()`.
-- **Credential Lookups Permission Fallback & Caching (`js/core/db.js`, `js/core/app.js`)**:
-  - Implemented local cache fallback (`b1t_credential_email_map`) in `DB.getEmailByStudentId()` and `DB.getEmailByFaculty()`.
-  - Added user-facing error guidance in `App.handleLogin()` when unauthenticated Firestore reads fail due to undeployed security rules (`allow read: if isSignedIn();`), informing users to log in with their email address or deploy repository rules to Firebase Console.
-
-**Authentication: Faculty & Student ID/Initials Login, Install Prompt 3-Row Architecture & Login Scroll Reset**
-- **Faculty & Student ID / Initials Flexible Login (`js/core/db.js`, `js/core/app.js`, `index.html`)**:
-  - `DB.getEmailByFaculty()`: Allowed faculty to log in with Faculty ID, initials (case-insensitive), or email. Avoided multi-field composite index requirements by performing single-field lookups on `facultyInitial`, `studentId`, and `facultyId`, followed by in-memory role matching (`isFaculty`, `Faculty`, `DptCoor`, `DptHead`).
-  - `DB.getEmailByStudentId()`: Allowed student login with student ID and password. Implemented multi-format normalization supporting raw string, stripped string (removing dashes/spaces), and numeric formats in Firestore.
-  - Retained strict 10-16 numeric digit enforcement on the set-details page (`pattern="[0-9]{10,16}"` and `/^[0-9]{10,16}$/`) so students must enter their valid student ID upon profile setup.
-  - Maintained email-only input (`type="email"`) and validation on the sign-up page.
-  - Updated login input placeholders and hints dynamically to reflect "Student ID or Email" and "Faculty ID, Initial or Email".
-- **Install Prompt: 3-Row Layout & Solid Background Across Themes (`index.html`, `css/components.css`, `css/colors.css`, `js/pwa/install-prompt.js`)**:
-  - Re-architected `.install-prompt` into a clean 3-row layout:
-    - Row 1: Header row with app icon and title (`Install b1t-Sched`).
-    - Row 2: Description row (`Install our app for quick access and offline use`).
-    - Row 3: Action buttons row (`Install` and `Not now`).
-  - Defined the missing `--bg-card` token across `:root` (`#FFFFFF`), `body.dark-mode` (`#0d0d0d`), and `body.gray-mode` (`#1a1a1a`) in `css/colors.css`.
-  - Set 100% solid, non-transparent card backgrounds on `.install-prompt`: Light Mode (`#ffffff`), Dark Mode (`#242424 !important`), and High Contrast (`#141414 !important`) with matching border colors and high-contrast typography.
-- **Prevent Downward Viewport Scroll on Login Refresh & Logout (`js/core/routing.js`, `js/core/auth.js`, `js/core/app.js`, `js/core/ui.js`)**:
-  - Enforced `history.scrollRestoration = 'manual'` in `Router.init()`.
-  - Added instant scroll-to-top (`window.scrollTo({ top: 0, left: 0, behavior: 'instant' })` and `scrollTop = 0`) across `Router.showView()`, `Auth.logout()`, `App.handleUnauthenticatedUser()`, and `UI.showLoading(false)`.
-
-**Auth, Role Enforcement, Mobile Task Filters, Notices Permission & Login View Polish**
-- **Default Light Mode for Logged-Out State (`index.html`, `js/core/auth.js`, `js/core/app.js`)**:
-  - Initialized `<head>` theme fallback to clean light mode (`light`) when no stored user profile or theme preference is present.
-  - In `Auth.logout()` and `App.handleUnauthenticatedUser()`, proactively stripped `dark-mode` and `gray-mode` classes from `document.body` and `document.documentElement`, ensuring unauthenticated users and public visitors always see the crisp Light Mode interface.
-- **Cross-Role Login Enforcement (`js/core/app.js`)**:
-  - Blocked students from logging in through the Faculty tab and faculty from logging in through the Student tab with explicit feedback (`UI.showToast`).
-  - Cached signup intent roles (`signup_role_<email>`) during registration and performed authoritative post-auth checks in `App.handleAuthenticatedUser()`. If an existing account with mismatched role attributes (e.g. `isFaculty: true` under student login or non-faculty under faculty login) attempts authentication, the session is rejected and logged out immediately.
-- **Role Lockdown on Set-Details (`index.html`, `js/core/app.js`)**:
-  - Hid the `.faculty-signup-toggle` container (`#set-is-faculty-checkbox`) on `#set-details-view` (`display: none;`).
-  - Synced `set-is-faculty-checkbox` state strictly with the verified `currentLoginRole` in `App.loadSetDetailsForm()`, preventing post-registration identity role hopping.
-- **User Management Faculty Action Buttons & Filter Inclusion (`js/core/app.js`)**:
-  - In `App.renderUserList()`, concealed the "Make CR" button for all faculty users, showing exclusively the "Make DptCoor" button.
-  - In `App.filterUsers()`, updated the `Faculty` filter category to encompass `DptCoor` and `DptHead` users alongside base `Faculty` accounts.
-- **Faculty & DptCoor Department Notices Permission Fix (`firestore.rules`, `js/core/firestore-listener-manager.js`)**:
-  - In `firestore.rules`, allowed read access on `cr_notices` for faculty matching on department (`isFaculty() && resource.data.department == getUserDepartment()`) and null-guarded `semester` and `section` string slicing, resolving previous `Missing or insufficient permissions` rule rejections.
-  - In `js/core/firestore-listener-manager.js`, bypassed section task listener setup for faculty profiles and routed department notice listening through `listenForNewDepartmentNotices()` strictly by `department`.
-- **Mobile Pending Tasks Compact Filter Dropdown (`index.html`, `js/core/app.js`, `css/dashboard.css`, `css/responsive.css`)**:
-  - Added `.task-filter-prefix` ("Filters: ") and compact `<select id="task-filter-select">` with default option "Set Filter", positioned alongside the external `.task-filter-clear` button.
-  - Hid desktop radio filter buttons on mobile (`max-width: 768px`) and displayed the compact dropdown row.
-  - Synchronized selection states bi-directionally between `#task-filter-select` and desktop filter pills in `App.setupTaskFilterListeners()`.
-- **Desktop Login 100vh Hero & Scroll-Down Guidance (`index.html`, `js/core/routing.js`, `css/main.css`, `css/responsive.css`)**:
-  - Removed top navbar spacing gap (`padding-top: 0 !important`) via `.no-nav-padding` on `#main-content` for the login view.
-  - Wrapped `#auth-card` inside `.auth-hero-wrapper` with `min-height: 100vh` on desktop, centering the login card and preventing the footer/FAQ from peeking through prematurely.
-  - Added `.login-scroll-indicator` with smooth bouncing chevron animation and click handler scrolling down to `#login-footer-section`.
-
-**Dashboard: Event Raiders Dark Mode Contrast & Task Action Button Row Layout**
-- **Dark Mode Overrides for Raider Feed (`css/dashboard.css`, `body.gray-mode`)**:
-  - Replaced dimmed and low-contrast dark badge styling with bright, distinct badges matching the Dark Mode theme:
-    - `.raider-card`, `.dashboard-sidebar .raider-card`: Elevated background `#222222`, crisp `#383838` border, and vibrant `#3b82f6` left border accent with subtle glow on hover.
-    - `.raider-card .event-date`: Gradient background from `#1d4ed8` to `#3b82f6` with clean white typography.
-    - `.raider-card .event-title`: High-contrast `#f8fafc` text.
-    - `.raider-badge-category`: Subtle blue background `rgba(59, 130, 246, 0.22)` with `#93c5fd` text and border.
-    - `.raider-badge-deadline`: High-visibility amber background `rgba(245, 158, 11, 0.22)` with `#fde047` text and border.
-    - `.raider-badge-fee`: Vivid emerald background `rgba(16, 185, 129, 0.22)` with `#6ee7b7` text and border.
-    - `.raider-badge-venue`: Crisp cyan background `rgba(6, 182, 212, 0.22)` with `#67e8f9` text and border.
-    - `.raider-badge-online`: Purple background `rgba(168, 85, 247, 0.22)` with `#e9d5ff` text and border.
-    - `.raider-external-btn`: Coordinated `#3b82f6` button style with hover state.
-    - `.raider-header-link`: Clear `#60a5fa` link color with subtle hover pill.
-- **Desktop Single-Row Layout for Task Action Buttons (`css/dashboard.css`, `index.html`)**:
-  - Removed `flex-basis: 100%` on `.tasks-actions .btn-danger` (`#reset-tasks-btn`), allowing `Add Tasks`, `View Old`, and `Reset Tasks` to sit side-by-side in a single row (`flex: 1; min-width: 0; gap: var(--spacing-sm)`).
-  - Preserved `.cr-info-message` automatic row wrapping below the three buttons with `width: 100%`.
-- **Mobile Responsive Button Text Shortening (`index.html`, `css/responsive.css`)**:
-  - Wrapped button labels in `.btn-text-full` (`Add Tasks`, `View Old`, `Reset Tasks`) and `.btn-text-short` (`Add`, `Old`, `Reset`).
-  - Added responsive media query rules in `css/responsive.css` (`@media (max-width: 768px)`):
-    - Hides `.btn-text-full` and displays `.btn-text-short` (`display: inline !important`).
-    - Adjusts button padding (`8px 6px`), font size, and gap (`6px`) so all three buttons fit cleanly across narrow mobile screens.
-
-**Dark Mode: Blue Accent Color (#3b82f6) Palette Migration**
-- **Accent Color Shift (`css/colors.css`, `body.gray-mode`)**: Transitioned the accent color for Dark Mode from coral-red (`#ff6360`) to vibrant blue (`#3b82f6`):
-  - `--primary-maroon`: `#3b82f6`
-  - `--secondary-maroon`: `#2563eb`
-  - `--accent-maroon`: `#3b82f6`
-  - `--light-maroon`: `#60a5fa`
-  - `--maroon-hover`: `#2563eb`
-- **Component & Modal Harmonization (`css/classroom.css`, `css/changelog.css`, `css/calendar.css`, `css/note.css`)**:
-  - `css/classroom.css`: Swapped `--classroom-green` and hover borders/headers in `#classroom-sync-modal` to `#3b82f6` and `#2563eb`.
-  - `css/changelog.css`: Updated modal header icon gradient (`#1d4ed8` to `#3b82f6`), version badges, and close button hover shadows to `#3b82f6`.
-  - `css/calendar.css`: Updated cell hover highlights, task detail link toggles, and modal close buttons to `#3b82f6`.
-  - `css/note.css`: Updated LocalSend link hover fallbacks to `#3b82f6`.
-
-**Profile Settings: Theme Option Renaming & Reordering (Dark Mode & High Contrast)**
-- **Renamed & Reordered Theme Options (`index.html`, `js/features/profile.js`, `js/core/app.js`)**:
-  - Renamed `Gray Mode` (charcoal background with coral accents) to `Dark Mode`.
-  - Renamed `Dark Mode` (pitch black background with vibrant green accents) to `High Contrast`.
-  - Reordered vertical option arrangement to place `High Contrast` as the final option:
-    1. System Default (`system`)
-    2. Light Mode (`light`)
-    3. Dark Mode (`gray`)
-    4. High Contrast (`dark`)
-  - Updated live theme preview listeners in `js/features/profile.js` and app startup theme initialization in `js/core/app.js` to seamlessly support and alias theme selections.
-
-**User Management: Removal of 'Remove Details' Button from Edit User Profile Modal**
-- **Modal Footer Simplification (`index.html`, `#edit-user-modal`)**: Removed the `#edit-user-delete-btn` ("Remove Details") button from the footer of the Edit User Profile modal. Adjusted footer styling to `justify-content: flex-end`, keeping the modal exclusively dedicated to editing and saving user details.
-- **Event Listener Cleanup (`js/core/app.js`)**: Removed the `editUserDeleteBtn` click listener and dialog trigger from `App.setupUserManagementListeners()`. The "Remove Details" action remains fully functional and accessible from the primary User Management accounts list cards.
-
-**Architecture: Categorical Folder Organization for JavaScript Codebase**
-- **Modular Directory Structure (`js/`)**: Categorized and organized all 37 JavaScript modules situated in the root `js/` directory into 5 distinct architectural folders:
-  - `js/core/`: Foundational application infrastructure (`app.js`, `auth.js`, `db.js`, `firebase-config.js`, `firestore-listener-manager.js`, `permission-manager.js`, `routing.js`, `ui.js`, `utils.js`).
-  - `js/features/`: Domain feature modules and UI handlers (`approvals.js`, `calendar-view.js`, `changelog-modal.js`, `classroom.js`, `cr-notice.js`, `facultyClassroom.js`, `notes.js`, `notice.js`, `profile.js`, `raids-feed.js`, `task-export.js`, `timeline-data.js`, `timeline-ui.js`).
-  - `js/pwa/`: Offline caching, manifest generation, and PWA lifecycle handlers (`cache-manager.js`, `install-prompt.js`, `manifest-generator.js`, `offline-indicator.js`, `offline-manager.js`, `pwa-detector.js`, `pwa-init.js`, `sw-update-manager.js`).
-  - `js/notifications/`: Multi-channel notification dispatchers and formatters (`notification-content-formatter.js`, `notification-manager.js`, `notifications-types.js`).
-  - `js/admin/`: Admin tools, audit logs, and maintenance migration utilities (`activity-logger.js`, `admin-api.js`, `migrate-activity-logs.js`, `update-user-semesters.js`).
-- **Script Tags & Dependency Order (`index.html`)**: Updated all 37 `<script src="...">` tags in `index.html` to load from their respective categorical subdirectories while strictly preserving script execution and global initialization order.
-- **Service Worker Cache Asset Map (`sw.js`)**: Updated `STATIC_ASSETS` in `sw.js` to reference the relocated scripts (`/js/core/app.js`, `/js/core/auth.js`, `/js/features/classroom.js`, etc.) and bumped `CACHE_VERSION` to `v2.53.0`.
-- **Environment Variable Injector (`inject-env.js`)**: Updated `configPath` in `inject-env.js` from `js/firebase-config.js` to `js/core/firebase-config.js`.
-
-**Classroom: Decouple Task Completion Checking from Sync to Refresh Button**
-- **Decoupled Sync Button Action (`js/classroom.js`, `syncAssignmentsToTasks()`)**: Restricted the `Sync` button exclusively to importing, updating, and syncing assignments into the task database (`tasks`). Removed automatic completion syncing (`syncTurnedInAssignmentsToUserCompletions()`) from `syncAssignmentsToTasks()`. Users can now import and review tasks in the Git Diff summary modal without inadvertently altering completion checkmarks or statuses.
-- **Auto-Check Task Completion on Refresh Button (`js/classroom.js`, `refreshData()`)**: Relocated live task completion checks to the `Refresh` button. When the user clicks `Refresh` in the Classroom window, the system fetches live coursework and student submission states from the Google Classroom API, refreshes dashboard data (`App.loadDashboardData(false)`), and runs `syncTurnedInAssignmentsToUserCompletions(freshAssignments)`. Any task whose corresponding assignment was submitted/turned in (`TURNED_IN` or `RETURNED` with grade) is automatically marked completed in Firestore (`DB.toggleTaskCompletion`), while unsubmitted tasks are unchecked.
-- **Pure Read-Only Background / Cached Loaders (`js/classroom.js`, `fetchAssignmentsData()`, `showCachedDataWithBanner()`)**: Confirmed background fetches and cached fallback renders do not execute completion mutations, keeping user task lists deterministic until explicitly refreshed.
-
-**User Management: 'Remove Details' Action, Firestore Admin Rules & Fallback Stripping**
-- **Renamed to 'Remove Details' (`index.html`, `js/app.js`)**: Updated the deletion button in the User Management list and Edit User modal footer (`#edit-user-delete-btn`) to `Remove Details` (`<i class="fas fa-user-minus"></i> Remove Details`). Updated the confirmation modal title (`Confirm Remove Details`), prompt text, and action buttons to give administrators clear context that database details are being purged.
-- **Firestore Security Rules (`firestore.rules`)**: Changed `allow delete: if false;` on `/users/{userId}` to `allow delete: if isAdmin();`. Updated `/users/{userId}/completedTasks/{taskId}` to allow admin read, write, and delete permissions (`isOwner(userId) || isAdmin()`).
-- **Resilient Deletion & Fallback (`js/db.js`, `DB.deleteUser()`)**: Wrapped `completedTasks` subcollection document deletion in a try-catch to prevent permission errors from aborting user deletion. Added an automatic fallback: if remote deployed security rules reject direct document deletion, the function automatically overwrites the document with `{ isDeleted: true, deletedAt: serverTimestamp() }`, stripping all personal profile information.
-- **Deleted Profile Isolation (`js/db.js`, `DB.getUserProfile()`, `DB.getAllUsers()`)**: Updated `DB.getUserProfile()` to recognize `data.isDeleted` and return `isNotFound: true` (triggering the Set Details onboarding form if the user logs in again). Updated `DB.getAllUsers()` to filter out records marked with `isDeleted: true`.
-
-**Classroom Sync: Strict Task ID & Course Matching in Completion Sync**
-- **Strict Task ID & Course Resolution (`js/classroom.js`, `syncTurnedInAssignmentsToUserCompletions()`)**: Fixed false-positive task completions where assignments with generic titles (e.g. "Project Proposal" or "Lab Report 3") in one course auto-completed matching-titled tasks belonging to completely different courses. Enforced that if `task.classroomWorkId` exists on a task, it must match `assignment.id` strictly. Removed cross-course title-only matching (`addedFrom === 'classroom'`), requiring both title and course name to match.
-- **Cache Merge Property Preservation (`js/classroom.js`, `mergeAndSkipUnchanged()`)**: Updated `mergeAndSkipUnchanged` to merge fresh API properties (`Object.assign({}, existing, item)`) rather than retaining an unmodified stale cache object.
-
-**Classroom Sync Summary Modal: Desktop Border Padding Removal**
-- **Zero-Padding Constraint (`css/classroom.css`, `css/responsive.css`)**: Removed outer border padding around the Classroom Sync Summary modal (`#classroom-sync-modal .modal-content`, `.classroom-sync-modal-content`) by explicitly excluding it from `.modal-content` padding rules in `css/responsive.css` and enforcing `padding: 0 !important;`. Ensures the header, stats overview, diff list, and footer span the entire modal content cleanly.
-
-**User Management: Direct Firestore User Deletion & Firebase Authentication Cleanup Guidance**
-- **Direct Firestore User Purge (`js/db.js`, `DB.deleteUser()`)**: Resolved issue where users deleted from the Firebase Console Authentication tab left orphan documents in Firestore (`users/${uid}`) and continued appearing on the website. Implemented `DB.deleteUser(userId)` to delete the primary user profile doc and batch-delete all records under `users/${userId}/completedTasks`.
-- **User Management Integration & Cache Update (`js/app.js`, `handleDeleteUser()`)**: Replaced deprecated/CORS-blocked Cloud Function call with `DB.deleteUser(userId)`. Automatically purges the deleted user from local memory (`this.allUsers`), updates the cached user count (`DB.updateUserCountCache`), and re-renders the user list immediately.
-- **Firebase Auth Cleanup Guidance Modal (`index.html`, `js/app.js`, `css/components.css`)**: Introduced a post-deletion guidance modal (`#user-delete-auth-modal`) after a user is deleted from the database. Informs the Admin that Firestore data was removed, but Firebase Authentication credentials must also be deleted in the Firebase Console for complete removal (otherwise re-login will route the user to the Set Details page to set up a new profile). Automatically copies the user's UID to clipboard with bottom-right toast feedback, and provides a direct button opening the Firebase Authentication users console (`https://console.firebase.google.com/project/<projectId>/authentication/users`).
-- **Edit User Modal Delete Action (`index.html`, `js/app.js`)**: Added a danger "Delete User" button (`#edit-user-delete-btn`) to the Edit User modal footer, allowing Admins to initiate user deletion directly while viewing/editing user details.
-
-**Task Card: Task ID Copy Button Left-Aligned After 'Added by'**
-- **Left-Aligned Meta Footer Layout (`css/components.css`, `js/ui.js`)**: Updated `.task-meta-footer` in `css/components.css` to use `justify-content: flex-start` with `gap: 8px` and `flex-wrap: wrap;`, removing the desktop `space-between` and mobile column media overrides. The Task ID copy button (`.copy-task-id-btn`) now sits directly adjacent to the `Added by` author attribution badge on the left, rather than being spaced to the opposite card edge or forced onto a subsequent row. Cleared top margin on `.task-meta-footer .task-added-by` to ensure vertical center alignment, and cleaned up `js/ui.js` to avoid emitting an empty span when author info is absent.
-
-**Dashboard Task Copy Toasts: Bottom-Right Corner Placement**
-- **Consistent Bottom-Right Placement (`js/app.js`, `copySingleTask()`, `copyTaskId()`)**: Updated all task copy toast notifications on the Dashboard to surface at the bottom-right corner (`#toast-container-bottom-right`), matching the UID copy toast behaviour in User Management. Affected toasts: `Task contents copied to clipboard`, `Task ID (<id>) copied to clipboard`, `Task not found to copy`, and their error counterparts.
-
-**Classroom: Task Completion Auto-Sync Restricted to Explicit Sync Button Only**
-- **Root Cause Identified (`js/classroom.js`)**: `syncTurnedInAssignmentsToUserCompletions()` was being invoked from two unintended paths in addition to the authoritative Sync button:
-  1. `fetchAssignmentsData()` (line 963) — fires on every Classroom load and Refresh.
-  2. `showCachedDataWithBanner()` (line 1240) — fires when displaying cached data during expired-session fallback.
-  This caused tasks to be auto-checked (or unchecked) any time the user opened or refreshed Classroom, regardless of whether they triggered an explicit Sync.
-- **Fix (`js/classroom.js`, `fetchAssignmentsData()`, `showCachedDataWithBanner()`)**: Removed `syncTurnedInAssignmentsToUserCompletions()` calls from both non-Sync paths. Added inline comments explaining the intentional design: task completion state is exclusively managed by `syncAssignmentsToTasks()` — the Sync button action — which retains its call to `syncTurnedInAssignmentsToUserCompletions()`. Refresh is now strictly read-only with respect to task completion state.
-
-**Bottom-Right UID Copy Toast & Profile Alumni Semester Selector Lockdown**
-- **Bottom-Right Corner UID Copy Toast (`js/ui.js`, `js/app.js`)**: Enhanced `UI.showToast()` to support an explicit `position` parameter (`'top-right'` vs `'bottom-right'`) and auto-route UID copy messages and User Management events to a dedicated bottom-right toast stack (`#toast-container-bottom-right`). Updated `App.copyUserUid()` to pass `'bottom-right'` explicitly. Implemented smooth bottom-entry translation animations and responsive edge boundary constraints (`max-width: min(380px, calc(100vw - 48px))`).
-- **Alumni / Special Semester Selection Lockdown (`js/profile.js`, `js/app.js`)**: Restricted the `Semester` selector in Profile Settings (`#profile-semester`) and initial registration (`#set-semester`) by filtering out `'alumni / special'` from selectable options. In accordance with system policy, `alumni / special` status can only be applied through automated semester promotion logic or explicitly assigned by an Administrator in the User Management modal (`#edit-user-modal`). Accounts already bearing `alumni / special` retain display of the value in a disabled/read-only state, with backend save guards in `Profile.handleSaveProfile()` preventing unauthorized manual selection.
-
-**Profile View: Dynamic Faculty ID Label for Faculty Accounts**
-- **Dynamic ID Labeling (`js/profile.js`, `loadProfile()`, `updateRoleDisplay()`)**: Updated user identification rendering in Profile Settings (`#profile-settings-view`). When authenticated as a faculty member (`Faculty`, `DptCoor`, or `DptHead`) or when previewing a faculty role in Admin preview mode, the ID paragraph (`#profile-student-id`) dynamically renders as `Faculty ID: <ID or Initial>` (resolving `facultyInitial` or `studentId`). For standard student and non-faculty roles, it continues to display as `Student ID: <studentId>`.
-- **Live Role Preview Adaptation**: Wired ID labeling into `Profile.updateRoleDisplay()`, ensuring that switching roles via the Admin Role Preview selector (`#admin-preview-select`) or exiting preview mode seamlessly toggles between `Faculty ID` and `Student ID` in real time.
-
-**Classroom Sync: Strict Turned-In Constraint for Task Completion**
-- **Strict Turn-In Verification (`js/classroom.js`, `isSubmittedOrReturned()`)**: Updated assignment completion check to verify that the assignment is actually turned in (`wasActuallyTurnedIn === true`, `rawState === 'TURNED_IN'`, or `statusCode === 'turned_in'`). If an assignment has `RETURNED` status, it now inspects `sub.submissionHistory` to verify the student actually submitted/turned in the work before teacher return, rather than treating teacher-returned or graded unsubmitted work as completed.
-- **Bi-Directional Completion Sync (`js/classroom.js`, `syncTurnedInAssignmentsToUserCompletions()`)**: Refactored `syncTurnedInAssignmentsToUserCompletions()` to evaluate all assignments against corresponding tasks in "Pending Tasks". If an assignment is verified as turned in, it marks the task as completed in Firestore (`DB.toggleTaskCompletion`); if an assignment is unsubmitted, missing, or reclaimed/unsubmitted, it automatically unchecks the matching task and deletes the completion record from `userCompletions`.
-- **Sync Action Integration (`js/classroom.js`, `syncAssignmentsToTasks()`)**: Integrated `await this.syncTurnedInAssignmentsToUserCompletions(syncableAssignments)` immediately after `syncAssignmentsToTasks()` updates tasks and refreshes dashboard data, ensuring newly synced Classroom tasks accurately reflect the user's actual submission status.
-
-**Pending Tasks UI Refinements & User Filter Faculty Read-Only Constraints**
-- **Task Card Left-Borders & Padding (`css/components.css`, `css/dashboard.css`)**: Removed left accent borders from `.task-card`, `.task-card.incomplete`, `.task-card.faculty-task`, and inner `.task-description-wrapper` (`border-left: none !important;`). Reduced `.task-card` padding to `10px 14px` for a more compact and balanced presentation across dashboard task lists.
-- **Task ID Copy Button & Desktop Inline Alignment (`js/ui.js`, `js/app.js`, `css/components.css`)**: Replaced raw monospace Task ID text with a discreet copy button (`.copy-task-id-btn`) containing an icon and "Copy ID" label. On desktop viewports (`min-width: 769px`), aligned the `Added by` author attribution and `Task ID` copy button beside each other in a unified single row (`.task-meta-footer`), while retaining clean vertical stacking on mobile devices.
-- **Single Task Content Export Copy Button (`js/task-export.js`, `js/ui.js`, `js/app.js`, `css/components.css`)**: Added a copy button (`.task-card-copy-btn`) at the top-right corner of each task card header. Invokes `TaskExport.formatSingleTask(task)` to copy comprehensive plain-text task details (type, title, course, status with days left, deadline, task ID, academic scope, author info, description, extra details, and attached links) directly to the system clipboard with instant visual checkmark feedback and toast notification.
-- **User Filter Faculty Read-Only Constraints & Notice Popup (`index.html`, `js/app.js`, `css/components.css`)**: In the User Management "Filter Users" modal (`#filter-popup`), when faculty roles (`Faculty` or `DptCoor`) are selected in `#filter-role`, the Semester (`#filter-semester`) and Section (`#filter-section`) selectors become read-only with dimmed opacity (`.readonly-select`). Attempting to click them activates transparent overlay interceptors (`#filter-semester-overlay`, `#filter-section-overlay`) that trigger an informative floating notice popup (`.filter-readonly-popup`) and toast stating: *"Semester and sections are not defined for faculties"*. When faculty roles are active, semester and section filters are automatically bypassed in `filterUsers()`.
-
-**User Management Make/Remove Faculty Deprecation, Approvals Modal Padding & Mobile Sidebars Full-Height Polish**
-- **Deprecated Make/Remove Faculty Button (`js/app.js`)**: Removed the obsolete `.toggle-faculty-btn` action button and its event handler from User Management. Since faculty accounts now directly self-register and verify their identity via the Account Approvals system, manual student-to-faculty toggling is deprecated. Retained the Make/Remove DptCoor role action for verified faculty accounts.
-- **Account Approvals Desktop Modal Border Padding (`css/dashboard.css`, `css/responsive.css`)**: Removed outer border padding on `.approval-modal-content` and `#approval-modal .modal-content` (`padding: 0 !important; overflow: hidden;`), ensuring modal header and verification lists sit flush with card edges on all desktop display sizes.
-- **Approvals Mobile Toggle Top-Left Badge Indicator (`css/dashboard.css`)**: Replaced below-icon flex rendering for `.approval-toggle .approval-badge-count` (`#approval-badge-count-mobile`) with absolute top-left positioning (`top: -5px; left: -5px;`) and adaptive theme border colors, mirroring primary mobile badge indicator conventions.
-- **Mobile Sidebars Full-Height & Bottom Border Removal (`css/dashboard.css`, `css/notice.css`, `css/classroom.css`, `css/components.css`)**: Unified the layout of all mobile drawer sidebars (Events `#events-sidebar`, Notices `#notice-sidebar`, and Approvals `#approval-sidebar`) to match Google Classroom's sidebar behavior. Replaced `100vh` with `top: 0; bottom: 0; height: 100%; height: 100dvh;`, eliminated downward drop-shadows in favor of leftward shadows (`box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1)`), and set `border-bottom: none !important; border-radius: 0 !important;` to ensure edge-to-edge vertical coverage across mobile browser URL bar transitions and zoom scaling.
-
-**Desktop Bottom-Right PWA Install Prompt with Post-Login Deferral & 5-Second Auto-Dismiss**
-- **Desktop Bottom-Right Corner Placement (`css/components.css`, `.install-prompt`)**: Repositioned the web app installation banner on desktop screens (`min-width: 769px`) to the bottom-right corner (`bottom: 24px; right: 24px; left: auto; transform: none; max-width: 380px; width: calc(100% - 48px);`) paired with a smooth entrance animation (`@keyframes slideInRight`). Retained centered bottom positioning (`left: 50%; transform: translateX(-50%);`) on mobile viewports (`max-width: 768px`) for ergonomic thumb reach. Added dedicated solid background styling for Dark mode and Gray mode (`var(--bg-card)`).
-- **Post-Login Deferred Activation (`js/install-prompt.js`, `js/app.js`)**: Updated `InstallPromptManager` so that PWA install events captured during initial load are suppressed and held while the user is on the login view (`#login-view`, `route === 'login'`, or unauthenticated state). The prompt automatically evaluates and surfaces (`checkAndShowPostLogin()`) once the user successfully completes authentication or navigates into the authenticated application views (Dashboard, Set Details, Profile Settings).
-- **5-Second Inactivity Auto-Dismissal (`js/install-prompt.js`)**: Introduced an automated 5-second dismissal timer (`startAutoDismissTimer`, `clearAutoDismissTimer`) that gracefully closes the install prompt if the user does not interact with it. Hovering (`mouseenter`) or touching (`touchstart`) the banner immediately pauses the timer, while mouse departure (`mouseleave`) restarts the 5-second countdown.
-
-**Login Screen Overhaul: Student/Faculty Role Toggles, High-Contrast Password Eye, oU1TS Telegram & FAQ**
-- **Student / Faculty Role Toggles (`.auth-role-toggle`, `index.html`, `js/app.js`)**: Integrated an interactive segmented button on both the Login and Sign-up forms:
-  - **Student Mode**: Enforces 10–16 digit numeric ID validation when an ID is entered, automatically querying Firestore to resolve the user's registered email before authenticating with Firebase Auth. Users can also authenticate with their standard email address.
-  - **Faculty Mode**: Lifts digit restrictions to allow faculty members to log in using their official Name Initial (e.g., `ABC`, letters/alphanumeric) or email address.
-  - **Seamless Registration Flow**: Selecting Faculty on sign-up stores the preference in `sessionStorage` and automatically initializes `#set-details-view` in Faculty mode (showing Faculty Initial and hiding semester/section requirements).
-- **High-Contrast Password Eye Toggle (`.password-toggle-btn`, `css/main.css`)**: Implemented an accessible password visibility toggle button across Login and Signup password fields. Disabled default browser reveal icons (`::-ms-reveal`) and tuned colors for sharp contrast across Light theme (`#4b5563`), Dark theme (`#94a3b8` / `#38bdf8`), and Gray theme (`#a1a1aa` / `#67e8f9`).
-- **Telegram Community Contact Card (`.telegram-contact-card`)**: Embedded the official **oU1TS** community Telegram card (`t.me/oUITS_res`) into the login view footer with brand styling, direct action link, and support info.
-- **Login FAQ Accordion (`.login-faq-container`)**: Added a dedicated, collapsible FAQ accordion to the bottom of the login screen answering key questions regarding platform architecture, student vs. faculty access, platform roles, and account verification.
-- **Natural Document Flow**: Removed restrictive `100vh` constraints on the authentication card, enabling smooth vertical scrolling on all mobile and desktop viewports.
-
-**Firebase User UID Copy Button in User Management**
-- **User Email Row Copy Button (`.copy-user-uid-btn`, `js/app.js`)**: Added a dedicated copy button displaying beside the user's email across all user cards in the User Management list (`#user-list-container`) and within the Edit User modal (`#edit-user-modal`).
-- **Instant Clipboard & Visual Feedback**: Clicking the UID button copies the user's Firebase Auth UID (`user.id`) to the system clipboard with instant `✓ Copied!` text/icon transition and a success toast notification (`UI.showToast`).
-- **UID Text Search Support**: Extended the User Management search filter (`user-search-input`) to match queries against user UIDs in addition to email, student ID, department, semester, and section.
-- **Theme Adaptation (`css/dashboard.css`)**: Styled `.copy-user-uid-btn` with tailored light mode (maroon accent), dark mode (sky-blue accent `#38bdf8`), and gray mode (`#67e8f9`) aesthetics with hover elevation and active press animations.
-
-**Decoupled Database Task Sync from Classroom Refresh**
-- **Streamlined `Classroom.refreshData()` (`js/classroom.js`)**: Removed the redundant background task synchronization logic (`DB.getTasksByClassroomIds`, `DB.updateTask`, `DB.createTask`, and `App.loadDashboardData()`) from the Classroom Refresh button action.
-- **Clear Separation of Concerns**:
-  - **Refresh (`refreshData`)**: Dedicated strictly to invalidating caches, fetching fresh courses, coursework, announcements, and materials from Google Classroom, updating local UI/views, and presenting the `#classroom-sync-modal` diff briefing highlighting what changed in Google Classroom since the previous load.
-  - **Sync (`syncAssignmentsToTasks`)**: Retained as the single authoritative, explicit mechanism for CR and Admin users (`#sync-classroom-tasks-btn`, `#sync-classroom-tasks-btn-course`) to sync and publish Classroom assignments into the platform's shared task database.
-
-# 02.09.26
-
-**Classroom Sync Briefing Modal & GitHub Version Control Diff View**
-- **Interactive Sync Summary Modal (`#classroom-sync-modal`)**: Replaced the legacy JavaScript `alert()` dialogs during Classroom sync and refresh with a dedicated, dark-themed briefing modal. The modal summarizes total processed items with clean status pills (`+ Added`, `~ Updated`, `= Up to date`), handles empty/up-to-date states cleanly, and provides direct links (`.sync-view-post-btn`) to view original Google Classroom posts in a new tab.
-- **Refresh Trigger Integration (`refreshData`)**: Enhanced the Classroom refresh button (`.classroom-back-btn` with `<i class="fas fa-redo-alt"></i>` in both all-courses and course details views) to snapshot existing cached content, fetch fresh API data, compute property and line-by-line diffs across assignments and announcements, and present the `#classroom-sync-modal` briefing upon completion.
-- **GitHub-Style Version Control Diff Engine**: Built an in-engine Longest Common Subsequence (LCS) line diff algorithm (`computeLineDiff`) that generates exact line-by-line diffs with line numbers, green addition indicators (`+`, `.git-diff-row-add`), red deletion indicators (`-`, `.git-diff-row-del`), and line change counters (`+X lines, -Y lines`).
-- **Collapsible Manual Dropdown Diffs (`.sync-diff-dropdown`)**: Added a manual "View Changes" / "Hide Changes" toggle button (`.sync-diff-toggle-btn`) with smooth chevron rotation for each synced item card, revealing:
-  - **Property Diff**: Highlights changed titles (`- Old Title` -> `+ New Title`) and changed deadlines (`- Old Deadline` -> `+ New Deadline`).
-  - **Files & Attachments Diff**: Lists attached Drive files, YouTube links, web URLs, and Google Forms with addition badges (`+ File.pdf`).
-  - **Line-by-Line Instructions Diff**: Monospace code table with split line numbers and diff styling.
-- **Course-Level Sync & Refresh Support**: Embedded both the Admin/CR Sync action button (`#sync-classroom-tasks-btn-course`) and the Refresh button into the course details header (`renderCourseDetails`) in addition to the all-courses unified view.
-
-**User Role Display, DptCoor Role, Faculty Customizations, Notice Permissions & Admin Role Preview Mode**
-- **Faculty Self-Registration & Unapproved State**: Added a "Faculty Account" toggle (`#set-is-faculty-checkbox`) in the Initial Setup view (`set-details-view`). When enabled, adapts the Student ID field into `"Faculty Initial"` (with placeholder `"Enter your faculty initial (e.g. ABC)"`), while cleanly hiding and bypassing semester and section requirements. Upon submission, the account is registered with `isFaculty: true, role: 'Faculty', isApproved: false`. In Profile Settings, unapproved faculty accounts display an amber `(unapproved)` tag (`#profile-role-approval-tag`) directly beside the role status badge.
-- **Account Approvals Management (Modal, Sidebar & Theme Support)**: Implemented a dedicated Account Approvals system (`js/approvals.js`, `#approval-modal`, `#approval-sidebar`) accessible via a sleek desktop floating icon-only shield button (`#approval-button-desktop` with `48x48px` dimensions) elevated to `bottom: 138px` cleanly above the "Notes" button, and via a mobile bookmark toggle tab (`#approval-toggle` positioned at `bottom: 355px` to cleanly clear existing sidebar toggles).
-  - **Homescreen-Only Scoping**: Enforced strict route scoping across `js/routing.js`, `js/ui.js`, and `js/approvals.js` ensuring the desktop button and mobile toggle exclusively display on the main dashboard (`#dashboard`) and remain completely hidden across all other routes (Profile, User Management, Classroom, Timeline).
-  - **Full Theme Adaptation**: Added solid, non-transparent container backgrounds and contrast-tuned text/borders for Light theme (`#ffffff` / `#f8fafc`), Dark theme (`#121212` / `#09090b` / `#18181b`), and Gray theme (`#1a1a1a` / `#141414` / `#222222`).
-  - **Mobile Overlay State Fix**: Configured `#approval-overlay` with default `visibility: hidden; opacity: 0; pointer-events: none;` preventing unwanted dark backdrop blockage on mobile viewports until actively toggled open.
-  - **Admin & DptCoor**: Views pending faculty registration requests (scoped to department for DptCoor, global for Admin) with real-time request counts and one-click **Approve** (activates full faculty access) and **Reject** actions.
-- **Department Notices for Faculty & DptCoor**: Updated Notice modals (`#notice-modal`, `#add-cr-notice-modal`, `#edit-cr-notice-modal`, `#old-cr-notices-modal`) and mobile sidebar (`#notice-sidebar`) in `js/notice.js` and `js/cr-notice.js` to dynamically display `"Department Notices"` for Faculty and DptCoor users. Replaced Firestore composite query (`.where('department').orderBy('timestamp')`) with single-field filtering and client-side sorting in `CRNoticeViewer`, resolving the `"System is optimizing database"` (missing Firestore index) error and enabling immediate, out-of-the-box loading without manual index creation. General Faculty members can view Department Notices, while posting/editing is strictly restricted to **DptCoor** and **Admin** roles.
-- **Home Page FAQ Role Documentation**: Overhauled the FAQ section (`#faq-section`) in `index.html` with an in-depth breakdown of all 6 platform role contexts (`Admin`, `DptCoor`, `Faculty`, `CR`, `Regular Student / User`, `Blocked`) clarifying task scoping, notice publishing permissions, and profile constraints.
-- **Faculty Profile Sem/Section Hiding**: Hidden semester and section dropdown selectors (`#profile-semester-group`, `#profile-section-group`) for Faculty and DptCoor users in Profile Settings, as faculties operate department-wide without semester/section restrictions.
-- **Faculty Task Modals & "Meetings" Type**: Customized the Course field in Add Task and Edit Task modals for Faculty users to show label `"Course / Designation"` and placeholder `"Task for a Faculty / Course"`. Added a new `"Meetings"` task type option (`.task-type-badge.meetings`) in Add/Edit Task modals and Pending Tasks filter.
-- **Profile Role Status**: Displayed active user role badge (`#profile-role-badge`) directly below Student ID in Profile Settings with real-time class styling across Admin, Faculty, DptCoor, CR, Student, and Blocked roles.
-- **Admin Role Preview Simulation & 2-Row Vertical Control**: Introduced an interactive "Preview as" dropdown (`#admin-preview-select`) in Profile Settings exclusively for Admins stacked cleanly into 2 vertical rows (Label on Row 1, Dropdown and Exit button on Row 2) to simulate other user roles (Faculty, DptCoor, CR, Student, Blocked) in temporary `sessionStorage`. In preview mode, the role status displays an amber `(preview)` tag (`#profile-role-preview-tag`).
-- **Repositioned Floating Preview Banner & 3-Second Auto-Minimize**: Positioned the floating banner (`#admin-preview-banner`) at the bottom-right corner for desktop and centered at the bottom on mobile devices (`max-width: 768px`). Displays the expanded view for 3 seconds before automatically minimizing into an unobtrusive floating eye icon (`#admin-preview-toggle-btn`) matching the banner's height (34px). Clicking the eye icon expands the full banner back into view for 3 seconds to access the Exit Preview action (`App.exitPreview()`).
-- **Session Isolation**: Role simulation strictly persists within the active browser tab via `sessionStorage` and automatically resets to the default Admin view upon tab closure or next session start, preventing any permanent alterations to user accounts or database permissions.
-
-**Firebase Task ID in Show More and Direct Old Tasks Editing**
-- **Pending Tasks Firebase ID**: Integrated Firestore document ID into expanded pending task cards (`.task-id-info`, `.task-id-code`) inside `js/ui.js` and `css/components.css`. Displays automatically alongside creator details when "Show more" is clicked, with `user-select: all` for instant copying.
-- **Editable Old Tasks**: Enabled role-based editing directly within the Old Tasks modal (`.old-task-actions`, `.old-task-edit-btn`) for Admins and task owners (Students, CRs, and Faculty).
-- **Task Migration on Deadline Extension**: Updated `js/app.js` (`openEditTaskModal`, `handleEditTask`) and `js/db.js` (`getOldTasks`) so that editing an old task's deadline to a future date or removing the deadline automatically restores it to the "Pending Tasks" list in real-time and refreshes the Old Tasks view.
-
----
-
 ## Table of Contents
 
 1. [Project Overview](#project-overview)
@@ -253,11 +12,18 @@
 6. [Styling System](#styling-system)
 7. [Firebase/Firestore Data Model](#firebasefirestore-data-model)
 8. [User Flows](#user-flows)
-9. [Views & Components](#views--components)
+9. [Views & Components](#views-components)
 10. [API Reference](#api-reference)
-11. [Activity Timeline & Migration](#activity-timeline--migration)
-12. [Design References & Inspirations](#design-references--inspirations)
-13. [Additional Resources](#additional-resources)
+11. [Version History](#version-history)
+12. [Related Documentation](#related-documentation)
+13. [Recent Updates (February 2026)](#recent-updates-february-2026)
+14. [Troubleshooting](#troubleshooting)
+15. [Best Practices](#best-practices)
+16. [Activity Timeline & Migration](#activity-timeline-migration)
+17. [Design References & Inspirations](#design-references-inspirations)
+18. [Short Guides & Tips](#short-guides-tips)
+19. [Additional Resources](#additional-resources)
+20. [Historical Release Notes (v2.49.0 and earlier)](#historical-release-notes)
 
 ---
 
@@ -397,7 +163,7 @@ This section provides a comprehensive breakdown of every library, framework, ser
 
 ## Architecture
 
-### Application Flow
+### Modular Layer Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -407,63 +173,101 @@ This section provides a comprehensive breakdown of every library, framework, ser
                           │
                           ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                     JavaScript Modules                      │
-│  ┌─────────────┐  ┌──────────┐  ┌────────┐  ┌────────────┐  │
-│  │ firebase-   │  │  auth.js │  │ db.js  │  │ routing.js │  │
-│  │ config.js   │  │          │  │        │  │            │  │
-│  └─────────────┘  └──────────┘  └────────┘  └────────────┘  │
-│  ┌─────────────┐  ┌──────────┐  ┌────────┐  ┌────────────┐  │
-│  │ profile.js  │  │  ui.js   │  │utils.js│  │  app.js    │  │
-│  │             │  │          │  │        │  │  (Main)    │  │
-│  └─────────────┘  └──────────┘  └────────┘  └────────────┘  │
-│  ┌─────────────┐                                            │
-│  │ notice.js   │                                            │
-│  │             │                                            │
-│  └─────────────┘                                            │
-└─────────────────────────────────────────────────────────────┘
+│                 Client-Side Modular Architecture             │
+│                                                             │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │ 1. Core Layer (js/core/)                              │  │
+│  │    firebase-config.js │ auth.js │ db.js │ routing.js  │  │
+│  │    ui.js │ utils.js │ permission-mgr │ listener-mgr   │  │
+│  │    app.js (Lifecycle Orchestrator)                    │  │
+│  └─────────────────────────┬─────────────────────────────┘  │
+│                            │                                │
+│       ┌────────────────────┼────────────────────┐           │
+│       ▼                    ▼                    ▼           │
+│  ┌──────────────┐   ┌──────────────┐   ┌──────────────┐     │
+│  │ 2. Features  │   │ 3. PWA Layer │   │ 4. Push Notif│     │
+│  │(js/features/)│   │  (js/pwa/)   │   │(js/notificat)│     │
+│  │ profile.js   │   │ detector     │   │ types.js     │     │
+│  │ classroom.js │   │ manifest-gen │   │ formatter.js │     │
+│  │ facultyClass │   │ cache-mgr    │   │ manager.js   │     │
+│  │ notice.js    │   │ install-promp│   └──────────────┘     │
+│  │ cr-notice.js │   │ offline-ind  │          │             │
+│  │ notes.js     │   │ offline-mgr  │          ▼             │
+│  │ calendar-view│   │ sw-update-mgr│   ┌──────────────┐     │
+│  │ approvals.js │   │ pwa-init     │   │ 5. Admin     │     │
+│  │ timeline-*   │   └──────────────┘   │  (js/admin/) │     │
+│  │ task-export  │                      │ admin-api    │     │
+│  │ changelog-mod│                      │ activity-log │     │
+│  │ raids-feed   │                      │ migrate-logs │     │
+│  └──────────────┘                      │ bulk-semester│     │
+│                                        └──────────────┘     │
+└─────────────────────────┬───────────────────────────────────┘
                           │
                           ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                    Firebase Backend                         │
 │  ┌─────────────────────┐  ┌────────────────────────────────┐│
 │  │   Authentication    │  │         Firestore              ││
-│  │  (Email/Password)   │  │  ┌──────┐ ┌─────┐ ┌──────────┐ ││
-│  └─────────────────────┘  │  │users │ │tasks│ │  events  │ ││
-│                           │  └──────┘ └─────┘ └──────────┘ ││
-│                           │  ┌────────────┐ ┌────────────┐ ││
-│                           │  │resourceLink│ │  metadata  │ ││
-│                           │  └────────────┘ └────────────┘ ││
+│  │(Email/Password/ID)  │  │ ┌──────┐ ┌─────┐ ┌───────────┐ ││
+│  │                     │  │ │users │ │tasks│ │  events   │ ││
+│  └─────────────────────┘  │ └──────┘ └─────┘ └───────────┘ ││
+│  ┌─────────────────────┐  │ ┌────────────┐ ┌───────────┐ ││
+│  │   Cloud Storage     │  │ │resourceLink│ │ cr_notices│ ││
+│  │(User Note Uploads)  │  │ └────────────┘ └───────────┘ ││
+│  └─────────────────────┘  │ ┌────────────┐ ┌───────────┐ ││
+│                           │ │activity_log│ │ metadata  │ ││
+│                           │ └────────────┘ └───────────┘ ││
 │                           └────────────────────────────────┘│
-└─────────────────────────────────────────────────────────────┘
+└─────────────────────────┬───────────────────────────────────┘
                           │
                           ▼
 ┌─────────────────────────────────────────────────────────────┐
-│              Vercel Serverless Backend                      │
-│  ┌─────────────────────┐  ┌────────────────────────────────┐│
-│  │   api/notices.js    │  │       api/pdf.js               ││
-│  │  (Scrape notice     │  │  (Proxy PDF downloads          ││
-│  │   list from UCAM)   │  │   from UCAM portal)            ││
-│  └─────────────────────┘  └────────────────────────────────┘│
+│          External APIs & Serverless Edge Services           │
+│  ┌────────────────────────┐  ┌───────────────────────────┐  │
+│  │ Google Classroom API   │  │ UITS Event Raiders        │  │
+│  │ (GIS OAuth 2.0 / REST) │  │ (Live RSS & JSON Feed)    │  │
+│  ├────────────────────────┤  ├───────────────────────────┤  │
+│  │ Vercel Serverless Edge │  │ File Upload Fallbacks     │  │
+│  │ (/api/notices + Blob)  │  │ (Catbox.moe / Tmpfiles)   │  │
+│  └────────────────────────┘  └───────────────────────────┘  │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 ### Module Dependencies
 
 ```
-app.js (Main Application)
-├── Auth (auth.js)
-├── DB (db.js)
-├── UI (ui.js)
-├── Router (routing.js)
-├── Profile (profile.js)
-├── Utils (utils.js)
-└── NoticeViewer (notice.js)
-
-firebase-config.js (Loaded First)
-└── Initializes: auth, db (Firestore instances)
-
-notice.js (Independent Module)
-└── Fetches from: Vercel backend API (b1t-acad-backend.vercel.app)
+js/core/app.js (Main Coordinator)
+├── Core Layer (js/core/)
+│   ├── firebase-config.js (Loaded first, initializes auth, db, storage)
+│   ├── auth.js (Authentication, session timeout, role checking)
+│   ├── db.js (Firestore CRUD operations, task reset, profile data)
+│   ├── ui.js (Global UI views, modals, notifications toggle)
+│   ├── routing.js (Hash-based client SPA routing)
+│   ├── utils.js (Sanitization, markdown escapeAndLinkify, dates, storage)
+│   ├── permission-manager.js (Push notification permissions)
+│   └── firestore-listener-manager.js (Real-time snapshot listeners)
+├── Feature Modules (js/features/)
+│   ├── profile.js (Profile management & cooldown constraints)
+│   ├── notice.js (UCAM notice board via Vercel Edge Blob)
+│   ├── cr-notice.js (CR notices for subsection groups)
+│   ├── classroom.js (Google Classroom OAuth, To-Do/Notices/Materials)
+│   ├── facultyClassroom.js (Faculty & CR Classroom creation FAB)
+│   ├── notes.js (Personal notes & multi-provider file upload)
+│   ├── approvals.js (Faculty registration verification & approvals)
+│   ├── calendar-view.js (Interactive monthly/weekly task calendar)
+│   ├── timeline-data.js & timeline-ui.js (Activity charts & heatmap)
+│   ├── task-export.js (TXT, Markdown, vector PDF schedule export)
+│   ├── changelog-modal.js (In-app Changelog modal with version ranges)
+│   └── raids-feed.js (Tech contests & hackathons syndication)
+├── PWA Modules (js/pwa/)
+│   └── pwa-init.js (Orchestrates detector, manifest, cache, install, offline, update)
+├── Notifications (js/notifications/)
+│   └── notification-manager.js (Notification formatting & dispatch via SW)
+└── Admin Services (js/admin/)
+    ├── admin-api.js (Admin API client for reset & deletion)
+    ├── activity-logger.js (Productivity tracking)
+    ├── migrate-activity-logs.js (Historical tasks/events migration script)
+    └── update-user-semesters.js (Bulk semester promotion runner)
 ```
 
 ---
@@ -474,95 +278,128 @@ notice.js (Independent Module)
 b1t-Sched/
 │
 ├── index.html                    # Main SPA entry point
-├── manifest.json                 # PWA manifest
-├── sw.js                         # Service worker
-├── Social-Preview.webp           # Logo/favicon
+├── manifest.json                 # PWA manifest configuration
+├── sw.js                         # Service worker (caching & push notifications)
+├── Social-Preview.webp           # Logo and social preview asset
 ├── Social-Preview.ico            # Favicon (ICO format)
+├── b1t-sched.webp               # App branding banner
+├── changes.json                  # In-app changelog data with minor-version grouping
+├── cors.json                     # Firebase Storage CORS configuration
+├── firebase.json                 # Firebase Hosting & Firestore deployment rules
+├── firestore.rules               # Firestore security rules (role-based access)
+├── firestore.indexes.json        # Composite query indexes
+├── inject-env.js                 # Build-time environment variable injection script
+├── package.json                  # Project metadata & npm scripts
+├── README.md                     # Project overview and developer roadmap
+├── AGENTS.md                     # Agent repository instructions & changelog rules
+├── CLAUDE.md                     # Assistant instructions & repository guidelines
 ├── LICENSE                       # Project license
-├── README.md                     # Quick start guide
 │
-├── css/                          # Stylesheets
-│   ├── colors.css               # CSS variables (theme colors)
-│   ├── main.css                 # Core styles, layouts
-│   ├── components.css           # Reusable component styles
-│   ├── dashboard.css            # Dashboard layout, modals, admin controls
-│   ├── navbar.css               # Navigation bar styles
-│   ├── user-details-card.css    # User profile card styles
-│   ├── notice.css               # Notice viewer modal, sidebar, PDF panel styles; Quick Links PDF viewer modal
-│   ├── classroom.css            # Google Classroom integration styles (sidebar, modal, course badges)
-│   ├── responsive.css           # Mobile/tablet breakpoints
-│   ├── buttons.css              # Button variations
+├── css/                          # Stylesheets (18 modular files)
+│   ├── colors.css               # CSS variables (Theme colors: Maroon, Dark, Gray)
+│   ├── main.css                 # Core styles, resets, typography, container layouts
+│   ├── components.css           # Reusable component styles (buttons, pills, cards)
+│   ├── dashboard.css            # Dashboard grid, panels, sidebars, admin controls
+│   ├── navbar.css               # Header navigation bar, brand title, user menu
+│   ├── user-details-card.css    # User profile mini-card styles
+│   ├── notice.css               # Notice viewer modal, sidebar, PDF preview panel
+│   ├── classroom.css            # Google Classroom integration (sidebar, modal, badges)
+│   ├── note.css                 # Note-taking modal, markdown editor, live preview
+│   ├── calendar.css             # Interactive monthly & weekly calendar views
+│   ├── changelog.css            # In-app Changelog modal & version range styling
+│   ├── timeline.css             # Activity heatmap, Chart.js weekly bars, streak cards
+│   ├── responsive.css           # Responsive mobile/tablet breakpoints & zoom fixes
+│   ├── buttons.css              # Button variations and icon alignments
 │   ├── drop-down.css            # Dropdown menu styles
-│   ├── menu-bar.css             # Menu bar styles
-│   ├── selector.css             # Dropdown/select styles
-│   ├── timeline.css             # Activity timeline styles (heatmap, charts)
-│   └── styles.css               # Additional styles
+│   ├── menu-bar.css             # Floating action menu bar styles
+│   ├── selector.css             # Dropdown/select input styling
+│   └── styles.css               # Global supplementary styles
 │
-├── js/                           # JavaScript modules
-│   ├── firebase-config.js       # Firebase initialization
-│   ├── auth.js                  # Authentication module
-│   ├── db.js                    # Database operations
-│   ├── ui.js                    # UI rendering functions
-│   ├── routing.js               # SPA hash-based routing
-│   ├── profile.js               # Profile management
-│   ├── utils.js                 # Utility functions
-│   ├── notice.js                # Notice viewer module (UCAM notices + PDF)
-│   ├── notes.js                 # Note-taking module with file upload
-│   ├── classroom.js             # Google Classroom API integration
-│   ├── raids-feed.js            # UITS Event Raiders RSS & JSON feed service
-│   ├── admin-api.js             # Admin API client (password reset, user deletion)
-│   ├── pwa-detector.js          # PWA detection
-│   ├── manifest-generator.js    # Manifest generation
-│   ├── cache-manager.js         # Data caching
-│   ├── install-prompt.js        # Install prompt management
-│   ├── offline-indicator.js     # Offline UI indicator
-│   ├── offline-manager.js       # Offline operation queue
-│   ├── sw-update-manager.js     # Service worker updates
-│   ├── pwa-init.js              # PWA initialization
-│   ├── notifications-types.js   # Notification type definitions
-│   ├── permission-manager.js    # Notification permission management
-│   ├── notification-content-formatter.js # Notification content formatting
-│   ├── notification-manager.js  # Core notification logic
-│   ├── firestore-listener-manager.js # Firestore real-time listeners
-│   ├── firestore-listener-manager.js # Firestore real-time listeners
-│   ├── activity-logger.js       # User activity tracking & backpopulation
-│   ├── timeline-data.js         # Timeline data fetching & processing
-│   ├── timeline-ui.js           # Timeline visualization rendering
-│   ├── calendar-view.js         # Interactive calendar modal management
-│   └── app.js                   # Main application logic
+├── js/                           # JavaScript modules (Modular Architecture)
+│   ├── core/                    # Fundamental app engine modules
+│   │   ├── firebase-config.js   # Firebase app, Auth, Firestore & Storage init
+│   │   ├── auth.js              # Authentication (ID/email login, roles, timeouts)
+│   │   ├── db.js                # Firestore CRUD operations & task management
+│   │   ├── ui.js                # Core UI rendering, modal triggers, toast alerts
+│   │   ├── routing.js           # Hash-based SPA client router
+│   │   ├── utils.js             # Sanitization, markdown rendering, date utilities
+│   │   ├── permission-manager.js # Push notification permission workflows
+│   │   ├── firestore-listener-manager.js # Real-time Firestore snapshot listeners
+│   │   └── app.js               # Main application lifecycle coordinator
+│   │
+│   ├── features/                # Domain-specific interactive features
+│   │   ├── profile.js           # Profile management & 30-day cooldown rules
+│   │   ├── cr-notice.js         # CR subsection notices creation & feed
+│   │   ├── notice.js            # UCAM notice board via Vercel Edge Blob
+│   │   ├── classroom.js         # Google Classroom API integration & session cache
+│   │   ├── facultyClassroom.js  # Faculty & CR Classroom creation FAB
+│   │   ├── notes.js             # Note-taking editor & multi-provider file uploads
+│   │   ├── approvals.js         # Faculty registration account approvals review
+│   │   ├── calendar-view.js     # Task & event interactive calendar modal
+│   │   ├── raids-feed.js        # UITS Event Raiders live RSS/JSON syndication
+│   │   ├── task-export.js       # TXT, Markdown, vector PDF schedule export
+│   │   ├── changelog-modal.js   # In-app Changelog modal with version ranges
+│   │   ├── timeline-data.js     # Activity timeline logs processing
+│   │   └── timeline-ui.js       # Heatmap & Chart.js productivity rendering
+│   │
+│   ├── pwa/                     # Progressive Web App & offline subsystem
+│   │   ├── pwa-detector.js      # PWA environment detection
+│   │   ├── manifest-generator.js # Dynamic Web App Manifest generation
+│   │   ├── cache-manager.js     # Service worker cache strategy manager
+│   │   ├── install-prompt.js    # Smart install banner manager (desktop/mobile)
+│   │   ├── offline-indicator.js # Network status banner with height offset
+│   │   ├── offline-manager.js   # Offline mutation queue & auto-replay
+│   │   ├── sw-update-manager.js # Service worker update detection & refresh prompt
+│   │   └── pwa-init.js          # Centralized PWA bootstrapping
+│   │
+│   ├── notifications/           # Push notification system
+│   │   ├── notifications-types.js # Notification payload schemas
+│   │   ├── notification-content-formatter.js # Truncation & badge formatting
+│   │   └── notification-manager.js # Notification dispatch & Service Worker push
+│   │
+│   └── admin/                   # Privileged administration & maintenance
+│       ├── admin-api.js         # Admin API client (password reset, deletion)
+│       ├── activity-logger.js   # User activity event logger
+│       ├── migrate-activity-logs.js # Historical tasks/events migration script
+│       └── update-user-semesters.js # Bulk semester auto-promotion utility
 │
-├── doc/                          # Documentation
-│   ├── DOCUMENTATION.md         # Complete project documentation (this file)
-│   ├── FIREBASE_SETUP.md        # Firebase setup guide
-│   ├── QUICKSTART.md            # Quick start guide
-│   ├── REDESIGN_PLAN.md         # Design documentation
-│   ├── ADMIN_FEATURES.md        # Admin functionality docs
-│   └── FIRESTORE_TASK_CHANGES.md # Task schema changes
-│
-├── functions/                    # Firebase Cloud Functions
-│   ├── index.js                 # Functions entry point
-│   ├── admin/                   # Admin functions
-│   │   ├── sendPasswordReset.js # Password reset function
-│   │   └── deleteUser.js        # User deletion function
-│   ├── package.json             # Functions dependencies
+├── functions/                    # Firebase Cloud Functions backend
+│   ├── index.js                 # Cloud Functions entry point
+│   ├── admin/                   # Admin privileged endpoints
+│   │   ├── sendPasswordReset.js # Admin password reset function
+│   │   └── deleteUser.js        # Admin user deletion function
+│   ├── package.json             # Cloud Functions dependencies
 │   └── DEPLOYMENT_GUIDE.md      # Functions deployment guide
 │
-├── images/                       # Image assets
-│   ├── logo/                    # Logo variations
-│   └── Social-logo/             # Social media assets
+├── doc/                          # Project documentation
+│   ├── DOCUMENTATION.md         # Comprehensive project documentation
+│   ├── FIREBASE_SETUP.md        # Firebase configuration & initialization guide
+│   ├── QUICKSTART.md            # Developer setup and onboarding guide
+│   ├── REDESIGN_PLAN.md         # SPA redesign planning document
+│   ├── ADMIN_FEATURES.md        # Administrator tools and privilege guide
+│   ├── FIRESTORE_TASK_CHANGES.md # Firestore completion schema specification
+│   ├── FILE_UPLOAD_OPTIONS_ANALYSIS.md # Upload services evaluation
+│   ├── FILE_UPLOAD_QUICK_REFERENCE.md  # Multi-provider developer cheat sheet
+│   ├── plan/                    # Feature implementation designs & plans
+│   ├── prompts/                 # Prompt session conversation archives
+│   └── summaries/               # Subsystem implementation summaries
 │
-└── Archive/                      # Legacy/unused files (see Archive/README.md)
-    ├── Abstraction/             # Old prototype files
-    ├── D1/                      # Legacy department schedules
-    ├── Note/                    # Code examples
-    └── *.html, *.md             # Old static pages
+├── images/                       # Graphical assets
+│   ├── logo/                    # Brand logo variations
+│   └── Social-logo/             # Social share images
+│
+└── Archive/                      # Historical archive (pre-redesign static files)
+    ├── Abstraction/             # Early prototype files
+    ├── D1/                      # Legacy static department schedules
+    ├── Note/                    # Historical reference notes
+    └── README.md                # Archive directory documentation
 ```
 
 ---
 
 ## JavaScript Modules
 
-### 1. firebase-config.js
+### 1. Firebase Configuration (js/core/firebase-config.js)
 
 **Purpose:** Initialize Firebase services
 
@@ -588,7 +425,7 @@ const db = firebase.firestore(); // Firestore instance
 
 ---
 
-### 2. Auth (auth.js)
+### 2. Auth (js/core/auth.js)
 
 **Purpose:** Handle user authentication and session management
 
@@ -637,7 +474,7 @@ The module automatically listens for user activity events (`mousedown`, `keydown
 
 ---
 
-### 3. DB (db.js)
+### 3. DB (js/core/db.js)
 
 **Purpose:** Firestore database operations
 
@@ -759,7 +596,7 @@ The module automatically listens for user activity events (`mousedown`, `keydown
 
 ---
 
-### 4. Router (routing.js)
+### 4. Router (js/core/routing.js)
 
 **Purpose:** Hash-based SPA routing
 
@@ -786,7 +623,7 @@ The module automatically listens for user activity events (`mousedown`, `keydown
 
 ---
 
-### 5. UI (ui.js)
+### 5. UI (js/core/ui.js)
 
 **Purpose:** UI rendering and manipulation
 
@@ -813,7 +650,7 @@ The module automatically listens for user activity events (`mousedown`, `keydown
 
 ---
 
-### 6. Profile (profile.js)
+### 6. Profile (js/features/profile.js)
 
 **Purpose:** Profile settings management
 
@@ -837,7 +674,7 @@ The module automatically listens for user activity events (`mousedown`, `keydown
 
 ---
 
-### 7. NoticeViewer (notice.js)
+### 7. NoticeViewer (js/features/notice.js)
 
 **Purpose:** UCAM university notice viewer with PDF preview
 
@@ -884,7 +721,7 @@ The Vercel backend (`/api/notices`) scans the UCAM portal for new notices. If th
 
 ---
 
-### 8. NoteManager (notes.js)
+### 8. NoteManager (js/features/notes.js)
 
 **Purpose:** Personal note-taking with markdown support, auto-save, merged UI, and comprehensive file upload fallbacks.
 
@@ -937,7 +774,7 @@ NoteManager.UPLOAD_TIMEOUT = 20000; // 20-second timeout per upload provider
 
 ---
 
-### 9. Utils (utils.js)
+### 9. Utils (js/core/utils.js)
 
 **Purpose:** Utility functions
 
@@ -967,7 +804,7 @@ NoteManager.UPLOAD_TIMEOUT = 20000; // 20-second timeout per upload provider
 
 ---
 
-### 10. App (app.js)
+### 10. App (js/core/app.js)
 
 **Purpose:** Main application controller
 
@@ -1046,7 +883,7 @@ During signup, Firebase triggers `onAuthStateChanged` immediately when the user 
 
 ---
 
-### 11. CalendarView (calendar-view.js)
+### 11. CalendarView (js/features/calendar-view.js)
 
 **Purpose:** Manages the interactive calendar modal, displaying tasks and events in a monthly or weekly view (mobile).
 
@@ -1066,14 +903,23 @@ During signup, Firebase triggers `onAuthStateChanged` immediately when the user 
 - **Empty State Handling:** Displays "No tasks scheduled for this month" when appropriate.
 - **Loading States:** Visual feedback during data fetching/rendering.
 
-| Method   | Description                                               |
-| -------- | --------------------------------------------------------- |
-| `init()` | Initialize the calendar module (attach global listeners). |
-| `open()` | Open the calendar modal and render the current view.      |
+| Method                      | Description                                                                                                                                                  |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `init()`                    | Initialize the calendar module (attach global listeners).                                                                                                   |
+| `open()`                    | Open the calendar modal and render the current view.                                                                                                         |
+| `close()`                   | Close the calendar modal.                                                                                                                                    |
+| `renderCalendar()`          | Main render function; delegates to `generateCalendarGrid` (desktop), `renderMonthlyViewMobile` or `renderWeeklyView` (mobile, based on `currentMobileView`). |
+| `renderMonthlyViewMobile()` | Renders the compact monthly grid for mobile with toggle, day headers, date cells, dot indicators, and task list panel.                                     |
+| `renderWeeklyView()`        | Renders the weekly scrolling view for mobile with toggle buttons.                                                                                            |
+| `updateHeader()`            | Updates the Month/Year dropdowns and navigation state.                                                                                                       |
+| `previousMonth()`           | Navigate to the previous month.                                                                                                                              |
+| `nextMonth()`               | Navigate to the next month.                                                                                                                                  |
+| `populateTasksInGrid()`     | Places task elements into the correct day cells.                                                                                                             |
+| `isTaskOverdue(task)`       | Checks if a task is overdue.                                                                                                                                 |
 
 ---
 
-### 12. Classroom (classroom.js)
+### 12. Classroom (js/features/classroom.js) & Faculty FAB (js/features/facultyClassroom.js)
 
 **Purpose:** Google Classroom API integration for fetching courses, assignments, announcements, and posted course materials.
 
@@ -1093,6 +939,7 @@ During signup, Firebase triggers `onAuthStateChanged` immediately when the user 
   4. **Completed Tasks**: Submitted, graded, or returned tasks grouped under a `"Completed"` divider banner (`<i class="fa-solid fa-circle-check"></i>`), sub-divided so completed tasks whose deadline is still open appear first, followed by a `"Past deadline"` sub-banner and completed tasks submitted late/past deadline.
 - **Desktop Window Border Padding Elimination**: Excludes `#classroom-modal .modal-content` and `.classroom-modal-content` from default modal padding on 769px–1366px displays and height-constrained screens, rendering flush without border clipping or nested whitespace.
 - **Materials Change Detection**: Live updates to course materials (new Drive files, YouTube links, Forms, or descriptions) are dynamically recognized via `updateTime` comparison and rendered as interactive attachment pills.
+- **Faculty & CR Creation FAB (`js/features/facultyClassroom.js`)**: Displays a floating action button (`.classroom-create-fab`) in mobile sidebars and desktop modals for authenticated Faculty and CR users, opening a template redirect modal (`#classroom-create-modal`) with an automated countdown redirect to Google Classroom course creation.
 
 **Properties:**
 
@@ -1104,45 +951,36 @@ During signup, Firebase triggers `onAuthStateChanged` immediately when the user 
 - `JSON_CACHE_KEY`: Storage key for the JSON snapshot (`'classroom_cached_json'`).
 - `_authResolve`: Internal resolver to signal authentication completion to the main app.
 
-| Method                           | Parameters | Returns | Description                                                                                        |
-| -------------------------------- | ---------- | ------- | -------------------------------------------------------------------------------------------------- |
-| `init()`                         | -          | Promise | Initialize GIS client and check for persisted session.                                             |
-| `checkPersistedSession()`        | -          | Promise | Check storage for valid token or attempt silent refresh without clearing connection state.          |
-| `login()`                        | -          | void    | Trigger manual OAuth login popup.                                                                  |
-| `handleAuthSuccess(response)`    | object     | void    | Handle successful token acquisition and start data fetching.                                       |
-| `fetchCoursesAndLoadAll()`       | -          | void    | Batch load active/archived courses and load unified items based on `currentView`.                  |
-| `loadAllMaterials()`             | -          | Promise | Fetch posted materials across all active courses within the date cutoff and render.                |
-| `fetchCourseMaterials(courseId)` | string     | Promise | Fetch posted materials for a specific course ID.                                                   |
-| `saveJsonCache(dataType, data)`  | string, arr| void    | Serialize structured Classroom state into local/session JSON cache.                                |
-| `getJsonCache()`                 | -          | obj|null | Retrieve and parse the cached JSON snapshot from storage.                                          |
-| `clearJsonCache()`               | -          | void    | Clear local and session JSON template cache entries.                                               |
-| `updateBottomCachedFooter(show, timeLabel)` | bool, str | void | Toggle and render the persistent bottom cached content banner and Reconnect button.               |
-| `openUnifiedView()`              | -          | void    | Reset `currentCourseId` to `null` and return to the default unified view feed.                     |
-| `toggleArchivedCourses()`        | -          | void    | Toggle visibility of archived classroom cards in the "My Classes" view.                            |
-| `toggleItemExpand(event, btn)`   | Event, Elem| void    | Toggle inline expansion of truncated description/text details for a Classroom list item.           |
-| `copyItemText(event, btn)`       | Event, Elem| Promise | Copy item title/caption text to system clipboard with temporary checkmark visual feedback.           |
-| `handleItemClick(event, link)`   | Event, Link| void    | Delegate row clicks to open the item URL while ignoring clicks on nested buttons and links.        |
-| `renderItemAttachments(materials)`| Array     | string  | Render Google Drive files, YouTube videos, web links, and forms as clickable attachment pills.     |
-| `getAssignmentStatusInfo(item)`  | object     | object  | Compute detailed status badge info (`label`, `className`, `icon`) for Missing, Assigned, Turned in, and Returned/Graded states. |
-| `sortAssignments(assignments)`   | Array      | Array   | Sort assignments into vertical groups (Upcoming deadlines first, Assigned with no due date, Past deadline, Completed below) in ascending due dates. |
-| `syncTurnedInAssignmentsToUserCompletions(assignments)` | Array | Promise | Automatically mark matching tasks in Pending Tasks as checked/completed for turned-in or graded assignments. |
-| `updateLogoutButtonVisibility()` | -          | void    | Dynamically show or hide header Sign Out buttons based on connection state.                        |
-| `syncAssignmentsToTasks()`       | -          | void    | (Admin/CR only) Sync assignments to main task list with two-way additions and deadline updates.    |
-| `logout()`                       | -          | void    | Explicitly revoke OAuth token, clear local storage connection flags, clear cache, and reset state. |
-| `cleanupSession()`               | -          | void    | Reset module memory state and render initial login screen.                                         |
-| `close()`                        | Close the calendar modal.                                                                                                                                    |
-| `renderCalendar()`               | Main render function; delegates to `generateCalendarGrid` (desktop), `renderMonthlyViewMobile` or `renderWeeklyView` (mobile, based on `currentMobileView`). |
-| `renderMonthlyViewMobile()`      | Renders the compact monthly grid for mobile with toggle, day headers, date cells, dot indicators, and task list panel.                                       |
-| `renderWeeklyView()`             | Renders the weekly scrolling view for mobile with toggle buttons.                                                                                            |
-| `updateHeader()`                 | Updates the Month/Year dropdowns and navigation state.                                                                                                       |
-| `previousMonth()`                | Navigate to the previous month.                                                                                                                              |
-| `nextMonth()`                    | Navigate to the next month.                                                                                                                                  |
-| `populateTasksInGrid()`          | Places task elements into the correct day cells.                                                                                                             |
-| `isTaskOverdue(task)`            | Checks if a task is overdue.                                                                                                                                 |
+| Method                                                  | Parameters  | Returns  | Description                                                                                                                                                      |
+| ------------------------------------------------------- | ----------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `init()`                                                | -           | Promise  | Initialize GIS client and check for persisted session.                                                                                                           |
+| `checkPersistedSession()`                               | -           | Promise  | Check storage for valid token or attempt silent refresh without clearing connection state.                                                                      |
+| `login()`                                               | -           | void     | Trigger manual OAuth login popup.                                                                                                                                |
+| `handleAuthSuccess(response)`                           | object      | void     | Handle successful token acquisition and start data fetching.                                                                                                     |
+| `fetchCoursesAndLoadAll()`                              | -           | void     | Batch load active/archived courses and load unified items based on `currentView`.                                                                                |
+| `loadAllMaterials()`                                    | -           | Promise  | Fetch posted materials across all active courses within the date cutoff and render.                                                                              |
+| `fetchCourseMaterials(courseId)`                        | string      | Promise  | Fetch posted materials for a specific course ID.                                                                                                                 |
+| `saveJsonCache(dataType, data)`                         | string, arr | void     | Serialize structured Classroom state into local/session JSON cache.                                                                                              |
+| `getJsonCache()`                                        | -           | obj\|null| Retrieve and parse the cached JSON snapshot from storage.                                                                                                        |
+| `clearJsonCache()`                                      | -           | void     | Clear local and session JSON template cache entries.                                                                                                             |
+| `updateBottomCachedFooter(show, timeLabel)`             | bool, str   | void     | Toggle and render the persistent bottom cached content banner and Reconnect button.                                                                              |
+| `openUnifiedView()`                                     | -           | void     | Reset `currentCourseId` to `null` and return to the default unified view feed.                                                                                   |
+| `toggleArchivedCourses()`                               | -           | void     | Toggle visibility of archived classroom cards in the "My Classes" view.                                                                                          |
+| `toggleItemExpand(event, btn)`                          | Event, Elem | void     | Toggle inline expansion of truncated description/text details for a Classroom list item.                                                                         |
+| `copyItemText(event, btn)`                              | Event, Elem | Promise  | Copy item title/caption text to system clipboard with temporary checkmark visual feedback.                                                                       |
+| `handleItemClick(event, link)`                          | Event, Link | void     | Delegate row clicks to open the item URL while ignoring clicks on nested buttons and links.                                                                      |
+| `renderItemAttachments(materials)`                      | Array       | string   | Render Google Drive files, YouTube videos, web links, and forms as clickable attachment pills.                                                                   |
+| `getAssignmentStatusInfo(item)`                         | object      | object   | Compute detailed status badge info (`label`, `className`, `icon`) for Missing, Assigned, Turned in, and Returned/Graded states.                                  |
+| `sortAssignments(assignments)`                          | Array       | Array    | Sort assignments into vertical groups (Upcoming deadlines first, Assigned with no due date, Past deadline, Completed below) in ascending due dates.              |
+| `syncTurnedInAssignmentsToUserCompletions(assignments)` | Array       | Promise  | Automatically mark matching tasks in Pending Tasks as checked/completed for turned-in or graded assignments.                                                     |
+| `updateLogoutButtonVisibility()`                        | -           | void     | Dynamically show or hide header Sign Out buttons based on connection state.                                                                                      |
+| `syncAssignmentsToTasks()`                              | -           | void     | (Admin/CR only) Sync assignments to main task list with two-way additions and deadline updates.                                                                  |
+| `logout()`                                              | -           | void     | Explicitly revoke OAuth token, clear local storage connection flags, clear cache, and reset state.                                                               |
+| `cleanupSession()`                                      | -           | void     | Reset module memory state and render initial login screen.                                                                                                       |
 
 ---
 
-### 12. PWA Modules
+### PWA Modules (js/pwa/)
 
 **Purpose:** Progressive Web App functionality for offline support, caching, and installability
 
@@ -1203,24 +1041,24 @@ During signup, Firebase triggers `onAuthStateChanged` immediately when the user 
 
 ---
 
-### 12. Push Notifications System
+### Push Notifications System (js/notifications/ & js/core/)
 
 **Purpose:** Real-time browser notifications for new tasks and events
 
-#### Permission Manager (`js/permission-manager.js`)
+#### Permission Manager (`js/core/permission-manager.js`)
 
 - Manages notification permission state
 - Requests permission from users
 - Provides browser-specific instructions for enabling notifications
 - Handles permission prompt UI interactions
 
-#### Notification Content Formatter (`js/notification-content-formatter.js`)
+#### Notification Content Formatter (`js/notifications/notification-content-formatter.js`)
 
 - Formats task and event data for notifications
 - Truncates content to fit notification size constraints (50 chars title, 150 chars body)
 - Formats dates/times in user-friendly format
 
-#### Notification Manager (`js/notification-manager.js`)
+#### Notification Manager (`js/notifications/notification-manager.js`)
 
 - Core notification system controller
 - Checks browser API support
@@ -1228,80 +1066,52 @@ During signup, Firebase triggers `onAuthStateChanged` immediately when the user 
 - Urgent notices use `requireInteraction: true` to persist until dismissed
 - Handles notification click events (navigates to dashboard)
 
-#### Firestore Listener Manager (`js/firestore-listener-manager.js`)
+#### Firestore Listener Manager (`js/core/firestore-listener-manager.js`)
 
 - Sets up real-time listeners on tasks, events, and CR notices collections
 - Detects new documents (ignores initial load)
 - Filters by user's department, semester, and section (notices use section group)
 - Triggers notifications when new items are added
 
----
+### Account Approvals (js/features/approvals.js)
 
-### 13. Classroom (classroom.js)
+**Purpose:** Manages the verification, approval, and rejection workflow for faculty accounts awaiting administrative validation.
 
-**Purpose:** Google Classroom API integration for viewing assignments and announcements
-
-#### Configuration
-
-```javascript
-Classroom.CLIENT_ID =
-  "142195418679-0ripc2dn76otvkvfnk6kdk2aitdd29rm.apps.googleusercontent.com";
-Classroom.SCOPES =
-  "https://www.googleapis.com/auth/classroom.courses.readonly ...";
-Classroom.DATE_FILTER_MONTHS = 6; // Only show items from last 6 months
-```
-
-#### Methods
-
-| Method                              | Parameters     | Description                                                                      |
-| ----------------------------------- | -------------- | -------------------------------------------------------------------------------- |
-| `init()`                            | -              | Initialize Google Classroom module with retry logic for Google Identity Services |
-| `setupEventListeners()`             | -              | Attach click listeners to toggle buttons and close buttons with null checks      |
-| `openClassroomParams()`             | -              | Open classroom interface (sidebar on mobile, modal on desktop)                   |
-| `toggleSidebar(open)`               | boolean        | Open/close mobile classroom sidebar                                              |
-| `toggleModal(open)`                 | boolean        | Open/close desktop classroom modal                                               |
-| `login()`                           | -              | Request Google OAuth access token                                                |
-| `logout()`                          | -              | Revoke Google OAuth access token                                                 |
-| `handleAuthSuccess()`               | -              | Handle successful authentication                                                 |
-| `fetchCoursesAndLoadAll()`          | -              | Fetch all active courses and load unified assignments view                       |
-| `loadAllAssignments()`              | -              | Load all assignments from all active courses (unified view)                      |
-| `loadAllAnnouncements()`            | -              | Load all announcements from all active courses (unified view)                    |
-| `switchView(view)`                  | string         | Toggle between 'todo' and 'notifications' views                                  |
-| `renderAllItems(items, viewType)`   | array, string  | Render unified list of assignments or announcements                              |
-| `renderUnifiedListItem(item, type)` | object, string | Render individual item with course badge                                         |
-| `renderInitialState()`              | -              | Render login prompt                                                              |
-| `renderLoading(message)`            | string         | Show loading indicator                                                           |
-| `renderError(message)`              | string         | Show error message                                                               |
-
-**Features:**
-
-- **Unified View:** Shows all assignments/announcements from all enrolled courses in one list
-- **Course Filtering:** Only fetches from ACTIVE courses (excludes archived/deleted courses)
-- **Date Filtering:** Configurable date range (default: last 6 months) to exclude old items
-- **Course Badges:** Each item displays which course it belongs to
-- **Toggle View:** Switch between To-Do (assignments) and Notices (announcements)
-- **Responsive:** Mobile sidebar and desktop modal
-- **OAuth Authentication:** Separate from Firebase auth, uses Google Identity Services
-- **OAuth Authentication:** Separate from Firebase auth, uses Google Identity Services
-- **Session Persistence:** Automatically restores session on page reload using `localStorage` and silent token refresh
-- **Auto-Refresh:** Proactively refreshes access tokens 5 minutes before expiry to prevent session timeouts
-- **Retry Logic:** Automatically retries initialization if Google Identity Services isn't loaded yet
-- **Cache Fallback:** If the session is expired, shows cached assignments/announcements with an amber expiry banner instead of a broken login UI flash.
-- **Manual Refresh:** Adds a dedicated refresh button (🔄) to manually clear cache and fetch fresh Classroom data.
-
-**Date Filter Configuration:**
-
-To adjust the time range for fetching assignments/announcements, modify the `DATE_FILTER_MONTHS` constant at the top of `classroom.js`:
-
-```javascript
-DATE_FILTER_MONTHS: 6,  // Change to 3, 12, etc.
-```
-
-**Desktop Flow:** Navbar "Classroom" button → Modal opens → Sign in with Google → View all assignments (default) → Toggle to Notices → Click item to open in Google Classroom
+**Key Features:**
+- **Admin & Role Gating:** Accessible only to authenticated Administrators via desktop navbar link, Profile Settings menu, or mobile drawer.
+- **Dedicated Modal & Sidebar Views:** Renders `#approvals-modal` on desktop and full-height `#approvals-sidebar` on mobile devices.
+- **Pending Faculty Queue:** Queries Firestore `users` collection for unverified faculty registrations (`role: 'faculty'`, `isApproved: false`).
+- **Live Counter Badge:** Displays dynamic notification badge (`.approvals-badge`) indicating the count of pending approvals.
+- **One-Click Actions:** Approve (sets `isApproved: true` and grants faculty permissions) or Reject (removes pending record with confirmation prompt).
 
 ---
 
-### 14. TaskExport (task-export.js)
+### UITS Event Raiders Feed (js/features/raids-feed.js)
+
+**Purpose:** Real-time syndication of technology events, hackathons, programming olympiads, and symposiums from the `ou1ts/events` portal into b1t-Sched.
+
+**Key Features:**
+- **Dual-Source Ingestion:** Fetches structured JSON data from `https://ou1ts.github.io/events/raids.json` with an automatic fallback parser for RSS 2.0 XML (`feed.xml`).
+- **Client-Side Caching:** Stores feed payloads in `localStorage` (`b1t_raider_events_cache`) with a 30-minute time-to-live (TTL) and graceful stale fallback during network errors.
+- **Desktop Sticky Sidebar:** Full-width vertical cards positioned below upcoming academic events in `.dashboard-sidebar.desktop-only`.
+- **Mobile Drawer Arrowhead Switcher:** Seamless sliding switcher on the mobile events drawer allowing one-tap switching between Academic Events and Raider Contests.
+- **Rich Card Presentation:** Displays registration deadlines, venue/online tags, contest sub-events counter, and deep links to registration portals.
+
+---
+
+### In-App Changelog Modal (js/features/changelog-modal.js)
+
+**Purpose:** Renders the interactive release history and update notes directly within the application, powered by `changes.json`.
+
+**Key Features:**
+- **Minor Version Grouping:** Displays updates grouped into minor version ranges (e.g., `v2.53.0 to v2.53.8`) with the active release highlighted as `Latest`.
+- **Desktop Min-Width Enforcement:** Ensures optimal reading geometry on widescreen displays (`min-width: 580px`, `max-width: 720px`).
+- **Unread Update Indicator:** Tracks last viewed version in `localStorage` (`b1t_last_seen_version`) and displays an unread indicator dot on the Changelog button when new updates exist.
+- **Filterable Change Categories:** Categorizes notes by feature additions, UX enhancements, security fixes, and bug resolutions.
+
+---
+
+### TaskExport (js/features/task-export.js)
 
 **Purpose:** Comprehensive multi-format task schedule exporter supporting TXT, Markdown (.md), and pure vector PDF with selectable text and embedded clickable hyperlinks.
 
@@ -1338,19 +1148,29 @@ DATE_FILTER_MONTHS: 6,  // Change to 3, 12, etc.
 ### CSS Architecture
 
 ```
-colors.css          → CSS Variables (Theme)
+colors.css               → CSS Variables (Theme: Default Maroon, Dark Mode, Gray Mode)
     ↓
-main.css            → Core Styles, Layouts
+main.css                 → Core Styles, Layouts, CSS Resets
     ↓
-components.css      → Reusable Components
+components.css           → Reusable Components, Badges, Overdue Alerts, Push Banner
     ↓
-dashboard.css       → Dashboard Layout, Modals, Admin Controls
+dashboard.css            → Dashboard Grid Layout, Sidebars, Modals, Admin Controls
     ↓
-navbar.css          → Navigation Specific
-user-details-card.css → User Card Specific
-notice.css          → Notice Viewer (Modal + Sidebar + PDF panel) + Quick Links PDF Viewer Modal
+Feature Stylesheets      → Domain Views:
+├── navbar.css           → Header Navigation Bar, Brand Navigation, User Menu
+├── user-details-card.css→ User Profile Mini-Card
+├── notice.css           → Notice Viewer (Modal + Sidebar + PDF panel) & Quick Links
+├── classroom.css        → Google Classroom Integration (Modal, Sidebar, FAB, Badges)
+├── note.css             → Note-Taking Editor, Live Preview, Multi-Provider Upload
+├── calendar.css         → Interactive Monthly & Weekly Calendar Views
+├── changelog.css        → In-App Changelog Modal & Version Range Badges
+├── timeline.css         → Activity Heatmap, Productivity Charts, Streaks
+├── buttons.css          → Button Variants, Secondary & Icon Alignments
+├── drop-down.css        → Dropdown Menu Styles
+├── menu-bar.css         → Floating Action Menu Bar
+└── selector.css         → Select / Option Form Controls
     ↓
-responsive.css      → Media Queries + Zoom Normalization
+responsive.css           → Mobile/Tablet Breakpoints, Safe Area Padding & Zoom Normalization
 ```
 
 ### Theme Colors (CSS Variables)
@@ -1443,6 +1263,7 @@ CSS `zoom` is applied per screen width to prevent UI overflow on devices that re
 
 ---
 
+<a id="firebasefirestore-data-model"></a><a id="firebase-firestore-data-model"></a>
 ## Firebase/Firestore Data Model
 
 ### Collections Structure
@@ -1732,6 +1553,7 @@ service cloud.firestore {
 
 ### 1. New User Registration Flow
 
+#### Student Registration
 ```
 ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
 │   Login     │    │   Signup    │    │ Set Details │    │  Dashboard  │
@@ -1745,20 +1567,52 @@ service cloud.firestore {
                                       └─────────────┘
 ```
 
+#### Faculty Registration & Approval
+```
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│   Login     │    │   Signup    │    │ Set Details │    │   Pending   │    │  Dashboard  │
+│    View     │───▶│    Form     │───▶│    Form     │───▶│ Approvals   │───▶│    View     │
+│             │    │             │    │             │    │   Queue     │    │             │
+│ Select      │    │ Enter email │    │ Enter:      │    │             │    │ Granted     │
+│ "Faculty"   │    │ & password  │    │ - Initial   │    │ Admin checks│    │ access upon │
+│ toggle      │    │             │    │ - Dept      │    │ & approves  │    │ approval    │
+└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
+```
+
 ### 2. Returning User Login Flow
 
 ```
-┌─────────────┐    ┌─────────────┐
-│   Login     │    │  Dashboard  │
-│    View     │───▶│    View     │
-│             │    │             │
-│ Enter email │    │ Loads user  │
-│ & password  │    │ profile &   │
-│             │    │ content     │
-└─────────────┘    └─────────────┘
+┌──────────────────────────────────────────┐    ┌─────────────┐
+│               Login View                 │    │  Dashboard  │
+│  ┌────────────────────────────────────┐  │───▶│    View     │
+│  │ Segmented Switch: Student / Faculty│  │    │             │
+│  └────────────────────────────────────┘  │    │ Loads user  │
+│                                          │    │ profile &   │
+│  Student Tab:                            │    │ content     │
+│  - Student ID (10-16 digits) OR Email    │    └─────────────┘
+│  - Password                              │
+│                                          │
+│  Faculty Tab:                            │
+│  - Faculty Initial OR Email              │
+│  - Password                              │
+└──────────────────────────────────────────┘
 ```
 
-### 3. Profile Update Flow
+### 3. Account Approvals Flow (Admin)
+
+```
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│  Dashboard  │    │  Approvals  │    │   Review    │    │   Faculty   │
+│  (Admin)    │───▶│ View/Modal  │───▶│   Account   │───▶│  Activated  │
+│             │    │             │    │             │    │             │
+│ Clicks      │    │ Shows count │    │ Inspects    │    │ Faculty can │
+│ Approvals   │    │ of pending  │    │ dept & ID;  │    │ now access  │
+│ link/badge  │    │ faculty     │    │ click       │    │ dashboard   │
+└─────────────┘    └─────────────┘    │ "Approve"   │    └─────────────┘
+                                      └─────────────┘
+```
+
+### 4. Profile Update Flow
 
 ```
 ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
@@ -1775,7 +1629,7 @@ service cloud.firestore {
                    └─────────────┘
 ```
 
-### 4. Logout Flow
+### 5. Logout Flow
 
 ```
 ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
@@ -1788,7 +1642,7 @@ service cloud.firestore {
                                       └─────────────┘
 ```
 
-### 5. Password Reset Flow
+### 6. Password Reset Flow
 
 ```
 ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
@@ -1803,32 +1657,37 @@ service cloud.firestore {
 
 ---
 
+<a id="views-components"></a><a id="views--components"></a>
 ## Views & Components
 
 ### Views (Screens)
 
-| View ID                 | Route                | Description           |
-| ----------------------- | -------------------- | --------------------- |
-| `login-view`            | `/`                  | Login/signup forms    |
-| `set-details-view`      | `#/set-details`      | First-time user setup |
-| `dashboard-view`        | `#/dashboard`        | Main dashboard        |
-| `profile-settings-view` | `#/profile-settings` | Profile management    |
+| View ID                  | Route                 | Description                                                  |
+| ------------------------ | --------------------- | ------------------------------------------------------------ |
+| `login-view`             | `/`                   | Segmented login & signup forms (Student ID / Faculty / Email)|
+| `set-details-view`       | `#/set-details`       | First-time user setup & profile department/section lock      |
+| `dashboard-view`         | `#/dashboard`         | Main dashboard (Tasks, Events, Notices, Classroom, Notes)    |
+| `profile-settings-view`  | `#/profile-settings`  | User profile, role badges, cooldowns, and session management |
+| `account-approvals-view` | `#/account-approvals` | Admin review & approval panel for pending Faculty/Students   |
 
 ### Login View Components
 
 - Logo and branding
-- Login form (email, password)
-- Signup form (email, password, confirm)
-- Toggle between login/signup
-- Auth message display
+- Segmented role switcher (Student ID vs Faculty Initial login tabs)
+- Login form (Student ID / Faculty Initial / Email, Password)
+- Signup form (Role selection: Student / Faculty, ID/Initial input, email, password, confirm password)
+- Toggle between login/signup modes
+- Auth status & validation message display
+- Forgot password modal trigger (`#forgot-password-modal`)
+- PWA install banner / prompt trigger
 
 ### Set Details View Components
 
-- Student ID input (10-16 digits)
+- Student ID input (10-16 digits) or Faculty Initial (read-only if pre-filled)
 - Department dropdown
 - Semester dropdown
-- Section dropdown (dynamic)
-- Save & Continue button
+- Section dropdown (dynamically populated)
+- Save & Continue button (locks fields after confirmation)
 
 ### Dashboard View Components
 
@@ -1852,11 +1711,12 @@ service cloud.firestore {
 - **Notice Sidebar (Mobile)** - Slide-out panel with notice list; tapping a notice opens PDF in a new tab
 - **Google Classroom Viewer (Desktop)** - Modal with unified view of all assignments/announcements from enrolled courses; toggle between To-Do and Notices; OAuth authentication with Google
 - **Google Classroom Sidebar (Mobile)** - Slide-out panel with unified assignments/announcements view; green toggle button on right edge
-- **FAQ Section** - Collapsible accordion with three items:
+- **Faculty Classroom Action** - Floating action button and modal for verified Faculty to create/post assignments and materials directly to Google Classroom
+- **FAQ Section** - Collapsible accordion with items explaining:
   - How b1t-Sched works (shared tasks, individual checkboxes)
-  - User roles (Admin, CR, Faculty, Blocked) and their permissions
+  - User roles (Admin, CR, Faculty, Student, Blocked) and their permissions
   - Profile settings and 30-day change cooldown disclaimer
-- **Note Taking** - Personal note modal with enhanced markdown support (code blocks, HTML entities), auto-save, file upload via Catbox/Tmpfiles/file.io with direct download support, and live preview with theme-optimized PDF export.
+- **Note Taking** - Personal note modal with enhanced markdown support (code blocks, HTML entities), auto-save, file upload via Catbox/Tmpfiles/file.io with direct download support, and live preview with theme-optimized PDF export
 - **Modals:**
   - Add Task Modal - Task creation form with Course as required field and two deadline options: "No official Time limit" or a specific date/time
   - Old Tasks Modal - List of tasks past 12h grace period (with completion status)
@@ -1864,11 +1724,17 @@ service cloud.firestore {
   - Old Events Modal - List of past events
   - Notice Viewer Modal (desktop) - University notice list + embedded PDF viewer
   - Google Classroom Modal (desktop) - Unified assignments/announcements from all enrolled courses
+  - Classroom Create Assignment Modal (`#classroom-create-modal`) - Faculty direct assignment posting
+  - Interactive Calendar Modal (`#calendar-modal`) - Full month & week view of academic deadlines and events
+  - Interactive Timeline Modal (`#timeline-modal`) - Gantt / Timeline visualization of course tasks and milestones
+  - Task Export Modal (`#task-export-modal`) - Multi-format export (TXT, Markdown, CSV, JSON, ICS) with filtering
+  - In-App Changelog Modal (`#changelog-modal`) - Dynamic release notes modal loaded from `changes.json`
+  - Account Approvals Modal / View (`#approvals-modal` / `#account-approvals-view`) - Admin review of pending registrations
 
 ### Profile Settings View Components
 
 - Back button
-- Profile info (email, student ID - read-only)
+- Profile info (email, student ID / faculty initial - read-only)
 - Department dropdown
 - Semester dropdown
 - Section dropdown (dynamic)
@@ -1880,7 +1746,7 @@ service cloud.firestore {
 
 - Logo and title
 - Navigation links (Dashboard, Resources)
-- User details card (email, dept/sem/section, cog icon)
+- User details card (email, dept/sem/section, role badge, cog icon)
 
 ---
 
@@ -1888,21 +1754,45 @@ service cloud.firestore {
 
 ### Global Objects
 
-After scripts load, these are available globally:
+After scripts load, these modules are available on the global `window` scope:
 
 ```javascript
 // Firebase instances
-auth; // Firebase Auth instance
-db; // Firestore instance
+auth;                      // Firebase Auth instance
+db;                        // Firestore instance
 
-// Application modules
-Auth; // Authentication module
-DB; // Database module
-UI; // UI rendering module
-Router; // Routing module
-Profile; // Profile management module
-Utils; // Utility functions
-App; // Main application
+// Core Modules (js/core/)
+Auth;                      // Authentication & credential resolution module
+DB;                        // Firestore database operations module
+UI;                        // UI rendering & interactive elements module
+Router;                    // Hash-based routing module
+Utils;                     // Utility, sanitization, and helper functions
+App;                       // Main application orchestrator & lifecycle manager
+PermissionManager;         // Centralized RBAC permission engine
+FirestoreListenerManager;  // Deduplicated real-time Firestore subscription tracker
+
+// Feature Modules (js/features/)
+Profile;                   // Profile management, cooldowns, and role settings
+Classroom;                 // Google Classroom OAuth2 sync & assignment integration
+FacultyClassroom;          // Faculty Classroom assignment creation FAB & modal
+NoticeViewer;              // UCAM university notice fetcher & split-pane PDF viewer
+CRNotice;                  // Class Representative announcement broadcasting
+NoteManager;               // Local & synced personal markdown notes engine
+Approvals;                 // Admin pending account approval management
+CalendarView;              // Interactive monthly & weekly deadline calendar
+TimelineData;              // Timeline engine data extraction & chronological mapping
+TimelineUI;                // Interactive Gantt & timeline modal rendering
+TaskExport;                // Multi-format task exporter (TXT, MD, CSV, JSON, ICS)
+ChangelogModal;            // Version release history viewer modal
+EventRaidersFeed;          // UITS Event Raiders real-time community feed
+
+// Administration & Audit (js/admin/)
+AdminAPI;                  // Admin administrative actions & management
+ActivityLogger;            // Structured security and activity audit logging
+
+// Push Notifications & PWA (js/notifications/ & js/pwa/)
+PushNotificationManager;   // Web Push notification subscription and handler
+PWAInstallManager;         // PWA installation prompt and lifecycle manager
 ```
 
 ### Common Response Format
@@ -1937,6 +1827,7 @@ Router.onRouteChange((routeName) => {
 
 ---
 
+<a id="version-history"></a>
 ## Version History
 
 | Version  | Date        | Changes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
@@ -1996,6 +1887,12 @@ Router.onRouteChange((routeName) => {
 | 2.46.0   | Aug 2026    | Google Classroom Assignment Status Badges: Integrated real-time student submission tracking (`studentSubmissions?userId=me`) to render distinct bottom-right status badges on all To-Do assignments for Missing (Red), Assigned (Blue), Turned in (Green), and Returned / Graded: X/Y (Purple) across all color themes.                                                                                                                                                                                                                                                                                                                                    |
 | 2.47.0   | Aug 2026    | UITS Event Raiders Live Feed Integration: Syndicated live hackathons, contests, olympiads, and symposiums from `ou1ts/events` RSS/JSON feeds (`js/raids-feed.js`). Organized desktop sidebar with dedicated vertical separation below upcoming events, and integrated a vertically centered solid maroon right-arrowhead view switcher on the mobile events drawer.                                                                                                                                                                                                                                                                                                                                                                                                       |
 | 2.48.0   | Aug 2026    | Google Classroom Window Padding & Multi-Group Deadline Hierarchy: Removed border padding on smaller desktop displays (769px–1366px). Restructured To-Do assignments to prioritize upcoming deadlines chronologically at the top, followed by assigned tasks (no due date), past deadline tasks with conditional "Past deadline" banners, and completed tasks sub-grouped by remaining deadline status.                                                                                                                                                                                                                                                                                                                                                                               |                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| 2.49.0   | Aug 2026    | Google Classroom Announcement & Assignment Creation Option for Faculty & CR Roles (.classroom-create-fab); Calendar View Task Description Clickable Links & Collapsible Dropdown Toggle; LocalSend Web Direct Peer-to-Peer Sharing Integration in Notes.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| 2.51.0 to 2.51.9 | Sep 2026 | Login Screen Overhaul (Student/Faculty segmented toggle & flexible ID/initial login); Account Approvals management (modal/sidebar) for faculty registration; User Management UID copy button & Firestore deletion guidance; Classroom Sync Briefing Modal with Git-diff change inspection & decoupled completion sync; full-height mobile sidebars; desktop bottom-right PWA install prompt; task card left-aligned copy button.                                                                                                                                                                                                                                                                                                                                  |
+| 2.52.0 to 2.52.2 | Sep 2026 | Direct Firestore user deletion & 'Remove Details' profile stripping fallback; Classroom strict coursework ID & course matching in completion sync; decoupled auto-completion checking from sync to refresh button; desktop Classroom sync modal border padding removal.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| 2.53.0 to 2.53.8 | Sep 2026 | Modular architecture reorganization into categorical subdirectories (js/core/, js/features/, js/pwa/, js/notifications/, js/admin/); theme reordering (Dark Mode & High Contrast) with blue accent shift (#3b82f6); Event Raiders dark mode contrast; mobile compact task filters; cross-role authentication enforcement; Faculty/Student ID login support; login scroll restoration; Changelog modal desktop min-width; app script syntax error & infinite loading fix.                                                                                                                                                                                                                                                                                                  |
+
+> For complete detailed release notes and per-change descriptions, see [changes.json](file:///changes.json) and session walkthrough archives in [doc/prompts/](file:///doc/prompts/).
 
 ---
 
@@ -2321,7 +2218,7 @@ CalendarView.maxYear = currentYear + 100; // Navigation limit (future)
 
 ---
 
-## Version History (Updated)
+### Milestone Releases (v2.20.0 - v2.21.0)
 
 | Version | Date     | Changes                                                                                                                                                                                                                                       |
 | ------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -2467,7 +2364,8 @@ CalendarView.maxYear = currentYear + 100; // Navigation limit (future)
 
 ---
 
-## 11. Activity Timeline & Migration
+<a id="activity-timeline-migration"></a><a id="activity-timeline--migration"></a>
+## Activity Timeline & Migration
 
 ### Overview
 
@@ -2526,7 +2424,8 @@ Since `activity_logs` is a new collection, existing `tasks` and `events` need to
 
 ---
 
-## 12. Design References & Inspirations
+<a id="design-references-inspirations"></a><a id="design-references--inspirations"></a>
+## Design References & Inspirations
 
 ### Calendar View
 
@@ -2601,6 +2500,7 @@ The note-taking feature uses multiple file upload providers for reliability:
 
 ---
 
+<a id="short-guides-tips"></a><a id="short-guides--tips"></a>
 ## Short Guides & Tips
 
 ### Uploading Files in Notes
@@ -2637,7 +2537,8 @@ You can use basic markdown formatting in task and event descriptions:
 
 ---
 
-## 13. Additional Resources
+<a id="additional-resources"></a>
+## Additional Resources
 
 ### File Upload Documentation
 
@@ -2660,7 +2561,8 @@ You can use basic markdown formatting in task and event descriptions:
 
 _Last Updated: August 26, 2026 (v2.49.0)_
 
-## Version History
+<a id="historical-release-notes"></a>
+## Historical Release Notes (v2.49.0 and earlier)
 
 ### v2.49.0 (Latest)
 

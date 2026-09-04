@@ -1634,6 +1634,8 @@ const App = {
           document.body.classList.remove('dark-mode');
           document.body.classList.remove('gray-mode');
         }
+      }
+
       // Cache studentId / facultyInitial to email mapping for future offline or permission-fallback logins
       if (this.userProfile && this.userProfile.email) {
         const localMap = Utils.storage.get('b1t_credential_email_map') || {};

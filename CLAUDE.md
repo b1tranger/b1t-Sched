@@ -1,12 +1,12 @@
 # Repository Rules & Guidelines
 
 ## 1. Changelog & History Maintenance
-- **Automatic History Updates**: Whenever adding new features, fixing bugs, refactoring components, or altering UI/styles in this codebase, always document the changes in doc/DOCUMENTATION.md , changes.json, sw.js#L5-5 (const CACHE_VERSION), and README.md (keeping version, features, and roadmap checklist synchronized with the current release state).
-- **Date Format**: Group entries under the current date using the format `# DD.MM.YY` (e.g., `# 02.09.26`) placed chronologically at the top of the file directly beneath the frontmatter tags comment block.
-- **Entry Structure**:
-  - Title the main change in bold with a clear feature/fix description.
-  - Detail specific modifications with bullet points mentioning affected file paths, selectors/IDs, and technical/design decisions.
-  - Preserve existing frontmatter tag comments at the top of the file.
+- **Automatic History Updates**: Whenever adding new features, fixing bugs, refactoring components, or altering UI/styles in this codebase, always document the changes in doc/DOCUMENTATION.md (under `## Version History`), changes.json, sw.js#L5-5 (const CACHE_VERSION), and README.md (keeping version, features, and roadmap checklist synchronized with the current release state).
+- **Placement & Summaries in Documentation**:
+  - In `doc/DOCUMENTATION.md`, record updates exclusively under `## Version History` as concise, high-level summaries (never at the very top of the file before the Table of Contents).
+  - Detailed release notes and comprehensive per-change descriptions are maintained in `changes.json` (which powers the in-app changelog modal) and companion walkthrough files in `doc/prompts/`.
+- **Version Ranges**: Consolidate patch updates into active minor version ranges (e.g., `v2.53.0 to v2.53.8`) in `changes.json` instead of fragmenting each patch into a separate standalone entry.
+
 
 ## 2. Mandatory Prompt, Plan & Walkthrough Archiving
 - **Automatic Per-Turn Full Conversation Updates**:
