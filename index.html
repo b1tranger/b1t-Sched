@@ -144,29 +144,45 @@
 
             <!-- Login/Signup View -->
             <div id="login-view" class="view" style="display: none;">
-                <div class="auth-container" style="margin-top: -5rem;">
-                    <div class="auth-card" style="height: 100vh;">
+                <div class="auth-container">
+                    <div class="auth-card">
                         <div class="auth-logo">
                             <img src="Social-Preview.webp" alt="b1t-Sched Logo" class="auth-logo-img">
                             <h1>b1t-Sched</h1>
                             <p class="auth-subtitle">A web-based academic task scheduler designed for
-                                university students.</p>
+                                university students & faculty.</p>
                         </div>
 
                         <!-- Login Form -->
                         <form id="login-form" class="auth-form">
                             <h2>User Login</h2>
 
+                            <!-- Role Toggle (Student / Faculty) -->
+                            <div class="auth-role-toggle" id="login-role-toggle">
+                                <button type="button" class="role-toggle-btn active" data-role="student" id="login-role-student">
+                                    <i class="fas fa-user-graduate"></i> Student
+                                </button>
+                                <button type="button" class="role-toggle-btn" data-role="faculty" id="login-role-faculty">
+                                    <i class="fas fa-chalkboard-teacher"></i> Faculty
+                                </button>
+                            </div>
+
                             <div class="form-group">
-                                <label for="login-email">ID or Email</label>
-                                <input type="email" id="login-email" class="form-input"
-                                    placeholder="student@example.com" required>
+                                <label for="login-email" id="login-id-label">Student ID or Email</label>
+                                <input type="text" id="login-email" class="form-input"
+                                    placeholder="Enter 10-16 digit ID or email" required autocomplete="username">
+                                <small id="login-id-hint" class="form-hint">Log in with your 10-16 digit student ID or email</small>
                             </div>
 
                             <div class="form-group">
                                 <label for="login-password">Password</label>
-                                <input type="password" id="login-password" class="form-input"
-                                    placeholder="Enter password" required>
+                                <div class="password-input-wrapper">
+                                    <input type="password" id="login-password" class="form-input"
+                                        placeholder="Enter password" required autocomplete="current-password">
+                                    <button type="button" class="password-toggle-btn" aria-label="Toggle password visibility" tabindex="-1">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
                             </div>
 
                             <div class="form-group checkbox-group"
@@ -198,22 +214,42 @@
                         <form id="signup-form" class="auth-form" style="display: none;">
                             <h2>Create Account</h2>
 
+                            <!-- Role Toggle (Student / Faculty) -->
+                            <div class="auth-role-toggle" id="signup-role-toggle">
+                                <button type="button" class="role-toggle-btn active" data-role="student" id="signup-role-student">
+                                    <i class="fas fa-user-graduate"></i> Student
+                                </button>
+                                <button type="button" class="role-toggle-btn" data-role="faculty" id="signup-role-faculty">
+                                    <i class="fas fa-chalkboard-teacher"></i> Faculty
+                                </button>
+                            </div>
+
                             <div class="form-group">
                                 <label for="signup-email">Email Address</label>
                                 <input type="email" id="signup-email" class="form-input"
-                                    placeholder="student@example.com" required>
+                                    placeholder="student@example.com" required autocomplete="email">
                             </div>
 
                             <div class="form-group">
                                 <label for="signup-password">Password</label>
-                                <input type="password" id="signup-password" class="form-input"
-                                    placeholder="At least 6 characters" required>
+                                <div class="password-input-wrapper">
+                                    <input type="password" id="signup-password" class="form-input"
+                                        placeholder="At least 6 characters" required autocomplete="new-password">
+                                    <button type="button" class="password-toggle-btn" aria-label="Toggle password visibility" tabindex="-1">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
                             </div>
 
                             <div class="form-group">
                                 <label for="signup-confirm-password">Confirm Password</label>
-                                <input type="password" id="signup-confirm-password" class="form-input"
-                                    placeholder="Re-enter password" required>
+                                <div class="password-input-wrapper">
+                                    <input type="password" id="signup-confirm-password" class="form-input"
+                                        placeholder="Re-enter password" required autocomplete="new-password">
+                                    <button type="button" class="password-toggle-btn" aria-label="Toggle password visibility" tabindex="-1">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
                             </div>
 
                             <button type="submit" class="btn btn-primary btn-block">
@@ -231,6 +267,74 @@
 
                         <!-- Error/Success Messages -->
                         <div id="auth-message" class="auth-message"></div>
+                    </div>
+
+                    <!-- Login Footer & Support / FAQ Section -->
+                    <div class="login-footer-section">
+                        <!-- Telegram Contact Card -->
+                        <div class="telegram-contact-card">
+                            <div class="telegram-contact-icon">
+                                <i class="fab fa-telegram-plane"></i>
+                            </div>
+                            <div class="telegram-contact-content">
+                                <h3>Need Help or Have Inquiries?</h3>
+                                <p>Join the official <strong>oU1TS</strong> Telegram group for immediate assistance, university updates, announcements, and feedback.</p>
+                                <a href="https://t.me/oUITS_res" target="_blank" rel="noopener noreferrer" class="btn btn-telegram">
+                                    <i class="fab fa-telegram"></i> Join Telegram @oUITS_res
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- FAQ Accordion -->
+                        <div class="login-faq-container">
+                            <div class="login-faq-header">
+                                <h2><i class="fas fa-question-circle"></i> Frequently Asked Questions</h2>
+                                <p>Everything you need to know about accessing and using b1t-Sched.</p>
+                            </div>
+
+                            <details class="login-faq-item">
+                                <summary class="login-faq-question">
+                                    <i class="fas fa-info-circle"></i> How does b1t-Sched work?
+                                </summary>
+                                <div class="login-faq-answer">
+                                    <p>b1t-Sched groups students by their academic identity — <strong>Department</strong>, <strong>Semester</strong>, and <strong>Section</strong>. All users who share the same academic combination automatically see the section-level <strong>Pending Tasks</strong> and <strong>Class Notices</strong>.</p>
+                                </div>
+                            </details>
+
+                            <details class="login-faq-item">
+                                <summary class="login-faq-question">
+                                    <i class="fas fa-user-check"></i> Student vs. Faculty Login & Sign-Up
+                                </summary>
+                                <div class="login-faq-answer">
+                                    <p><strong>Students:</strong> Sign up with your university email. In Set Details, provide your <strong>10–16 digit Student ID</strong> along with your Department, Semester, and Section. You can log in using either your Student ID or your registered email address.</p>
+                                    <p><strong>Faculty:</strong> Toggle the <strong>Faculty</strong> button during login or sign up. Faculty accounts operate department-wide without semester/section constraints and can log in using their <strong>official Name Initial</strong> (e.g. <code>ABC</code>) or registered email.</p>
+                                </div>
+                            </details>
+
+                            <details class="login-faq-item">
+                                <summary class="login-faq-question">
+                                    <i class="fas fa-user-shield"></i> What are the platform roles?
+                                </summary>
+                                <div class="login-faq-answer">
+                                    <ul>
+                                        <li><strong>Admin</strong> — Full platform authority across tasks, notices, and user role management.</li>
+                                        <li><strong>DptCoor (Department Coordinator)</strong> — Faculty leadership role with department-wide coordination and notice posting privileges.</li>
+                                        <li><strong>Faculty</strong> — Department-wide task and notice tracking without semester/section constraints. Verified through the approval management system.</li>
+                                        <li><strong>CR (Class Representative)</strong> — Class leadership role capable of posting section-level tasks, exams, and class notices.</li>
+                                        <li><strong>Student</strong> — Standard academic user accessing section-specific pending tasks and notices.</li>
+                                    </ul>
+                                </div>
+                            </details>
+
+                            <details class="login-faq-item">
+                                <summary class="login-faq-question">
+                                    <i class="fas fa-envelope-open-text"></i> Email verification & password resets
+                                </summary>
+                                <div class="login-faq-answer">
+                                    <p>After creating an account, verify your email address via the confirmation link sent to your inbox. If you forget your password, click the <strong>Forgot Password?</strong> link on the login screen to receive a secure password reset email.</p>
+                                </div>
+                            </details>
+                        </div>
                     </div>
                 </div>
 
@@ -1748,7 +1852,13 @@
                         <input type="hidden" id="edit-user-id">
 
                         <div class="user-info-display">
-                            <p><strong>Email:</strong> <span id="edit-user-email">-</span></p>
+                            <div class="user-card-email-row" style="margin-bottom: 6px;">
+                                <p style="margin: 0;"><strong>Email:</strong> <span id="edit-user-email">-</span></p>
+                                <button type="button" id="edit-user-copy-uid-btn" class="copy-user-uid-btn" title="Copy Firebase UID">
+                                    <i class="far fa-copy"></i>
+                                    <span class="copy-uid-label">UID</span>
+                                </button>
+                            </div>
                             <p><strong>Student ID:</strong> <span id="edit-user-student-id">-</span></p>
                         </div>
 

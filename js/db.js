@@ -59,6 +59,64 @@ const DB = {
     }
   },
 
+  async getEmailByStudentId(studentId) {
+    try {
+      const cleanId = String(studentId || '').trim();
+      const snapshot = await db.collection('users')
+        .where('studentId', '==', cleanId)
+        .limit(1)
+        .get();
+      if (!snapshot.empty) {
+        return { success: true, email: snapshot.docs[0].data().email };
+      }
+      return { success: false, error: 'Student ID not found' };
+    } catch (error) {
+      console.error('Error finding student by ID:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  async getEmailByFacultyInitial(initial) {
+    try {
+      const cleanInitial = String(initial || '').trim();
+      if (!cleanInitial) return { success: false, error: 'Initial cannot be empty' };
+
+      // Query by facultyInitial (case-sensitive exact match or uppercase)
+      let snapshot = await db.collection('users')
+        .where('facultyInitial', '==', cleanInitial)
+        .limit(1)
+        .get();
+      if (snapshot.empty) {
+        snapshot = await db.collection('users')
+          .where('facultyInitial', '==', cleanInitial.toUpperCase())
+          .limit(1)
+          .get();
+      }
+      // Fallback for faculty accounts that stored initial in studentId
+      if (snapshot.empty) {
+        snapshot = await db.collection('users')
+          .where('studentId', '==', cleanInitial)
+          .where('isFaculty', '==', true)
+          .limit(1)
+          .get();
+      }
+      if (snapshot.empty) {
+        snapshot = await db.collection('users')
+          .where('studentId', '==', cleanInitial.toUpperCase())
+          .where('isFaculty', '==', true)
+          .limit(1)
+          .get();
+      }
+      if (!snapshot.empty) {
+        return { success: true, email: snapshot.docs[0].data().email };
+      }
+      return { success: false, error: 'Faculty initial not found' };
+    } catch (error) {
+      console.error('Error finding faculty by initial:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
   // Task operations - fetches tasks for the section group (A1+A2 merged, B1+B2 merged, etc.)
   // Returns pending tasks + overdue tasks within 12 hours grace period
   async getTasks(department, semester, section) {

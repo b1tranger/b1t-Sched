@@ -1342,12 +1342,80 @@ body.user-blocked .task-edit-btn {
     min-width: 0;
 }
 
+.user-card-email-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: var(--spacing-xs);
+    flex-wrap: wrap;
+}
+
 .user-card-email {
     font-size: var(--font-md);
     font-weight: var(--font-semibold);
     color: var(--text-dark);
-    margin: 0 0 var(--spacing-xs) 0;
+    margin: 0;
     word-break: break-all;
+}
+
+.copy-user-uid-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 7px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    color: var(--primary-maroon);
+    background: rgba(128, 0, 0, 0.07);
+    border: 1px solid rgba(128, 0, 0, 0.22);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    line-height: 1.4;
+    user-select: none;
+    flex-shrink: 0;
+}
+
+.copy-user-uid-btn:hover {
+    background: rgba(128, 0, 0, 0.14);
+    border-color: var(--primary-maroon);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(128, 0, 0, 0.15);
+}
+
+.copy-user-uid-btn:active {
+    transform: translateY(0);
+}
+
+.copy-user-uid-btn.copied {
+    color: #10b981 !important;
+    background: rgba(16, 185, 129, 0.14) !important;
+    border-color: #10b981 !important;
+}
+
+body.dark-mode .copy-user-uid-btn {
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.1);
+    border-color: rgba(56, 189, 248, 0.28);
+}
+
+body.dark-mode .copy-user-uid-btn:hover {
+    background: rgba(56, 189, 248, 0.2);
+    border-color: #38bdf8;
+    box-shadow: 0 2px 6px rgba(56, 189, 248, 0.2);
+}
+
+body.gray-mode .copy-user-uid-btn {
+    color: #67e8f9;
+    background: rgba(103, 232, 249, 0.1);
+    border-color: rgba(103, 232, 249, 0.28);
+}
+
+body.gray-mode .copy-user-uid-btn:hover {
+    background: rgba(103, 232, 249, 0.2);
+    border-color: #67e8f9;
+    box-shadow: 0 2px 6px rgba(103, 232, 249, 0.2);
 }
 
 .user-card-details {

@@ -98,22 +98,23 @@ body.dark-mode {
 
 /* Auth Container (Login/Signup) */
 .auth-container {
-  /* margin-top: -80px; */
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  justify-content: flex-start;
   align-items: center;
   min-height: 100vh;
-  padding: var(--spacing-lg);
+  padding: 40px var(--spacing-md);
   background: var(--bg-white);
+  box-sizing: border-box;
 }
 
 .auth-card {
   background: transparent;
   border-radius: 0;
   box-shadow: none;
-  padding: var(--spacing-xxl) 0;
+  padding: var(--spacing-md) 0 var(--spacing-xl) 0;
   width: 100%;
-  max-width: 400px;
+  max-width: 440px;
 }
 
 .auth-logo {
@@ -144,6 +145,373 @@ body.dark-mode {
   font-size: var(--font-xl);
   margin-bottom: var(--spacing-lg);
   text-align: center;
+}
+
+/* Auth Role Toggle (Student / Faculty) */
+.auth-role-toggle {
+  display: flex;
+  background: var(--bg-dark);
+  padding: 4px;
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-lg);
+  gap: 4px;
+  border: 1px solid var(--border-light);
+}
+
+.role-toggle-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 14px;
+  font-size: var(--font-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-medium);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  user-select: none;
+}
+
+.role-toggle-btn:hover {
+  color: var(--text-dark);
+}
+
+.role-toggle-btn.active {
+  background: var(--bg-white);
+  color: var(--primary-maroon);
+  box-shadow: var(--shadow-sm);
+}
+
+body.dark-mode .auth-role-toggle {
+  background: #18181b;
+  border-color: #27272a;
+}
+
+body.dark-mode .role-toggle-btn {
+  color: #94a3b8;
+}
+
+body.dark-mode .role-toggle-btn:hover {
+  color: #f1f5f9;
+}
+
+body.dark-mode .role-toggle-btn.active {
+  background: #27272a;
+  color: #38bdf8;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+body.gray-mode .auth-role-toggle {
+  background: #222222;
+  border-color: #333333;
+}
+
+body.gray-mode .role-toggle-btn {
+  color: #a1a1aa;
+}
+
+body.gray-mode .role-toggle-btn:hover {
+  color: #fafafa;
+}
+
+body.gray-mode .role-toggle-btn.active {
+  background: #2d2d2d;
+  color: #67e8f9;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* Password Input Wrapper & High-Contrast Eye Toggle */
+.password-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.password-input-wrapper .form-input {
+  padding-right: 44px;
+}
+
+/* Suppress native Edge/IE eye button to prevent duplicate icons */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px 10px;
+  font-size: 15px;
+  color: #4b5563;
+  transition: color var(--transition-fast), transform var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+  border-radius: var(--radius-sm);
+  z-index: 2;
+}
+
+.password-toggle-btn:hover {
+  color: var(--primary-maroon);
+}
+
+.password-toggle-btn:active {
+  transform: translateY(-50%) scale(0.92);
+}
+
+body.dark-mode .password-toggle-btn {
+  color: #94a3b8;
+}
+
+body.dark-mode .password-toggle-btn:hover {
+  color: #38bdf8;
+}
+
+body.gray-mode .password-toggle-btn {
+  color: #a1a1aa;
+}
+
+body.gray-mode .password-toggle-btn:hover {
+  color: #67e8f9;
+}
+
+/* Login Footer & Support / FAQ Section */
+.login-footer-section {
+  width: 100%;
+  max-width: 680px;
+  margin-top: var(--spacing-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+  padding-bottom: var(--spacing-xxl);
+}
+
+/* Telegram Contact Card */
+.telegram-contact-card {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+  background: var(--bg-lighter);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg) var(--spacing-xl);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+}
+
+.telegram-contact-card:hover {
+  border-color: #229ED9;
+  box-shadow: 0 4px 12px rgba(34, 158, 217, 0.15);
+}
+
+.telegram-contact-icon {
+  font-size: 2.4rem;
+  color: #229ED9;
+  flex-shrink: 0;
+}
+
+.telegram-contact-content {
+  flex: 1;
+}
+
+.telegram-contact-content h3 {
+  margin: 0 0 6px 0;
+  font-size: var(--font-lg);
+  color: var(--text-dark);
+}
+
+.telegram-contact-content p {
+  margin: 0 0 var(--spacing-md) 0;
+  font-size: var(--font-sm);
+  color: var(--text-medium);
+  line-height: 1.5;
+}
+
+.btn-telegram {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #229ED9;
+  color: #ffffff !important;
+  padding: 8px 18px;
+  border-radius: var(--radius-md);
+  font-weight: var(--font-semibold);
+  font-size: var(--font-sm);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  border: none;
+}
+
+.btn-telegram:hover {
+  background: #1d88bb;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(34, 158, 217, 0.35);
+}
+
+/* Login FAQ Container */
+.login-faq-container {
+  background: var(--bg-lighter);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  box-shadow: var(--shadow-sm);
+}
+
+.login-faq-header {
+  margin-bottom: var(--spacing-lg);
+  text-align: center;
+}
+
+.login-faq-header h2 {
+  font-size: var(--font-xl);
+  color: var(--primary-maroon);
+  margin: 0 0 6px 0;
+}
+
+.login-faq-header p {
+  margin: 0;
+  font-size: var(--font-sm);
+  color: var(--text-medium);
+}
+
+.login-faq-item {
+  border-bottom: 1px solid var(--border-light);
+  padding: var(--spacing-md) 0;
+}
+
+.login-faq-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.login-faq-question {
+  font-size: var(--font-md);
+  font-weight: var(--font-semibold);
+  color: var(--text-dark);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  user-select: none;
+  list-style: none;
+}
+
+.login-faq-question::-webkit-details-marker {
+  display: none;
+}
+
+.login-faq-question i {
+  color: var(--primary-maroon);
+}
+
+.login-faq-answer {
+  padding-top: var(--spacing-sm);
+  padding-left: 26px;
+  font-size: var(--font-sm);
+  color: var(--text-medium);
+  line-height: 1.6;
+}
+
+.login-faq-answer p {
+  margin: 0 0 var(--spacing-xs) 0;
+}
+
+.login-faq-answer ul {
+  margin: var(--spacing-xs) 0;
+  padding-left: 18px;
+}
+
+.login-faq-answer li {
+  margin-bottom: 6px;
+}
+
+/* Dark Mode Theme Adaptations */
+body.dark-mode .auth-container {
+  background: var(--bg-dark);
+}
+
+body.dark-mode .telegram-contact-card,
+body.dark-mode .login-faq-container {
+  background: #18181b;
+  border-color: #27272a;
+}
+
+body.dark-mode .telegram-contact-content h3,
+body.dark-mode .login-faq-question {
+  color: #f1f5f9;
+}
+
+body.dark-mode .telegram-contact-content p,
+body.dark-mode .login-faq-header p,
+body.dark-mode .login-faq-answer {
+  color: #94a3b8;
+}
+
+body.dark-mode .login-faq-header h2 {
+  color: #38bdf8;
+}
+
+body.dark-mode .login-faq-question i {
+  color: #38bdf8;
+}
+
+body.dark-mode .login-faq-item {
+  border-bottom-color: #27272a;
+}
+
+/* Gray Mode Theme Adaptations */
+body.gray-mode .auth-container {
+  background: var(--bg-dark);
+}
+
+body.gray-mode .telegram-contact-card,
+body.gray-mode .login-faq-container {
+  background: #1f1f1f;
+  border-color: #333333;
+}
+
+body.gray-mode .telegram-contact-content h3,
+body.gray-mode .login-faq-question {
+  color: #fafafa;
+}
+
+body.gray-mode .telegram-contact-content p,
+body.gray-mode .login-faq-header p,
+body.gray-mode .login-faq-answer {
+  color: #a1a1aa;
+}
+
+body.gray-mode .login-faq-header h2 {
+  color: #67e8f9;
+}
+
+body.gray-mode .login-faq-question i {
+  color: #67e8f9;
+}
+
+body.gray-mode .login-faq-item {
+  border-bottom-color: #333333;
+}
+
+@media (max-width: 600px) {
+  .telegram-contact-card {
+    flex-direction: column;
+    text-align: center;
+    padding: var(--spacing-lg);
+  }
+  .btn-telegram {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 /* Set Details Container */

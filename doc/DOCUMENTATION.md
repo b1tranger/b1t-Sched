@@ -2,6 +2,30 @@
 
 > **Academic Task Scheduler** - A Single Page Application (SPA) for managing academic tasks, assignments, exams, and events with personalized department-specific content.
 
+# 04.09.26
+
+**Login Screen Overhaul: Student/Faculty Role Toggles, High-Contrast Password Eye, oU1TS Telegram & FAQ**
+- **Student / Faculty Role Toggles (`.auth-role-toggle`, `index.html`, `js/app.js`)**: Integrated an interactive segmented button on both the Login and Sign-up forms:
+  - **Student Mode**: Enforces 10–16 digit numeric ID validation when an ID is entered, automatically querying Firestore to resolve the user's registered email before authenticating with Firebase Auth. Users can also authenticate with their standard email address.
+  - **Faculty Mode**: Lifts digit restrictions to allow faculty members to log in using their official Name Initial (e.g., `ABC`, letters/alphanumeric) or email address.
+  - **Seamless Registration Flow**: Selecting Faculty on sign-up stores the preference in `sessionStorage` and automatically initializes `#set-details-view` in Faculty mode (showing Faculty Initial and hiding semester/section requirements).
+- **High-Contrast Password Eye Toggle (`.password-toggle-btn`, `css/main.css`)**: Implemented an accessible password visibility toggle button across Login and Signup password fields. Disabled default browser reveal icons (`::-ms-reveal`) and tuned colors for sharp contrast across Light theme (`#4b5563`), Dark theme (`#94a3b8` / `#38bdf8`), and Gray theme (`#a1a1aa` / `#67e8f9`).
+- **Telegram Community Contact Card (`.telegram-contact-card`)**: Embedded the official **oU1TS** community Telegram card (`t.me/oUITS_res`) into the login view footer with brand styling, direct action link, and support info.
+- **Login FAQ Accordion (`.login-faq-container`)**: Added a dedicated, collapsible FAQ accordion to the bottom of the login screen answering key questions regarding platform architecture, student vs. faculty access, platform roles, and account verification.
+- **Natural Document Flow**: Removed restrictive `100vh` constraints on the authentication card, enabling smooth vertical scrolling on all mobile and desktop viewports.
+
+**Firebase User UID Copy Button in User Management**
+- **User Email Row Copy Button (`.copy-user-uid-btn`, `js/app.js`)**: Added a dedicated copy button displaying beside the user's email across all user cards in the User Management list (`#user-list-container`) and within the Edit User modal (`#edit-user-modal`).
+- **Instant Clipboard & Visual Feedback**: Clicking the UID button copies the user's Firebase Auth UID (`user.id`) to the system clipboard with instant `✓ Copied!` text/icon transition and a success toast notification (`UI.showToast`).
+- **UID Text Search Support**: Extended the User Management search filter (`user-search-input`) to match queries against user UIDs in addition to email, student ID, department, semester, and section.
+- **Theme Adaptation (`css/dashboard.css`)**: Styled `.copy-user-uid-btn` with tailored light mode (maroon accent), dark mode (sky-blue accent `#38bdf8`), and gray mode (`#67e8f9`) aesthetics with hover elevation and active press animations.
+
+**Decoupled Database Task Sync from Classroom Refresh**
+- **Streamlined `Classroom.refreshData()` (`js/classroom.js`)**: Removed the redundant background task synchronization logic (`DB.getTasksByClassroomIds`, `DB.updateTask`, `DB.createTask`, and `App.loadDashboardData()`) from the Classroom Refresh button action.
+- **Clear Separation of Concerns**:
+  - **Refresh (`refreshData`)**: Dedicated strictly to invalidating caches, fetching fresh courses, coursework, announcements, and materials from Google Classroom, updating local UI/views, and presenting the `#classroom-sync-modal` diff briefing highlighting what changed in Google Classroom since the previous load.
+  - **Sync (`syncAssignmentsToTasks`)**: Retained as the single authoritative, explicit mechanism for CR and Admin users (`#sync-classroom-tasks-btn`, `#sync-classroom-tasks-btn-course`) to sync and publish Classroom assignments into the platform's shared task database.
+
 # 02.09.26
 
 **Classroom Sync Briefing Modal & GitHub Version Control Diff View**

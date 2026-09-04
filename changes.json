@@ -1,13 +1,28 @@
 {
-  "currentVersion": "v2.50.0",
-  "lastUpdated": "September 2, 2026",
+  "currentVersion": "v2.51.0",
+  "lastUpdated": "September 4, 2026",
   "documentationUrl": "https://b1tranger.netlify.app/render.html?file=https%3A%2F%2Fgithub.com%2Fb1tranger%2Fb1t-Sched%2Fblob%2Fmain%2Fdoc%2FDOCUMENTATION.md",
   "history": [
     {
-      "version": "v2.50.0",
+      "version": "v2.51.0",
       "badge": "Latest",
       "date": "September 2026",
       "changes": [
+        {
+          "type": "New Feature",
+          "title": "Login Screen Overhaul: Student/Faculty Toggle, High-Contrast Password Eye, oU1TS Telegram & FAQ Section",
+          "description": "Revamped the login and registration experience across #login-view, #signup-view, and #set-details-view. Added an interactive segmented Student / Faculty role toggle (.auth-role-toggle) supporting dual authentication logic: students can log in with their 10–16 digit numeric ID or email, while faculty members can log in using their official Name Initial (e.g. ABC) or email. Integrated a custom high-contrast password visibility eye toggle (.password-toggle-btn) with tailored contrast for Light, Dark, and Gray themes while suppressing native Edge/IE duplicates. Added a dedicated footer section to the login view featuring the official oU1TS Telegram community contact card (t.me/oUITS_res) and an expandable FAQ accordion."
+        },
+        {
+          "type": "New Feature",
+          "title": "Firebase User UID Copy Button in User Management",
+          "description": "Added a dedicated copy button (.copy-user-uid-btn) displaying beside user emails across all user cards in the User Management view (#user-management-view) and Edit User modal (#edit-user-modal). Clicking the button copies the user's Firebase Auth UID to the clipboard with animated checkmark feedback and toast notification, making it fast and effortless for Admins to search and locate specific accounts directly in the Firebase Console. Also extended user search filtering to support direct matching against Firebase UIDs."
+        },
+        {
+          "type": "Refactor",
+          "title": "Decouple Database Task Sync from Classroom Refresh",
+          "description": "Streamlined Classroom.refreshData() in js/classroom.js to strictly fetch fresh coursework and announcements from Google Classroom, update local caches/UI, and show Classroom changes. Decoupled and eliminated redundant Firestore database task writes from the Refresh action, preserving the Admin/CR Sync button (syncAssignmentsToTasks) as the single authoritative mechanism for pushing assignments into shared schedule tasks."
+        },
         {
           "type": "New Feature",
           "title": "Classroom Sync Briefing Modal with GitHub-Style Version Control Diff View",

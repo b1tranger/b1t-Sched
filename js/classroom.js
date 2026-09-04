@@ -2219,52 +2219,6 @@ const Classroom = {
             }
         }
 
-        // Auto-sync tasks to DB for Admin / CR
-        if (typeof App !== 'undefined' && (App.isAdmin || App.isCR)) {
-            try {
-                const syncable = freshAssignments.filter(a => a.dueDate);
-                if (syncable.length > 0) {
-                    const classroomWorkIds = syncable.map(a => a.id);
-                    const existingTasksResult = await DB.getTasksByClassroomIds(classroomWorkIds);
-                    const existingTasksMap = new Map();
-                    if (existingTasksResult.success && existingTasksResult.data) {
-                        existingTasksResult.data.forEach(t => {
-                            if (t.classroomWorkId) existingTasksMap.set(t.classroomWorkId, t);
-                        });
-                    }
-                    const userId = Auth.getUserId();
-                    const userEmail = Auth.getUserEmail();
-                    for (const a of syncable) {
-                        const due = new Date(a.dueDate.year, a.dueDate.month - 1, a.dueDate.day, a.dueTime?.hours || 23, a.dueTime?.minutes || 59);
-                        const linkLabel = a.alternateLink ? `[View in Classroom](${a.alternateLink})\n\n` : '';
-                        const taskData = {
-                            title: a.title,
-                            course: a.courseName || 'Classroom Assignment',
-                            type: 'assignment',
-                            description: linkLabel + (a.description || ''),
-                            department: App.userProfile ? App.userProfile.department : 'ALL',
-                            semester: App.userProfile ? App.userProfile.semester : null,
-                            section: App.userProfile ? App.userProfile.section : null,
-                            deadline: due.toISOString(),
-                            addedFrom: 'classroom',
-                            classroomWorkId: a.id
-                        };
-                        const existingTask = existingTasksMap.get(a.id);
-                        if (existingTask) {
-                            await DB.updateTask(existingTask.id, taskData);
-                        } else {
-                            await DB.createTask(userId, userEmail, taskData);
-                        }
-                    }
-                    if (App && typeof App.loadDashboardData === 'function') {
-                        await App.loadDashboardData();
-                    }
-                }
-            } catch (err) {
-                console.warn('[Classroom] Background task sync on refresh warning:', err);
-            }
-        }
-
         // Present the Classroom Sync Summary modal briefing
         this.showSyncSummaryModal({
             added: addedItems,

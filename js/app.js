@@ -280,6 +280,74 @@ const App = {
   },
 
   setupEventListeners() {
+    // Login role toggle (Student / Faculty)
+    this.currentLoginRole = 'student';
+    const loginRoleStudent = document.getElementById('login-role-student');
+    const loginRoleFaculty = document.getElementById('login-role-faculty');
+    const loginIdLabel = document.getElementById('login-id-label');
+    const loginIdInput = document.getElementById('login-email');
+    const loginIdHint = document.getElementById('login-id-hint');
+
+    const setLoginRole = (role) => {
+      this.currentLoginRole = role;
+      if (loginRoleStudent) loginRoleStudent.classList.toggle('active', role === 'student');
+      if (loginRoleFaculty) loginRoleFaculty.classList.toggle('active', role === 'faculty');
+
+      if (role === 'student') {
+        if (loginIdLabel) loginIdLabel.textContent = 'Student ID or Email';
+        if (loginIdInput) loginIdInput.placeholder = 'Enter 10-16 digit ID or email';
+        if (loginIdHint) loginIdHint.textContent = 'Log in with your 10-16 digit student ID or email';
+      } else {
+        if (loginIdLabel) loginIdLabel.textContent = 'Faculty Initial or Email';
+        if (loginIdInput) loginIdInput.placeholder = 'Enter faculty initial (e.g. ABC) or email';
+        if (loginIdHint) loginIdHint.textContent = 'Log in with your faculty initial or email';
+      }
+    };
+
+    if (loginRoleStudent) {
+      loginRoleStudent.addEventListener('click', () => setLoginRole('student'));
+    }
+    if (loginRoleFaculty) {
+      loginRoleFaculty.addEventListener('click', () => setLoginRole('faculty'));
+    }
+
+    // Signup role toggle (Student / Faculty)
+    this.currentSignupRole = 'student';
+    const signupRoleStudent = document.getElementById('signup-role-student');
+    const signupRoleFaculty = document.getElementById('signup-role-faculty');
+
+    const setSignupRole = (role) => {
+      this.currentSignupRole = role;
+      sessionStorage.setItem('signup_role', role);
+      if (signupRoleStudent) signupRoleStudent.classList.toggle('active', role === 'student');
+      if (signupRoleFaculty) signupRoleFaculty.classList.toggle('active', role === 'faculty');
+    };
+
+    if (signupRoleStudent) {
+      signupRoleStudent.addEventListener('click', () => setSignupRole('student'));
+    }
+    if (signupRoleFaculty) {
+      signupRoleFaculty.addEventListener('click', () => setSignupRole('faculty'));
+    }
+
+    // Password visibility toggle buttons
+    document.querySelectorAll('.password-toggle-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const wrapper = btn.closest('.password-input-wrapper');
+        if (!wrapper) return;
+        const input = wrapper.querySelector('input');
+        const icon = btn.querySelector('i');
+        if (!input) return;
+
+        const isPassword = input.type === 'password';
+        input.type = isPassword ? 'text' : 'password';
+        if (icon) {
+          icon.className = isPassword ? 'fas fa-eye-slash' : 'fas fa-eye';
+        }
+      });
+    });
+
     // Login form
     const loginForm = document.getElementById('login-form');
     if (loginForm) {
@@ -1107,23 +1175,55 @@ const App = {
   },
 
   async handleLogin() {
-    const email = document.getElementById('login-email').value.trim();
-    const password = document.getElementById('login-password').value;
+    const rawInput = (document.getElementById('login-email')?.value || '').trim();
+    const password = document.getElementById('login-password')?.value || '';
 
-    if (!email || !password) {
-      UI.showMessage('auth-message', 'Please enter both email and password', 'error');
+    if (!rawInput || !password) {
+      UI.showMessage('auth-message', 'Please enter your login credential and password', 'error');
       return;
     }
 
-    if (!Utils.isValidEmail(email)) {
-      UI.showMessage('auth-message', 'Please enter a valid email address', 'error');
-      return;
+    let targetEmail = rawInput;
+    const isEmail = rawInput.includes('@');
+
+    // If non-email, resolve email based on student ID or faculty initial
+    if (!isEmail) {
+      UI.showLoading(true);
+      if (this.currentLoginRole === 'student') {
+        // Enforce 10-16 numeric digit restriction for student ID
+        if (!/^[0-9]{10,16}$/.test(rawInput)) {
+          UI.showLoading(false);
+          UI.showMessage('auth-message', 'Student ID must be 10-16 digits, or enter your full email address.', 'error');
+          return;
+        }
+
+        const lookup = await DB.getEmailByStudentId(rawInput);
+        if (!lookup.success || !lookup.email) {
+          UI.showLoading(false);
+          UI.showMessage('auth-message', `No student account found with ID "${rawInput}". Please check your ID or sign up first.`, 'error');
+          return;
+        }
+        targetEmail = lookup.email;
+      } else {
+        // Faculty initial login
+        const lookup = await DB.getEmailByFacultyInitial(rawInput);
+        if (!lookup.success || !lookup.email) {
+          UI.showLoading(false);
+          UI.showMessage('auth-message', `No faculty account found with initial "${rawInput}". Please check your initial or sign up first.`, 'error');
+          return;
+        }
+        targetEmail = lookup.email;
+      }
+    } else {
+      if (!Utils.isValidEmail(targetEmail)) {
+        UI.showMessage('auth-message', 'Please enter a valid email address.', 'error');
+        return;
+      }
+      UI.showLoading(true);
     }
 
-    UI.showLoading(true);
-
-    const rememberMe = document.getElementById('trust-device').checked;
-    const result = await Auth.login(email, password, rememberMe);
+    const rememberMe = document.getElementById('trust-device')?.checked || false;
+    const result = await Auth.login(targetEmail, password, rememberMe);
 
     if (result.success) {
       // Check email verification immediately
@@ -1213,6 +1313,7 @@ const App = {
 
     // Set flag to prevent auth state handling during signup
     this.isSigningUp = true;
+    sessionStorage.setItem('signup_role', this.currentSignupRole || 'student');
 
     const result = await Auth.signup(email, password);
 
@@ -1565,6 +1666,17 @@ const App = {
   },
 
   async loadSetDetailsForm() {
+    // Check if user pre-selected faculty or student during signup
+    const signupRole = sessionStorage.getItem('signup_role');
+    const facultyCheckbox = document.getElementById('set-is-faculty-checkbox');
+    if (signupRole === 'faculty') {
+      if (facultyCheckbox) facultyCheckbox.checked = true;
+      this.toggleFacultySetDetails(true);
+    } else if (signupRole === 'student') {
+      if (facultyCheckbox) facultyCheckbox.checked = false;
+      this.toggleFacultySetDetails(false);
+    }
+
     // Load departments and semesters
     const deptResult = await DB.getDepartments();
     const semResult = await DB.getSemesters();
@@ -2942,6 +3054,14 @@ const App = {
           const userId = e.target.closest('.edit-user-btn').dataset.userId;
           await this.openEditUserModal(userId);
         }
+        // Copy user UID button
+        if (e.target.closest('.copy-user-uid-btn')) {
+          const btn = e.target.closest('.copy-user-uid-btn');
+          const uid = btn.dataset.uid;
+          if (uid) {
+            await this.copyUserUid(uid, btn);
+          }
+        }
       });
     }
 
@@ -2972,6 +3092,17 @@ const App = {
     }
     if (cancelEditUser) {
       cancelEditUser.addEventListener('click', () => UI.hideModal('edit-user-modal'));
+    }
+
+    // Edit user copy UID button listener
+    const editUserCopyUidBtn = document.getElementById('edit-user-copy-uid-btn');
+    if (editUserCopyUidBtn) {
+      editUserCopyUidBtn.addEventListener('click', async () => {
+        const uid = editUserCopyUidBtn.dataset.uid;
+        if (uid) {
+          await this.copyUserUid(uid, editUserCopyUidBtn);
+        }
+      });
     }
 
     // Edit User form
@@ -3063,7 +3194,13 @@ const App = {
               <i class="fas fa-user-circle"></i>
             </div>
             <div class="user-basic-info">
-              <p class="user-card-email">${user.email || 'No email'}</p>
+              <div class="user-card-email-row">
+                <p class="user-card-email">${user.email || 'No email'}</p>
+                <button type="button" class="copy-user-uid-btn" data-uid="${user.id}" title="Copy Firebase UID: ${user.id}">
+                  <i class="far fa-copy"></i>
+                  <span class="copy-uid-label">UID</span>
+                </button>
+              </div>
               <p class="user-card-details">${user.department || 'N/A'}${isFaculty ? '' : ` • ${user.semester || 'N/A'} • ${user.section || 'N/A'}`}</p>
               <p class="user-card-student-id">ID: ${user.studentId || 'Not set'}</p>
             </div>
@@ -3132,15 +3269,17 @@ const App = {
 
     let filtered = [...this.allUsers];
 
-    // Filter by text search query (email, student ID, department, semester, section)
+    // Filter by text search query (email, student ID, department, semester, section, or UID)
     if (searchQuery) {
       filtered = filtered.filter(u => {
         const email = (u.email || '').toLowerCase();
+        const uid = (u.id || '').toLowerCase();
         const studentId = (u.studentId || '').toLowerCase();
         const dept = (u.department || '').toLowerCase();
         const sem = (u.semester || '').toLowerCase();
         const sec = (u.section || '').toLowerCase();
         return email.includes(searchQuery) ||
+               uid.includes(searchQuery) ||
                studentId.includes(searchQuery) ||
                dept.includes(searchQuery) ||
                sem.includes(searchQuery) ||
@@ -3214,6 +3353,51 @@ const App = {
     if (clearUserSearchBtn) clearUserSearchBtn.style.display = 'none';
 
     this.renderUserList(this.allUsers);
+  },
+
+  async copyUserUid(uid, btn) {
+    if (!uid) return;
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(uid);
+      } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = uid;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+
+      if (btn) {
+        btn.classList.add('copied');
+        const icon = btn.querySelector('i');
+        const label = btn.querySelector('.copy-uid-label');
+        const originalIconClass = icon ? icon.className : '';
+        const originalLabelText = label ? label.textContent : '';
+
+        if (icon) icon.className = 'fas fa-check';
+        if (label) label.textContent = 'Copied!';
+
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          if (icon) icon.className = originalIconClass;
+          if (label) label.textContent = originalLabelText;
+        }, 1500);
+      }
+
+      if (typeof UI !== 'undefined' && typeof UI.showToast === 'function') {
+        UI.showToast(`Copied UID: ${uid}`, 'success');
+      }
+    } catch (err) {
+      console.error('Failed to copy UID:', err);
+      if (typeof UI !== 'undefined' && typeof UI.showToast === 'function') {
+        UI.showToast('Failed to copy UID to clipboard', 'error');
+      }
+    }
   },
 
   async handleAdminPasswordReset(userId, userEmail) {
@@ -3354,6 +3538,11 @@ const App = {
     document.getElementById('edit-user-id').value = userId;
     document.getElementById('edit-user-email').textContent = user.email || 'No email';
     document.getElementById('edit-user-student-id').textContent = user.studentId || 'Not set';
+    const copyUidBtn = document.getElementById('edit-user-copy-uid-btn');
+    if (copyUidBtn) {
+      copyUidBtn.dataset.uid = userId;
+      copyUidBtn.title = `Copy Firebase UID: ${userId}`;
+    }
 
     // Load dropdowns
     const deptResult = await DB.getDepartments();
