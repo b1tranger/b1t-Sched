@@ -1,13 +1,23 @@
 {
-  "currentVersion": "v2.53.0 to v2.53.10",
+  "currentVersion": "v2.53.0 to v2.53.13",
   "lastUpdated": "September 5, 2026",
   "documentationUrl": "https://b1tranger.netlify.app/render.html?file=https%3A%2F%2Fgithub.com%2Fb1tranger%2Fb1t-Sched%2Fblob%2Fmain%2Fdoc%2FDOCUMENTATION.md",
   "history": [
     {
-      "version": "v2.53.0 to v2.53.10",
+      "version": "v2.53.0 to v2.53.13",
       "badge": "Latest",
       "date": "September 2026",
       "changes": [
+        {
+          "type": "Enhancement",
+          "title": "Task Export Native Vector Print to PDF with Selectable Text & Descriptive Filenames",
+          "description": "Upgraded Task Export PDF pipeline in js/features/task-export.js to prompt the browser's native print window with true vector typography and Google Noto Sans Bengali font fallback. Selecting 'Save as PDF' produces 100% selectable, highlightable, and copyable text with flawless Indic/Bangla ligatures and active hyperlinks. Synchronized top-level document.title before print invocation so the browser's 'Save as PDF' dialog automatically suggests the matching descriptive filename (e.g., 'b1t-Sched_CSE_Current_Tasks_2026-09-05.pdf') instead of generic site title. Included an inline one-click fallback link for users preferring direct image-based file downloads."
+        },
+        {
+          "type": "Fix",
+          "title": "Task Export Unicode Bangla & Complex Font Rendering Resolution",
+          "description": "Resolved critical character encoding and font mojibake bug where non-Latin (Bangla/Bengali) text (e.g., 'এক Group এ Maximum 4 জন থাকতে পারবে..') rendered as corrupted WinAnsi symbols (*••Group • Maximum 4 œ¨¥¾•¤Çª¾°¬Ç..*). Migrated PDF export engine in js/features/task-export.js to browser DOM-to-PDF rendering via html2pdf.js with full Indic script shaping, retina canvas scaling (2.0), pure-white background, embedded hyperlinks, and straight line task dividers. Added standard UTF-8 Byte Order Mark (\\uFEFF) to TXT and Markdown blob downloads for seamless Windows text editor decoding."
+        },
         {
           "type": "UI/UX",
           "title": "Classroom Sync Summary Modal Mobile Z-Index & Sidebar Layering Fix",

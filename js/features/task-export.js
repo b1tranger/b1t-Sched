@@ -153,6 +153,19 @@ const TaskExport = {
   },
 
   /**
+   * Helper to escape HTML characters in dynamic strings
+   */
+  escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  },
+
+  /**
    * Helper to format markdown text into plain text for TXT export
    */
   markdownToPlainText(text) {
@@ -160,9 +173,10 @@ const TaskExport = {
     return text
       // Replace [title](url) with "title (url)"
       .replace(/\[([^\]]+)\]\((https?:\/\/[^\s\)]+)\)/g, '$1 ($2)')
-      // Remove bold/italic asterisks
+      // Remove bold: **text** -> text
       .replace(/\*\*([^*]+)\*\*/g, '$1')
-      .replace(/\*([^*]+)\*/g, '$1')
+      // Remove inline italics: *text* -> text
+      .replace(/(^|[^\*])\*([^*\n]+)\*(?!\*)/g, '$1$2')
       // Remove inline code ticks
       .replace(/`([^`]+)`/g, '$1')
       // Remove HTML tags
@@ -176,18 +190,21 @@ const TaskExport = {
   markdownToHtmlWithLinks(text) {
     if (!text) return 'No description available.';
 
-    // First replace markdown links with styled anchor tags
-    let html = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s\)]+)\)/g, '<a href="$2" target="_blank" class="pdf-embedded-link">$1</a>');
+    // First escape raw HTML entities
+    let html = this.escapeHtml(text);
+
+    // Replace markdown links with styled anchor tags
+    html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s\)]+)\)/g, '<a href="$2" target="_blank" style="color: #0b5ed7; text-decoration: underline;">$1</a>');
 
     // Linkify remaining raw URLs that are not inside href=""
-    const rawUrlRegex = /(?<!href="|">)(https?:\/\/[^\s<>"'\)\]]+)/g;
-    html = html.replace(rawUrlRegex, '<a href="$1" target="_blank" class="pdf-embedded-link">$1</a>');
+    const rawUrlRegex = /(?<!href=")(https?:\/\/[^\s<>"'\)\]]+)/g;
+    html = html.replace(rawUrlRegex, '<a href="$1" target="_blank" style="color: #0b5ed7; text-decoration: underline;">$1</a>');
 
     // Bold formatting
     html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
 
     // Italic formatting
-    html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+    html = html.replace(/(^|[^\*])\*([^*\n]+)\*(?!\*)/g, '$1<em>$2</em>');
 
     // Line breaks
     html = html.replace(/\n/g, '<br>');
@@ -401,9 +418,26 @@ const TaskExport = {
         this.downloadFile(`b1t-Sched_${safeDept}_${safeScope}${safeFilter}_${fileTimestamp}.md`, mdContent, 'text/markdown;charset=utf-8');
         this.showStatus('Markdown export downloaded successfully!', 'success');
       } else if (this.selectedFormat === 'pdf') {
-        this.showStatus('Generating PDF document (embedding links)...', 'loading');
-        await this.generatePdf(tasks, meta, `b1t-Sched_${safeDept}_${safeScope}${safeFilter}_${fileTimestamp}.pdf`);
-        this.showStatus('PDF export generated and downloaded successfully!', 'success');
+        const filename = `b1t-Sched_${safeDept}_${safeScope}${safeFilter}_${fileTimestamp}.pdf`;
+        this.showStatus('Prompting print window (select "Save as PDF" to save selectable vector PDF)...', 'loading');
+        await this.printPdf(tasks, meta, filename);
+        this.showStatus(`
+          <span>Print window opened! In the printer destination, select <strong>Save as PDF</strong> for selectable text.</span>
+          <br>
+          <span style="font-size: 11.5px; margin-top: 5px; display: inline-block;">
+            Need a direct file? <a href="#" id="direct-pdf-download-link" style="color: #0b5ed7; text-decoration: underline; font-weight: 600;">Download Direct PDF (Image-based)</a>
+          </span>
+        `, 'success');
+
+        const directLink = document.getElementById('direct-pdf-download-link');
+        if (directLink) {
+          directLink.addEventListener('click', async (e) => {
+            e.preventDefault();
+            this.showStatus('Generating direct PDF download...', 'loading');
+            await this.generatePdf(tasks, meta, filename);
+            this.showStatus('Direct PDF export downloaded successfully!', 'success');
+          });
+        }
       }
 
       setTimeout(() => {
@@ -655,31 +689,139 @@ const TaskExport = {
   },
 
   /**
-   * Resolve jsPDF constructor from global namespace
+   * Prompts the browser's native print window with vector typography,
+   * enabling users to "Save as PDF" with 100% selectable and copyable text,
+   * full OpenType Indic/Bangla font shaping, active links, and sharp vector rendering.
    */
-  getJsPdfConstructor() {
-    if (typeof window.jspdf !== 'undefined' && window.jspdf.jsPDF) {
-      return window.jspdf.jsPDF;
+  async printPdf(tasks, meta, filename) {
+    const htmlContent = this.buildPdfHtml(tasks, meta);
+    const cleanTitle = (filename || 'b1t-Sched_Tasks_Export.pdf').replace(/\.pdf$/i, '');
+
+    // Remove any previous print frame
+    const oldFrame = document.getElementById('task-export-print-frame');
+    if (oldFrame) {
+      oldFrame.remove();
     }
-    if (typeof window.jsPDF !== 'undefined') {
-      return window.jsPDF;
+
+    const printFrame = document.createElement('iframe');
+    printFrame.id = 'task-export-print-frame';
+    printFrame.style.position = 'fixed';
+    printFrame.style.right = '0';
+    printFrame.style.bottom = '0';
+    printFrame.style.width = '0';
+    printFrame.style.height = '0';
+    printFrame.style.border = '0';
+    printFrame.style.visibility = 'hidden';
+    printFrame.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(printFrame);
+
+    const frameDoc = printFrame.contentWindow.document;
+    frameDoc.open();
+    frameDoc.write(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>${this.escapeHtml(cleanTitle)}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 12mm 10mm 15mm 10mm;
     }
-    if (typeof window.html2pdf !== 'undefined' && typeof window.html2pdf.jsPDF !== 'undefined') {
-      return window.html2pdf.jsPDF;
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #ffffff !important;
+      color: #000000 !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans Bengali', 'SolaimanLipi', 'Kalpurush', 'Vrinda', Arial, sans-serif !important;
     }
-    return null;
+    #task-export-pdf-root {
+      padding: 0 !important;
+      width: 100% !important;
+    }
+    .task-pdf-item {
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+      margin-bottom: 12px !important;
+    }
+    .pdf-page-break-before {
+      page-break-before: always !important;
+      break-before: page !important;
+      margin-top: 20px !important;
+    }
+    a {
+      color: #0b5ed7 !important;
+      text-decoration: underline !important;
+    }
+  </style>
+</head>
+<body>
+  ${htmlContent}
+</body>
+</html>`);
+    frameDoc.close();
+
+    // Wait for fonts to be ready before triggering print dialog
+    try {
+      if (frameDoc.fonts && frameDoc.fonts.ready) {
+        await Promise.race([
+          frameDoc.fonts.ready,
+          new Promise(r => setTimeout(r, 400))
+        ]);
+      } else {
+        await new Promise(r => setTimeout(r, 300));
+      }
+    } catch (e) {
+      await new Promise(r => setTimeout(r, 300));
+    }
+
+    // Temporarily set top-level document.title so the browser's "Save as PDF" dialog suggests the descriptive filename
+    const originalTitle = document.title;
+    document.title = cleanTitle;
+
+    let restored = false;
+    const restoreTitle = () => {
+      if (!restored) {
+        restored = true;
+        document.title = originalTitle;
+        window.removeEventListener('focus', restoreTitle);
+        window.removeEventListener('afterprint', restoreTitle);
+      }
+    };
+
+    window.addEventListener('focus', restoreTitle);
+    window.addEventListener('afterprint', restoreTitle);
+    if (printFrame.contentWindow) {
+      printFrame.contentWindow.addEventListener('afterprint', restoreTitle);
+    }
+    setTimeout(restoreTitle, 6000);
+
+    printFrame.contentWindow.focus();
+    printFrame.contentWindow.print();
+
+    // Cleanup print frame after print dialog interaction
+    setTimeout(() => {
+      if (printFrame && printFrame.parentNode) {
+        printFrame.remove();
+      }
+    }, 60000);
   },
 
   /**
-   * Ensures jsPDF library is available, dynamically loading it if needed
+   * Ensures html2pdf library is available, dynamically loading it if needed
    */
-  async ensureJsPdfLoaded() {
-    let JsPdfClass = this.getJsPdfConstructor();
-    if (JsPdfClass) return JsPdfClass;
+  async ensureHtml2PdfLoaded() {
+    if (typeof window.html2pdf !== 'undefined') {
+      return window.html2pdf;
+    }
 
-    // Dynamically inject script if not yet loaded
+    // Dynamically inject html2pdf script if not yet loaded
     await new Promise((resolve, reject) => {
-      const existing = document.querySelector('script[src*="jspdf"]');
+      const existing = document.querySelector('script[src*="html2pdf"]');
       if (existing) {
         existing.addEventListener('load', () => resolve());
         existing.addEventListener('error', (err) => reject(err));
@@ -687,358 +829,80 @@ const TaskExport = {
         return;
       }
       const script = document.createElement('script');
-      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
       script.onload = () => resolve();
-      script.onerror = () => reject(new Error('Failed to load jsPDF library from CDN.'));
+      script.onerror = () => reject(new Error('Failed to load html2pdf library from CDN.'));
       document.head.appendChild(script);
     });
 
-    JsPdfClass = this.getJsPdfConstructor();
-    if (!JsPdfClass) {
-      throw new Error('PDF generation library (jsPDF) could not be initialized.');
+    if (typeof window.html2pdf === 'undefined') {
+      throw new Error('PDF generation library (html2pdf) could not be initialized.');
     }
-    return JsPdfClass;
+    return window.html2pdf;
   },
 
   /**
-   * Parses text into plain text chunks and clickable link tokens
+   * Builds the HTML template string for PDF rendering with full Unicode / Bangla font support
    */
-  parseRichTokens(text) {
-    if (!text) return [];
+  buildPdfHtml(tasks, meta) {
+    const completedCount = tasks.filter(t => t.isCompleted).length;
+    const pendingCount = tasks.length - completedCount;
 
-    // Match markdown links [title](url) or raw URLs
-    const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\s\)]+)\)|(https?:\/\/[^\s<>"'\)\]]+)/gi;
-    const tokens = [];
-    let lastIndex = 0;
-    let match;
+    let html = `
+      <div id="task-export-pdf-root" style="background-color: #ffffff !important; color: #000000 !important; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'SolaimanLipi', 'Kalpurush', 'Vrinda', Arial, sans-serif !important; box-sizing: border-box; padding: 12px 16px 20px 16px; margin: 0; line-height: 1.45; width: 100%;">
+        <!-- Header -->
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 4px;">
+          <tr>
+            <td style="text-align: left; vertical-align: top;">
+              <a href="https://b1tsched.netlify.app/" target="_blank" style="font-size: 24px; font-weight: bold; color: #800000; text-decoration: none; display: inline-block;">b1t-Sched</a>
+              <div style="font-size: 11.5px; color: #000000; margin-top: 2px;">Academic Task Schedule Export</div>
+            </td>
+            <td style="text-align: right; vertical-align: top;">
+              <div style="font-size: 13px; font-weight: bold; color: #800000;">EXPORT: ${this.escapeHtml(meta.scope.toUpperCase())}</div>
+              <div style="font-size: 11px; color: #000000; margin-top: 2px;">Generated: ${this.escapeHtml(meta.exportDate)}</div>
+            </td>
+          </tr>
+        </table>
 
-    while ((match = linkRegex.exec(text)) !== null) {
-      if (match.index > lastIndex) {
-        tokens.push({
-          type: 'text',
-          text: text.substring(lastIndex, match.index)
-        });
-      }
+        <div style="border-bottom: 0.5px solid #c8c8c8; margin: 8px 0 6px 0;"></div>
 
-      if (match[1] && match[2]) {
-        tokens.push({
-          type: 'link',
-          text: match[1].trim(),
-          url: match[2].trim()
-        });
-      } else if (match[3]) {
-        const rawUrl = match[3].trim();
-        tokens.push({
-          type: 'link',
-          text: rawUrl,
-          url: rawUrl
-        });
-      }
+        <table style="width: 100%; border-collapse: collapse; font-size: 11.5px; color: #000000;">
+          <tr>
+            <td style="text-align: left;">
+              <strong style="color: #000000;">Department:</strong> ${this.escapeHtml(meta.department)} &nbsp;|&nbsp; <strong style="color: #000000;">Filter:</strong> ${this.escapeHtml(meta.filterName)}
+            </td>
+            <td style="text-align: right; font-weight: bold; color: #000000;">
+              Total Tasks: ${meta.totalCount} &nbsp;|&nbsp; Completed: ${completedCount} &nbsp;|&nbsp; Pending: ${pendingCount}
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2" style="text-align: left; padding-top: 3px; color: #000000;">
+              <strong style="color: #000000;">Semester / Section:</strong> ${this.escapeHtml(meta.semester)} (${this.escapeHtml(meta.section)})
+            </td>
+          </tr>
+        </table>
 
-      lastIndex = linkRegex.lastIndex;
-    }
+        <div style="border-bottom: 1.5px solid #800000; margin: 8px 0 12px 0;"></div>
 
-    if (lastIndex < text.length) {
-      tokens.push({
-        type: 'text',
-        text: text.substring(lastIndex)
-      });
-    }
-
-    return tokens;
-  },
-
-  /**
-   * Measures total height needed to render wrapped rich text
-   */
-  measureRichTextHeight(doc, text, maxWidth, lineHeight, fontSize) {
-    if (!text) return 0;
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(fontSize);
-
-    const paragraphs = text.split('\n');
-    let lineCount = 0;
-
-    paragraphs.forEach((para) => {
-      const trimmed = para.trim();
-      if (!trimmed) {
-        lineCount += 0.5;
-        return;
-      }
-
-      const tokens = this.parseRichTokens(trimmed);
-      let curX = 0;
-      lineCount += 1;
-
-      tokens.forEach(token => {
-        if (token.type === 'text') {
-          const words = token.text.split(/(\s+)/);
-          words.forEach(word => {
-            if (!word) return;
-            const wordWidth = doc.getTextWidth(word);
-            if (curX + wordWidth > maxWidth && curX > 0) {
-              lineCount += 1;
-              curX = 0;
-              if (/^\s+$/.test(word)) return;
-            }
-            curX += wordWidth;
-          });
-        } else if (token.type === 'link') {
-          const linkWidth = doc.getTextWidth(token.text);
-          if (curX + linkWidth > maxWidth && curX > 0) {
-            lineCount += 1;
-            curX = 0;
-          }
-          if (linkWidth > maxWidth) {
-            const chunks = doc.splitTextToSize(token.text, maxWidth);
-            lineCount += Math.max(0, chunks.length - 1);
-            curX = doc.getTextWidth(chunks[chunks.length - 1]);
-          } else {
-            curX += linkWidth;
-          }
-        }
-      });
-    });
-
-    return lineCount * lineHeight;
-  },
-
-  /**
-   * Renders rich text with word wrapping and embedded clickable links in jsPDF
-   */
-  renderRichTextWithLinks(doc, text, startX, startY, maxWidth, lineHeight, fontSize) {
-    if (!text) return startY;
-
-    const paragraphs = text.split('\n');
-    let curY = startY;
-
-    paragraphs.forEach((para, pIdx) => {
-      if (pIdx > 0) {
-        curY += lineHeight * 0.4;
-      }
-      const trimmed = para.trim();
-      if (!trimmed) {
-        curY += lineHeight * 0.5;
-        return;
-      }
-
-      const tokens = this.parseRichTokens(trimmed);
-      let curX = startX;
-
-      tokens.forEach(token => {
-        if (token.type === 'text') {
-          const words = token.text.split(/(\s+)/);
-          words.forEach(word => {
-            if (!word) return;
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(fontSize);
-            doc.setTextColor(0, 0, 0); // Black font
-
-            const wordWidth = doc.getTextWidth(word);
-
-            if (curX + wordWidth > startX + maxWidth && curX > startX) {
-              curY += lineHeight;
-              curX = startX;
-              if (/^\s+$/.test(word)) return;
-            }
-
-            if (!/^\s+$/.test(word)) {
-              doc.text(word, curX, curY);
-            }
-            curX += wordWidth;
-          });
-        } else if (token.type === 'link') {
-          doc.setFont('helvetica', 'normal');
-          doc.setFontSize(fontSize);
-          doc.setTextColor(11, 94, 215); // Blue link
-
-          const linkText = token.text;
-          const linkWidth = doc.getTextWidth(linkText);
-
-          if (curX + linkWidth > startX + maxWidth && curX > startX) {
-            curY += lineHeight;
-            curX = startX;
-          }
-
-          if (linkWidth > maxWidth) {
-            const chunks = doc.splitTextToSize(linkText, maxWidth);
-            chunks.forEach((chunk, cIdx) => {
-              if (cIdx > 0) {
-                curY += lineHeight;
-                curX = startX;
-              }
-              const chunkW = doc.getTextWidth(chunk);
-              doc.text(chunk, curX, curY);
-              doc.setDrawColor(11, 94, 215);
-              doc.setLineWidth(0.2);
-              doc.line(curX, curY + 0.5, curX + chunkW, curY + 0.5);
-              doc.link(curX, curY - (lineHeight * 0.75), chunkW, lineHeight, { url: token.url });
-              curX += chunkW;
-            });
-          } else {
-            doc.text(linkText, curX, curY);
-            doc.setDrawColor(11, 94, 215);
-            doc.setLineWidth(0.2);
-            doc.line(curX, curY + 0.5, curX + linkWidth, curY + 0.5);
-            doc.link(curX, curY - (lineHeight * 0.75), linkWidth, lineHeight, { url: token.url });
-            curX += linkWidth;
-          }
-        }
-      });
-
-      curY += lineHeight;
-    });
-
-    return curY;
-  },
-
-  /**
-   * Generates clean, pure-white PDF export with 120% scale, straight line dividers, and clickable links
-   */
-  async generatePdf(tasks, meta, filename) {
-    const JsPDF = await this.ensureJsPdfLoaded();
-
-    const doc = new JsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4'
-    });
-
-    const pageWidth = doc.internal.pageSize.getWidth(); // 210mm
-    const pageHeight = doc.internal.pageSize.getHeight(); // 297mm
-    const margin = 14;
-    const contentWidth = pageWidth - (margin * 2); // 182mm
-    const pageBottomLimit = pageHeight - 16;
-
-    // 120% Scaled Typography and Spacing Tokens
-    const scale = 1.2;
-    const fontTitle = 13.5;
-    const fontHeaderBrand = 22;
-    const fontCourse = 10.5;
-    const fontBody = 10.5;
-    const fontMeta = 9.8;
-    const fontSmall = 9.0;
-    const lineHeightBody = 5.2;
-
-    let y = margin + 2;
-
-    const drawPageHeader = () => {
-      // Brand Title (Clickable link to website)
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(fontHeaderBrand);
-      doc.setTextColor(128, 0, 0); // Maroon
-      const brandTitle = 'b1t-Sched';
-      doc.text(brandTitle, margin, y);
-      const brandWidth = doc.getTextWidth(brandTitle);
-      doc.link(margin, y - 6, brandWidth, 8, { url: 'https://b1tsched.netlify.app/' });
-
-      // Subtitle
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(fontMeta);
-      doc.setTextColor(0, 0, 0); // Black font
-      doc.text('Academic Task Schedule Export', margin, y + 5.2);
-
-      // Scope on the right
-      const scopeText = `EXPORT: ${meta.scope.toUpperCase()}`;
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(fontCourse);
-      doc.setTextColor(128, 0, 0);
-      doc.text(scopeText, pageWidth - margin - doc.getTextWidth(scopeText), y);
-
-      // Export Date
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(fontSmall);
-      doc.setTextColor(0, 0, 0); // Black font
-      const dateText = `Generated: ${meta.exportDate}`;
-      doc.text(dateText, pageWidth - margin - doc.getTextWidth(dateText), y + 5.2);
-
-      y += 9.5;
-
-      // Summary straight line divider
-      doc.setDrawColor(200, 200, 200);
-      doc.setLineWidth(0.35);
-      doc.line(margin, y, pageWidth - margin, y);
-      y += 4.8;
-
-      // Summary Info Line (No background box)
-      doc.setFontSize(fontMeta);
-      doc.setTextColor(0, 0, 0); // Black font
-      doc.setFont('helvetica', 'bold');
-      doc.text('Department:', margin, y);
-      doc.setFont('helvetica', 'normal');
-      doc.text(` ${meta.department}   |   Filter: ${meta.filterName}`, margin + doc.getTextWidth('Department:'), y);
-
-      const completedCount = tasks.filter(t => t.isCompleted).length;
-      const pendingCount = tasks.length - completedCount;
-
-      const totalText = `Total Tasks: ${meta.totalCount}  |  Completed: ${completedCount}  |  Pending: ${pendingCount}`;
-      doc.setFont('helvetica', 'bold');
-      doc.text(totalText, pageWidth - margin - doc.getTextWidth(totalText), y);
-
-      y += 4.5;
-      doc.setFont('helvetica', 'bold');
-      doc.text('Semester / Section:', margin, y);
-      doc.setFont('helvetica', 'normal');
-      doc.text(` ${meta.semester} (${meta.section})`, margin + doc.getTextWidth('Semester / Section:'), y);
-
-      y += 4.5;
-      // Header closing straight line divider
-      doc.setDrawColor(128, 0, 0);
-      doc.setLineWidth(0.5);
-      doc.line(margin, y, pageWidth - margin, y);
-      y += 8;
-    };
-
-    // Draw header on first page
-    drawPageHeader();
-
-    // Central Heading stating the type of the tasks that have been exported
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(13.5);
-    doc.setTextColor(128, 0, 0); // Maroon central heading
-    const centralHeading = meta.filterHeading; // e.g. "EXAM TASKS" or "ALL ACADEMIC TASKS"
-    const headingW = doc.getTextWidth(centralHeading);
-    doc.text(centralHeading, (pageWidth - headingW) / 2, y);
-    y += 4.5;
-
-    doc.setDrawColor(210, 215, 222);
-    doc.setLineWidth(0.35);
-    doc.line((pageWidth - headingW) / 2 - 10, y, (pageWidth + headingW) / 2 + 10, y);
-    y += 7.5;
+        <div style="text-align: center; margin: 8px 0 14px 0;">
+          <div style="font-size: 14.5px; font-weight: bold; color: #800000; letter-spacing: 0.5px;">${this.escapeHtml(meta.filterHeading)}</div>
+          <div style="width: 180px; height: 1px; background-color: #d2d7de; margin: 6px auto 0 auto;"></div>
+        </div>
+    `;
 
     let hasRenderedOldTasksHeading = false;
 
-    // Iterate through all tasks
     tasks.forEach((task, index) => {
-      // When reaching old tasks in "Export All Tasks", insert page break and Old Tasks heading
       if (task.isOldTask && !hasRenderedOldTasksHeading) {
         hasRenderedOldTasksHeading = true;
-        doc.addPage();
-        y = margin + 2;
-
-        // Old Tasks Central Heading
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(15);
-        doc.setTextColor(128, 0, 0); // Maroon
-        const oldHeading = 'OLD TASKS';
-        const oldHeadingW = doc.getTextWidth(oldHeading);
-        doc.text(oldHeading, (pageWidth - oldHeadingW) / 2, y);
-        y += 4.5;
-
-        // Subtitle under Old Tasks
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(fontMeta);
-        doc.setTextColor(0, 0, 0);
-        const oldSub = meta.filter !== 'all' ? `Archived & Past ${meta.filterName}` : 'Archived & Past Task History';
-        const oldSubW = doc.getTextWidth(oldSub);
-        doc.text(oldSub, (pageWidth - oldSubW) / 2, y);
-        y += 4.5;
-
-        // Straight line divider
-        doc.setDrawColor(128, 0, 0);
-        doc.setLineWidth(0.5);
-        doc.line(margin, y, pageWidth - margin, y);
-        y += 8;
+        const oldSub = meta.filter !== 'all' ? `Archived & Past ${this.escapeHtml(meta.filterName)}` : 'Archived & Past Task History';
+        html += `
+          <div class="pdf-page-break-before" style="page-break-before: always; break-before: page; text-align: center; margin: 20px 0 14px 0;">
+            <div style="font-size: 16px; font-weight: bold; color: #800000; letter-spacing: 0.5px;">OLD TASKS</div>
+            <div style="font-size: 11.5px; color: #000000; margin-top: 3px;">${oldSub}</div>
+            <div style="border-bottom: 1.5px solid #800000; margin: 8px 0 16px 0;"></div>
+          </div>
+        `;
       }
 
       const typeUpper = (task.type || 'TASK').toUpperCase();
@@ -1048,188 +912,171 @@ const TaskExport = {
       const target = `${task.department || meta.department} - ${task.semester || meta.semester} (${task.section || meta.section})`;
       const addedBy = `${task.addedByName || 'User'}${task.addedByRole ? ` (${task.addedByRole})` : ''}`;
 
-      const desc = task.description || '';
-      const details = task.details || '';
-      const links = task.extractedLinks || [];
-
-      // Calculate heights required for this task
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(fontTitle);
-      const titleLines = doc.splitTextToSize(title, contentWidth);
-
-      const descHeight = desc ? this.measureRichTextHeight(doc, desc, contentWidth, lineHeightBody, fontBody) : 0;
-      const detailsHeight = details ? this.measureRichTextHeight(doc, details, contentWidth, lineHeightBody, fontBody) : 0;
-      const linksHeight = links.length > 0 ? (5 + (links.length * 5.2)) : 0;
-
-      const taskTotalHeight = 6 + (titleLines.length * 5.5) + 6 + descHeight + detailsHeight + linksHeight + 10;
-
-      // Page break check
-      if (y + taskTotalHeight > pageBottomLimit) {
-        doc.addPage();
-        y = margin;
-      }
-
-      // 1. Task Top Line: Course Code | Type | Status
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(fontCourse);
-      doc.setTextColor(128, 0, 0); // Maroon Course
-      doc.text(course.toUpperCase(), margin, y);
-
-      let statusLabel = '[Status: Pending]';
+      let statusLabel = 'Pending';
+      let statusColor = '#000000';
       if (task.status === 'Completed') {
-        statusLabel = '[Status: Completed]';
+        statusLabel = 'Completed';
+        statusColor = '#15803d';
       } else if (task.status === 'Overdue') {
-        statusLabel = '[Status: Overdue]';
+        statusLabel = 'Overdue';
+        statusColor = '#b91c1c';
       } else if (task.isUrgent) {
-        statusLabel = `[Status: Due Soon - ${task.daysUntil}d left]`;
+        statusLabel = `Due Soon - ${task.daysUntil}d left`;
+        statusColor = '#b91c1c';
       }
 
-      const metaHeaderRight = `TYPE: ${typeUpper}   ${statusLabel}`;
-      doc.setFontSize(fontMeta);
-      doc.setTextColor(0, 0, 0);
-      if (task.status === 'Overdue') {
-        doc.setTextColor(185, 28, 28);
-      } else if (task.status === 'Completed') {
-        doc.setTextColor(21, 128, 61);
-      }
-      doc.text(metaHeaderRight, pageWidth - margin - doc.getTextWidth(metaHeaderRight), y);
+      const isDeadAlert = task.isUrgent || task.isPastDeadline;
+      const deadColor = isDeadAlert ? '#b91c1c' : '#000000';
+      const deadWeight = isDeadAlert ? 'bold' : 'normal';
 
-      y += 5.5;
+      html += `
+        <div class="task-pdf-item" style="page-break-inside: avoid; break-inside: avoid; margin-bottom: 12px; color: #000000;">
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 3px;">
+            <tr>
+              <td style="text-align: left; vertical-align: baseline;">
+                <span style="font-size: 12.5px; font-weight: bold; color: #800000; text-transform: uppercase;">${this.escapeHtml(course)}</span>
+              </td>
+              <td style="text-align: right; vertical-align: baseline;">
+                <span style="font-size: 11px; color: ${statusColor}; font-weight: 600;">TYPE: ${this.escapeHtml(typeUpper)} &nbsp;&nbsp; [Status: ${this.escapeHtml(statusLabel)}]</span>
+              </td>
+            </tr>
+          </table>
 
-      // 2. Task Title (Bold Black Font - 120% Scaled)
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(fontTitle);
-      doc.setTextColor(0, 0, 0); // Pure black
-      titleLines.forEach(tLine => {
-        doc.text(tLine, margin, y);
-        y += 5.5;
-      });
+          <div style="font-size: 15px; font-weight: bold; color: #000000; margin-bottom: 5px; line-height: 1.35;">${this.escapeHtml(title)}</div>
 
-      // 3. Metadata Line: Deadline | Target | Added By
-      doc.setFontSize(fontMeta);
-      doc.setTextColor(0, 0, 0);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Deadline:', margin, y);
-      const deadX = margin + doc.getTextWidth('Deadline:') + 1.5;
-      doc.setFont('helvetica', 'normal');
-      if (task.isUrgent || task.isPastDeadline) {
-        doc.setTextColor(185, 28, 28);
-        doc.setFont('helvetica', 'bold');
-      }
-      doc.text(deadline, deadX, y);
+          <table style="width: 100%; border-collapse: collapse; font-size: 11.5px; color: #000000; margin-bottom: 6px;">
+            <tr>
+              <td style="text-align: left; vertical-align: top;">
+                <strong>Deadline:</strong> <span style="color: ${deadColor}; font-weight: ${deadWeight};">${this.escapeHtml(deadline)}</span>
+                &nbsp;&nbsp;&nbsp;
+                <strong>Target:</strong> ${this.escapeHtml(target)}
+              </td>
+              <td style="text-align: right; vertical-align: top; white-space: nowrap;">
+                Added: ${this.escapeHtml(addedBy)}
+              </td>
+            </tr>
+          </table>
+      `;
 
-      doc.setTextColor(0, 0, 0);
-      doc.setFont('helvetica', 'bold');
-      const targetLabelX = deadX + doc.getTextWidth(deadline) + 6;
-      if (targetLabelX < contentWidth - 45) {
-        doc.text('Target:', targetLabelX, y);
-        doc.setFont('helvetica', 'normal');
-        doc.text(` ${target}`, targetLabelX + doc.getTextWidth('Target:'), y);
-      }
-
-      const addedByText = `Added: ${addedBy}`;
-      doc.setFont('helvetica', 'normal');
-      doc.text(addedByText, pageWidth - margin - doc.getTextWidth(addedByText), y);
-
-      y += 5.5;
-
-      // 4. Description with embedded clickable links
-      if (desc) {
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(fontMeta);
-        doc.setTextColor(0, 0, 0);
-        doc.text('Description:', margin, y);
-        y += 4.8;
-
-        y = this.renderRichTextWithLinks(doc, desc, margin, y, contentWidth, lineHeightBody, fontBody);
-        y += 2;
+      if (task.description) {
+        html += `
+          <div style="margin-top: 5px;">
+            <div style="font-size: 11.5px; font-weight: bold; color: #000000; margin-bottom: 2px;">Description:</div>
+            <div style="font-size: 12.5px; color: #000000; line-height: 1.45; word-break: break-word;">${this.markdownToHtmlWithLinks(task.description)}</div>
+          </div>
+        `;
       }
 
-      // 5. Details with embedded clickable links
-      if (details) {
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(fontMeta);
-        doc.setTextColor(0, 0, 0);
-        doc.text('Details:', margin, y);
-        y += 4.8;
-
-        y = this.renderRichTextWithLinks(doc, details, margin, y, contentWidth, lineHeightBody, fontBody);
-        y += 2;
+      if (task.details) {
+        html += `
+          <div style="margin-top: 5px;">
+            <div style="font-size: 11.5px; font-weight: bold; color: #000000; margin-bottom: 2px;">Details:</div>
+            <div style="font-size: 12.5px; color: #000000; line-height: 1.45; word-break: break-word;">${this.markdownToHtmlWithLinks(task.details)}</div>
+          </div>
+        `;
       }
 
-      // 6. Attached Links (Clean, tight character spacing, no emojis)
-      if (links.length > 0) {
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(fontMeta);
-        doc.setTextColor(0, 0, 0);
-        doc.text('Attached Links:', margin, y);
-        y += 4.6;
-
-        links.forEach(link => {
-          doc.setFont('helvetica', 'bold');
-          doc.setFontSize(fontSmall);
-          doc.setTextColor(0, 0, 0);
-          doc.text('Link: ', margin + 2, y);
-
-          const linkPrefixW = doc.getTextWidth('Link: ');
-          const linkX = margin + 2 + linkPrefixW;
-
-          doc.setFont('helvetica', 'normal');
-          doc.setTextColor(11, 94, 215); // Blue link
-          doc.text(link.title, linkX, y);
-
-          const titleW = doc.getTextWidth(link.title);
-          doc.setDrawColor(11, 94, 215);
-          doc.setLineWidth(0.2);
-          doc.line(linkX, y + 0.4, linkX + titleW, y + 0.4);
-
-          // Clickable link annotation
-          doc.link(linkX, y - (lineHeightBody * 0.75), titleW, lineHeightBody, { url: link.url });
-
-          y += 4.8;
+      if (task.extractedLinks && task.extractedLinks.length > 0) {
+        html += `
+          <div style="margin-top: 5px;">
+            <div style="font-size: 11.5px; font-weight: bold; color: #000000; margin-bottom: 2px;">Attached Links:</div>
+            <ul style="margin: 2px 0 0 18px; padding: 0; font-size: 11.5px; color: #000000;">
+        `;
+        task.extractedLinks.forEach(link => {
+          html += `
+            <li style="margin-bottom: 2px;">
+              <strong>Link:</strong> <a href="${this.escapeHtml(link.url)}" target="_blank" style="color: #0b5ed7; text-decoration: underline;">${this.escapeHtml(link.title)}</a>
+            </li>
+          `;
         });
+        html += `</ul></div>`;
       }
 
-      y += 4;
-
-      // 7. Straight Line Divider between each task
       if (index < tasks.length - 1) {
-        doc.setDrawColor(210, 215, 222);
-        doc.setLineWidth(0.4);
-        doc.line(margin, y, pageWidth - margin, y);
-        y += 8;
+        html += `<div style="border-bottom: 0.5px solid #d2d7de; margin: 12px 0;"></div>`;
       }
+
+      html += `</div>`;
     });
 
-    // Page numbering and footer on every page
-    const pageCount = doc.internal.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(fontSmall);
-      doc.setTextColor(0, 0, 0); // Black font
-      doc.setDrawColor(210, 215, 222);
-      doc.setLineWidth(0.3);
-      doc.line(margin, pageHeight - 11, pageWidth - margin, pageHeight - 11);
-
-      const footerBrandText = 'b1t-Sched • Academic Task Schedule';
-      doc.text(footerBrandText, margin, pageHeight - 6.5);
-      const footerBrandWidth = doc.getTextWidth(footerBrandText);
-      doc.link(margin, pageHeight - 10, footerBrandWidth, 6, { url: 'https://b1tsched.netlify.app/' });
-
-      const pageNumText = `Page ${i} of ${pageCount}`;
-      doc.text(pageNumText, pageWidth - margin - doc.getTextWidth(pageNumText), pageHeight - 6.5);
-    }
-
-    // Save/Download the PDF document
-    doc.save(filename);
+    html += `</div>`;
+    return html;
   },
 
   /**
-   * Helper to trigger browser download for text/markdown blobs
+   * Generates clean, pure-white PDF export with 120% scale, straight line dividers, clickable links,
+   * and full Unicode / Bangla (Bengali) font rendering support.
+   */
+  async generatePdf(tasks, meta, filename) {
+    const html2pdfLib = await this.ensureHtml2PdfLoaded();
+
+    const htmlContent = this.buildPdfHtml(tasks, meta);
+
+    const opt = {
+      margin: [10, 10, 16, 10], // mm: top, right, bottom, left
+      filename: filename,
+      image: { type: 'jpeg', quality: 0.98 },
+      enableLinks: true,
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        scrollX: 0,
+        scrollY: 0,
+        logging: false
+      },
+      jsPDF: {
+        unit: 'mm',
+        format: 'a4',
+        orientation: 'portrait'
+      },
+      pagebreak: {
+        mode: ['css', 'legacy']
+      }
+    };
+
+    await html2pdfLib()
+      .set(opt)
+      .from(htmlContent)
+      .toPdf()
+      .get('pdf')
+      .then(pdf => {
+        const pageCount = pdf.internal.getNumberOfPages();
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const marginX = 10;
+        const footerY = pageHeight - 6.5;
+
+        for (let i = 1; i <= pageCount; i++) {
+          pdf.setPage(i);
+          pdf.setFont('helvetica', 'normal');
+          pdf.setFontSize(8.5);
+          pdf.setTextColor(110, 110, 110);
+          pdf.setDrawColor(210, 215, 222);
+          pdf.setLineWidth(0.3);
+
+          // Bottom line divider
+          pdf.line(marginX, pageHeight - 11, pageWidth - marginX, pageHeight - 11);
+
+          // Brand footer with clickable link
+          const footerBrandText = 'b1t-Sched • Academic Task Schedule';
+          pdf.text(footerBrandText, marginX, footerY);
+          const brandWidth = pdf.getTextWidth(footerBrandText);
+          pdf.link(marginX, pageHeight - 10, brandWidth, 5.5, { url: 'https://b1tsched.netlify.app/' });
+
+          // Page number
+          const pageNumText = `Page ${i} of ${pageCount}`;
+          pdf.text(pageNumText, pageWidth - marginX - pdf.getTextWidth(pageNumText), footerY);
+        }
+      })
+      .save();
+  },
+
+  /**
+   * Helper to trigger browser download for text/markdown blobs with UTF-8 BOM
    */
   downloadFile(filename, content, mimeType) {
-    const blob = new Blob([content], { type: mimeType });
+    const blob = new Blob(['\uFEFF' + content], { type: mimeType });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
