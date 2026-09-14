@@ -202,6 +202,7 @@ const FirestoreListenerManager = {
 
     return db.collection('cr_notices')
       .where('department', '==', department)
+      .where('isDepartmentNotice', '==', true)
       .limit(50)
       .onSnapshot((snapshot) => {
         if (isFirstSnapshot) {

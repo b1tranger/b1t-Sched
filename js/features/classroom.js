@@ -733,8 +733,10 @@ const Classroom = {
                 try {
                     const cachedAssignments = await this.cacheManager.getCachedClassroomData('assignments');
                     const cachedAnnouncements = await this.cacheManager.getCachedClassroomData('announcements');
+                    const cachedMaterials = await this.cacheManager.getCachedClassroomData('materials');
                     prevAssignments = (cachedAssignments && cachedAssignments.data) || [];
                     prevAnnouncements = (cachedAnnouncements && cachedAnnouncements.data) || [];
+                    prevMaterials = (cachedMaterials && cachedMaterials.data) || [];
                 } catch (e) {
                     console.warn('[Classroom] Error reading cache before reconnect:', e);
                 }
@@ -745,11 +747,17 @@ const Classroom = {
             if (prevAnnouncements.length === 0 && this.getJsonCache()) {
                 prevAnnouncements = this.getJsonCache().announcements || [];
             }
+            if (prevMaterials.length === 0 && this.getJsonCache()) {
+                prevMaterials = this.getJsonCache().materials || [];
+            }
             if (prevAssignments.length === 0 && this.inMemoryCache && this.inMemoryCache.assignments) {
                 prevAssignments = this.inMemoryCache.assignments;
             }
             if (prevAnnouncements.length === 0 && this.inMemoryCache && this.inMemoryCache.announcements) {
                 prevAnnouncements = this.inMemoryCache.announcements;
+            }
+            if (prevMaterials.length === 0 && this.inMemoryCache && this.inMemoryCache.materials) {
+                prevMaterials = this.inMemoryCache.materials;
             }
         }
 
@@ -762,6 +770,7 @@ const Classroom = {
         if (wasExpiredSession) {
             const freshAssignments = (this.inMemoryCache && this.inMemoryCache.assignments) || [];
             const freshAnnouncements = (this.inMemoryCache && this.inMemoryCache.announcements) || [];
+            const freshMaterials = (this.inMemoryCache && this.inMemoryCache.materials) || [];
 
             if (typeof App !== 'undefined' && typeof App.loadDashboardData === 'function') {
                 await App.loadDashboardData(false);
@@ -769,7 +778,7 @@ const Classroom = {
 
             await this.syncTurnedInAssignmentsToUserCompletions(freshAssignments);
 
-            const diffSummary = this.computeClassroomChanges(prevAssignments, prevAnnouncements, freshAssignments, freshAnnouncements);
+            const diffSummary = this.computeClassroomChanges(prevAssignments, prevAnnouncements, freshAssignments, freshAnnouncements, prevMaterials, freshMaterials);
             this.showSyncSummaryModal(diffSummary);
         }
 
@@ -1801,7 +1810,11 @@ const Classroom = {
                     const statusClass = item.status === 'added' ? 'status-added' : (item.status === 'updated' ? 'status-updated' : 'status-unchanged');
                     const badgeClass = item.status;
                     const badgeIcon = item.status === 'added' ? 'fa-plus' : (item.status === 'updated' ? 'fa-pen' : 'fa-check');
-                    const badgeLabel = item.status === 'added' ? 'Added Task' : (item.status === 'updated' ? 'Updated' : 'Up to date');
+
+                    const itemType = item.type || 'assignment';
+                    const typeLabel = itemType === 'announcement' ? 'Announcement' : (itemType === 'material' ? 'Material' : 'Assignment');
+                    const typeIcon = itemType === 'announcement' ? 'fa-bullhorn' : (itemType === 'material' ? 'fa-folder-open' : 'fa-clipboard-list');
+                    const badgeLabel = item.status === 'added' ? `Added ${typeLabel}` : (item.status === 'updated' ? `Updated ${typeLabel}` : `Up to date`);
 
                     const diffHtml = this.renderDiffViewer(item.diff);
 
@@ -1813,12 +1826,15 @@ const Classroom = {
                                         <span class="sync-action-badge ${badgeClass}">
                                             <i class="fas ${badgeIcon}"></i> ${badgeLabel}
                                         </span>
+                                        <span class="sync-type-pill type-${itemType}">
+                                            <i class="fas ${typeIcon}"></i> ${typeLabel}
+                                        </span>
                                         <span class="sync-course-pill">${Utils.escapeHtml(item.courseName || 'Classroom')}</span>
                                     </div>
                                     <h4 class="sync-card-title">${Utils.escapeHtml(item.title)}</h4>
                                     <div class="sync-card-meta">
                                         <i class="far fa-clock"></i>
-                                        <span>${Utils.escapeHtml(item.diff?.newDeadlineStr || 'No due date')}</span>
+                                        <span>${Utils.escapeHtml(item.diff?.newDeadlineStr || (itemType === 'material' ? 'Course Resource' : (itemType === 'announcement' ? 'Announcement / Notice' : 'No due date')))}</span>
                                     </div>
                                 </div>
                                 <div class="sync-card-actions">
@@ -1939,17 +1955,20 @@ const Classroom = {
                 const linkLabel = assignment.alternateLink ? `[View in Classroom](${assignment.alternateLink})\n\n` : '';
                 const desc = linkLabel + (assignment.description || '');
 
+                const isFacultyUser = (typeof App !== 'undefined' && (App.isFaculty || (App.userProfile && (App.userProfile.isFaculty || App.userProfile.role === 'Faculty'))));
+
                 const taskData = {
                     title: assignment.title,
                     course: assignment.courseName || 'Classroom Assignment',
                     type: 'assignment',
                     description: desc,
                     department: App.userProfile ? App.userProfile.department : 'ALL',
-                    semester: App.userProfile ? App.userProfile.semester : null,
-                    section: App.userProfile ? App.userProfile.section : null,
+                    semester: isFacultyUser ? null : (App.userProfile ? App.userProfile.semester : null),
+                    section: isFacultyUser ? null : (App.userProfile ? App.userProfile.section : null),
                     deadline: due.toISOString(),
                     addedFrom: 'classroom',
-                    classroomWorkId: assignment.id
+                    classroomWorkId: assignment.id,
+                    addedByRole: isFacultyUser ? 'Faculty' : undefined
                 };
 
                 const existingTask = existingTasksMap.get(assignment.id);
@@ -2161,12 +2180,14 @@ const Classroom = {
         }
     },
 
-    // Compute changes across assignments & announcements between previous cache and fresh data
-    computeClassroomChanges(prevAssignments = [], prevAnnouncements = [], freshAssignments = [], freshAnnouncements = []) {
+    // Compute changes across assignments, announcements & materials between previous cache and fresh data
+    computeClassroomChanges(prevAssignments = [], prevAnnouncements = [], freshAssignments = [], freshAnnouncements = [], prevMaterials = [], freshMaterials = []) {
         const prevAssignmentsMap = new Map();
         (prevAssignments || []).forEach(a => { if (a && a.id) prevAssignmentsMap.set(String(a.id), a); });
         const prevAnnouncementsMap = new Map();
         (prevAnnouncements || []).forEach(a => { if (a && a.id) prevAnnouncementsMap.set(String(a.id), a); });
+        const prevMaterialsMap = new Map();
+        (prevMaterials || []).forEach(m => { if (m && m.id) prevMaterialsMap.set(String(m.id), m); });
 
         const addedItems = [];
         const updatedItems = [];
@@ -2179,6 +2200,7 @@ const Classroom = {
                 const diff = this.computeItemDiff(null, item, true);
                 addedItems.push({
                     id: item.id,
+                    type: 'assignment',
                     title: item.title || 'Assignment',
                     courseName: item.courseName || 'Classroom Assignment',
                     link: item.alternateLink || '#',
@@ -2195,6 +2217,7 @@ const Classroom = {
                 if (diff.hasAnyChanges) {
                     updatedItems.push({
                         id: item.id,
+                        type: 'assignment',
                         title: item.title || 'Assignment',
                         courseName: item.courseName || 'Classroom Assignment',
                         link: item.alternateLink || '#',
@@ -2204,6 +2227,7 @@ const Classroom = {
                 } else {
                     unchangedItems.push({
                         id: item.id,
+                        type: 'assignment',
                         title: item.title || 'Assignment',
                         courseName: item.courseName || 'Classroom Assignment',
                         link: item.alternateLink || '#',
@@ -2227,6 +2251,7 @@ const Classroom = {
                 }, true);
                 addedItems.push({
                     id: ann.id,
+                    type: 'announcement',
                     title: annTitle,
                     courseName: ann.courseName || 'Class Announcement',
                     link: ann.alternateLink || '#',
@@ -2248,6 +2273,7 @@ const Classroom = {
                 if (diff.hasAnyChanges) {
                     updatedItems.push({
                         id: ann.id,
+                        type: 'announcement',
                         title: annTitle,
                         courseName: ann.courseName || 'Class Announcement',
                         link: ann.alternateLink || '#',
@@ -2257,9 +2283,66 @@ const Classroom = {
                 } else {
                     unchangedItems.push({
                         id: ann.id,
+                        type: 'announcement',
                         title: annTitle,
                         courseName: ann.courseName || 'Class Announcement',
                         link: ann.alternateLink || '#',
+                        status: 'unchanged',
+                        diff
+                    });
+                }
+            }
+        }
+
+        // Check course materials
+        for (const mat of (freshMaterials || [])) {
+            const prev = prevMaterialsMap.get(String(mat.id));
+            const matTitle = mat.title || 'Course Material';
+            if (!prev) {
+                const diff = this.computeItemDiff(null, {
+                    title: matTitle,
+                    description: mat.description,
+                    alternateLink: mat.alternateLink,
+                    materials: mat.materials
+                }, true);
+                addedItems.push({
+                    id: mat.id,
+                    type: 'material',
+                    title: matTitle,
+                    courseName: mat.courseName || 'Class Material',
+                    link: mat.alternateLink || '#',
+                    status: 'added',
+                    diff
+                });
+            } else {
+                const prevTitle = prev.title || 'Course Material';
+                const diff = this.computeItemDiff({
+                    title: prevTitle,
+                    description: prev.description
+                }, {
+                    title: matTitle,
+                    description: mat.description,
+                    alternateLink: mat.alternateLink,
+                    materials: mat.materials
+                }, false);
+
+                if (diff.hasAnyChanges) {
+                    updatedItems.push({
+                        id: mat.id,
+                        type: 'material',
+                        title: matTitle,
+                        courseName: mat.courseName || 'Class Material',
+                        link: mat.alternateLink || '#',
+                        status: 'updated',
+                        diff
+                    });
+                } else {
+                    unchangedItems.push({
+                        id: mat.id,
+                        type: 'material',
+                        title: matTitle,
+                        courseName: mat.courseName || 'Class Material',
+                        link: mat.alternateLink || '#',
                         status: 'unchanged',
                         diff
                     });
@@ -2284,6 +2367,7 @@ const Classroom = {
         // Snapshot previous cached data to calculate diffs upon refresh
         const prevAssignments = (this.inMemoryCache && this.inMemoryCache.assignments) || (this.getJsonCache() && this.getJsonCache().assignments) || [];
         const prevAnnouncements = (this.inMemoryCache && this.inMemoryCache.announcements) || (this.getJsonCache() && this.getJsonCache().announcements) || [];
+        const prevMaterials = (this.inMemoryCache && this.inMemoryCache.materials) || (this.getJsonCache() && this.getJsonCache().materials) || [];
 
         // Clear in-memory cache and CacheManager entries for a fresh sync
         this.inMemoryCache = { assignments: null, announcements: null, materials: null };
@@ -2300,9 +2384,10 @@ const Classroom = {
         this.courses = [];
         await this.fetchCoursesAndLoadAll();
 
-        // Fresh assignments & announcements
+        // Fresh assignments, announcements & materials
         const freshAssignments = (this.inMemoryCache && this.inMemoryCache.assignments) || [];
         const freshAnnouncements = (this.inMemoryCache && this.inMemoryCache.announcements) || [];
+        const freshMaterials = (this.inMemoryCache && this.inMemoryCache.materials) || [];
 
         // Refresh dashboard tasks so App.currentTasks is fresh before checking completions
         if (typeof App !== 'undefined' && typeof App.loadDashboardData === 'function') {
@@ -2312,8 +2397,8 @@ const Classroom = {
         // Auto-check completed/turned-in tasks in Pending Tasks upon refresh
         await this.syncTurnedInAssignmentsToUserCompletions(freshAssignments);
 
-        // Compute changes across fresh assignments & announcements and present briefing modal
-        const diffSummary = this.computeClassroomChanges(prevAssignments, prevAnnouncements, freshAssignments, freshAnnouncements);
+        // Compute changes across fresh assignments, announcements & materials and present briefing modal
+        const diffSummary = this.computeClassroomChanges(prevAssignments, prevAnnouncements, freshAssignments, freshAnnouncements, prevMaterials, freshMaterials);
         this.showSyncSummaryModal(diffSummary);
     },
 

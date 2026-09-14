@@ -296,8 +296,6 @@ const DB = {
 
       const snapshot = await db.collection('tasks')
         .where('department', '==', department)
-        .where('semester', '==', null)
-        .where('section', '==', null)
         .where('status', '==', 'active')
         .get();
 
@@ -305,6 +303,14 @@ const DB = {
       const tasksNoDeadline = [];
       snapshot.forEach(doc => {
         const data = doc.data();
+
+        // Include tasks designated for faculty or with null/empty semester and section
+        const isFacultyTask = (data.addedByRole === 'Faculty') ||
+          (!data.semester && !data.section) ||
+          (data.semester === 'null' && data.section === 'null');
+
+        if (!isFacultyTask) return;
+
         // Always include tasks with no deadline (null or missing)
         if (!('deadline' in data) || data.deadline === null) {
           tasksNoDeadline.push({ id: doc.id, ...data });
@@ -341,10 +347,19 @@ const DB = {
       // Determine user role for the task
       const rolesResult = await this.getUserRoles(userId);
       let addedByRole = 'Student';
-      if (rolesResult.isAdmin) addedByRole = 'Admin';
-      else if (rolesResult.isDptCoor) addedByRole = 'DptCoor';
-      else if (rolesResult.isFaculty) addedByRole = 'Faculty';
-      else if (rolesResult.isCR) addedByRole = 'CR';
+      if (data.addedByRole) {
+        addedByRole = data.addedByRole;
+      } else if (typeof App !== 'undefined' && App.previewRole === 'Faculty') {
+        addedByRole = 'Faculty';
+      } else if (rolesResult.isAdmin) {
+        addedByRole = (typeof App !== 'undefined' && App.isFaculty) ? 'Faculty' : 'Admin';
+      } else if (rolesResult.isDptCoor) {
+        addedByRole = 'DptCoor';
+      } else if (rolesResult.isFaculty || (data.semester === null && data.section === null)) {
+        addedByRole = 'Faculty';
+      } else if (rolesResult.isCR) {
+        addedByRole = 'CR';
+      }
 
       const docRef = await db.collection('tasks').add({
         title: data.title,

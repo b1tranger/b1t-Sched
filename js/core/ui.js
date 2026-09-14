@@ -168,8 +168,13 @@ const UI = {
 
   // Update user details card
   updateUserDetailsCard(email, department, semester, section) {
-    document.getElementById('user-email').textContent = email;
-    document.getElementById('user-department').textContent = `${department} • ${semester} • ${section}`;
+    const emailEl = document.getElementById('user-email');
+    const deptEl = document.getElementById('user-department');
+    if (emailEl) emailEl.textContent = email || '';
+    if (deptEl) {
+      const parts = [department, semester, section].filter(p => p && p !== 'null' && p !== 'undefined');
+      deptEl.textContent = parts.join(' • ') || department || '';
+    }
   },
 
   getResourceIcon(iconStr, url, title) {

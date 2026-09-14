@@ -1,13 +1,33 @@
 {
-  "currentVersion": "v2.53.0 to v2.53.13",
-  "lastUpdated": "September 5, 2026",
+  "currentVersion": "v2.53.0 to v2.53.14",
+  "lastUpdated": "September 14, 2026",
   "documentationUrl": "https://b1tranger.netlify.app/render.html?file=https%3A%2F%2Fgithub.com%2Fb1tranger%2Fb1t-Sched%2Fblob%2Fmain%2Fdoc%2FDOCUMENTATION.md",
   "history": [
     {
-      "version": "v2.53.0 to v2.53.13",
+      "version": "v2.53.0 to v2.53.14",
       "badge": "Latest",
       "date": "September 2026",
       "changes": [
+        {
+          "type": "Enhancement",
+          "title": "Classroom Item Type Badges & Diff Support for Materials & Announcements",
+          "description": "Resolved an issue in js/features/classroom.js where all synced Google Classroom items displayed as generic 'Added Task' in the briefing modal. Item objects are now tagged with specific types ('assignment', 'announcement', 'material') and rendered with dedicated color-coded type pills and action badges ('Added Announcement', 'Added Assignment', 'Added Material'). Added full property and instruction diffing support for coursework materials across sync cycles."
+        },
+        {
+          "type": "Fix",
+          "title": "Faculty Session Auto-Logout & Background Token Refresh Resolution",
+          "description": "Fixed an issue where users logged in as Faculty were logged out during background token refreshes or tab reconnection. The role mismatch validation in js/core/app.js is now strictly confined to interactive login attempts (_isExplicitLoginAttempt), ensuring background state updates preserve active faculty sessions without disruption."
+        },
+        {
+          "type": "Fix",
+          "title": "Department Notices Permission Error & Query Scope Resolution",
+          "description": "Resolved FirebaseError: Missing or insufficient permissions at cr-notice.js:155 by scoping Department notice queries and real-time listeners to where('isDepartmentNotice', '==', true). Added resilient error handling with fallback retrieval."
+        },
+        {
+          "type": "Fix",
+          "title": "Faculty Task Loading, Preview Mode Attribution & Profile Null Text Fix",
+          "description": "Updated DB.getFacultyTasks in js/core/db.js to query active department tasks and include tasks attributed to Faculty or with null/empty semester and section, ensuring tasks created in Faculty preview mode or by faculty are retrieved. Updated UI.updateUserDetailsCard in js/core/ui.js to filter out null and undefined values, cleanly displaying department ('CSE') on the navbar profile button instead of 'CSE • null • null'. Ensured Admin Faculty Preview mode displays faculty profile state and attributes created tasks to Faculty."
+        },
         {
           "type": "Enhancement",
           "title": "Task Export Native Vector Print to PDF with Selectable Text & Descriptive Filenames",

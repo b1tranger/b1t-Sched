@@ -6,7 +6,7 @@
   <img src="Social-Preview.webp" width="220px" alt="b1t-Sched Logo" style="border-radius: 16px; margin-bottom: 12px;">
   <h1>👉 <a href="https://github.com/b1tranger/b1t-Sched/blob/main/doc/DOCUMENTATION.md">Complete Documentation</a> 👈</h1>
   <p>
-    <strong>Current Version:</strong> <code>v2.53.0 to v2.53.13</code> • 
+    <strong>Current Version:</strong> <code>v2.53.0 to v2.53.14</code> • 
     <strong>Architecture:</strong> Vanilla JS SPA + Firebase Firestore & Auth + PWA
   </p>
 </div>
@@ -63,7 +63,7 @@
 - **Viewport Scroll Stability**: Enforced manual browser scroll restoration and instant scroll-to-top resets on SPA route navigation, user sign-out, and unauthenticated redirects.
 
 ### 📱 Progressive Web App (PWA) & Offline
-- **Offline Resilient**: Service worker (`v2.53.11`) caches static assets, dynamic layouts, and recent task data for seamless offline usage.
+- **Offline Resilient**: Service worker (`v2.53.14`) caches static assets, dynamic layouts, and recent task data for seamless offline usage.
 - **Adaptive Offline Banner**: Dynamic top banner that pushes navigation and views downward without overlaying or obscuring interactive elements.
 - **PWA Installation**: Installable desktop and mobile app with a customized 3-row install prompt (Icon + Title, Description, Action Buttons) featuring solid backgrounds across all themes.
 
@@ -77,7 +77,7 @@ All JavaScript modules are categorized into distinct architectural directories:
 b1t-Sched/
 ├── index.html                    # Single Page Application entry point
 ├── manifest.json                 # PWA Web App Manifest
-├── sw.js                         # Service Worker (v2.53.11 caching & background sync)
+├── sw.js                         # Service Worker (v2.53.14 caching & background sync)
 ├── changes.json                  # Machine-readable release changelog history
 ├── firestore.rules               # Firestore Cloud Security Rules & role helpers
 ├── README.md                     # Project overview & documentation

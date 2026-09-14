@@ -1507,6 +1507,34 @@ body.dark-mode .classroom-wip-badge {
     font-weight: 500;
 }
 
+.sync-type-pill {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.sync-type-pill.type-assignment {
+    background: rgba(56, 139, 253, 0.15);
+    color: #58a6ff;
+    border: 1px solid rgba(56, 139, 253, 0.3);
+}
+
+.sync-type-pill.type-announcement {
+    background: rgba(210, 153, 34, 0.15);
+    color: #d29922;
+    border: 1px solid rgba(210, 153, 34, 0.3);
+}
+
+.sync-type-pill.type-material {
+    background: rgba(163, 113, 247, 0.15);
+    color: #bc8cff;
+    border: 1px solid rgba(163, 113, 247, 0.3);
+}
+
 .sync-card-title {
     margin: 2px 0 0 0;
     font-size: 0.96rem;

@@ -970,7 +970,8 @@ const App = {
       deadline,
       department,
       semester: this.isFaculty ? null : semester,
-      section: this.isFaculty ? null : section
+      section: this.isFaculty ? null : section,
+      addedByRole: this.isFaculty ? 'Faculty' : undefined
     };
 
     const result = await DB.createTask(userId, userEmail, taskData);
@@ -1376,12 +1377,14 @@ const App = {
     }
 
     const rememberMe = document.getElementById('trust-device')?.checked || false;
+    this._isExplicitLoginAttempt = true;
     const result = await Auth.login(targetEmail, password, rememberMe);
 
     if (result.success) {
       // Check email verification immediately
       const user = Auth.getCurrentUser();
       if (user && !user.emailVerified) {
+        this._isExplicitLoginAttempt = false;
         UI.showLoading(false);
         UI.showMessage('auth-message', 'Please verify your email before logging in. Check your inbox (or spam folder) for the verification link.', 'error');
         await Auth.logout();
@@ -1395,6 +1398,7 @@ const App = {
         forgotPasswordContainer.classList.remove('visible');
       }
     } else {
+      this._isExplicitLoginAttempt = false;
       UI.showMessage('auth-message', result.error, 'error');
       // Show forgot password link after failed login attempt
       const forgotPasswordContainer = document.getElementById('forgot-password-container');
@@ -1537,21 +1541,28 @@ const App = {
         this.isBlocked = Utils.storage.get('isBlocked') || false;
       }
 
-      // Enforce cross-role login restrictions for non-admin accounts
-      if (!this.isAdmin) {
+      // Enforce cross-role login restrictions for non-admin accounts exclusively during interactive login attempts
+      if (!this.isAdmin && this._isExplicitLoginAttempt) {
         if (this.currentLoginRole === 'faculty' && !this.isFaculty) {
           UI.showMessage('auth-message', 'This account is registered as a Student. Please switch to the Student login tab.', 'error');
           await Auth.logout();
           UI.showLoading(false);
+          this._isExplicitLoginAttempt = false;
           return;
         }
         if (this.currentLoginRole === 'student' && this.isFaculty) {
           UI.showMessage('auth-message', 'This account is registered as Faculty. Please switch to the Faculty login tab.', 'error');
           await Auth.logout();
           UI.showLoading(false);
+          this._isExplicitLoginAttempt = false;
           return;
         }
       }
+      this._isExplicitLoginAttempt = false;
+
+      // Keep currentLoginRole synchronized with authentic role for session stability
+      this.currentLoginRole = this.isFaculty ? 'faculty' : 'student';
+      Utils.storage.set('b1t_login_role', this.currentLoginRole);
 
       // Store authentic DB roles for reference
       this.realRoles = {
@@ -1803,6 +1814,14 @@ const App = {
       this.isDptCoor = this.realRoles.isDptCoor || false;
       this.isBlocked = this.realRoles.isBlocked || false;
       UI.updatePreviewBanner(false);
+      if (this.userProfile) {
+        UI.updateUserDetailsCard(
+          this.userProfile.email,
+          this.userProfile.department,
+          this.userProfile.semester,
+          this.userProfile.section
+        );
+      }
     } else {
       // Set preview role
       this.previewRole = role;
@@ -1839,6 +1858,23 @@ const App = {
         this.isBlocked = true;
       }
       UI.updatePreviewBanner(true, role);
+      if (this.userProfile) {
+        if (role === 'Faculty' || role === 'DptCoor' || role === 'DptHead') {
+          UI.updateUserDetailsCard(
+            this.userProfile.email,
+            this.userProfile.department,
+            null,
+            null
+          );
+        } else {
+          UI.updateUserDetailsCard(
+            this.userProfile.email,
+            this.userProfile.department,
+            this.userProfile.semester,
+            this.userProfile.section
+          );
+        }
+      }
     }
 
     // Update UI controls based on active preview roles

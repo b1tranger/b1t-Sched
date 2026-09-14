@@ -137,6 +137,7 @@ const CRNoticeViewer = {
             console.log(`Subscribing to Department notices for ${userDept}`);
             this.unsubscribe = db.collection('cr_notices')
                 .where('department', '==', userDept)
+                .where('isDepartmentNotice', '==', true)
                 .limit(50)
                 .onSnapshot(snapshot => {
                     const notices = [];
@@ -152,8 +153,22 @@ const CRNoticeViewer = {
                     this.notices = notices;
                     this.renderAllNotices();
                 }, error => {
-                    console.error("Error fetching Department notices:", error);
-                    this.renderError(error.message);
+                    console.warn("Department notices subscription restricted or encountered error:", error);
+                    // Fallback attempt to retrieve department notices
+                    db.collection('cr_notices')
+                        .where('department', '==', userDept)
+                        .limit(50)
+                        .get()
+                        .then(snapshot => {
+                            const notices = [];
+                            snapshot.forEach(doc => notices.push({ id: doc.id, ...doc.data() }));
+                            this.notices = notices;
+                            this.renderAllNotices();
+                        })
+                        .catch(fallbackErr => {
+                            console.error("Error fetching Department notices:", fallbackErr);
+                            this.renderError("Department notices could not be loaded. Please ensure Firestore permissions are granted.");
+                        });
                 });
             return;
         }
