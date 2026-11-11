@@ -3,7 +3,7 @@
  * Handles caching strategies, offline functionality, and background sync
  */
 
-const CACHE_VERSION = 'v2.53.14';
+const CACHE_VERSION = 'v2.53.15';
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `dynamic-${CACHE_VERSION}`;
 const API_CACHE = `api-${CACHE_VERSION}`;
@@ -251,7 +251,7 @@ async function staleWhileRevalidate(request, cacheName) {
   const fetchPromise = fetch(request).then(networkResponse => {
     if (networkResponse.ok) {
       const responseToCache = networkResponse.clone();
-      caches.open(cacheName).then(c => c.put(request, responseToCache)).catch(() => {});
+      caches.open(cacheName).then(c => c.put(request, responseToCache)).catch(() => { });
     }
     return networkResponse;
   }).catch(error => {

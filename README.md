@@ -6,7 +6,7 @@
   <img src="Social-Preview.webp" width="220px" alt="b1t-Sched Logo" style="border-radius: 16px; margin-bottom: 12px;">
   <h1>👉 <a href="https://github.com/b1tranger/b1t-Sched/blob/main/doc/DOCUMENTATION.md">Complete Documentation</a> 👈</h1>
   <p>
-    <strong>Current Version:</strong> <code>v2.53.0 to v2.53.14</code> • 
+    <strong>Current Version:</strong> <code>v2.53.0 to v2.53.15</code> • 
     <strong>Architecture:</strong> Vanilla JS SPA + Firebase Firestore & Auth + PWA
   </p>
 </div>
@@ -43,7 +43,7 @@
   - Unified course stream showing assignments, materials, and announcements with OAuth session persistence.
   - 3-group status layout (**Assigned**, **Missing**, **Turned In / Graded**) with chronological upcoming deadline priority and "Past deadline" visual divider banners.
   - Strict turn-in verification for automatic task completion.
-  - Decoupled Classroom sync briefing summaries and quick announcement/assignment posting for Faculty and CRs.
+  - Decoupled Classroom sync briefing summaries and an always-visible `+` shortcut button to open Google Classroom.
 - **University & CR Notices**: Real-time section notices posted by CRs and department notices posted by Faculty, alongside a UCAM university notice viewer with inline PDF preview via a Vercel serverless backend.
 
 ### 📝 Notes & Productivity Tools

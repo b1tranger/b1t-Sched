@@ -53,15 +53,10 @@ const Classroom = {
     },
 
     updateCreateButtonVisibility() {
-        const isConnected = localStorage.getItem('classroom_connected') === 'true';
-        const isLoggedIn = Boolean(this.accessToken || isConnected);
-        const isEligible = this.isFacultyOrCR();
-        const showBtn = isLoggedIn && isEligible;
-
         const mobileBtn = document.getElementById('classroom-create-btn-mobile');
         const desktopBtn = document.getElementById('classroom-create-btn-desktop');
-        if (mobileBtn) mobileBtn.style.display = showBtn ? 'flex' : 'none';
-        if (desktopBtn) desktopBtn.style.display = showBtn ? 'flex' : 'none';
+        if (mobileBtn) mobileBtn.style.display = 'flex';
+        if (desktopBtn) desktopBtn.style.display = 'flex';
     },
 
     updateLogoutButtonVisibility() {
@@ -1809,7 +1804,7 @@ const Classroom = {
                 itemsContainer.innerHTML = allItems.map(item => {
                     const statusClass = item.status === 'added' ? 'status-added' : (item.status === 'updated' ? 'status-updated' : 'status-unchanged');
                     const badgeClass = item.status;
-                    const badgeIcon = item.status === 'added' ? 'fa-plus' : (item.status === 'updated' ? 'fa-pen' : 'fa-check');
+                    const badgeIcon = item.status === 'added' ? 'fa-New Class Announcement / Assignment' : (item.status === 'updated' ? 'fa-pen' : 'fa-check');
 
                     const itemType = item.type || 'assignment';
                     const typeLabel = itemType === 'announcement' ? 'Announcement' : (itemType === 'material' ? 'Material' : 'Assignment');
@@ -1894,7 +1889,7 @@ const Classroom = {
 
         const syncBtn = document.getElementById('sync-classroom-tasks-btn');
         const courseSyncBtn = document.getElementById('sync-classroom-tasks-btn-course');
-        
+
         [syncBtn, courseSyncBtn].forEach(btn => {
             if (btn) {
                 btn.disabled = true;
@@ -1984,9 +1979,9 @@ const Classroom = {
                     }
 
                     const hasChanges = existingTask.title !== taskData.title ||
-                                       existingTask.course !== taskData.course ||
-                                       existingTask.description !== taskData.description ||
-                                       existingDueIso !== taskData.deadline;
+                        existingTask.course !== taskData.course ||
+                        existingTask.description !== taskData.description ||
+                        existingDueIso !== taskData.deadline;
 
                     if (hasChanges || itemDiff.hasAnyChanges) {
                         const updateRes = await DB.updateTask(existingTask.id, taskData);
@@ -2744,7 +2739,7 @@ const Classroom = {
         let statusCode = item.statusCode;
         let statusLabel = item.status;
         const subState = item.submissionState;
-        
+
         let isPastDue = false;
         if (item.dueDate) {
             const due = new Date(item.dueDate.year, item.dueDate.month - 1, item.dueDate.day, item.dueTime?.hours || 23, item.dueTime?.minutes || 59);

@@ -1,13 +1,23 @@
 {
-  "currentVersion": "v2.53.0 to v2.53.14",
-  "lastUpdated": "September 14, 2026",
+  "currentVersion": "v2.53.0 to v2.53.15",
+  "lastUpdated": "November 11, 2026",
   "documentationUrl": "https://b1tranger.netlify.app/render.html?file=https%3A%2F%2Fgithub.com%2Fb1tranger%2Fb1t-Sched%2Fblob%2Fmain%2Fdoc%2FDOCUMENTATION.md",
   "history": [
     {
-      "version": "v2.53.0 to v2.53.14",
+      "version": "v2.53.0 to v2.53.15",
       "badge": "Latest",
-      "date": "September 2026",
+      "date": "November 2026",
       "changes": [
+        {
+          "type": "Enhancement",
+          "title": "Always-Visible Google Classroom Shortcut FAB",
+          "description": "Made the floating '+' shortcut button (#classroom-create-btn-desktop and #classroom-create-btn-mobile) always visible over the Google Classroom modal and mobile sidebar regardless of user role or sign-in state, providing every user with a direct shortcut to open Google Classroom."
+        },
+        {
+          "type": "UI/UX",
+          "title": "Top Navbar GitHub Icon Button & Compact Mobile Footer",
+          "description": "Added an icon-only GitHub repository button (.nav-github-btn) to the top navigation bar across Light, Dark, and Gray themes. Updated the mobile dashboard footer (#app-footer) to hide 'Source Code' and 'What's New' text labels so only their icons appear alongside the full copyright credits."
+        },
         {
           "type": "Enhancement",
           "title": "Classroom Item Type Badges & Diff Support for Materials & Announcements",
