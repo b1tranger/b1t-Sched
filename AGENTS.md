@@ -9,28 +9,23 @@
 
 
 ## 2. Mandatory Prompt, Plan & Walkthrough Archiving
-- **Automatic Per-Turn Full Conversation Updates**:
-  - After **EVERY SINGLE** chat prompt-response cycle, you MUST update the session's comprehensive conversation archive (`doc/prompts/<Prefix>. <Session Title>.md`) by appending the new turn contents to it.
-  - **DO NOT** create a new file for each individual prompt turn (avoid creating fragmented files like `<Prefix>.3`, `<Prefix>.4`, `<Prefix>.5`, etc.).
-  - Append the current turn's verbatim user request, internal thinking (`### Thinking`), and final response (`### AI Response`) directly to the end of the session archive file, separated by horizontal rules (`---`).
-- **Fractional Suffixes Reserved for Plans & Walkthroughs Only**:
-  - Minor/fractional prefixes (e.g., `<Prefix>.1`, `<Prefix>.2`, etc.) are reserved **exclusively** for companion implementation plans and walkthroughs:
-    - Primary chat session: `doc/prompts/<Prefix>. <Session Title>.md` (contains all turns sequentially)
-    - Implementation plan: `doc/prompts/<Prefix>.1 Implementation Plan - <Plan Title>.md`
-    - Walkthrough document: `doc/prompts/<Prefix>.2 Walkthrough - <Title>.md`
-    - Subsequent plans/walkthroughs within the same session: `<Prefix>.3 Implementation Plan - ...`, `<Prefix>.4 Walkthrough - ...`, etc.
-- **Mandatory Dual-Write on Every Turn**:
-  - **Implementation Plans**: Whenever creating or updating an implementation plan artifact (`implementation_plan.md`), you MUST simultaneously write a copy to `doc/prompts/<Prefix>.<N> Implementation Plan - <Plan Title>.md` before pausing for user review.
-  - **Walkthroughs**: Whenever creating or updating a walkthrough artifact (`walkthrough.md`), you MUST simultaneously write a copy to `doc/prompts/<Prefix>.<N> Walkthrough - <Title>.md` upon completing execution.
-  - **Full Conversation Archive**: Update and append the active turn to `doc/prompts/<Prefix>. <Session Title>.md` immediately upon generating the response on every turn.
-- **Target Location**: All prompt, plan, and walkthrough records reside in the [`doc/prompts`](doc/prompts) directory.
-- **Prefix Sequencing Strategy**:
-  - Inspect existing files in `doc/prompts/` to identify the current major sequence integer (e.g. `35.`).
-  - Keep all conversation turns for that session inside the main file `doc/prompts/<Prefix>. <Session Title>.md`.
-- **Chat Archive Fidelity**:
-  - Reproduce the conversation exactly as the source (user request blocks verbatim).
-  - Include the model's internal thinking/reasoning parts (`### Thinking`) alongside the final response (`### AI Response`) verbatim exactly as delivered in the chat (never use placeholders like `*(Refer to output in main chat)*` or truncated summaries).
-  - Preserve the frontmatter tags comment block at the top of the archive file.
+- **Target Location & Serial Session Folders**:
+  - All conversation, prompt, plan, and walkthrough records reside inside [`doc/prompts/`](doc/prompts) in dedicated serial folders named with an incrementing major integer prefix:
+    `doc/prompts/<N>. <Session Title>/` (e.g., `doc/prompts/36. Schedule Export Update/`).
+  - **Determining `<N>`**: Inspect `doc/prompts/` to find the highest existing major integer prefix across both existing session folders and legacy flat `<N>. ...md` files, and assign `N = N_max + 1` for a new conversation session.
+  - **Session Continuity**: Always update **the same session folder** (`doc/prompts/<N>. <Session Title>/`) on each turn or when resuming an existing conversation; do NOT create a new major folder `<N+1>` per turn.
+- **Required Files Inside `doc/prompts/<N>. <Session Title>/`**:
+  1. **`transcript_full.jsonl`**: An exact, unmodified UTF-8 copy of `<appDataDir>/brain/<conversation-id>/.system_generated/logs/transcript_full.jsonl`. Never truncate, edit, or reformat lines in `transcript_full.jsonl`.
+  2. **`conversation.md`**: A verbatim Markdown rendering generated directly from `transcript_full.jsonl`, including every step without summarizing or omitting content: metadata (`Conversation ID`, `Session Folder`, and `Continued From` if applicable), all `USER_INPUT.content`, all `PLANNER_RESPONSE.thinking` verbatim, all `PLANNER_RESPONSE.tool_calls` and tool/system outputs (`GENERIC` / `SYSTEM_MESSAGE`), and all `PLANNER_RESPONSE.content` verbatim.
+  3. **`summary.md` (Conversation Summary Markdown)**: Maintained alongside `transcript_full.jsonl` and `conversation.md` in the same folder, preserving the frontmatter tags comment block at the top and summarizing session metadata, user goals, key technical decisions, files modified, verification results, and outcomes.
+  4. **Companion Plans & Walkthroughs (Fractional Suffixes Reserved for Plans & Walkthroughs Only)**: Stored in the same `doc/prompts/<N>. <Session Title>/` folder:
+     - Implementation plan: `<N>.1 Implementation Plan - <Plan Title>.md` (dual-write whenever creating/updating `implementation_plan.md` before user review)
+     - Walkthrough document: `<N>.2 Walkthrough - <Title>.md` (dual-write whenever creating/updating `walkthrough.md` upon completion)
+     - Subsequent plans/walkthroughs in the same session: `<N>.3 Implementation Plan - ...`, `<N>.4 Walkthrough - ...`, etc.
+- **Update Cadence (Keeping the Archive Current)**:
+  - Because the runtime writes a turn's final `PLANNER_RESPONSE` (final `thinking` and `content`) to `transcript_full.jsonl` after the turn finishes:
+    1. **At the start of each turn (or when continuing from a prior `<conversation-id>`):** Copy `<appDataDir>/brain/<conversation-id>/.system_generated/logs/transcript_full.jsonl` to `doc/prompts/<N>. <Session Title>/transcript_full.jsonl` and regenerate `conversation.md` so the previous turn's finalized `thinking` and `content` are captured verbatim (and sync the prior conversation's folder if continuing).
+    2. **Before sending each new final response:** Re-copy `transcript_full.jsonl`, regenerate `conversation.md` to capture all completed steps of the current turn, append the exact final response under `## Pending Final Response (Pre-Commit)` (noting it will be replaced verbatim from `transcript_full.jsonl` on the next sync), and create or update `summary.md` in the same folder.
 
 ## 3. Code Quality & Styling Standards
 - Follow the established vanilla JavaScript and CSS conventions across the repository.
