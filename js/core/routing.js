@@ -29,10 +29,23 @@ const Router = {
 
   handleRoute() {
     const hash = window.location.hash || '';
-    const routeName = this.routes[hash];
+    let routeName = this.routes[hash];
     
+    // Auth Guard: If logged in, prevent navigation back to login
+    const isAuthenticated = (typeof App !== 'undefined' && App.userProfile && (App.userProfile.department || App.isFaculty)) ||
+      (typeof Auth !== 'undefined' && Auth.getCurrentUser() && localStorage.getItem('userProfile'));
+      
+    if (isAuthenticated && (routeName === 'login' || (!window.location.hash && routeName === 'login'))) {
+      this.navigate('dashboard', true);
+      return;
+    }
+
     if (!routeName) {
-      this.navigate('login');
+      if (isAuthenticated) {
+        this.navigate('dashboard', true);
+      } else {
+        this.navigate('login', true);
+      }
       return;
     }
 
@@ -125,7 +138,7 @@ const Router = {
     }
   },
 
-  navigate(route) {
+  navigate(route, replace = false) {
     const routeMap = {
       'login': '',
       'dashboard': '#/dashboard',
@@ -136,7 +149,12 @@ const Router = {
 
     const hash = routeMap[route];
     if (hash !== undefined) {
-      window.location.hash = hash;
+      if (replace && window.location.hash !== hash) {
+        history.replaceState(null, '', hash || window.location.pathname);
+        this.handleRoute();
+      } else {
+        window.location.hash = hash;
+      }
     }
   },
 

@@ -140,6 +140,9 @@ const Profile = {
             document.body.classList.remove('gray-mode');
           }
         }
+        if (typeof Utils !== 'undefined' && Utils.updateThemeColorMeta) {
+          Utils.updateThemeColorMeta(selectedTheme);
+        }
 
         // Auto-save theme
         const userId = Auth.getUserId();
@@ -182,6 +185,43 @@ const Profile = {
   },
 
   async loadProfile() {
+    if (typeof App !== 'undefined' && App.isVisitor) {
+      this.currentProfile = (typeof VisitorData !== 'undefined')
+        ? VisitorData.getProfile(App.userProfile?.department, App.userProfile?.semester, App.userProfile?.section)
+        : {
+            id: 'visitor-preview',
+            name: 'Visitor Guest',
+            email: 'visitor@b1tsched.local',
+            role: 'Visitor',
+            department: App.userProfile?.department || 'CSE',
+            semester: App.userProfile?.semester || '5th',
+            section: App.userProfile?.section || '5A',
+            studentId: 'VISITOR-PREVIEW',
+            theme: 'light'
+          };
+      document.getElementById('profile-email').textContent = this.currentProfile.email;
+      const studentIdEl = document.getElementById('profile-student-id');
+      if (studentIdEl) studentIdEl.textContent = 'Account: Visitor (Read-Only Preview)';
+      const roleBadgeEl = document.getElementById('profile-role-badge');
+      if (roleBadgeEl) {
+        roleBadgeEl.innerHTML = '<span class="role-badge visitor" style="background:#e0f2fe;color:#0369a1;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:600;"><i class="fas fa-eye"></i> Visitor</span>';
+      }
+      const deptSelect = document.getElementById('profile-department');
+      if (deptSelect) deptSelect.innerHTML = `<option value="${this.currentProfile.department}">${this.currentProfile.department}</option>`;
+      const semSelect = document.getElementById('profile-semester');
+      if (semSelect) semSelect.innerHTML = `<option value="${this.currentProfile.semester}">${this.currentProfile.semester}</option>`;
+      const secSelect = document.getElementById('profile-section');
+      if (secSelect) secSelect.innerHTML = `<option value="${this.currentProfile.section}">${this.currentProfile.section}</option>`;
+
+      const saveBtn = document.getElementById('save-profile-btn');
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.title = 'Profile editing is disabled in Visitor Mode';
+      }
+      UI.showLoading(false);
+      return;
+    }
+
     const userId = Auth.getUserId();
     if (!userId) return;
 
@@ -423,6 +463,11 @@ const Profile = {
 
   async handleSaveProfile() {
     try {
+      if (typeof App !== 'undefined' && App.isVisitor) {
+        UI.showMessage('profile-message', 'Profile editing is disabled in Visitor Mode (Read-Only Preview).', 'info');
+        return;
+      }
+
       // Check if user is blocked
       if (App.isBlocked) {
         UI.showMessage('profile-message', 'Your account has been restricted. You cannot change profile settings.', 'error');

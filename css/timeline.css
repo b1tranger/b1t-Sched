@@ -1,10 +1,36 @@
-#close-timeline-modal:hover {
+#close-timeline-modal {
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
     cursor: pointer;
-    background-color: rgba(0, 0, 0, 0.171);
-    padding: 0 5px 2px 5px;
-    border-radius: 50px;
-    /* position: sticky; */
-    margin-right: -5px
+    color: var(--text-dark, #333);
+    transition: background-color var(--transition-fast, 0.2s);
+    flex-shrink: 0;
+}
+
+#close-timeline-modal:hover {
+    background-color: rgba(0, 0, 0, 0.08);
+}
+
+body.dark-mode #close-timeline-modal {
+    color: var(--text-dark, #f0f1ea);
+}
+
+body.dark-mode #close-timeline-modal:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+}
+
+@media (max-width: 768px) {
+    #close-timeline-modal {
+        width: 40px;
+        height: 40px;
+        font-size: 1.25rem;
+    }
 }
 
 

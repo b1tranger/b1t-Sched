@@ -12,7 +12,7 @@ class ManifestGenerator {
       start_url: '/',
       display: 'standalone',
       background_color: '#ffffff',
-      theme_color: '#4CAF50',
+      theme_color: '#660000',
       orientation: 'portrait-primary',
       icons: [
         {

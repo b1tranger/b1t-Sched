@@ -141,6 +141,135 @@ body.dark-mode {
   max-width: 440px;
 }
 
+/* Desktop display optimization for login card */
+@media (min-width: 992px) {
+  .auth-hero-wrapper {
+    padding: var(--spacing-xl) 0 60px 0;
+  }
+
+  .auth-card {
+    max-width: 460px;
+    background: var(--bg-card, #ffffff);
+    border: 1px solid var(--border-light, #e4e4e7);
+    border-radius: var(--radius-lg, 12px);
+    padding: 32px 36px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.06), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  }
+
+  body.dark-mode .auth-card {
+    background: #18181b;
+    border-color: #27272a;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.35);
+  }
+
+  body.gray-mode .auth-card {
+    background: #18181b;
+    border-color: #2d2b38;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+  }
+
+  .auth-logo {
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .auth-logo-img {
+    width: 88px;
+    height: 88px;
+    margin-bottom: var(--spacing-sm);
+  }
+}
+
+/* Visitor Mode Entry Button (Mobile / Default) */
+#visitor-mode-btn,
+.visitor-mode-btn {
+  margin-top: 10px;
+}
+
+/* Hide on mobile signup view if user switched forms */
+@media (max-width: 768px) {
+  #signup-form:not([style*="display: none"]) ~ #visitor-mode-btn {
+    display: none;
+  }
+}
+
+/* Desktop right-bottom floating Browse as Visitor button */
+@media (min-width: 769px) {
+  #visitor-mode-btn,
+  .visitor-mode-btn {
+    position: fixed !important;
+    bottom: 24px !important;
+    right: 28px !important;
+    left: auto !important;
+    top: auto !important;
+    width: auto !important;
+    max-width: fit-content !important;
+    margin: 0 !important;
+    z-index: 95;
+    padding: 10px 18px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: var(--font-semibold, 600);
+    letter-spacing: 0.3px;
+    background: var(--bg-card, #ffffff);
+    color: var(--text-dark, #1e293b);
+    border: 1px solid var(--border-medium, #cbd5e1);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+    display: inline-flex !important;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+    transition: all var(--transition-fast, 0.2s ease);
+  }
+
+  #visitor-mode-btn:hover,
+  .visitor-mode-btn:hover {
+    background: var(--bg-hover, #f1f5f9);
+    color: var(--primary-maroon, #660000);
+    border-color: var(--primary-maroon, #660000);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.16);
+  }
+
+  #visitor-mode-btn:active,
+  .visitor-mode-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  }
+
+  body.dark-mode #visitor-mode-btn,
+  body.dark-mode .visitor-mode-btn {
+    background: #27272a;
+    color: #f4f4f5;
+    border-color: #3f3f46;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  }
+
+  body.dark-mode #visitor-mode-btn:hover,
+  body.dark-mode .visitor-mode-btn:hover {
+    background: #3f3f46;
+    color: #38bdf8;
+    border-color: #38bdf8;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  }
+
+  body.gray-mode #visitor-mode-btn,
+  body.gray-mode .visitor-mode-btn {
+    background: #23222b;
+    color: #ede9fe;
+    border-color: #3a3848;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  }
+
+  body.gray-mode #visitor-mode-btn:hover,
+  body.gray-mode .visitor-mode-btn:hover {
+    background: #2e2c39;
+    color: #a78bfa;
+    border-color: #a78bfa;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.55);
+  }
+}
+
 /* Scroll Down Animation Indicator */
 .login-scroll-indicator {
   position: absolute;
@@ -1214,11 +1343,27 @@ body.dark-mode .faq-parent-heading {
 }
 
 @media (max-width: 768px) {
+  .app-footer {
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+
   .app-footer .footer-link-text {
-    display: none;
+    display: none !important;
+  }
+
+  .app-footer a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 4px;
   }
 
   .app-footer i {
-    margin-right: 0;
+    margin-right: 0 !important;
+    font-size: 15px;
+  }
+
+  .footer-separator {
+    margin: 0 6px;
   }
 }

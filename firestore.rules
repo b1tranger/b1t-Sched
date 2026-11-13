@@ -87,6 +87,7 @@ service cloud.firestore {
       
       allow update: if isSignedIn() && (
         isAdmin() || 
+        (isDptCoor() && resource.data.department == getUserDepartment()) ||
         isFaculty() && resource.data.addedBy == request.auth.uid ||
         resource.data.addedBy == request.auth.uid
       );
@@ -94,6 +95,7 @@ service cloud.firestore {
       allow delete: if isSignedIn() && (
         isAdmin() || 
         isCR() ||
+        (isDptCoor() && resource.data.department == getUserDepartment()) ||
         isFaculty() && resource.data.addedBy == request.auth.uid ||
         resource.data.addedBy == request.auth.uid
       );

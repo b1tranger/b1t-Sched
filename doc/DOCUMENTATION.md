@@ -1893,7 +1893,7 @@ Router.onRouteChange((routeName) => {
 | 2.49.0   | Aug 2026    | Google Classroom Announcement & Assignment Creation Option for Faculty & CR Roles (.classroom-create-fab); Calendar View Task Description Clickable Links & Collapsible Dropdown Toggle; LocalSend Web Direct Peer-to-Peer Sharing Integration in Notes.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | 2.51.0 to 2.51.9 | Sep 2026 | Login Screen Overhaul (Student/Faculty segmented toggle & flexible ID/initial login); Account Approvals management (modal/sidebar) for faculty registration; User Management UID copy button & Firestore deletion guidance; Classroom Sync Briefing Modal with Git-diff change inspection & decoupled completion sync; full-height mobile sidebars; desktop bottom-right PWA install prompt; task card left-aligned copy button.                                                                                                                                                                                                                                                                                                                                  |
 | 2.52.0 to 2.52.2 | Sep 2026 | Direct Firestore user deletion & 'Remove Details' profile stripping fallback; Classroom strict coursework ID & course matching in completion sync; decoupled auto-completion checking from sync to refresh button; desktop Classroom sync modal border padding removal.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| 2.53.0 to 2.53.15 | Nov 2026 | Modular architecture reorganization into categorical subdirectories (js/core/, js/features/, js/pwa/, js/notifications/, js/admin/); theme reordering (Dark Mode & High Contrast) with blue accent shift (#3b82f6); Event Raiders dark mode contrast; mobile compact task filters; cross-role authentication enforcement; Faculty/Student ID login support; login scroll restoration; Changelog modal desktop min-width; app script syntax error & infinite loading fix; Classroom sync modal decoupling from Admin/CR Sync button with toast feedback & automated Git-diff briefing on expired session reconnection; Classroom sync briefing modal mobile z-index elevation (12000) over all sidebars with responsive full-bleed mobile display and backdrop click dismissal; Task Export Unicode Bangla and complex script font rendering resolution via html2pdf.js retina DOM-to-PDF pipeline with UTF-8 BOM downloads for TXT and Markdown; Task Export selectable vector PDF upgrade via native print window prompt with descriptive filename synchronization and direct download fallback; Classroom sync briefing modal item type badges (Announcement / Assignment / Material) with course material diffing; Faculty periodic auto-logout fix on token refresh; Department notices query scoping and security permissions resolution; Faculty preview mode task attribution and home profile button null text removal; always-visible Google Classroom '+' shortcut FAB across all roles; icon-only GitHub repository button in top navbar and icon-only mobile footer links with full credits. |
+| 2.53.0 to 2.53.16 | Nov 2026 | Modular architecture reorganization into categorical subdirectories (js/core/, js/features/, js/pwa/, js/notifications/, js/admin/); theme reordering (Dark Mode & High Contrast) with blue accent shift (#3b82f6); Event Raiders dark mode contrast; mobile compact task filters; cross-role authentication enforcement; Faculty/Student ID login support; login scroll restoration; Changelog modal desktop min-width; app script syntax error & infinite loading fix; Classroom sync modal decoupling from Admin/CR Sync button with toast feedback & automated Git-diff briefing on expired session reconnection; Classroom sync briefing modal mobile z-index elevation (12000) over all sidebars with responsive full-bleed mobile display and backdrop click dismissal; Task Export Unicode Bangla and complex script font rendering resolution via html2pdf.js retina DOM-to-PDF pipeline with UTF-8 BOM downloads for TXT and Markdown; Task Export selectable vector PDF upgrade via native print window prompt with descriptive filename synchronization and direct download fallback; Classroom sync briefing modal item type badges (Announcement / Assignment / Material) with course material diffing; Faculty periodic auto-logout fix on token refresh; Department notices query scoping and security permissions resolution; Faculty preview mode task attribution and home profile button null text removal; always-visible Google Classroom '+' shortcut FAB across all roles; icon-only GitHub repository button in top navbar and icon-only mobile footer links with full credits; client-side only Visitor Mode with zero Firebase calls and dummy task/event/notice data; Department Coordinator permissions to edit/delete matching department faculty tasks; Admin & CR semester tracking & auto-completion of no-deadline tasks (defaulting deadlines to semester end); forgot password 2-minute idle timer; mobile notification ServiceWorkerRegistration.showNotification priority fix; university notice Firestore metadata CDN caching; desktop login window elevated styling and fine-grained resolution scaling; desktop floating 'Browse as Visitor' action button preventing login FAQ & Support indicator collision. |
 
 > For complete detailed release notes and per-change descriptions, see [changes.json](file:///changes.json) and session walkthrough archives in [doc/prompts/](file:///doc/prompts/).
 
@@ -2430,76 +2430,70 @@ Since `activity_logs` is a new collection, existing `tasks` and `events` need to
 <a id="design-references-inspirations"></a><a id="design-references--inspirations"></a>
 ## Design References & Inspirations
 
-### Calendar View
+> *"Took reference from ClickUp, Google Calendar, GitHub, and a random Bar chart from Google search that I hadn't checked further."*
 
-**Desktop:** The calendar view design was inspired by **ClickUp's calendar interface**, featuring:
+### Visual & Architectural Inspirations
 
-- Monthly grid layout with task visualization
-- Compact cell design with date indicators
-- Task type badges and overflow indicators
-- Inline navigation controls
+1. **ClickUp**:
+   - **Hierarchical Task & Assignment Cards**: Clean cards with status indicators, course tags, assignment type badges, and overdue warning badges.
+   - **Compact View & Filters**: Filter popup and filter chips (All, Assignment, Lab Report, Presentation, Project).
+   - **Reference:** [ClickUp](https://clickup.com/)
 
-**Reference:** [ClickUp Calendar View](https://clickup.com/)
+2. **Google Calendar**:
+   - **Desktop Monthly Grid**: 7-column calendar matrix with date cells, month navigation, and multi-task pill indicators.
+   - **Mobile Weekly View**: Horizontal swipeable week-by-week timeline designed for responsive small screens.
+   - **Reference:** [Google Calendar](https://calendar.google.com/)
 
-**Mobile:** The mobile calendar view is inspired by **Google Calendar's weekly view**, featuring:
+3. **GitHub**:
+   - **Activity Contribution Heatmap**: Green/sky-blue intensity graph tracking daily activity, completions, and edits.
+   - **Version Control Diff Briefings**: Modal comparing Google Classroom coursework changes side-by-side with additions and deletions highlighted.
+   - **Top Navigation Bar & Repository Links**: Compact navbar with direct repository icon link, user cards, and release badges.
+   - **Reference:** [GitHub](https://github.com/)
 
-- Horizontal scrolling through weeks of the month
-- Week-by-week navigation with swipe gestures
-- Compact day columns with vertical task lists
-- Month navigation controls to switch between months
-- Touch-optimized interface
+4. **Analytical Bar Chart (Search Reference)**:
+   - **Activity Distribution**: Weekly day-by-day distribution bar chart in the Activity Timeline modal, inspired by standard web dashboard analytics charts.
 
-**Reference:** [Google Calendar](https://calendar.google.com/)
+---
 
-### Activity Timeline
+### Third-Party Libraries, Plugins & CDNs
 
-Visualizes user productivity and engagement:
+The application operates as a lightweight, framework-less Single-Page Application (SPA) utilizing targeted client-side libraries:
 
-- **Heatmap**: GitHub-style contribution graph showing daily activity intensity.
-- **Weekly Stats**: Bar chart showing activity distribution by day of the week.
-- **Activity Log**: Chronological list of recent actions (Task Added, Completed, Event Created).
-- **Backpopulation**: Utility (`migrateActivityLogs()`) to import past tasks into history.
+| Library / Plugin | Version / Source | Purpose |
+|------------------|------------------|---------|
+| **FontAwesome Free** | v6.x (cdnjs / cdn.jsdelivr.net) | UI iconography across navbar, buttons, task status, and badges |
+| **Chart.js** | v3.x / v4.x (cdn.jsdelivr.net) | Renders Activity Timeline distribution charts |
+| **JSZip** | v3.10.1 (cdnjs) | Compresses task exports, backups, and attachments |
+| **html2pdf.js** | v0.10.1 (cdnjs) | Client-side DOM-to-PDF rendering for schedule downloads |
+| **jsPDF** | v2.5.1 (cdnjs) | PDF generation engine powering html2pdf.js |
+| **Firebase JavaScript SDK** | v8.10.1 (gstatic) | Authentication, Cloud Firestore real-time database |
+| **Google APIs Client (GAPI)** | `apis.google.com/js/api.js` | Google Classroom courses, coursework, and announcements API |
+| **Google Identity Services (GIS)** | `accounts.google.com/gsi/client` | OAuth 2.0 token client for Google Classroom integration |
 
-### File Upload System
+---
 
-The note-taking feature uses multiple file upload providers for reliability:
+### File Upload System & Reverted Implementations
 
-#### Primary: Firebase Storage
+#### Reverted Implementation: Firebase Storage
+- **Original Architecture**: Files uploaded to Firebase Cloud Storage bucket (`uploadToFirebaseStorage`).
+- **Reason for Reversion**: Firebase Storage bucket quotas on the Spark free tier are strictly limited (5 GB total, 1 GB/day bandwidth) and require Google Cloud billing or complex CORS configuration (`gsutil cors set`).
+- **Current Status**: Disabled (`// Disabled` in `js/features/notes.js`).
+- **Active Replacement**: A robust client-side multi-provider fallback pipeline:
+  1. **Primary: Catbox.moe** (`https://catbox.moe/user/api.php` - 200 MB limit, permanent hosting, CORS-friendly).
+  2. **Fallback 1: Tmpfiles.org** (`https://tmpfiles.org/api/v1/upload` - 100 MB limit, temporary hosting).
+  3. **Fallback 2: File.io** (100 MB limit).
+  4. **Direct Blob Downloads**: Handled via `handleNoteLinkClick` with `fetch(url, { mode: 'cors' }) -> Blob -> ObjectURL` to prevent unwanted new-tab popups.
 
-- **Service:** Google Firebase Cloud Storage
-- **Limits:** 10 MB per file, 5 GB total (free tier)
-- **Retention:** Permanent
-- **Documentation:** [Firebase Storage](https://firebase.google.com/docs/storage)
+---
 
-#### Fallback 1: Catbox.moe
+### Architectural & Device Limitations
 
-- **Service:** Catbox.moe File Hosting API
-- **Limits:** 200 MB per file
-- **Retention:** Permanent
-- **API Endpoint:** `https://catbox.moe/user/api.php`
-- **Documentation:** [Catbox API](https://catbox.moe/api.php)
-
-#### Fallback 2: Tmpfiles.org
-
-- **Service:** Tmpfiles.org Temporary File Hosting
-- **Limits:** 100 MB per file
-- **Retention:** 1 year expiration
-- **API Endpoint:** `https://tmpfiles.org/api/v1/upload`
-- **Documentation:** [Tmpfiles API](https://tmpfiles.org/)
-
-#### Deprecated: File.io
-
-- **Status:** Removed due to CORS issues
-- **Issue:** Missing `Access-Control-Allow-Origin` header blocked browser uploads
-- **Replacement:** Multi-provider fallback system (Firebase → Catbox → Tmpfiles)
-
-**Implementation Details:**
-
-- Automatic fallback on provider failure
-- Progress indication during upload
-- Direct download support (no new tab required)
-- Markdown link generation: `[filename](url)`
-- Error handling with user-friendly messages
+1. **Mobile Web Notifications API**:
+   - On Android Chrome and iOS Safari PWA, calling `new Notification(...)` directly throws an `Illegal constructor` error.
+   - **Solution**: The application uses `navigator.serviceWorker.ready -> ServiceWorkerRegistration.showNotification()` as the primary notification pipeline.
+2. **Device Resolution & Zooming**:
+   - Different Android/iOS devices apply default browser scaling (DPR 2x-3x).
+   - Fixed modals use `100dvh` and `font-size: 16px !important` on form inputs to prevent intrusive browser auto-zoom on input focus.
 
 ---
 

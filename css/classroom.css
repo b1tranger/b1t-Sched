@@ -574,10 +574,23 @@ body.dark-mode .classroom-modal-header {
     color: var(--classroom-text-secondary);
     font-size: 0.9rem;
     margin-top: 6px;
-    white-space: nowrap;
+    white-space: normal;
+    word-break: break-word;
+    overflow: hidden;
+    transition: all 0.25s ease-in-out;
+}
+
+.item-snippet .snippet-truncated {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
-    transition: all 0.25s ease-in-out;
+    line-height: 1.4;
+}
+
+.classroom-item.expanded .item-snippet {
+    white-space: normal;
 }
 
 /* Specific item types */

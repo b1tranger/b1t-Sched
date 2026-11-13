@@ -6,7 +6,7 @@
   <img src="Social-Preview.webp" width="220px" alt="b1t-Sched Logo" style="border-radius: 16px; margin-bottom: 12px;">
   <h1>👉 <a href="https://github.com/b1tranger/b1t-Sched/blob/main/doc/DOCUMENTATION.md">Complete Documentation</a> 👈</h1>
   <p>
-    <strong>Current Version:</strong> <code>v2.53.0 to v2.53.15</code> • 
+    <strong>Current Version:</strong> <code>v2.53.0 to v2.53.16</code> • 
     <strong>Architecture:</strong> Vanilla JS SPA + Firebase Firestore & Auth + PWA
   </p>
 </div>
@@ -27,6 +27,9 @@
   5. `DptHead` (Department Head) - Comprehensive departmental oversight and coordinator capabilities.
   6. `Admin` - Complete platform administration, user management, account approvals, role assignments, UID lookups, and the **Admin Role Preview Mode** (simulate any role with a real-time floating indicator).
 - **Faculty Self-Registration & Approvals**: Faculty self-register with pending status until approved by an Admin or Department Coordinator via the interactive Approvals modal.
+- **Visitor Preview Mode**: Instant client-side exploration using static mock data with zero Firebase network requests (`js/features/visitor-data.js`). Shows sample assignments, labs, events, notices, and profile state without touching the backend.
+- **Department Coordinator Permissions**: Department Coordinators can modify and delete matching department faculty tasks directly from the main feed.
+- **Semester Tracking & Auto-Completion**: Tasks without explicit deadlines default to the end of that semester (Spring: June 30, Fall: December 31). Once that semester concludes, tasks are automatically marked as completed rather than deleted.
 
 ### 📋 Task Management & Productivity
 - **Personalized Task Feed**: Automatic task filtering based on Department, Semester, and Section Group (`A1+A2`, `B1+B2`, etc.).

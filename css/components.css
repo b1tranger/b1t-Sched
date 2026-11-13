@@ -929,38 +929,57 @@ body.dark-mode .task-deadline.urgent {
 @media (max-width: 768px) {
 
   #add-task-modal .modal-content,
-  #edit-task-modal .modal-content {
+  #edit-task-modal .modal-content,
+  #add-event-modal .modal-content,
+  #add-cr-notice-modal .modal-content {
     width: 100%;
     max-width: 100%;
-    height: 100vh;
-    max-height: 100vh;
+    height: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
     border-radius: 0;
     margin: 0;
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
   }
 
   #add-task-modal .modal-body,
-  #edit-task-modal .modal-body {
+  #edit-task-modal .modal-body,
+  #add-event-modal .modal-body,
+  #add-cr-notice-modal .modal-body {
     flex: 1;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
   }
 
   #add-task-modal .modal-footer,
-  #edit-task-modal .modal-footer {
+  #edit-task-modal .modal-footer,
+  #add-event-modal .modal-footer,
+  #add-cr-notice-modal .modal-footer {
     flex-shrink: 0;
     position: sticky;
     bottom: 0;
     background: var(--bg-white);
     border-top: 2px solid var(--border-light);
-    padding: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+
+  /* Prevent browser auto-zoom on mobile inputs */
+  .form-input,
+  .form-select,
+  .form-textarea {
+    font-size: 16px !important;
   }
 
   /* Prevent body scroll when modal is open */
   body:has(#add-task-modal[style*="display: flex"]),
-  body:has(#edit-task-modal[style*="display: flex"]) {
+  body:has(#edit-task-modal[style*="display: flex"]),
+  body:has(#add-event-modal[style*="display: flex"]),
+  body:has(#add-cr-notice-modal[style*="display: flex"]) {
     overflow: hidden;
     position: fixed;
     width: 100%;

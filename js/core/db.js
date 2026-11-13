@@ -898,8 +898,9 @@ const DB = {
     }
   },
 
-  // Reset (delete) all old tasks for a department/semester/section group (admin only)
-  async resetOldTasks(department, semester, section) {
+  // Reset old tasks for a department/semester/section group (admin or CR)
+  // Auto-completes no-deadline tasks from ended semesters; deletes expired explicit-deadline tasks
+  async resetOldTasks(department, semester, section, includeNoDeadline = false) {
     try {
       const now = new Date();
       const sectionsInGroup = Utils.getSectionsInGroup(section);
@@ -911,13 +912,30 @@ const DB = {
 
       const batch = db.batch();
       let deletedCount = 0;
+      let autoCompletedCount = 0;
 
       snapshot.forEach(doc => {
         const data = doc.data();
-        // Skip tasks with no deadline (they should remain in pending indefinitely)
-        if (!data.deadline) return;
+        const createdAt = data.createdAt ? (data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt)) : now;
+        const semesterEnd = Utils.getSemesterEnd(createdAt);
+        const isNoDeadline = data.isNoDeadline === true || !data.deadline;
+
+        if (isNoDeadline) {
+          // If the semester has ended (or explicitly requested), auto-complete rather than delete
+          if (now > semesterEnd || includeNoDeadline) {
+            batch.update(doc.ref, {
+              isCompleted: true,
+              autoCompleted: true,
+              completedAt: firebase.firestore.Timestamp.fromDate(semesterEnd),
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            autoCompletedCount++;
+          }
+          return;
+        }
+
         const deadline = data.deadline.toDate ? data.deadline.toDate() : new Date(data.deadline);
-        // Delete tasks that are past their deadline
+        // Delete tasks that are past their explicit deadline
         if (deadline < now) {
           batch.delete(doc.ref);
           deletedCount++;
@@ -925,8 +943,8 @@ const DB = {
       });
 
       await batch.commit();
-      console.log(`Reset ${deletedCount} old tasks`);
-      return { success: true, deletedCount };
+      console.log(`Reset tasks: ${deletedCount} deleted, ${autoCompletedCount} auto-completed`);
+      return { success: true, deletedCount, autoCompletedCount };
     } catch (error) {
       console.error('Error resetting old tasks:', error);
       return { success: false, error: error.message };

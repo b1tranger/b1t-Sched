@@ -58,6 +58,22 @@ const Utils = {
     return text.slice(0, maxLength) + '...';
   },
 
+  // Update browser theme-color meta tag
+  updateThemeColorMeta(theme) {
+    let color = '#660000';
+    if (theme === 'dark' || theme === 'high-contrast') {
+      color = '#262626';
+    } else if (theme === 'gray') {
+      color = '#0b0a10';
+    } else if (theme === 'system') {
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        color = '#0b0a10';
+      }
+    }
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', color);
+  },
+
   // Debounce function
   debounce(func, wait = 300) {
     let timeout;
@@ -326,5 +342,41 @@ const Utils = {
       return ALUMNI;
     }
     return SEMESTERS[newIndex];
+  },
+
+  // Get the end date for the semester containing `date` (Spring ends Jun 30 23:59:59, Fall ends Dec 31 23:59:59)
+  getSemesterEnd(date = new Date()) {
+    const d = date instanceof Date ? date : new Date(date);
+    const year = d.getFullYear();
+    const month = d.getMonth(); // 0 = Jan, 5 = Jun, 6 = Jul, 11 = Dec
+    if (month >= 6) {
+      return new Date(year, 11, 31, 23, 59, 59, 999);
+    } else {
+      return new Date(year, 5, 30, 23, 59, 59, 999);
+    }
+  },
+
+  // Get current active semester information: cycle, name, start, end, and remaining days
+  getCurrentSemesterInfo(date = new Date()) {
+    const d = date instanceof Date ? date : new Date(date);
+    const year = d.getFullYear();
+    const month = d.getMonth();
+    const isFall = month >= 6;
+    const cycle = isFall ? `${year}-07` : `${year}-01`;
+    const name = isFall ? `Fall ${year}` : `Spring ${year}`;
+    const start = isFall ? new Date(year, 6, 1, 0, 0, 0, 0) : new Date(year, 0, 1, 0, 0, 0, 0);
+    const end = isFall ? new Date(year, 11, 31, 23, 59, 59, 999) : new Date(year, 5, 30, 23, 59, 59, 999);
+    const msRemaining = end.getTime() - d.getTime();
+    const daysRemaining = Math.max(0, Math.ceil(msRemaining / (1000 * 60 * 60 * 24)));
+    return {
+      cycle,
+      name,
+      season: isFall ? 'Fall' : 'Spring',
+      year,
+      startDate: start,
+      endDate: end,
+      daysRemaining,
+      isExpired: d > end
+    };
   }
 };

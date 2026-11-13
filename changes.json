@@ -1,13 +1,53 @@
 {
-  "currentVersion": "v2.53.0 to v2.53.15",
-  "lastUpdated": "November 11, 2026",
+  "currentVersion": "v2.53.0 to v2.53.16",
+  "lastUpdated": "November 13, 2026",
   "documentationUrl": "https://b1tranger.netlify.app/render.html?file=https%3A%2F%2Fgithub.com%2Fb1tranger%2Fb1t-Sched%2Fblob%2Fmain%2Fdoc%2FDOCUMENTATION.md",
   "history": [
     {
-      "version": "v2.53.0 to v2.53.15",
+      "version": "v2.53.0 to v2.53.16",
       "badge": "Latest",
       "date": "November 2026",
       "changes": [
+        {
+          "type": "UI/UX",
+          "title": "Visitor Mode: Desktop Floating Action Button (Avoids FAQ & Support Collision)",
+          "description": "Repositioned the \"Browse as Visitor\" entry button on desktop displays (>= 769px) into a fixed bottom-right floating pill action button (#visitor-mode-btn) with subtle elevation, hover animation, and dark/gray mode adaptation. This prevents height overlap with the centered \"FAQ & Support\" bounce indicator on the login screen while keeping visitor exploration instantly accessible."
+        },
+        {
+          "type": "New Feature",
+          "title": "Visitor Mode (Client-Side Only Preview)",
+          "description": "Introduced an instant 'Browse as Visitor' preview mode powered by standalone static mock data in js/features/visitor-data.js. Performs zero Firebase Network, Auth, or Firestore queries, displays sample assignments, labs, events, and notices, allows in-memory interactive task completions, and renders 'Visitor' profile attributes while safeguarding against unauthorized backend writes."
+        },
+        {
+          "type": "Security & Permissions",
+          "title": "Department Coordinator Task Management Permissions",
+          "description": "Updated Firestore security rules (firestore.rules) and application controllers (js/core/app.js, js/core/ui.js) to allow Department Coordinators (isDptCoor) to edit and delete other Faculty tasks within their matching department, keeping departmental coursework synchronized."
+        },
+        {
+          "type": "Enhancement",
+          "title": "Semester Tracking & Auto-Completion of No-Deadline Tasks",
+          "description": "Changed task lifecycle management for no-deadline tasks from auto-deletion to auto-completion. Every task without an explicit deadline defaults to the end of that semester (June 30 for Spring, December 31 for Fall) via Utils.getSemesterEnd. When the semester concludes or during bulk resets, no-deadline tasks are automatically resolved and marked as completed rather than deleted."
+        },
+        {
+          "type": "UI/UX",
+          "title": "Forgot Password 2-Minute Inactivity Trigger & Failed Attempt Visibility",
+          "description": "Implemented an idle timer that automatically reveals the Forgot Password recovery link after 2 minutes of idle time on the login view, while keeping the immediate reveal on failed password attempts."
+        },
+        {
+          "type": "Fix",
+          "title": "Mobile Notification Service Worker Ready Priority",
+          "description": "Resolved notification failures on mobile devices (Android Chrome, iOS Safari PWA) where direct Notification constructor invocation threw an Illegal constructor error. All notifications now prioritize navigator.serviceWorker.ready before falling back to desktop constructors."
+        },
+        {
+          "type": "Performance",
+          "title": "University Notices Firestore Metadata Caching",
+          "description": "Configured notice viewer in js/features/notice.js to check and populate Firestore document metadata/uni_notices upon Admin refresh, allowing subsequent students to load notices instantly with low-latency CDN reads without waiting for cold backend server wakeups."
+        },
+        {
+          "type": "UI/UX",
+          "title": "Desktop Login Window Refinement & Resolution Breakpoint Scaling",
+          "description": "Styled the desktop login card with a clean elevated container and responsive spacing. Added fine-grained CSS scale variables in js/core/app.js and css/main.css for ultra-narrow, mobile, tablet, and widescreen resolutions."
+        },
         {
           "type": "Enhancement",
           "title": "Always-Visible Google Classroom Shortcut FAB",

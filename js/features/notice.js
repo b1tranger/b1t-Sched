@@ -17,6 +17,7 @@ const NoticeViewer = {
     autoRetryTimer: null,
     retryCountdownInterval: null,
     retrySecondsRemaining: 0,
+    cooldownInterval: null,
 
     // ──────────────────────────────────────────────
     // INITIALIZATION
@@ -217,6 +218,47 @@ const NoticeViewer = {
         if (countdownElemMobile) countdownElemMobile.innerHTML = text;
     },
 
+    startRefreshCooldownTimer(remainingSeconds) {
+        if (this.cooldownInterval) {
+            clearInterval(this.cooldownInterval);
+            this.cooldownInterval = null;
+        }
+
+        let seconds = remainingSeconds;
+        const updateButtons = (sec) => {
+            const btns = [
+                document.getElementById('refresh-notices-btn-desktop'),
+                document.getElementById('refresh-notices-btn-mobile')
+            ];
+            btns.forEach(btn => {
+                if (btn) {
+                    if (sec > 0) {
+                        btn.disabled = true;
+                        btn.innerHTML = `<i class="fas fa-clock"></i> Wait ${sec}s`;
+                        btn.title = `Refresh cooldown active (${sec}s remaining)`;
+                    } else {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-sync-alt"></i> Check Updates';
+                        btn.title = 'Fetch new notices from backend server';
+                    }
+                }
+            });
+        };
+
+        updateButtons(seconds);
+
+        this.cooldownInterval = setInterval(() => {
+            seconds--;
+            if (seconds > 0) {
+                updateButtons(seconds);
+            } else {
+                clearInterval(this.cooldownInterval);
+                this.cooldownInterval = null;
+                updateButtons(0);
+            }
+        }, 1000);
+    },
+
     async loadNotices(forceRefresh = false) {
         this.clearAutoRetryTimers();
 
@@ -239,9 +281,10 @@ const NoticeViewer = {
 
             if (this.lastRefreshTime > 0 && (now - this.lastRefreshTime) < this.REFRESH_COOLDOWN_MS) {
                 const remainingSec = Math.ceil((this.REFRESH_COOLDOWN_MS - (now - this.lastRefreshTime)) / 1000);
+                this.startRefreshCooldownTimer(remainingSec);
                 const cooldownMsg = `Please wait ${remainingSec}s before refreshing notices again.`;
                 if (typeof UI !== 'undefined' && UI.showToast) {
-                    UI.showToast(cooldownMsg, 'error');
+                    UI.showToast(cooldownMsg, 'warning');
                 } else {
                     this.showErrorState(cooldownMsg);
                 }
@@ -252,6 +295,30 @@ const NoticeViewer = {
         // Show loading state
         this.showLoadingState(forceRefresh);
         if (forceRefresh) this.isRefreshing = true;
+
+        // Try instant loading from localStorage or Firestore metadata document
+        if (!forceRefresh) {
+            const cached = this.checkCache();
+            if (cached && cached.length > 0) {
+                this.notices = cached;
+                this.noticesLoaded = true;
+                this.renderAllNotices();
+                console.log('[NoticeViewer] Rendered notices from local cache');
+            } else if (typeof firebase !== 'undefined' && firebase.firestore) {
+                try {
+                    const doc = await firebase.firestore().collection('metadata').doc('uni_notices').get();
+                    if (doc.exists && doc.data() && Array.isArray(doc.data().notices) && doc.data().notices.length > 0) {
+                        this.notices = doc.data().notices;
+                        this.noticesLoaded = true;
+                        this.saveToCache(this.notices);
+                        this.renderAllNotices();
+                        console.log('[NoticeViewer] Rendered notices from Firestore metadata');
+                    }
+                } catch (fsErr) {
+                    console.warn('[NoticeViewer] Firestore metadata notice check skipped:', fsErr);
+                }
+            }
+        }
 
         try {
             const url = forceRefresh ? `${this.API_BASE}/api/notices?refresh=true` : `${this.API_BASE}/api/notices`;
@@ -290,6 +357,7 @@ const NoticeViewer = {
 
             if (forceRefresh) {
                 this.lastRefreshTime = Date.now();
+                this.startRefreshCooldownTimer(Math.ceil(this.REFRESH_COOLDOWN_MS / 1000));
                 const totalLoaded = this.notices.length;
                 const successMsg = `Notices updated from backend server! ${totalLoaded} notice(s) available.`;
                 if (typeof UI !== 'undefined' && UI.showToast) {
@@ -305,6 +373,19 @@ const NoticeViewer = {
 
             // Save to localStorage
             this.saveToCache(this.notices);
+
+            // If Admin or user with privileges, persist to Firestore metadata so all users can load instantly
+            if (typeof firebase !== 'undefined' && firebase.firestore && typeof App !== 'undefined' && App.isAdmin) {
+                try {
+                    firebase.firestore().collection('metadata').doc('uni_notices').set({
+                        notices: this.notices.slice(0, 50),
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        updatedBy: firebase.auth().currentUser ? firebase.auth().currentUser.uid : 'admin'
+                    }, { merge: true }).catch(e => console.warn('[NoticeViewer] Failed to sync to Firestore metadata:', e));
+                } catch (fsErr) {
+                    console.warn('[NoticeViewer] Firestore sync skipped:', fsErr);
+                }
+            }
 
             // Render in all containers
             this.renderAllNotices();
@@ -546,6 +627,11 @@ const NoticeViewer = {
                 if (!this.noticesLoaded || this.notices.length === 0) {
                     this.loadNotices(false);
                 }
+
+                const remaining = this.lastRefreshTime > 0 ? Math.ceil((this.REFRESH_COOLDOWN_MS - (Date.now() - this.lastRefreshTime)) / 1000) : 0;
+                if (remaining > 0) {
+                    this.startRefreshCooldownTimer(remaining);
+                }
             } else {
                 sidebar.classList.remove('open');
                 overlay.classList.remove('active');
@@ -558,6 +644,11 @@ const NoticeViewer = {
     openNoticeModal() {
         const isFacultyOrDptCoor = (typeof App !== 'undefined' && (App.isFaculty || App.isDptCoor)) || (Utils.storage.get('userProfile')?.isFaculty || Utils.storage.get('userProfile')?.isDptCoor || Utils.storage.get('userProfile')?.isDptHead);
         this.updateNoticeTitles(isFacultyOrDptCoor);
+
+        const remaining = this.lastRefreshTime > 0 ? Math.ceil((this.REFRESH_COOLDOWN_MS - (Date.now() - this.lastRefreshTime)) / 1000) : 0;
+        if (remaining > 0) {
+            this.startRefreshCooldownTimer(remaining);
+        }
 
         UI.showModal('notice-modal');
         if (!this.noticesLoaded || this.notices.length === 0) {

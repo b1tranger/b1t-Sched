@@ -96,7 +96,7 @@ const UI = {
           position: fixed;
           bottom: 24px;
           right: 24px;
-          z-index: 10000;
+          z-index: 13000;
           display: flex;
           flex-direction: column-reverse;
           gap: 10px;
@@ -108,7 +108,7 @@ const UI = {
           position: fixed;
           top: 20px;
           right: 20px;
-          z-index: 10000;
+          z-index: 13000;
           display: flex;
           flex-direction: column;
           gap: 10px;
@@ -351,7 +351,8 @@ const UI = {
   // Render tasks with checkboxes
   // isAdmin: user has admin privileges (can edit/delete any task, manage events)
   // isCR: user is a Class Representative (can delete any task, use reset)
-  renderTasks(tasks, userCompletions = {}, isAdmin = false, isCR = false, currentUserId = null) {
+  // isDptCoor: Department Coordinator (can edit/delete faculty tasks in their department)
+  renderTasks(tasks, userCompletions = {}, isAdmin = false, isCR = false, currentUserId = null, isDptCoor = false, userDepartment = '') {
     const container = document.getElementById('tasks-container');
     const noTasksMsg = document.getElementById('no-tasks-message');
 
@@ -389,12 +390,11 @@ const UI = {
         if (aCompleted !== bCompleted) {
           return aCompleted ? 1 : -1;
         }
-        // Tasks with no deadline always go after all with a deadline (but before completed)
-        const aHasDeadline = !!a.deadline;
-        const bHasDeadline = !!b.deadline;
-        if (aHasDeadline && !bHasDeadline) return -1;
-        if (!aHasDeadline && bHasDeadline) return 1;
-        if (!aHasDeadline && !bHasDeadline) return 0;
+        // Tasks with no explicit deadline go after tasks with explicit deadlines (but before completed)
+        const aNoDeadline = a.isNoDeadline === true || !a.deadline;
+        const bNoDeadline = b.isNoDeadline === true || !b.deadline;
+        if (!aNoDeadline && bNoDeadline) return -1;
+        if (aNoDeadline && !bNoDeadline) return 1;
         // Both have deadlines, sort by soonest
         const aDeadline = a.deadline.toDate ? a.deadline.toDate() : new Date(a.deadline);
         const bDeadline = b.deadline.toDate ? b.deadline.toDate() : new Date(b.deadline);
@@ -418,28 +418,37 @@ const UI = {
               <i class="fas fa-chalkboard-teacher"></i>
               <span>Faculty Tasks - ${dept}</span>
             </div>
-            ${deptTasks.map(task => this.renderTaskCard(task, userCompletions, isAdmin, isCR, currentUserId, now, true)).join('')}
+            ${deptTasks.map(task => this.renderTaskCard(task, userCompletions, isAdmin, isCR, currentUserId, now, true, isDptCoor, userDepartment)).join('')}
           </div>
         `;
       }
     });
 
     // Render other tasks
-    html += sortedOtherTasks.map(task => this.renderTaskCard(task, userCompletions, isAdmin, isCR, currentUserId, now, false)).join('');
+    html += sortedOtherTasks.map(task => this.renderTaskCard(task, userCompletions, isAdmin, isCR, currentUserId, now, false, isDptCoor, userDepartment)).join('');
 
     container.innerHTML = html;
   },
 
   // Helper function to render a single task card
-  renderTaskCard(task, userCompletions, isAdmin, isCR, currentUserId, now, isFacultyTask) {
+  renderTaskCard(task, userCompletions, isAdmin, isCR, currentUserId, now, isFacultyTask, isDptCoor = false, userDepartment = '') {
     let deadline = null;
     let daysUntil = null;
     let isUrgent = false;
     let isPastDeadline = false;
-    if (task.deadline) {
+    const isNoDeadline = task.isNoDeadline === true || !task.deadline;
+
+    if (task.deadline && !task.isNoDeadline) {
       deadline = task.deadline.toDate ? task.deadline.toDate() : new Date(task.deadline);
       daysUntil = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
       isUrgent = daysUntil <= 3 && daysUntil > 0;
+      isPastDeadline = deadline < now;
+    } else {
+      // For tasks without explicit deadline, the default deadline is the end of that semester
+      const createdAt = task.createdAt ? (task.createdAt.toDate ? task.createdAt.toDate() : new Date(task.createdAt)) : now;
+      deadline = task.deadline ? (task.deadline.toDate ? task.deadline.toDate() : new Date(task.deadline)) : Utils.getSemesterEnd(createdAt);
+      daysUntil = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
+      isUrgent = false;
       isPastDeadline = deadline < now;
     }
     const isCompleted = userCompletions[task.id] || false;
@@ -450,15 +459,16 @@ const UI = {
     } else if (isPastDeadline) {
       statusClass = 'incomplete';
     }
-    // Edit: Admin can edit any task, Faculty can edit their own tasks, users can only edit their own tasks
-    const canEdit = isAdmin || (currentUserId && task.addedBy === currentUserId);
+    // Edit: Admin can edit any task, DptCoor can edit faculty tasks in their department, users/faculty can edit their own tasks
+    const isDeptMatch = userDepartment && task.department === userDepartment;
+    const canEdit = isAdmin || (currentUserId && task.addedBy === currentUserId) || (isDptCoor && isFacultyTask && isDeptMatch);
     const editButton = canEdit ? `
         <button class="task-edit-btn" data-task-id="${task.id}" title="Edit task">
           <i class="fas fa-edit"></i>
         </button>
       ` : '';
-    // Delete: Admin/CR can delete any task, users can only delete their own tasks
-    const canDelete = isAdmin || isCR || (currentUserId && task.addedBy === currentUserId);
+    // Delete: Admin/CR can delete any task, DptCoor can delete faculty tasks in their department, users can only delete their own tasks
+    const canDelete = isAdmin || isCR || (currentUserId && task.addedBy === currentUserId) || (isDptCoor && isFacultyTask && isDeptMatch);
     const deleteButton = canDelete ? `
         <button class="task-delete-btn" data-task-id="${task.id}" title="Delete task">
           <i class="fas fa-trash"></i>
@@ -520,7 +530,7 @@ const UI = {
               <div class="task-footer">
                 <span class="task-deadline ${isUrgent ? 'urgent' : ''} ${isPastDeadline && !isCompleted ? 'urgent' : ''}">
                   <i class="fas fa-clock"></i>
-                  ${task.deadline ? Utils.formatDate(deadline) : 'No official Time limit'}
+                  ${isNoDeadline ? `End of Semester (${Utils.formatDate(deadline)})` : (task.deadline ? Utils.formatDate(deadline) : 'End of Semester')}
                   ${isPastDeadline && !isCompleted ? '(Overdue!)' : ''}
                   ${isUrgent && !isPastDeadline ? `(${daysUntil} day${daysUntil !== 1 ? 's' : ''} left!)` : ''}
                 </span>
@@ -533,7 +543,7 @@ const UI = {
   },
 
   // Render old tasks (past deadline - compact view)
-  renderOldTasks(tasks, isAdmin = false, currentUserId = null) {
+  renderOldTasks(tasks, isAdmin = false, currentUserId = null, isDptCoor = false, userDepartment = '') {
     const container = document.getElementById('old-tasks-container');
     const noOldTasksMsg = document.getElementById('no-old-tasks-message');
 
@@ -556,8 +566,9 @@ const UI = {
       const iconClass = isCompleted ? 'fa-check-circle completed-icon' : 'fa-clock overdue-icon';
       const statusClass = isCompleted ? 'completed' : 'overdue';
 
-      // Edit: Admin can edit any task, users can edit their own tasks
-      const canEdit = isAdmin || (currentUserId && task.addedBy === currentUserId);
+      // Edit: Admin can edit any task, DptCoor can edit faculty tasks in their department, users can edit their own tasks
+      const isDeptMatch = userDepartment && task.department === userDepartment;
+      const canEdit = isAdmin || (currentUserId && task.addedBy === currentUserId) || (isDptCoor && task.addedByRole === 'Faculty' && isDeptMatch);
       const editButton = canEdit ? `
         <div class="old-task-actions">
           <button class="task-edit-btn old-task-edit-btn" data-task-id="${task.id}" title="Edit task">

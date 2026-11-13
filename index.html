@@ -9,10 +9,12 @@
 
     <!-- Favicon -->
     <link rel="icon" href="Social-Preview.webp" type="image/webp">
+    <link rel="icon" type="image/png" sizes="192x192" href="/images/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
 
     <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#4CAF50">
+    <meta name="theme-color" content="#660000">
 
     <!-- CSS Files -->
     <link rel="stylesheet" href="css/colors.css">
@@ -59,14 +61,18 @@
                     }
                 }
 
+                let metaTheme = '#660000';
                 if (theme === 'dark' || theme === 'high-contrast') {
+                    metaTheme = '#262626';
                     document.documentElement.classList.add('dark-mode');
                     window.addEventListener('DOMContentLoaded', () => document.body.classList.add('dark-mode'));
                 } else if (theme === 'gray') {
+                    metaTheme = '#0b0a10';
                     document.documentElement.classList.add('gray-mode');
                     window.addEventListener('DOMContentLoaded', () => document.body.classList.add('gray-mode'));
                 } else if (theme === 'system') {
                     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                        metaTheme = '#0b0a10';
                         document.documentElement.classList.add('gray-mode');
                         window.addEventListener('DOMContentLoaded', () => document.body.classList.add('gray-mode'));
                     }
@@ -77,6 +83,8 @@
                         document.body.classList.remove('dark-mode', 'gray-mode');
                     });
                 }
+                const metaTag = document.querySelector('meta[name="theme-color"]');
+                if (metaTag) metaTag.setAttribute('content', metaTheme);
             } catch (e) {
                 console.error("Theme init error", e);
             }
@@ -96,6 +104,16 @@
             <button id="exit-preview-banner-btn" class="btn btn-sm btn-exit-preview" type="button"
                 title="Exit preview mode">
                 <i class="fas fa-times-circle"></i> <span class="exit-btn-text">Exit Preview</span>
+            </button>
+        </div>
+    </div>
+    <!-- Visitor Preview Floating Banner -->
+    <div id="visitor-preview-banner" class="admin-preview-banner visitor-banner" style="display: none; background: #0284c7;">
+        <div id="visitor-preview-banner-content" class="admin-preview-banner-content">
+            <span class="preview-badge" style="color: #ffffff;"><i class="fas fa-eye"></i> <strong>Visitor Mode (Preview)</strong></span>
+            <button id="exit-visitor-banner-btn" class="btn btn-sm btn-exit-preview" type="button"
+                title="Exit visitor mode and sign in" style="background: rgba(255, 255, 255, 0.2); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.4);">
+                <i class="fas fa-sign-in-alt"></i> <span class="exit-btn-text">Sign In</span>
             </button>
         </div>
     </div>
@@ -288,6 +306,11 @@
                                     Back to Login
                                 </button>
                             </form>
+
+                            <button type="button" id="visitor-mode-btn" class="btn btn-outline btn-block visitor-mode-btn"
+                                title="Browse sample tasks and notices without an account">
+                                <i class="fas fa-eye"></i> Browse as Visitor (Preview)
+                            </button>
 
                             <!-- Error/Success Messages -->
                             <div id="auth-message" class="auth-message"></div>
@@ -2542,21 +2565,15 @@
                 © <span id="footer-year"></span>
                 <a href="https://github.com/b1tranger" target="_blank" rel="noopener noreferrer">@b1tranger</a>
                 <span class="footer-separator">|</span>
-                <a href="https://github.com/b1tranger/b1t-Sched" target="_blank" rel="noopener noreferrer">
-                    <i class="fab fa-github"></i> Source Code
-                    <a href="https://github.com/b1tranger/b1t-Sched" target="_blank" rel="noopener noreferrer"
-                        title="Source Code" aria-label="Source Code">
-                        <i class="fab fa-github" aria-hidden="true"></i><span class="footer-link-text">Source
-                            Code</span>
-                    </a>
-                    <span class="footer-separator">|</span>
-                    <a href="#" id="footer-changelog-link" <a href="#" id="footer-changelog-link" title="What's New"
-                        aria-label="What's New"
-                        onclick="if(window.ChangelogModal){window.ChangelogModal.checkAndShowChangelog(true);}return false;">
-                        <i class="fas fa-bullhorn"></i> What's New
-                        <i class="fas fa-bullhorn" aria-hidden="true"></i><span class="footer-link-text">What's
-                            New</span>
-                    </a>
+                <a href="https://github.com/b1tranger/b1t-Sched" target="_blank" rel="noopener noreferrer"
+                    title="Source Code" aria-label="Source Code">
+                    <i class="fab fa-github" aria-hidden="true"></i><span class="footer-link-text"> Source Code</span>
+                </a>
+                <span class="footer-separator">|</span>
+                <a href="#" id="footer-changelog-link" title="What's New" aria-label="What's New"
+                    onclick="if(window.ChangelogModal){window.ChangelogModal.checkAndShowChangelog(true);}return false;">
+                    <i class="fas fa-bullhorn" aria-hidden="true"></i><span class="footer-link-text"> What's New</span>
+                </a>
             </p>
         </footer>
     </div>
@@ -2622,6 +2639,9 @@
 
     <!-- UITS Event Raiders Feed Module -->
     <script src="js/features/raids-feed.js"></script>
+
+    <!-- Visitor Mode Static Mock Data -->
+    <script src="js/features/visitor-data.js"></script>
 
     <script src="js/core/app.js"></script>
     <script src="js/features/calendar-view.js"></script>

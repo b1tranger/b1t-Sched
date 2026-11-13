@@ -13,7 +13,7 @@ const NotificationManager = {
    * @returns {boolean}
    */
   isSupported() {
-    return 'Notification' in window;
+    return ('Notification' in window) || ('serviceWorker' in navigator && 'PushManager' in window);
   },
 
   /**
@@ -65,39 +65,48 @@ const NotificationManager = {
       // Format notification content
       const notificationData = NotificationContentFormatter.formatTaskNotification(task);
 
-      // Try to use Service Worker notification (required for mobile)
-      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-        const registration = await navigator.serviceWorker.ready;
-        await registration.showNotification(notificationData.title, {
+      // Prioritize Service Worker showNotification (required for mobile browsers, works on modern desktop)
+      if ('serviceWorker' in navigator) {
+        try {
+          const registration = await navigator.serviceWorker.ready;
+          if (registration && typeof registration.showNotification === 'function') {
+            await registration.showNotification(notificationData.title, {
+              body: notificationData.body,
+              icon: notificationData.icon || '/images/icon-192x192.png',
+              tag: notificationData.tag,
+              requireInteraction: notificationData.requireInteraction,
+              data: notificationData.data,
+              badge: '/Social-Preview.webp',
+              vibrate: [200, 100, 200]
+            });
+            console.log('Task notification displayed via Service Worker:', task.id);
+            return null; // Service Worker notifications don't return a Notification object
+          }
+        } catch (swError) {
+          console.warn('Service Worker notification failed, falling back:', swError);
+        }
+      }
+
+      // Fallback to regular Notification API (desktop browsers where supported)
+      if (typeof Notification !== 'undefined') {
+        const notification = new Notification(notificationData.title, {
           body: notificationData.body,
           icon: notificationData.icon,
           tag: notificationData.tag,
           requireInteraction: notificationData.requireInteraction,
-          data: notificationData.data,
-          badge: '/Social-Preview.webp',
-          vibrate: [200, 100, 200]
+          data: notificationData.data
         });
-        console.log('Task notification displayed via Service Worker:', task.id);
-        return null; // Service Worker notifications don't return a Notification object
+
+        // Handle click event
+        notification.onclick = () => {
+          this.handleNotificationClick('task', task.id);
+          notification.close();
+        };
+
+        console.log('Task notification displayed:', task.id);
+        return notification;
       }
-
-      // Fallback to regular Notification API (desktop browsers)
-      const notification = new Notification(notificationData.title, {
-        body: notificationData.body,
-        icon: notificationData.icon,
-        tag: notificationData.tag,
-        requireInteraction: notificationData.requireInteraction,
-        data: notificationData.data
-      });
-
-      // Handle click event
-      notification.onclick = () => {
-        this.handleNotificationClick('task', task.id);
-        notification.close();
-      };
-
-      console.log('Task notification displayed:', task.id);
-      return notification;
+      return null;
     } catch (error) {
       console.error('Failed to display task notification:', error);
       console.error('Task ID:', task.id);
@@ -122,39 +131,48 @@ const NotificationManager = {
       // Format notification content
       const notificationData = NotificationContentFormatter.formatEventNotification(event);
 
-      // Try to use Service Worker notification (required for mobile)
-      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-        const registration = await navigator.serviceWorker.ready;
-        await registration.showNotification(notificationData.title, {
+      // Prioritize Service Worker showNotification (required for mobile browsers, works on modern desktop)
+      if ('serviceWorker' in navigator) {
+        try {
+          const registration = await navigator.serviceWorker.ready;
+          if (registration && typeof registration.showNotification === 'function') {
+            await registration.showNotification(notificationData.title, {
+              body: notificationData.body,
+              icon: notificationData.icon || '/images/icon-192x192.png',
+              tag: notificationData.tag,
+              requireInteraction: notificationData.requireInteraction,
+              data: notificationData.data,
+              badge: '/Social-Preview.webp',
+              vibrate: [200, 100, 200]
+            });
+            console.log('Event notification displayed via Service Worker:', event.id);
+            return null; // Service Worker notifications don't return a Notification object
+          }
+        } catch (swError) {
+          console.warn('Service Worker event notification failed, falling back:', swError);
+        }
+      }
+
+      // Fallback to regular Notification API (desktop browsers)
+      if (typeof Notification !== 'undefined') {
+        const notification = new Notification(notificationData.title, {
           body: notificationData.body,
           icon: notificationData.icon,
           tag: notificationData.tag,
           requireInteraction: notificationData.requireInteraction,
-          data: notificationData.data,
-          badge: '/Social-Preview.webp',
-          vibrate: [200, 100, 200]
+          data: notificationData.data
         });
-        console.log('Event notification displayed via Service Worker:', event.id);
-        return null; // Service Worker notifications don't return a Notification object
+
+        // Handle click event
+        notification.onclick = () => {
+          this.handleNotificationClick('event', event.id);
+          notification.close();
+        };
+
+        console.log('Event notification displayed:', event.id);
+        return notification;
       }
-
-      // Fallback to regular Notification API (desktop browsers)
-      const notification = new Notification(notificationData.title, {
-        body: notificationData.body,
-        icon: notificationData.icon,
-        tag: notificationData.tag,
-        requireInteraction: notificationData.requireInteraction,
-        data: notificationData.data
-      });
-
-      // Handle click event
-      notification.onclick = () => {
-        this.handleNotificationClick('event', event.id);
-        notification.close();
-      };
-
-      console.log('Event notification displayed:', event.id);
-      return notification;
+      return null;
     } catch (error) {
       console.error('Failed to display event notification:', error);
       console.error('Event ID:', event.id);
@@ -179,39 +197,48 @@ const NotificationManager = {
       // Format notification content
       const notificationData = NotificationContentFormatter.formatNoticeNotification(notice);
 
-      // Try to use Service Worker notification (required for mobile)
-      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-        const registration = await navigator.serviceWorker.ready;
-        await registration.showNotification(notificationData.title, {
+      // Prioritize Service Worker showNotification (required for mobile browsers, works on modern desktop)
+      if ('serviceWorker' in navigator) {
+        try {
+          const registration = await navigator.serviceWorker.ready;
+          if (registration && typeof registration.showNotification === 'function') {
+            await registration.showNotification(notificationData.title, {
+              body: notificationData.body,
+              icon: notificationData.icon || '/images/icon-192x192.png',
+              tag: notificationData.tag,
+              requireInteraction: notificationData.requireInteraction,
+              data: notificationData.data,
+              badge: '/Social-Preview.webp',
+              vibrate: [200, 100, 200]
+            });
+            console.log('Notice notification displayed via Service Worker:', notice.id);
+            return null;
+          }
+        } catch (swError) {
+          console.warn('Service Worker notice notification failed, falling back:', swError);
+        }
+      }
+
+      // Fallback to regular Notification API (desktop browsers)
+      if (typeof Notification !== 'undefined') {
+        const notification = new Notification(notificationData.title, {
           body: notificationData.body,
           icon: notificationData.icon,
           tag: notificationData.tag,
           requireInteraction: notificationData.requireInteraction,
-          data: notificationData.data,
-          badge: '/Social-Preview.webp',
-          vibrate: [200, 100, 200]
+          data: notificationData.data
         });
-        console.log('Notice notification displayed via Service Worker:', notice.id);
-        return null;
+
+        // Handle click event
+        notification.onclick = () => {
+          this.handleNotificationClick('notice', notice.id);
+          notification.close();
+        };
+
+        console.log('Notice notification displayed:', notice.id);
+        return notification;
       }
-
-      // Fallback to regular Notification API (desktop browsers)
-      const notification = new Notification(notificationData.title, {
-        body: notificationData.body,
-        icon: notificationData.icon,
-        tag: notificationData.tag,
-        requireInteraction: notificationData.requireInteraction,
-        data: notificationData.data
-      });
-
-      // Handle click event
-      notification.onclick = () => {
-        this.handleNotificationClick('notice', notice.id);
-        notification.close();
-      };
-
-      console.log('Notice notification displayed:', notice.id);
-      return notification;
+      return null;
     } catch (error) {
       console.error('Failed to display notice notification:', error);
       console.error('Notice ID:', notice.id);

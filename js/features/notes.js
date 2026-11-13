@@ -178,16 +178,44 @@ const NoteManager = {
     this.isEditing = false;
   },
 
-  // Handle link clicks inside the preview to trigger downloads
-  handleNoteLinkClick(e) {
+  // Handle link clicks inside the preview to trigger direct downloads
+  async handleNoteLinkClick(e) {
     e.preventDefault();
-    const link = e.target;
+    const link = e.target.closest('a') || e.target;
     const url = link.href;
 
     if (!url || url === '#') return;
 
-    // Open the file URL directly — browsers will download or display based on content type
-    window.open(url, '_blank', 'noopener,noreferrer');
+    // Determine filename from link text or URL path
+    let filename = link.textContent.trim();
+    if (!filename || filename === url) {
+      filename = url.split('/').pop().split('?')[0] || 'downloaded-file';
+    }
+
+    // Try direct blob download first (works seamlessly if CORS allows)
+    let downloadedDirectly = false;
+    try {
+      const response = await fetch(url, { mode: 'cors' });
+      if (response.ok) {
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 2000);
+        downloadedDirectly = true;
+      }
+    } catch (err) {
+      console.warn('Direct blob download failed (falling back to open in tab):', err);
+    }
+
+    if (!downloadedDirectly) {
+      // Fallback: Open in new tab
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
 
     // Show the download helper with platform-specific fallback instructions
     const downloadHelper = document.getElementById('note-download-helper');
@@ -200,17 +228,19 @@ const NoteManager = {
       const isMobile = window.innerWidth <= 768 || /Mobi|Android/i.test(navigator.userAgent);
       const helperText = downloadHelper.querySelector('.download-helper-text');
       if (helperText) {
-        helperText.innerHTML = isMobile
-          ? 'If the file didn\'t download, <strong>press and hold</strong> the link above, then tap <strong>"Open in new tab"</strong>.'
-          : 'If the file didn\'t download, <strong>right-click</strong> the link above and select <strong>"Save link as..."</strong>.';
+        helperText.innerHTML = downloadedDirectly
+          ? '<i class="fas fa-check-circle" style="color: #2e7d32;"></i> Download started! Check your downloads folder.'
+          : (isMobile
+            ? 'If the file didn\'t download, <strong>press and hold</strong> the link above, then tap <strong>"Open in new tab"</strong>.'
+            : 'If the file didn\'t download, <strong>right-click</strong> the link above and select <strong>"Save link as..."</strong>.');
       }
 
       downloadHelper.style.display = 'flex';
 
-      // Auto-hide after 10 seconds
+      // Auto-hide after 8 seconds
       setTimeout(() => {
         downloadHelper.style.display = 'none';
-      }, 10000);
+      }, 8000);
     }
   },
 

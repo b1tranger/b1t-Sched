@@ -228,6 +228,8 @@ const App = {
   filterPopup: null,
   allUsers: [],
   isSigningUp: false, // Flag to prevent auth state handling during signup
+  isVisitor: false, // Flag indicating active client-side visitor preview mode
+  forgotPasswordIdleTimer: null, // Timer to display forgot password after 2 minutes of idle time
   currentFilter: 'all', // State to track active task filter
   classroomInitPromise: null, // Store init promise to await later
   isLoadingData: false, // Prevent duplicate data fetches during initialization
@@ -350,8 +352,20 @@ const App = {
   },
 
   adjustMobileZoom() {
-    // Only apply on mobile displays (<= 768px)
-    if (window.innerWidth <= 768) {
+    const width = window.innerWidth;
+    // Set fine-grained CSS scale custom property for varying resolution breakpoints
+    if (width <= 360) {
+      document.documentElement.style.setProperty('--app-scale', '0.92');
+    } else if (width <= 480) {
+      document.documentElement.style.setProperty('--app-scale', '0.96');
+    } else if (width <= 768) {
+      document.documentElement.style.setProperty('--app-scale', '0.98');
+    } else {
+      document.documentElement.style.setProperty('--app-scale', '1');
+    }
+
+    // Apply mobile zoom safely without clipping fixed modal viewports
+    if (width <= 768) {
       document.body.style.zoom = '95%';
     } else {
       document.body.style.zoom = '';
@@ -430,8 +444,12 @@ const App = {
     // Login form
     const loginForm = document.getElementById('login-form');
     if (loginForm) {
+      loginForm.addEventListener('input', () => {
+        this.startForgotPasswordIdleTimer();
+      });
       loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+        this.clearForgotPasswordIdleTimer();
         await this.handleLogin();
       });
     }
@@ -482,6 +500,22 @@ const App = {
             footerSec.scrollIntoView({ behavior: 'smooth' });
           }
         }
+      });
+    }
+
+    // Visitor Mode Button
+    const visitorModeBtn = document.getElementById('visitor-mode-btn');
+    if (visitorModeBtn) {
+      visitorModeBtn.addEventListener('click', () => {
+        this.startVisitorMode();
+      });
+    }
+
+    // Exit Visitor Mode Button
+    const exitVisitorBtn = document.getElementById('exit-visitor-banner-btn');
+    if (exitVisitorBtn) {
+      exitVisitorBtn.addEventListener('click', () => {
+        this.exitVisitorMode();
       });
     }
 
@@ -924,11 +958,16 @@ const App = {
     const result = await DB.getOldTasks(userId, department, this.isFaculty ? null : semester, this.isFaculty ? null : section);
     if (result.success) {
       this.oldTasks = result.data;
-      UI.renderOldTasks(result.data, this.isAdmin, userId);
+      UI.renderOldTasks(result.data, this.isAdmin, userId, this.isDptCoor, this.userProfile?.department);
     }
   },
 
   async handleAddTask() {
+    if (this.isVisitor) {
+      alert('Adding tasks is disabled in Visitor Mode (Read-Only Preview).');
+      return;
+    }
+
     // Check if user is blocked
     if (this.isBlocked) {
       alert('Your account has been restricted. You cannot add tasks.');
@@ -942,8 +981,11 @@ const App = {
     const deadlineInput = document.getElementById('task-deadline');
     const deadlineNone = document.getElementById('deadline-none');
     let deadline = null;
+    let isNoDeadline = false;
     if (deadlineNone && deadlineNone.checked) {
-      deadline = null;
+      isNoDeadline = true;
+      // Default deadline for no-deadline tasks is the end of that semester
+      deadline = Utils.getSemesterEnd(new Date());
     } else if (deadlineInput && deadlineInput.value) {
       deadline = deadlineInput.value;
     }
@@ -968,6 +1010,7 @@ const App = {
       type,
       description,
       deadline,
+      isNoDeadline,
       department,
       semester: this.isFaculty ? null : semester,
       section: this.isFaculty ? null : section,
@@ -989,6 +1032,11 @@ const App = {
   },
 
   async openEditTaskModal(taskId) {
+    if (this.isVisitor) {
+      alert('Editing tasks is disabled in Visitor Mode (Read-Only Preview).');
+      return;
+    }
+
     // Check if user is blocked
     if (this.isBlocked) {
       alert('Your account has been restricted. You cannot edit tasks.');
@@ -1006,9 +1054,11 @@ const App = {
     }
 
     // Check if user can edit this task
-    // Admin can edit any task, Faculty can edit their own tasks, users can edit their own tasks
+    // Admin can edit any task, DptCoor can edit faculty tasks in their department, Faculty/users can edit their own tasks
     const userId = Auth.getUserId();
-    const canEdit = this.isAdmin || (userId && task.addedBy === userId);
+    const isDeptMatch = this.userProfile?.department && task.department === this.userProfile.department;
+    const isFacultyTask = task.addedByRole === 'Faculty';
+    const canEdit = this.isAdmin || (userId && task.addedBy === userId) || (this.isDptCoor && isFacultyTask && isDeptMatch);
     if (!canEdit) {
       alert('You do not have permission to edit this task');
       return;
@@ -1076,8 +1126,10 @@ const App = {
     const deadlineInput = document.getElementById('edit-task-deadline');
     const deadlineNone = document.getElementById('edit-deadline-none');
     let deadline = null;
+    let isNoDeadline = false;
     if (deadlineNone && deadlineNone.checked) {
-      deadline = null;
+      isNoDeadline = true;
+      deadline = Utils.getSemesterEnd(new Date());
     } else if (deadlineInput && deadlineInput.value) {
       deadline = deadlineInput.value;
     }
@@ -1091,7 +1143,8 @@ const App = {
       course,
       type,
       description,
-      deadline
+      deadline,
+      isNoDeadline
     });
 
     if (result.success) {
@@ -1106,7 +1159,7 @@ const App = {
         const oldResult = await DB.getOldTasks(userId, department, this.isFaculty ? null : semester, this.isFaculty ? null : section);
         if (oldResult.success) {
           this.oldTasks = oldResult.data;
-          UI.renderOldTasks(oldResult.data, this.isAdmin, userId);
+          UI.renderOldTasks(oldResult.data, this.isAdmin, userId, this.isDptCoor, this.userProfile?.department);
         }
       }
     } else {
@@ -1242,6 +1295,16 @@ const App = {
       return;
     }
 
+    if (this.isVisitor) {
+      if (isCompleted) {
+        this.userCompletions[taskId] = { completedAt: new Date() };
+      } else {
+        delete this.userCompletions[taskId];
+      }
+      UI.renderTasks(this.currentTasks, this.userCompletions, false, false, 'visitor-mock-user', false, this.userProfile?.department);
+      return;
+    }
+
     const userId = Auth.getUserId();
     if (!userId) return;
 
@@ -1263,7 +1326,7 @@ const App = {
       }
 
       // Re-render tasks with updated completions
-      UI.renderTasks(this.currentTasks, this.userCompletions, this.isAdmin, this.isCR, Auth.getUserId());
+      UI.renderTasks(this.currentTasks, this.userCompletions, this.isAdmin, this.isCR, Auth.getUserId(), this.isDptCoor, this.userProfile?.department);
 
       // Re-apply active filter directly — must run AFTER renderTasks rebuilds the DOM
       const activeRadio = document.querySelector('input[name="task-filter"]:checked');
@@ -1393,6 +1456,7 @@ const App = {
       // Auth state listener will handle navigation
       UI.hideMessage('auth-message');
       // Hide forgot password link on successful login
+      this.clearForgotPasswordIdleTimer();
       const forgotPasswordContainer = document.getElementById('forgot-password-container');
       if (forgotPasswordContainer) {
         forgotPasswordContainer.classList.remove('visible');
@@ -1438,6 +1502,28 @@ const App = {
     } else {
       console.error('[App] Reset failed:', result.error);
       UI.showMessage('password-reset-message', result.error, 'error');
+    }
+  },
+
+  startForgotPasswordIdleTimer() {
+    this.clearForgotPasswordIdleTimer();
+    // Only schedule if user is on the login view
+    if (typeof Router !== 'undefined' && Router.getCurrentRoute && Router.getCurrentRoute() !== 'login') {
+      return;
+    }
+
+    this.forgotPasswordIdleTimer = setTimeout(() => {
+      const forgotPasswordContainer = document.getElementById('forgot-password-container');
+      if (forgotPasswordContainer && (typeof Router === 'undefined' || !Router.getCurrentRoute || Router.getCurrentRoute() === 'login')) {
+        forgotPasswordContainer.classList.add('visible');
+      }
+    }, 120000); // 2 minutes idle
+  },
+
+  clearForgotPasswordIdleTimer() {
+    if (this.forgotPasswordIdleTimer) {
+      clearTimeout(this.forgotPasswordIdleTimer);
+      this.forgotPasswordIdleTimer = null;
     }
   },
 
@@ -1646,6 +1732,7 @@ const App = {
           document.body.classList.remove('gray-mode');
         }
       }
+      Utils.updateThemeColorMeta(userTheme);
 
       // Cache studentId / facultyInitial to email mapping for future offline or permission-fallback logins
       if (this.userProfile && this.userProfile.email) {
@@ -1682,7 +1769,7 @@ const App = {
       if (Router.getCurrentRoute() === 'profile-settings') {
         await Profile.loadProfile();
       } else {
-        Router.navigate('dashboard');
+        Router.navigate('dashboard', true);
         // Ensure data is loaded before we hide the loading screen
         await this.loadDashboardData(false);
         // Show semester auto-promotion notice if needed
@@ -1761,13 +1848,19 @@ const App = {
       }
     }
 
-    Router.navigate('login');
+    Router.navigate('login', true);
+    this.startForgotPasswordIdleTimer();
     UI.showLoading(false);
     this.userProfile = null;
     this.isAdmin = false;
     this.isCR = false;
     this.isFaculty = false;
     this.isDptCoor = false;
+    this.isVisitor = false;
+
+    // Hide visitor banner if open
+    const visitorBanner = document.getElementById('visitor-preview-banner');
+    if (visitorBanner) visitorBanner.style.display = 'none';
 
     // Default to Light Mode in logged-out state
     document.body.classList.remove('dark-mode', 'gray-mode');
@@ -1798,6 +1891,71 @@ const App = {
     if (typeof ChangelogModal !== 'undefined' && typeof ChangelogModal.close === 'function') {
       ChangelogModal.close();
     }
+  },
+
+  // Start Visitor Mode (Client-side sample preview, zero Firebase queries)
+  startVisitorMode(department = 'CSE', semester = '5th', section = '5A') {
+    this.clearForgotPasswordIdleTimer();
+    this.isVisitor = true;
+    this.userProfile = (typeof VisitorData !== 'undefined')
+      ? VisitorData.getProfile(department, semester, section)
+      : {
+          id: 'visitor-mock-user',
+          name: 'Visitor Guest',
+          email: 'visitor@b1tsched.local',
+          role: 'Visitor',
+          department: department,
+          semester: semester,
+          section: section,
+          studentId: 'VISITOR-PREVIEW',
+          theme: 'light'
+        };
+
+    this.isAdmin = false;
+    this.isCR = false;
+    this.isFaculty = false;
+    this.isDptCoor = false;
+    this.isBlocked = false;
+
+    // Show visitor floating banner
+    const visitorBanner = document.getElementById('visitor-preview-banner');
+    if (visitorBanner) visitorBanner.style.display = 'flex';
+
+    // Hide admin controls and blocked banners
+    UI.toggleAdminControls(false, false, false);
+    UI.toggleBlockedUserMode(false);
+    UI.updateUserDetailsCard(
+      this.userProfile.email,
+      this.userProfile.department,
+      this.userProfile.semester,
+      this.userProfile.section
+    );
+
+    // Show footer and dashboard containers
+    const appFooter = document.getElementById('app-footer');
+    if (appFooter) appFooter.style.display = 'flex';
+
+    // Navigate to dashboard
+    Router.navigate('dashboard', true);
+
+    // Load static visitor data
+    this.currentTasks = (typeof VisitorData !== 'undefined') ? VisitorData.getTasks(department, semester, section) : [];
+    this.currentEvents = (typeof VisitorData !== 'undefined') ? VisitorData.getEvents(department) : [];
+    this.currentRaiderEvents = [];
+    this.userCompletions = {};
+
+    UI.renderTasks(this.currentTasks, this.userCompletions, false, false, 'visitor-mock-user', false, department);
+    UI.renderEvents(this.currentEvents, false, false, 'visitor-mock-user');
+
+    UI.showLoading(false);
+    UI.showToast('Entered Visitor Mode. Exploring sample data in read-only mode.', 'info');
+  },
+
+  exitVisitorMode() {
+    this.isVisitor = false;
+    const visitorBanner = document.getElementById('visitor-preview-banner');
+    if (visitorBanner) visitorBanner.style.display = 'none';
+    this.handleUnauthenticatedUser();
   },
 
   // Apply or exit Admin role preview simulation
@@ -2390,6 +2548,17 @@ const App = {
 
   async loadDashboardData(showLoader = true) {
     if (!this.userProfile || this.isLoadingData) return;
+
+    if (this.isVisitor) {
+      this.currentTasks = (typeof VisitorData !== 'undefined') ? VisitorData.getTasks(this.userProfile.department, this.userProfile.semester, this.userProfile.section) : [];
+      this.currentEvents = (typeof VisitorData !== 'undefined') ? VisitorData.getEvents(this.userProfile.department) : [];
+      this.currentRaiderEvents = [];
+      UI.renderTasks(this.currentTasks, this.userCompletions, false, false, 'visitor-mock-user', false, this.userProfile.department);
+      UI.renderEvents(this.currentEvents, false, false, 'visitor-mock-user');
+      UI.showLoading(false);
+      return;
+    }
+
     this.isLoadingData = true;
 
     try {
@@ -2420,7 +2589,21 @@ const App = {
 
       if (tasksResult.success) {
         this.currentTasks = tasksResult.data;
-        UI.renderTasks(this.currentTasks, this.userCompletions, this.isAdmin, this.isCR, userId);
+
+        // Auto-complete no-deadline tasks whose semester has already ended
+        const now = new Date();
+        (this.currentTasks || []).forEach(task => {
+          const isNoDeadline = task.isNoDeadline === true || !task.deadline;
+          if (isNoDeadline) {
+            const createdAt = task.createdAt ? (task.createdAt.toDate ? task.createdAt.toDate() : new Date(task.createdAt)) : now;
+            const semesterEnd = task.deadline ? (task.deadline.toDate ? task.deadline.toDate() : new Date(task.deadline)) : Utils.getSemesterEnd(createdAt);
+            if (now > semesterEnd && !this.userCompletions[task.id]) {
+              this.userCompletions[task.id] = { completedAt: semesterEnd, isCompleted: true, autoCompleted: true };
+            }
+          }
+        });
+
+        UI.renderTasks(this.currentTasks, this.userCompletions, this.isAdmin, this.isCR, userId, this.isDptCoor, this.userProfile?.department);
         if (this.calendarView) {
           this.calendarView.onTasksUpdated();
         }
@@ -2949,16 +3132,33 @@ const App = {
   },
 
   async handleResetTasks() {
+    if (this.isVisitor) {
+      alert('Resetting tasks is disabled in Visitor Mode (Read-Only Preview).');
+      return;
+    }
+
     if (!this.isAdmin && !this.isCR) return;
 
-    const confirmed = confirm('Are you sure you want to reset all old/past tasks? This action cannot be undone.');
+    // Check if there are tasks with no explicit deadline in current group
+    const noDeadlineCount = (this.currentTasks || []).filter(t => t.isNoDeadline || !t.deadline).length;
+    let includeNoDeadline = false;
+
+    let confirmMsg = 'Are you sure you want to reset all expired tasks? This will delete past-deadline tasks and auto-complete ended-semester tasks.';
+    if (noDeadlineCount > 0) {
+      includeNoDeadline = confirm(`Found ${noDeadlineCount} task(s) without an explicit deadline (default deadline is semester end).\n\nClick OK to also auto-complete these tasks now, or Cancel to leave them pending until the semester ends.`);
+      confirmMsg = includeNoDeadline
+        ? `Confirm: Reset expired deadline tasks and auto-complete all ${noDeadlineCount} semester tasks?`
+        : 'Confirm: Reset only past tasks with expired deadlines?';
+    }
+
+    const confirmed = confirm(confirmMsg);
     if (!confirmed) return;
 
     const { department, semester, section } = this.userProfile;
-    const result = await DB.resetOldTasks(department, semester, section);
+    const result = await DB.resetOldTasks(department, semester, section, includeNoDeadline);
 
     if (result.success) {
-      alert(`Successfully reset ${result.deletedCount} old tasks.`);
+      alert(`Successfully reset tasks: ${result.deletedCount} expired task(s) deleted, ${result.autoCompletedCount || 0} task(s) auto-completed.`);
       await this.loadDashboardData();
     } else {
       alert('Failed to reset tasks: ' + result.error);
@@ -2966,6 +3166,11 @@ const App = {
   },
 
   async handleDeleteTask(taskId) {
+    if (this.isVisitor) {
+      alert('Deleting tasks is disabled in Visitor Mode (Read-Only Preview).');
+      return;
+    }
+
     // Check if user is blocked
     if (this.isBlocked) {
       alert('Your account has been restricted. You cannot delete tasks.');
@@ -2976,9 +3181,11 @@ const App = {
     const task = this.currentTasks.find(t => t.id === taskId);
     if (!task) return;
 
-    // Check permissions: Admin/CR can delete any, users can only delete their own
+    // Check permissions: Admin/CR can delete any, DptCoor can delete dept faculty tasks, users can only delete their own
     const userId = Auth.getUserId();
-    const canDelete = this.isAdmin || this.isCR || (userId && task.addedBy === userId);
+    const isDeptMatch = this.userProfile?.department && task.department === this.userProfile.department;
+    const isFacultyTask = task.addedByRole === 'Faculty';
+    const canDelete = this.isAdmin || this.isCR || (userId && task.addedBy === userId) || (this.isDptCoor && isFacultyTask && isDeptMatch);
     if (!canDelete) {
       alert('You do not have permission to delete this task');
       return;
@@ -2995,7 +3202,7 @@ const App = {
 
       // Remove from local state and re-render
       this.currentTasks = this.currentTasks.filter(t => t.id !== taskId);
-      UI.renderTasks(this.currentTasks, this.userCompletions, this.isAdmin, this.isCR, Auth.getUserId());
+      UI.renderTasks(this.currentTasks, this.userCompletions, this.isAdmin, this.isCR, Auth.getUserId(), this.isDptCoor, this.userProfile?.department);
 
       // Re-apply active filter directly — must run AFTER renderTasks rebuilds the DOM
       const activeRadio = document.querySelector('input[name="task-filter"]:checked');
