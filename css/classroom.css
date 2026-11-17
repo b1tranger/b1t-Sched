@@ -1123,6 +1123,8 @@ body.dark-mode .classroom-reconnect-btn {
     right: 20px;
     width: 50px;
     height: 50px;
+    padding: 0;
+    line-height: 1;
     border-radius: 50%;
     background-color: var(--classroom-green, #0f9d58);
     color: #ffffff;
